@@ -29,8 +29,14 @@ def unfold_pants(flat: dict, stretched: dict | None = None) -> dict:
 
 
 def unfold_top(flat: dict) -> dict:
-    return dict(chest_circ=2 * flat["chest_flat"], hem_circ=2 * flat["hem_flat"],
-                length=flat["length"], sleeve=flat.get("sleeve", 0.0))
+    """Circumferences of a top lying flat (double layer). The lengths stay flat features: the
+    fit reconstructs them through the flat-lay model (flatlay.py)."""
+    t = dict(chest_circ=2 * flat["chest_flat"], hem_circ=2 * flat["hem_flat"])
+    if flat.get("bicep_flat"):
+        t["bicep_circ"] = 2 * flat["bicep_flat"]
+    if flat.get("opening_flat"):
+        t["sleeve_opening"] = 2 * flat["opening_flat"]
+    return t
 
 
 def unfold(garment: str, flat: dict, **kw) -> dict:

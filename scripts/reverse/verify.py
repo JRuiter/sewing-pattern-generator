@@ -9,14 +9,16 @@ from garments import get
 from .fit import WIDTH_KEYS, tolerance
 
 
-def compare(pattern, targets: dict, keys=None):
+def compare(pattern, targets: dict, keys=None, actual_values=None, labels=None):
+    """Rows target vs actual; actual = the pattern's finished measurements (or actual_values)."""
     mod = get(pattern.garment)
-    labels = getattr(mod, "FINISHED_LABELS", {})
+    labels = labels or getattr(mod, "FINISHED_LABELS", {})
+    actual_values = actual_values if actual_values is not None else pattern.finished
     rows = []
     for k in keys or targets:
-        if k not in pattern.finished:
+        if k not in actual_values or k not in targets:
             continue
-        target, actual = targets[k], pattern.finished[k]
+        target, actual = targets[k], actual_values[k]
         d = actual - target
         tol = tolerance(k, target)
         rows.append(dict(key=k, name=labels.get(k, (k,))[0], target=target, actual=actual, delta=d,

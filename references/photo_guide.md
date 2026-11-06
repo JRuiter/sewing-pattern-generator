@@ -39,11 +39,15 @@ Helpful: front and back view, a close-up of pockets and cuffs, and the fabric
    - **Crotch curve:** fold one leg inwards over the other so the front or back crotch seam
      lies flat; one photo each for front and back.
    - **Back** (for back pockets, back rise).
-   For tops: fold the sleeve out so the **armhole** lies flat; spread out the hood.
+   For tops: one photo, front up, sleeves spread sideways and smoothed along their top
+   fold; the neckline flat and visible (it shows me whether the sleeves are set in or
+   raglan). Optional: fold the sleeve back so the **armhole** seam lies flat.
 
 ### Tape-measure values (take precedence)
 If you like, measure as well and send me the values in cm:
-waistband (relaxed, flat × 2), hip width, inseam, outseam, leg opening.
+waistband (relaxed, flat × 2), hip width, inseam, outseam, leg opening. For tops: the chest
+width lying flat, about 2–3 cm below the armpit: I use it to correct the scale of the whole photo
+(worth it for wide garments with long sleeves).
 For cuffs: measure relaxed, not stretched.
 
 ### What happens next
@@ -68,7 +72,10 @@ For cuffs: measure relaxed, not stretched.
 
 ### Limits
 - Mode B is fully automatic for **pants** (widths, rise, inseam, outseam, waistband,
-  cuffs). Tops are measured roughly (chest, hem, length, sleeve); I ask for the armhole and
-  neckline with a tape measure.
+  cuffs) and for **T-shirts with set-in or raglan sleeves** (chest, hem, length, underarm,
+  neckline, shoulder, upper arm, sleeve length and opening). Hoods, collars and cuffs on tops
+  are not copied yet.
+- With long sleeves spread out the garment is very wide compared to the card: hold the camera
+  really level, or give me the chest width from the tape measure.
 - Style lines, zips and collars are recognised but not drafted; I tell you openly what is
   left out.

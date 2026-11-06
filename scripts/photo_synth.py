@@ -123,7 +123,7 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
     fabric = _texture(h, w, garment_rgb[::-1], rng, amp=7)
     rib = _texture(h, w, rib_rgb[::-1], rng, stripes=True, amp=5)
     rib_mask = np.zeros((h, w), np.uint8)
-    for g in ([sil_info["band"]] if sil_info["band"] is not None else []) + sil_info["cuffs"]:
+    for g in ([sil_info["band"]] if sil_info.get("band") is not None else []) + sil_info.get("cuffs", []):
         cv2.fillPoly(rib_mask, [to_px(g.exterior.coords)], 255, shift=3)
     garment = np.where(rib_mask[:, :, None] > 0, rib, fabric)
     a = (mask.astype(np.float32) / 255)[:, :, None]
@@ -131,15 +131,18 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
     # seams (dark lines) at the waistband seam, cuff seams and crotch seam
     dark = (garment_rgb[2] * 0.55, garment_rgb[1] * 0.55, garment_rgb[0] * 0.55)
     lw = max(1, int(px_per_mm * 0.8))
-    if sil_info["wb"] > 0:
+    if sil_info.get("wb", 0) > 0:
         bw = sil_info["band"].bounds
         cv2.line(img, tuple(to_px([[bw[0], bw[3]]])[0] // 8), tuple(to_px([[bw[2], bw[3]]])[0] // 8), dark, lw)
-    for cf in sil_info["cuffs"]:
+    for cf in sil_info.get("cuffs", []):
         cc = np.asarray(cf.exterior.coords)[:4]
         top = sorted(cc, key=lambda p: p[1])[:2]
         cv2.line(img, tuple(to_px([top[0]])[0] // 8), tuple(to_px([top[1]])[0] // 8), dark, lw)
-    cx, cy = sil_info["crotch"]
-    cv2.line(img, tuple(to_px([[0, sil_info["wb"]]])[0] // 8), tuple(to_px([[cx, cy]])[0] // 8), dark, lw)
+    if sil_info.get("crotch") is not None:
+        cx, cy = sil_info["crotch"]
+        cv2.line(img, tuple(to_px([[0, sil_info["wb"]]])[0] // 8), tuple(to_px([[cx, cy]])[0] // 8), dark, lw)
+    for ln in sil_info.get("lines", []):               # tops: neckline and sleeve seams
+        cv2.polylines(img, [to_px(ln)], False, dark, lw, lineType=cv2.LINE_AA, shift=3)
     # shadow under the fabric (slight)
     shadow = cv2.GaussianBlur(mask, (0, 0), px_per_mm * 2).astype(np.float32) / 255
     img = img * (1 - 0.12 * np.clip(shadow - a[:, :, 0], 0, 1))[:, :, None]
@@ -188,6 +191,19 @@ def camera(img, seed=0, tilt=0.04, rot_deg=4.0, blur=1.0, noise=3.0, jpeg=88, ou
 def synth_pants_photo(pat, path=None, seed=0, px_per_mm=3.0, splay_deg=5.0, **cam):
     info = pants_silhouette(pat, splay_deg=splay_deg)
     scene, _, _ = render_scene(info, px_per_mm=px_per_mm, seed=seed)
+    img, _ = camera(scene, seed=seed, **cam)
+    if path:
+        cv2.imwrite(path, img)
+    return img, info["truth"]
+
+
+def synth_top_photo(pat, path=None, seed=0, px_per_mm=3.0, **cam):
+    """T-shirt / raglan laid flat with the sleeves spread sideways (model: flatlay.py)."""
+    import flatlay
+    info = flatlay.top_flatlay(pat)
+    sil = info["silhouette"]
+    # centre the garment horizontally around x = 0 is already given; render_scene needs bounds
+    scene, _, _ = render_scene(dict(silhouette=sil, lines=info["lines"]), px_per_mm=px_per_mm, seed=seed)
     img, _ = camera(scene, seed=seed, **cam)
     if path:
         cv2.imwrite(path, img)
