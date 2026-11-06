@@ -1,14 +1,15 @@
-# sewing-pattern-generator · Schnittmuster-Generator
+# sewing-pattern-generator
 
 A [Claude skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) that drafts
 **sewable, true-to-scale sewing patterns** from measurements, a free-text description, or photos of a
 garment. Parametric drafting, seam validation, and print-ready 1:1 PDFs for plotter rolls, A0/A1, or A4
 tiling.
 
-> Die Ausgaben des Skills (Rückfragen, Schnitte, Nähanleitungen, Berichte) sind auf **Deutsch**.
-> Deutsche Kurzbeschreibung [weiter unten](#deutsch).
+All generated files (pattern labels, sewing instructions, reports) are in English. Claude answers
+in the language you write in, and the skill also triggers on German requests ("Schnittmuster
+erstellen", "Lieblingshose kopieren" …).
 
-![Preview: harem pants size 122 on a 610 mm roll](examples/1_haremshose_122_rolle610/haremshose_gr122_rolle610_vorschau.png)
+![Preview: harem pants size 122 on a 610 mm roll](examples/1_harem_pants_122_roll610/harem_pants_size122_roll610_preview.png)
 
 ## What it does
 
@@ -25,12 +26,12 @@ tiling.
   - **A0 / A1** sheets (oversized pieces tiled)
   - **A4 / US Letter** tiles with 10 mm overlap, glue areas, row/column labels, registration diamonds
     and an overview page
-  - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and German sewing
+  - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and sewing
     instructions (Markdown + PDF)
 - **Photo mode A** (inspiration photo): feature list with confidence → confirmed by the user → mapped
   onto a garment module; unsupported features are named honestly with the closest alternative.
 - **Photo mode B** (copy a favourite garment): lay it flat next to the printable ArUco
-  [reference card](assets/referenzkarte.pdf), take a photo from above → perspective correction,
+  [reference card](assets/reference-card.pdf), take a photo from above → perspective correction,
   segmentation, measurements and an overlay image → **reverse engineering** (least-squares fit of the
   parametric model) → deviation report (lengths ±1 cm, widths ±2 %) → savable project JSON that can be
   graded to other sizes.
@@ -45,7 +46,7 @@ tiling.
 | `skirt` | gathered, A-line, circle skirt with elastic waistband |
 | `beanie`, `loop` | beanie with brim/slouch, single or double loop scarf |
 
-Sizes: children 86–176, women 34–56, men 44–60 – or any custom measurements (measured values always
+Sizes: children 86–176 (`122`), women 34–56 (`w38`), men 44–60 (`m52`), or any custom measurements (measured values always
 take precedence over the size table).
 
 ## Installation
@@ -54,50 +55,50 @@ take precedence over the size table).
 Clone (or download) this repository into your skills folder, e.g. for Claude Code:
 
 ```bash
-git clone https://github.com/JRuiter/sewing-pattern-generator ~/.claude/skills/schnittmuster-generator
-pip install -r ~/.claude/skills/schnittmuster-generator/requirements.txt
+git clone https://github.com/JRuiter/sewing-pattern-generator ~/.claude/skills/sewing-pattern-generator
+pip install -r ~/.claude/skills/sewing-pattern-generator/requirements.txt
 ```
 
 For claude.ai / the Claude app, zip the repository folder and upload it under *Settings → Capabilities →
-Skills*. Then just ask, e.g. *„Haremshose für meine Tochter, Gr. 122, Sweat, Druck auf der 24"-Rolle“*.
+Skills*. Then just ask, e.g. *"Harem pants for my daughter, size 122, sweat fabric, print on the 24" roll"*.
 
 ### As a command-line tool
 Python ≥ 3.10:
 
 ```bash
 pip install -r requirements.txt
-python scripts/generate.py --garment pants_basic --style haremshose --size 122 \
-    --fabric sweat --format rolle610,a4 --out out/harem122
+python scripts/generate.py --garment pants_basic --style harem --size 122 \
+    --fabric sweat --format roll610,a4 --out out/harem122
 ```
 
 More examples:
 
 ```bash
 python scripts/generate.py --garment tshirt_basic --size 140 --options '{"sleeve_style":"raglan"}' --format a4
-python scripts/generate.py --garment hoodie --size d38 --format rolle914,a0
-python scripts/generate.py --garment skirt --size 128 --style teller --format a1
+python scripts/generate.py --garment hoodie --size w38 --format roll914,a0
+python scripts/generate.py --garment skirt --size 128 --style circle --format a1
 python scripts/generate.py --spec order.json                 # everything as JSON
 
 # photo mode B: measure a flat-lay photo with the reference card, rebuild the pattern, print it
-cd scripts && python -m reverse.pipeline ../photo.jpg --type hose --out ../project
-python generate.py --projekt ../project/projekt.json --format rolle610 --out ../out/copy
+cd scripts && python -m reverse.pipeline ../photo.jpg --type pants --out ../project
+python generate.py --project ../project/project.json --format roll610 --out ../out/copy
 ```
 
-Exit code 2 means the sewability check failed; `pruefbericht.md` explains why and no print files are
+Exit code 2 means the sewability check failed; `validation_report.md` explains why and no print files are
 written.
 
 ## Examples
 
-All generated by the code in this repository (`examples/`):
+All generated by the code in this repository (`python tools/make_examples.py`):
 
-1. [Harem pants, size 122, sweat, 610 mm roll](examples/1_haremshose_122_rolle610) – one 600 × 1062 mm
+1. [Harem pants, size 122, sweat, 610 mm roll](examples/1_harem_pants_122_roll610) – one 600 × 1062 mm
    page, sewing instructions, cutting layout, validation report (28/28 checks OK)
-2. [The same as A4 tiles](examples/2_haremshose_122_a4) – 12 pages + overview
-3. [Photo mode B](examples/3_foto_modus_b) – synthetic flat-lay photo with reference card → overlay →
+2. [The same as A4 tiles](examples/2_harem_pants_122_a4) – 12 pages + overview
+3. [Photo mode B](examples/3_photo_mode_b) – synthetic flat-lay photo with reference card → overlay →
    reverse-engineering report → reconstructed pattern. Round-trip comparison with the original pattern:
-   all lengths within 0.5 cm, all widths within 1 % ([rundlauf_vergleich.md](examples/3_foto_modus_b/rundlauf_vergleich.md))
+   all lengths within 0.5 cm, all widths within 2 % ([round_trip_comparison.md](examples/3_photo_mode_b/round_trip_comparison.md))
 
-Validation tables and previews for every garment in three sizes: [`testergebnisse/`](testergebnisse/UEBERSICHT.md)
+Validation tables and previews for every garment in three sizes: [`test-results/`](test-results/OVERVIEW.md)
 (780 of 780 checks passed).
 
 ## Tests
@@ -116,20 +117,21 @@ full round trip pattern → photo → reverse engineering → pattern.
 ## Repository layout
 
 ```
-SKILL.md          skill instructions (German) – what Claude does step by step
+SKILL.md          skill instructions: what Claude does step by step
 scripts/          geometry, measurements, ease, garments/, validate, layout, render, instructions,
                   photo_analyze, photo_measure, reverse/ (decompose, unfold, fit, verify, store)
-references/       drafting rules, size tables, print specs, photo guide (German)
+references/       drafting rules, size tables, print specs, photo guide
 assets/           printable reference card (ArUco), DejaVu fonts
 tests/            pytest suite
+tools/            zip builder, example/test-result generator
 examples/         the three example outputs
-testergebnisse/   validation reports and previews per garment and size
+test-results/     validation reports and previews per garment and size
 ```
 
 ## Your patterns belong to you
 
 Patterns generated with this tool are **yours**. Use, print, sew, sell the finished garments, or share
-the pattern files however you like – no attribution required. The MIT license below covers the
+the pattern files however you like; no attribution required. The MIT license below covers the
 *software*; it places no restrictions on what you create with it.
 
 The constructions are original parametric drafts based on generally known drafting principles; no
@@ -144,19 +146,3 @@ use a new pattern.
 [MIT](LICENSE) © JRuiter. The bundled DejaVu fonts are under their own free license
 ([assets/fonts/DejaVu-LICENSE.txt](assets/fonts/DejaVu-LICENSE.txt)).
 
----
-
-## Deutsch
-
-**Schnittmuster-Generator** ist ein Claude-Skill, der aus einer Beschreibung, Größe/Körpermaßen
-und/oder Fotos ein nähbares, maßhaltiges Schnittmuster konstruiert, es automatisch auf Nähbarkeit
-prüft und druckfertige 1:1-PDFs für Plotter-Rolle, A0/A1 oder A4 zum Kleben erzeugt – mit
-Zuschnittplan, Stoffverbrauch und Nähanleitung. Ein Lieblingsteil lässt sich flach mit der
-[Referenzkarte](assets/referenzkarte.pdf) fotografieren und nachkonstruieren (Reverse Engineering mit
-Abweichungsbericht und Gradierung in andere Größen).
-
-Installation siehe oben, Ablauf und Regeln in [SKILL.md](SKILL.md), Konstruktionsregeln in
-[references/drafting_rules.md](references/drafting_rules.md).
-
-**Die erzeugten Schnittmuster gehören dir** – frei nutzbar, auch für verkaufte Nähstücke. Beim ersten
-Nähen eines neuen Schnitts bitte immer ein Probeteil nähen.

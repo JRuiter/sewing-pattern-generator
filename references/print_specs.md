@@ -1,65 +1,62 @@
-# Druckvorgaben
+# Print specifications
 
-Gilt für alle Ausgaben von `scripts/render.py`. Wird von `tests/test_validate.py`
-automatisch geprüft (Kontrollquadrat, eingebettete Schriften, Linienstärken, Überlappung).
+Apply to every output of `scripts/render.py`. Checked automatically by
+`tests/test_validate.py` (control square, embedded fonts, line widths, overlap).
 
-## Allgemein
+## General
 
-| Vorgabe | Umsetzung |
+| Requirement | Implementation |
 |---|---|
-| Vektor-PDF, Maßstab 1:1 | reportlab, Einheiten mm → pt (1 mm = 2,8346 pt), keine Rastergrafik im Schnitt |
-| Schriften eingebettet | DejaVu Sans (TrueType, `assets/fonts/`, freie Lizenz) |
-| Linienstärken ≥ 0,5 pt | Schnittlinie 1,0 pt, Bruch 1,0 pt, Nählinie 0,6 pt, Markierungen 0,6–0,8 pt, Kachelrahmen 0,5 pt |
-| Linienarten | Schnittlinie **durchgezogen**, Nählinie **gestrichelt**, Stoffbruch **Strich-Punkt** |
-| Kontrollquadrat | auf jeder Seite/jedem Bogen: 5 × 5 cm (exakt 141,73 pt) + 1 inch (72 pt) |
-| Beschriftung je Teil | Name, Größe, „n× zuschneiden“ (gegengleich/im Bruch), Fadenlaufpfeil, Passzeichen (einfach/doppelt), Nahtzugabe-Hinweis, „◄ STOFFBRUCH ►“ |
-| Druckhinweis | „Mit 100 % / Tatsächliche Größe drucken – NICHT ‚An Seite anpassen‘“ im Kopf jeder Datei |
+| Vector PDF, scale 1:1 | reportlab, units mm → pt (1 mm = 2.8346 pt), no raster graphics in the pattern |
+| Fonts embedded | DejaVu Sans (TrueType, `assets/fonts/`, free license) |
+| Line widths ≥ 0.5 pt | cutting line 1.0 pt, fold 1.0 pt, seam line 0.6 pt, markings 0.6–0.8 pt, tile frame 0.5 pt |
+| Line styles | cutting line **solid**, seam line **dashed**, fold **dash-dot** |
+| Control square | on every page/sheet: 5 × 5 cm (exactly 141.73 pt) + 1 inch (72 pt) |
+| Labels per piece | name, size, "cut n" (mirrored pair/on fold), grainline arrow, notches (single/double), seam allowance note, "◄ PLACE ON FOLD ►" |
+| Printing note | "Print at 100 % / "Actual size". Do NOT use "Fit to page"." in the header of every file |
 
-## Rolle (Plotter)
+## Roll (plotter)
 
-- Seitenbreite = Rollenbreite − 10 mm (610 → 600 mm, 914 → 904 mm), Länge variabel,
-  **Hochformat** (Seite nie breiter als lang).
-- Rand 5 mm, Kopfbereich 80 mm (Titel, Legende, Kontrollquadrate).
-- Teile werden platzsparend gepackt: Drehung in 15°-Schritten erlaubt (Fadenlauf dreht
-  mit), Abstand ≥ 10 mm, mehrere Strategien, kürzeste Länge gewinnt. Kein Teil wird
-  zerschnitten.
-- Ausnahme: Ein Teil breiter als die Rolle (z. B. Tellerrock für Erwachsene) wird in
-  rollenbreite Bahnen à 120 cm mit 10 mm Überlappung und Klebemarken geteilt; die
-  Nähanleitung weist darauf hin.
+- Page width = roll width − 10 mm (610 → 600 mm, 914 → 904 mm), variable length,
+  **portrait** (the page is never wider than it is long).
+- Margin 5 mm, header 80 mm (title, legend, control squares).
+- Pieces are packed tightly: rotation in 15° steps is allowed (the grainline rotates with
+  the piece), gap ≥ 10 mm, several strategies, the shortest length wins. No piece is cut.
+- Exception: a piece wider than the roll (e.g. an adult circle skirt) is split into
+  roll-wide strips of 120 cm with 10 mm overlap and glue marks; the sewing instructions
+  point this out.
 
-### Canon imagePROGRAF iPF650 (24"-Rolle, 610 mm)
-1. PDF in **Adobe Acrobat** öffnen → Drucken → „Tatsächliche Größe“, „Seite einpassen“ AUS.
-2. Papierformat: **benutzerdefiniert, 600 mm × Seitenlänge** (steht im Dateinamen/Kopf),
-   **Hochformat**. Nicht drehen lassen („Automatisch drehen“ AUS).
-3. Alternativ **imagePROGRAF Direct Print & Share**: Rollenpapier, „Originalgröße“,
-   Randlos AUS.
-4. Nach dem Druck Kontrollquadrat nachmessen (5,0 × 5,0 cm).
+### Canon imagePROGRAF iPF650 (24" roll, 610 mm)
+1. Open the PDF in **Adobe Acrobat** → Print → "Actual size", "Fit to page" OFF.
+2. Paper size: **custom, 600 mm × page length** (shown in the file name/header),
+   **portrait**. Do not let it rotate ("Auto-rotate" OFF).
+3. Alternatively **imagePROGRAF Direct Print & Share**: roll paper, "Original size",
+   borderless OFF.
+4. After printing, measure the control square (5.0 × 5.0 cm).
 
-## A0 / A1 (Copyshop)
+## A0 / A1 (copy shop)
 
-- Teile ungeteilt auf möglichst wenige Bögen (Rand 10 mm), Kontrollquadrat je Bogen.
-- Passt ein Teil auf keinen Bogen, wird es wie A4 gekachelt (Überlappung + Klebemarken)
-  und als eigener Abschnitt angehängt.
+- Pieces whole, on as few sheets as possible (margin 10 mm), control square on each sheet.
+- If a piece fits on no sheet, it is tiled like A4 (overlap + glue marks) and appended as
+  its own section.
 
-## A4 / US-Letter zum Kleben
+## A4 / US Letter to tape together
 
-- Kachelung mit **10 mm Überlappung**; die Klebefläche ist grau hinterlegt und auf beiden
-  Seiten deckungsgleich (gleicher Inhalt, automatisch getestet). Bei jeder Seite wird der
-  linke bzw. obere Rand an der gestrichelten Linie abgeschnitten und auf die Nachbarseite
-  geklebt.
-- Seitenkennung als Zeile/Spalte (A1, A2, B1 …) groß im Hintergrund und in der Kopfzeile
-  („kleben an: links A1, oben …“).
-- Passmarken: Rauten mit Kennung beider Seiten (z. B. „A1|A2“) an jeder Klebekante, damit Seiten eindeutig
-  zusammenpassen.
-- Rand 8 mm (Druckerrand), leere Seiten werden weggelassen.
-- **Seite 1 = Übersichtsplan:** verkleinerte Anordnung aller Seiten mit Kennungen,
-  Klebeanleitung und Druckhinweis (der Plan selbst ist verkleinert, die Kontrollquadrate
-  darauf sind 1:1).
-- Kontrollquadrat auf jeder Seite an einer freien Stelle (ohne Schnittlinien).
+- Tiles with **10 mm overlap**; the glue area is shaded grey and identical on both pages
+  (same content, tested automatically). On each page, trim the left or top margin along
+  the dashed line and glue it onto the neighbouring page.
+- Page label as row/column (A1, A2, B1 …), large in the background and in the header
+  ("glue to left: A1, top: …").
+- Registration marks: diamonds with the labels of both pages (e.g. "A1|A2") on every glue
+  edge so that the pages match unambiguously.
+- Margin 8 mm (printer margin); empty pages are left out.
+- **Page 1 = overview:** reduced layout of all pages with labels, assembly instructions and
+  printing note (the plan itself is scaled down, the control squares on it are 1:1).
+- Control square on every page in a free spot (no pattern lines).
 
-## Zusätzliche Dateien
+## Additional files
 
-- `*_master_1zu1.svg` – SVG mit Einheit mm (`width="…mm"`), 1:1, für Plotter-/CAD-Software.
-- `*_vorschau.png` – farbige Vorschau mit Seiten-/Bahnraster.
-- `zuschnittplan.png` – Lage der Teile auf dem Stoff (einlagig, Fadenlauf parallel zur
-  Webkante, alle Kopien, gegengleiche Teile gespiegelt) mit Stoffverbrauch.
+- `*_master_1to1.svg`: SVG with unit mm (`width="…mm"`), 1:1, for plotter/CAD software.
+- `*_preview.png`: coloured preview with page/strip grid.
+- `cutting_layout.png`: position of the pieces on the fabric (single layer, grainline
+  parallel to the selvage, all copies, mirrored pieces flipped) with fabric consumption.

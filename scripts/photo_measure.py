@@ -368,7 +368,7 @@ def overlay(img, mask, cnt, geo, res, px_per_mm, path):
     f = ImageFont.truetype(font_path, 22)
     lines = ["Detected measurements (please check):"] + [f"{LABELS[k]}: {v / 10:.1f} cm"
                                                  for k, v in res.items() if k in LABELS]
-    box_w = 420
+    box_w = 500
     d.rectangle([8, 8, 8 + box_w, 16 + 28 * len(lines)], fill=(255, 255, 255))
     for i, t in enumerate(lines):
         d.text((16, 12 + 28 * i), t, fill=(0, 0, 0), font=f)

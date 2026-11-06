@@ -1,75 +1,74 @@
-# Fotoanleitung für Nutzer
+# Photo guide for users
 
-Diese Texte kann Claude dem Nutzer direkt (gekürzt) weitergeben.
+Claude can pass these texts on to the user directly (shortened, in the user's language).
 
-## Modus A – „So ein Teil hätte ich gern“ (Inspirationsfoto)
+## Mode A: "I'd like something like this" (inspiration photo)
 
-Jedes Foto geht: getragen, Katalog, Pinterest, Screenshot. Daraus erkenne ich **Stil und
-Proportionen** (Silhouette, Länge, Taschen, Bündchen, Ausschnitt, Ärmelform, Kapuze …)
-und zeige dir eine Merkmalsliste mit meiner Sicherheit zur Bestätigung.
+Any photo works: worn, catalogue, Pinterest, screenshot. From it I can tell **style and
+proportions** (silhouette, length, pockets, cuffs, neckline, sleeve type, hood …) and show
+you a feature list with how sure I am, for you to confirm.
 
-Was ein Inspirationsfoto **nicht** liefert: genaue Maße. Dafür brauche ich die **Größe
-oder die Körpermaße** der Person, für die genäht wird. Rückseite und verdeckte Details
-frage ich nach, statt sie zu raten. Ein Designer-Schnitt wird nicht kopiert: Du bekommst
-eine eigene Konstruktion im gleichen Stil für den privaten Gebrauch.
+What an inspiration photo does **not** give: exact measurements. For that I need the **size
+or the body measurements** of the person you are sewing for. I will ask about the back and
+hidden details instead of guessing. A designer pattern is not copied: you get an original
+construction in a similar style for private use.
 
-Hilfreich: Vorder- und Rückansicht, Detailfoto von Taschen und Bündchen, Angabe des
-Stoffes (z. B. „Sweat, etwas dehnbar“).
+Helpful: front and back view, a close-up of pockets and cuffs, and the fabric
+(e.g. "sweat, a little stretchy").
 
-## Modus B – „Mein Lieblingsteil nachnähen“ (abnehmen)
+## Mode B: "Copy my favourite garment"
 
-### Du brauchst
-- das Kleidungsstück, gewaschen und gebügelt bzw. glattgestrichen,
-- eine **einfarbige, kontrastreiche Unterlage** (Boden, Tisch, Bettlaken – hell bei
-  dunklem Teil, dunkel bei hellem Teil),
-- die **Referenzkarte** (`assets/referenzkarte.pdf`, mit **100 %** drucken, das
-  Quadrat muss 10,0 × 10,0 cm messen) **oder** einen Zollstock/ein Maßband,
-- Smartphone-Kamera.
+### You need
+- the garment, washed and ironed or smoothed out,
+- a **plain, high-contrast surface** (floor, table, bed sheet: light for a dark garment,
+  dark for a light one),
+- the **reference card** (`assets/reference-card.pdf`, printed at **100 %**; the square must
+  measure 10.0 × 10.0 cm) **or** a folding ruler/tape measure,
+- a smartphone camera.
 
-### So fotografierst du
-1. Teil **flach** hinlegen, Falten glattstreichen, nicht dehnen.
-   - Hose: Vorderseite oben, Beine leicht gespreizt, sodass der Schritt sichtbar ist.
-   - Oberteil: Vorderseite oben, Ärmel seitlich ausgebreitet.
-2. **Referenzkarte** flach daneben legen (nicht aufs Teil, nicht knicken, alle vier
-   Ecken-Marker sichtbar). Ohne Karte: Zollstock entlang zweier Kanten legen.
-3. Kamera **senkrecht von oben**, ganzes Teil + Karte im Bild, ca. 10 % Rand. Auf einen
-   Stuhl stellen hilft. Leichte Schräge korrigiere ich, starke nicht.
-4. Gleichmäßiges Licht, kein harter Schatten, kein Blitz.
-5. Je Fläche ein Foto. Für Hosen zusätzlich hilfreich:
-   - **Schrittkurve:** ein Bein nach innen über das andere klappen, sodass die vordere
-     bzw. hintere Schrittnaht flach liegt – je ein Foto vorne und hinten.
-   - **Rückseite** (für Gesäßtaschen, hintere Leibhöhe).
-   Für Oberteile: Ärmel herausklappen, damit das **Armloch** flach liegt; Kapuze
-   ausgebreitet.
+### How to take the photo
+1. Lay the garment **flat**, smooth out wrinkles, do not stretch it.
+   - Pants: front side up, legs slightly spread so the crotch is visible.
+   - Top: front side up, sleeves spread out sideways.
+2. Lay the **reference card** flat next to it (not on the garment, not folded, all four
+   corner markers visible). Without the card: lay a folding ruler along two edges.
+3. Camera **straight from above**, whole garment + card in the picture, about 10 % margin.
+   Standing on a chair helps. I can correct a slight tilt, but not a strong one.
+4. Even light, no hard shadows, no flash.
+5. One photo per side. For pants these also help:
+   - **Crotch curve:** fold one leg inwards over the other so the front or back crotch seam
+     lies flat; one photo each for front and back.
+   - **Back** (for back pockets, back rise).
+   For tops: fold the sleeve out so the **armhole** lies flat; spread out the hood.
 
-### Maßband-Werte (haben Vorrang)
-Wenn du magst, miss zusätzlich und schreib mir die Werte in cm:
-Bundweite (entspannt, flach × 2), Hüftweite, Innenbeinlänge, Seitenlänge, Beinöffnung.
-Bei Bündchen: entspannt messen, nicht gedehnt.
+### Tape-measure values (take precedence)
+If you like, measure as well and send me the values in cm:
+waistband (relaxed, flat × 2), hip width, inseam, outseam, leg opening.
+For cuffs: measure relaxed, not stretched.
 
-### Was dann passiert
-1. Ich erkenne die Karte, entzerre das Foto (Perspektive) und berechne den Maßstab.
-2. Ich trenne das Teil vom Hintergrund und miss Weiten und Längen (flach liegend =
-   2 Lagen, also Weite = 2 × Breite).
-3. Du bekommst ein **Overlay-Bild** mit der erkannten Kontur und allen Messwerten zur
-   Kontrolle. Stimmt etwas nicht, korrigiere einfach den Wert.
-4. Daraus rekonstruiere ich den Schnitt mit denselben Konstruktionsregeln wie sonst
-   (glatte Kurven, rechte Winkel), prüfe, ob der Schnitt wieder genau dein Teil ergibt
-   (Toleranz: Längen ± 1 cm, Weiten ± 2 %), und zeige dir den Abweichungsbericht.
-5. Das Ergebnis speichere ich als Projekt (`projekt.json`), damit du später sagen kannst:
-   „wie das Teil vom letzten Mal, aber 2 Größen größer“.
+### What happens next
+1. I detect the card, rectify the photo (perspective) and work out the scale.
+2. I separate the garment from the background and measure widths and lengths (lying flat =
+   2 layers, so width = 2 × flat width).
+3. You get an **overlay image** with the detected outline and all measurements to check. If
+   something is wrong, just correct the value.
+4. From that I reconstruct the pattern with the same drafting rules as always (smooth
+   curves, right angles), check that the pattern gives your garment back exactly
+   (tolerance: lengths ± 1 cm, widths ± 2 %), and show you the deviation report.
+5. I save the result as a project (`project.json`) so that later you can say:
+   "like the one from last time, but 2 sizes bigger".
 
-### Häufige Probleme
-| Meldung | Lösung |
+### Common problems
+| Message | Fix |
 |---|---|
-| „Referenzkarte nicht gefunden“ | Karte ganz ins Bild, flach, nicht spiegelnd; bei 100 % gedruckt? |
-| Kontur franst aus / Hintergrund mit erkannt | kontrastreichere Unterlage, Schatten vermeiden |
-| Schritt falsch erkannt | Beine etwas weiter spreizen, Bein-Innenkanten sichtbar |
-| Maße wirken zu groß/klein | Kontrollquadrat der Karte nachmessen; Teil gedehnt hingelegt? |
+| "Reference card not found" | whole card in the picture, flat, not reflecting; printed at 100 %? |
+| Outline frays / background detected too | higher-contrast surface, avoid shadows |
+| Crotch detected wrongly | spread the legs a bit further, inner leg edges visible |
+| Measurements look too big/small | measure the control square on the card; was the garment stretched? |
 
-### Grenzen
-- Modus B ist für **Hosen** vollautomatisch (Weiten, Leibhöhe, Innenbein, Seitenlänge,
-  Bund, Bündchen). Oberteile werden grob vermessen (Brust, Saum, Länge, Ärmel);
-  Armloch und Ausschnitt frage ich per Maßband ab.
-- Teilungsnähte, Reißverschlüsse und Kragen werden erkannt, aber nicht konstruiert –
-  ich sage dir offen, was weggelassen wird.
+### Limits
+- Mode B is fully automatic for **pants** (widths, rise, inseam, outseam, waistband,
+  cuffs). Tops are measured roughly (chest, hem, length, sleeve); I ask for the armhole and
+  neckline with a tape measure.
+- Style lines, zips and collars are recognised but not drafted; I tell you openly what is
+  left out.

@@ -1,0 +1,33 @@
+### Sewability check
+
+| Area | Check | Target | Actual | Δ | Result | Note |
+|---|---|---|---|---|---|---|
+| Seam pairs | Side seam front ↔ back | 25.1 cm | 25.1 cm | +0.0 mm | ✅ OK |  |
+| Seam pairs | Armhole ↔ sleeve cap (ease) | ease 0–5 mm | 26.4 cm ↔ 26.6 cm | +2.0 mm | ✅ OK | Jersey: 0–5 mm |
+| Seam pairs | Shoulder seam front ↔ back | 8.5 cm | 8.5 cm | +0.0 mm | ✅ OK |  |
+| Seam pairs | Sleeve seam (front ↔ back) | 3.7 cm | 3.7 cm | -0.0 mm | ✅ OK |  |
+| Seam pairs | Neckband ↔ neckline (stretched) | 70–85 % of 40.4 cm | 28.2 cm = 70 % | -121.1 mm | ✅ OK | rib band is stretched while sewing |
+| Angles/transitions | Underarm: side seam ↔ armhole front | 90° | 90.5° | +0.5° | ✅ OK |  |
+| Angles/transitions | Underarm: side seam ↔ armhole back | 90° | 90.7° | +0.7° | ✅ OK |  |
+| Angles/transitions | Shoulder ↔ armhole (front + back) | 180° | 179.4° | -0.6° | ✅ OK |  |
+| Angles/transitions | Sleeve cap top (smooth) | 180° | 177.9° | -2.1° | ✅ OK |  |
+| Angles/transitions | Sleeve underarm ↔ cap front | 90° | 89.2° | -0.8° | ✅ OK |  |
+| Angles/transitions | Shoulder ↔ neckline (front + back) | 180° | 180.4° | +0.4° | ✅ OK |  |
+| Angles/transitions | Neckline at centre front | 90° | 90.3° | +0.3° | ✅ OK |  |
+| Angles/transitions | Neckline at centre back | 90° | 89.5° | -0.5° | ✅ OK |  |
+| Angles/transitions | Hem at centre front | 90° | 90.0° | +0.0° | ✅ OK |  |
+| Angles/transitions | Hem ↔ side seam front | 90° | 90.0° | -0.0° | ✅ OK |  |
+| Measurements | Chest circumference pattern = body + ease | 59.4 cm | 59.5 cm | +0.1 % | ✅ OK | body 55.0 cm + +8 % ease |
+| Measurements | Neckline fits over the head | ≥ 50.0 cm | 50.8 cm | +8.5 mm | ✅ OK | neckband length incl. usable stretch ≥ head circumference |
+| Measurements | Neckline (fabric edge) fits over the head | ≥ 50.0 cm | 56.5 cm | +65.0 mm | ✅ OK | neckline incl. stretch ≥ head circumference |
+| Measurements | Body length plausible | 29.4 cm – 60.8 cm | 38.2 cm | +0.0 mm | ✅ OK | from the neck point |
+| Geometry | Front: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Hem: 2.0 cm; Neckline: 0.7 cm |
+| Labels | Front: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
+| Geometry | Back: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Hem: 2.0 cm; Neckline: 0.7 cm |
+| Labels | Back: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
+| Geometry | Sleeve: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Sleeve hem: 2.0 cm |
+| Labels | Sleeve: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
+| Geometry | Neckband: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 0.7 cm included |
+| Labels | Neckband: grainline & cutting | present | cut 1 |  | ✅ OK | Rib knit |
+
+**Result:** 27 OK, 0 warning(s), 0 error(s): the pattern is sewable.

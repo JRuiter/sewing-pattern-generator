@@ -1,135 +1,134 @@
-# Konstruktionsregeln
+# Drafting rules
 
-Eigene parametrische Konstruktionen nach den allgemein bekannten Prinzipien der
-Bekleidungskonstruktion (Grundschnitt aus Körpermaß + Mehrweite, rechte Winkel an
-Mittel- und Seitennähten, Kurven tangential an Nahtenden). Es werden keine Schnitte aus
-Büchern oder Heften nachgebaut. Alle Maße in mm; Formeln im Code unter `scripts/garments/`.
+Original parametric constructions based on the generally known principles of garment
+drafting (basic block from body measurement + ease, right angles at centre and side
+seams, curves tangent at seam ends). No patterns from books or magazines are rebuilt.
+All measurements in mm; the formulas are in the code under `scripts/garments/`.
 
-Bezeichnungen: `H` Hüftumfang, `B` Brustumfang, `KH` Körperhöhe, `SL` Schrittlänge,
-`SeL` Seitenlänge, `k = KH / 1220` (Skalierung kleiner Teile, Kind Gr. 122 = 1,
-begrenzt auf 0,75–1,45).
+Symbols: `H` hip circumference, `B` chest circumference, `BH` body height, `IL` inseam
+length, `SL` side length, `k = BH / 1220` (scaling of small pieces, kids' size 122 = 1,
+limited to 0.75–1.45).
 
-## 1. Allgemeine Regeln
+## 1. General rules
 
-- **Koordinaten:** x nach rechts, y nach oben, Kanten gegen den Uhrzeigersinn, jede Kante
-  mit eigener Nahtzugabe. Die Schnittlinie entsteht durch Versatz jeder Kante um ihre
-  Nahtzugabe; Ecken werden verschnitten (Schnittpunkt), bei spitzen Winkeln gefast.
-- **Nahtzugaben:** 1,0 cm Standard (Overlock/Nähmaschine), Saum Hose 2,5 cm, Saum Shirt
-  2,0 cm, Ausschnitt 0,7 cm, Bruchkanten 0.
-- **Kurven** sind kubische Bézierkurven mit vorgegebenen End-Tangenten. An jeder
-  Ecke, an der zwei Teile zur durchgehenden Kante zusammengenäht werden (z. B. Schulter +
-  Armloch, Schrittnaht links + rechts), müssen sich die Winkel zu 180° ergänzen; an
-  Mittel-/Bruchkanten trifft jede Kurve rechtwinklig auf.
-- **Mehrweite** (`scripts/ease.py`), Anteil des Körperumfangs:
+- **Coordinates:** x to the right, y up, edges counter-clockwise, each edge with its own
+  seam allowance. The cutting line is created by offsetting each edge by its seam
+  allowance; corners are mitred (intersection point) and bevelled at sharp angles.
+- **Seam allowances:** 1.0 cm standard (overlocker/sewing machine), pants hem 2.5 cm,
+  shirt hem 2.0 cm, neckline 0.7 cm, fold edges 0.
+- **Curves** are cubic Bézier curves with given end tangents. At every corner where two
+  pieces are sewn into a continuous edge (e.g. shoulder + armhole, left + right crotch
+  seam) the angles must add up to 180°; at centre/fold edges every curve meets the edge
+  at a right angle.
+- **Ease** (`scripts/ease.py`), as a share of the body circumference:
 
-| Passform | Brust Webware | Brust Maschenware* | Hüfte Webware | Hüfte Maschenware* |
+| Fit | Chest woven | Chest knit* | Hip woven | Hip knit* |
 |---|---|---|---|---|
-| eng | +6 % | ±0 (bei ≥ 40 % Dehnung negativ, bis −10 %) | +6 % | −4 … −12 % (Leggings) |
+| slim | +6 % | ±0 (negative at ≥ 40 % stretch, down to −10 %) | +6 % | −4 … −12 % (leggings) |
 | normal | +14 % | +9 % | +14 % | +10 % |
-| weit | +22 % | +17 % | +22 % | +18 % |
+| wide | +22 % | +17 % | +22 % | +18 % |
 | oversized | +32 % | +27 % | +30 % | +26 % |
 | harem | – | – | +34 % | +30 % |
 
-  \* bei 30 % Dehnung; je 10 % mehr Dehnung 1 % weniger Mehrweite.
+  \* at 30 % stretch; every 10 % more stretch means 1 % less ease.
 
-- **Bündchen-Verhältnis** (Bündchenlänge / Ansatzkante): Bündchenware 0,85 bei 50 %
-  Dehnung bis 0,70 bei 80 % Dehnung; Jersey-Streifen 0,80–0,92.
-- **Einhaltemenge Ärmelkugel:** Jersey 0–5 mm, Sweat/Fleece 0–8 mm, Webware 10–25 mm.
-  Die Kugelhöhe wird per Bisektion so bestimmt, dass die Zielmenge (40 % des Bereichs)
-  erreicht wird.
+- **Rib ratio** (rib length / edge it is sewn to): rib knit 0.85 at 50 % stretch down to
+  0.70 at 80 % stretch; jersey strips 0.80–0.92.
+- **Sleeve cap ease:** jersey 0–5 mm, sweat/fleece 0–8 mm, woven 10–25 mm. The cap height
+  is found by bisection so that the target amount (40 % of the range) is reached.
 
-## 2. Hose (`pants_basic`)
+## 2. Pants (`pants_basic`)
 
-1. **Hüftweite** `Hc = H × (1 + Mehrweite)`; Vorderhose `Hc/4 − d`, Hinterhose `Hc/4 + d`
-   (d = 5 mm Kinder, 10 mm Erwachsene).
-2. **Schrittverlängerung:** vorne 5 % von Hc, hinten 10 % (eng: 4 % / 8 %); per
-   `fork_factor` anpassbar (Reverse Engineering).
-3. **Leibhöhe** `R = (SeL − SL) + Sitzzugabe + Harem-Absenkung − Bundhöhe`;
-   Sitzzugabe 15 mm Kinder / 20 mm Erwachsene (eng ×0,25, weit ×1,3, oversized ×1,6),
-   Harem-Absenkung 6 % der Körperhöhe. Hüftlinie bei 0,55 × R unter der Oberkante.
-4. **Beinlänge** ab Schrittlinie: `SL − 15/25 mm − Absenkung + Blusigkeit`; bei
-   Bündchen 15 mm × k (Harem 30 mm × k) Blusigkeit über dem Bündchen.
-5. **Beinöffnung:** mit Bündchen `max(1,12 × Knöchel, Knöchel + 15 mm) / Bündchen-Verhältnis`;
-   ohne Bündchen: normal 0,46 × Hc, weit 0,62 × Hc, harem 0,40 × Hc, eng = Knöchel
-   (+8 % bei < 50 % Dehnung). Vorder-/Hinterbein ±2 d um die Hälfte.
-6. **Beinlinien:** geklemmte kubische Splines x(y) von der Schrittlinie zum Saum; ein
-   Kniepunkt (halbe Beinlänge) nur bei enger Passform oder wenn `knee_total` gesetzt ist.
-7. **Schrittkurve vorne:** von der Hüftlinie (vordere Mitte senkrecht) zum
-   Schrittpunkt; sie trifft **rechtwinklig auf das Innenbein**.
-8. **Hinterhose:** hintere Mitte oben um 15/25 mm nach innen und 15/25 mm (eng 20/35)
-   erhöht; der hintere Schrittpunkt wird per Bisektion so abgesenkt, dass **Innenbein
-   hinten = Innenbein vorne**. Oberkante tangential, rechtwinklig zur hinteren Mitte.
-   Die Seitennaht hinten wird oben angeglichen, sodass **Seitennähte gleich lang** sind.
-9. **Bund:** Gummibund als doppelt gelegter Stoffstreifen, Länge = Oberkante der Hose
-   (ungerafft), im Bruch zugeschnitten (halbe Länge); Gummi ≈ 0,9 × Taille.
-   Alternativen: Bündchen (Verhältnis s. o.), Yogabund (60 mm × k), Tunnel (umgeschlagen).
-10. **Taschen:** Eingrifftasche (Seitenteil + Taschenbeutel), schräge Eingrifftasche,
-    aufgesetzte Gesäßtasche. Tascheneingriff vorne: 0,28 × Vorderhosenbreite, Tiefe an der
-    Seitennaht 0,62 × R (95–170 mm).
+1. **Hip width** `Hc = H × (1 + ease)`; front `Hc/4 − d`, back `Hc/4 + d`
+   (d = 5 mm kids, 10 mm adults).
+2. **Crotch extension:** front 5 % of Hc, back 10 % (slim: 4 % / 8 %); adjustable via
+   `fork_factor` (reverse engineering).
+3. **Rise** `R = (SL − IL) + seat allowance + harem drop − waistband height`;
+   seat allowance 15 mm kids / 20 mm adults (slim ×0.25, wide ×1.3, oversized ×1.6),
+   harem drop 6 % of body height. Hip line at 0.55 × R below the top edge.
+4. **Leg length** from the crotch line: `IL − 15/25 mm − drop + blousing`; with cuffs
+   15 mm × k (harem 30 mm × k) blousing above the cuff.
+5. **Leg opening:** with cuffs `max(1.12 × ankle, ankle + 15 mm) / rib ratio`;
+   without cuffs: normal 0.46 × Hc, wide 0.62 × Hc, harem 0.40 × Hc, slim = ankle
+   (+8 % below 50 % stretch). Front/back leg ±2 d around half.
+6. **Leg lines:** clamped cubic splines x(y) from the crotch line to the hem; a knee point
+   (half leg length) only for slim fit or when `knee_total` is set.
+7. **Front crotch curve:** from the hip line (centre front vertical) to the crotch point;
+   it meets the **inseam at a right angle**.
+8. **Back:** centre back moved inwards at the top by 15/25 mm and raised by 15/25 mm
+   (slim 20/35); the back crotch point is lowered by bisection so that **back inseam =
+   front inseam**. Top edge tangential, at a right angle to centre back. The back side
+   seam is adjusted at the top so that **both side seams have the same length**.
+9. **Waistband:** elastic casing as a folded fabric strip, length = top edge of the pants
+   (ungathered), cut on the fold (half length); elastic ≈ 0.9 × waist.
+   Alternatives: rib (ratio see above), yoga waistband (60 mm × k), tunnel (turned down).
+10. **Pockets:** side pocket (side panel + pocket bag), slanted side pocket, back patch
+    pocket. Pocket opening at the front: 0.28 × front width, depth at the side seam
+    0.62 × R (95–170 mm).
 
-**Fertigmaße für Reverse Engineering:** `hip_total`, `fork_factor`, `front_rise_total`,
-`inseam_total`, `opening_total`, `knee_total` (alle als Option überschreibbar).
+**Parameters for reverse engineering:** `hip_total`, `fork_factor`, `front_rise_total`,
+`inseam_total`, `opening_total`, `knee_total` (all can be overridden as options).
 
-## 3. T-Shirt / Raglan (`tshirt_basic`)
+## 3. T-shirt / raglan (`tshirt_basic`)
 
-1. **Brustweite** `Ct = B × (1 + Mehrweite)`, Viertel `q = Ct/4`.
-2. **Halsausschnitt:** halbe Breite `nw = Hals/5 + 15`; Tiefe vorne `nw + 15/25`
-   (V-Ausschnitt +60), hinten 15/20. Ausschnitt trifft rechtwinklig auf Mitte und
-   Schulter. Passt der Ausschnitt (inkl. Dehnung) nicht über den Kopf, wird er
-   automatisch erweitert, bis die Prüfung „Halsausschnitt passt über den Kopf“ besteht.
-3. **Schulter:** Länge = Schulterbreite (+15 mm weit, +4 % Brust oversized),
-   Neigung 17°.
-4. **Armlochtiefe** `0,18 × Ct + 25` (+3 % Ct bei weit/oversized); das Armloch beginnt
-   rechtwinklig zur Schulter und endet rechtwinklig zur Seitennaht.
-5. **Länge** = Rückenlänge + 0,13 × KH (Tunika +0,12 × KH).
-6. **Ärmel:** Weite = Oberarm × (1 + 8/18/30/40 %); Kugel als symmetrische Bézierkurve,
-   Kugelhöhe per Bisektion auf die Ziel-Einhaltemenge. Kurzarm-Unterarmnaht ≥ 35 mm.
-   Ärmelnähte vorne/hinten gleich lang, Achselecken 90°.
-7. **Raglan:** Raglanlinien vom Halsausschnitt zur Achsel werden starr auf den Ärmel
-   übertragen; der Ärmel-Hals ist eine Kurve rechtwinklig zu beiden Raglannähten; die
-   hintere Raglannaht wird per Bisektion auf gleiche Länge gebracht.
-8. **Halsbündchen:** Länge = Ausschnitt × Bündchen-Verhältnis, Breite 2 × Bündchenhöhe.
+1. **Chest width** `Ct = B × (1 + ease)`, quarter `q = Ct/4`.
+2. **Neckline:** half width `nw = neck/5 + 15`; depth front `nw + 15/25`
+   (V-neck +60), back 15/20. The neckline meets centre and shoulder at right angles. If
+   the neckline (incl. stretch) does not fit over the head, it is widened automatically
+   until the check "Neckline fits over the head" passes.
+3. **Shoulder:** length = shoulder width (+15 mm wide, +4 % chest oversized),
+   slope 17°.
+4. **Armhole depth** `0.18 × Ct + 25` (+3 % Ct for wide/oversized); the armhole starts at
+   a right angle to the shoulder and ends at a right angle to the side seam.
+5. **Length** = back length + 0.13 × BH (tunic +0.12 × BH).
+6. **Sleeve:** width = upper arm × (1 + 8/18/30/40 %); cap as a symmetric Bézier curve,
+   cap height by bisection to the target ease. Short-sleeve underarm seam ≥ 35 mm
+   (≥ 50 mm with cuffs). Front/back sleeve seams the same length, underarm corners 90°.
+7. **Raglan:** the raglan lines from the neckline to the underarm are transferred rigidly
+   to the sleeve; the sleeve neck is a curve at right angles to both raglan seams; the
+   back raglan seam is brought to the same length by bisection.
+8. **Neckband:** length = neckline × rib ratio, width 2 × band height.
 
 ## 4. Hoodie (`hoodie`)
 
-T-Shirt-Konstruktion mit Passform „weit“, Sweat, Bündchen an Ärmel und Saum.
-**Kapuze:** Höhe `0,58 × Kopfumfang + 25`, Breite `0,44 × Kopfumfang + 15`; die
-Halsnaht der Kapuze wird per Bisektion exakt auf die halbe Ausschnittlänge gebracht und
-trifft rechtwinklig auf die Vorderkante (Tunnel/Beleg 25 mm). Kängurutasche: 0,62 × q
-breit, Eingriffe schräg.
+T-shirt construction with fit "wide", sweat, rib cuffs at sleeves and hem.
+**Hood:** height `0.58 × head + 25`, width `0.44 × head + 15`; the neck seam of the hood
+is brought exactly to half the neckline length by bisection and meets the front edge at
+a right angle (casing/facing 25 mm). Kangaroo pocket: 0.62 × q wide, slanted openings.
 
-## 5. Rock (`skirt`)
+## 5. Skirt (`skirt`)
 
-- **Gerafft:** Rechtecke, Weite oben = max(1,6 × H, 1,25 × H), im Bruch; Bund mit Gummi.
-- **A-Linie:** Weite oben 1,10 × H, Seitennaht 12° ausgestellt; Saum und Taille treffen
-  rechtwinklig auf Mitte und Seitennaht (Saum in der Mitte tiefer: `L × (1/cos α − 1)`).
-- **Teller:** Viertelkreis im Bruch; Innenradius `r = Weite oben / 2π`, Außenradius
-  `r + Rocklänge`. Teile breiter als die Rolle werden in Bahnen gekachelt.
-- Längen: mini, knie (Seitenlänge − 0,285 × KH), midi, maxi.
+- **Gathered:** rectangles, width at top = max(1.6 × H, 1.25 × H), on the fold;
+  elastic waistband.
+- **A-line:** width at top 1.10 × H, side seam flared 12°; hem and waist meet centre and
+  side seam at right angles (hem lower at the centre: `L × (1/cos α − 1)`).
+- **Circle:** quarter circle on the fold; inner radius `r = top width / 2π`, outer radius
+  `r + skirt length`. Pieces wider than the roll are tiled into strips.
+- Lengths: mini, knee (side length − 0.285 × BH), midi, maxi.
 
-## 6. Mütze (`beanie`) und Loop (`loop`)
+## 6. Beanie (`beanie`) and loop scarf (`loop`)
 
-- **Beanie:** Weite = Kopfumfang × 0,86 (Maschenware ≥ 30 % Dehnung, sonst × 0,98),
-  Höhe 0,36 × Kopfumfang (Slouch 0,48). 2 Teile mit runder Kuppel; die Kuppelkurve
-  beginnt rechtwinklig an der Seitennaht und läuft waagerecht über die Mitte. Optional
-  Umschlag (0,10 × Kopfumfang).
-- **Loop:** Rechteck, Umfang 1,2 × Kopfumfang (einfach) bzw. 2,6 × Kopfumfang (doppelt
-  gewickelt), Höhe 0,17 × KH (Erwachsene 30 cm), in der Höhe doppelt gelegt; Umfang inkl.
-  halber Dehnung muss ≥ 1,1 × Kopfumfang sein.
+- **Beanie:** width = head × 0.86 (knit with ≥ 30 % stretch, otherwise × 0.98),
+  height 0.36 × head (slouch 0.48). 2 pieces with a round crown; the crown curve starts
+  at a right angle at the side seam and runs horizontally over the centre. Optional brim
+  (0.10 × head).
+- **Loop:** rectangle, circumference 1.2 × head (single) or 2.6 × head (wrapped twice),
+  height 0.17 × BH (adults 30 cm), folded in half along the height; circumference incl.
+  half the stretch must be ≥ 1.1 × head.
 
-## 7. Nähbarkeits-Validierung (`scripts/validate.py`)
+## 7. Sewability validation (`scripts/validate.py`)
 
-| Prüfung | Regel |
+| Check | Rule |
 |---|---|
-| Nahtpaare gleich lang | ± 2 mm (Seitennähte, Innenbein, Schritt, Schulter, Ärmelnähte, Kapuze) |
-| Bündchen ↔ Ansatzkante | Verhältnis im Bereich des Bündchenstoffs (70–85 %, Jersey bis 92 %) |
-| Einreihen | Rock ↔ Bund innerhalb der gewollten Kräuselmenge |
-| Ärmelkugel ↔ Armloch | Einhaltemenge im Stoffbereich (s. o.) |
-| Ecken | 90° bzw. 180° (zusammengesetzt); OK ≤ 3°, Warnung ≤ 6°, sonst Fehler (zusammengesetzte Ecken +4° Toleranz) |
-| Umfänge | Fertigumfang = Körpermaß + Mehrweite, ± 1 % |
-| Längen | Leibhöhe, Schrittlänge, Ärmellänge plausibel zur Körperhöhe |
-| Kopf | Halsausschnitt/Bund inkl. Dehnung ≥ Kopf- bzw. Hüftumfang |
-| Geometrie | Kontur geschlossen, gegen den Uhrzeigersinn, nicht selbstüberschneidend; Nahtzugabe an jeder Nicht-Bruch-Kante per Normalenstrahl gemessen |
-| Beschriftung | Jedes Teil hat Fadenlauf (innerhalb des Teils) und Zuschnittangabe |
+| Seam pairs equal length | ± 2 mm (side seams, inseam, crotch, shoulder, sleeve seams, hood) |
+| Rib ↔ edge | ratio within the range of the rib fabric (70–85 %, jersey up to 92 %) |
+| Gathering | skirt ↔ waistband within the intended gathering amount |
+| Sleeve cap ↔ armhole | ease within the fabric range (see above) |
+| Corners | 90° or 180° (joined); OK ≤ 3°, warning ≤ 6°, otherwise error (joined corners +4° tolerance) |
+| Circumferences | finished circumference = body measurement + ease, ± 1 % |
+| Lengths | rise, inseam, sleeve length plausible for the body height |
+| Head | neckline/waistband incl. stretch ≥ head or hip circumference |
+| Geometry | outline closed, counter-clockwise, not self-intersecting; seam allowance on every non-fold edge measured with a normal ray |
+| Labels | every piece has a grainline (inside the piece) and cutting information |
 
-Ein Fehler (❌) blockiert die Ausgabe der Druckdateien.
+An error (❌) blocks the print files.

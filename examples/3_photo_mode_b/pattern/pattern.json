@@ -1,0 +1,507 @@
+{
+  "garment": "pants_basic",
+  "title": "Joggers",
+  "size": "copied from garment (≈ size 116)",
+  "options": {
+    "style": "jogger",
+    "fit": "normal",
+    "fabric": "sweat",
+    "stretch": 25,
+    "length": "long",
+    "waistband": "casing",
+    "cuffs": true,
+    "pockets": [],
+    "cuff_fabric": "rib",
+    "cuff_stretch": null,
+    "waistband_height": 31.5,
+    "cuff_height": 50.5,
+    "elastic_width": null,
+    "crotch_drop": 0.0,
+    "blouse": 0.0,
+    "sa": 10.0,
+    "hem_sa": 25.0,
+    "hip_total": 691.9875100438697,
+    "fork_factor": 0.9847048937226544,
+    "front_rise_total": 190.9501625915358,
+    "inseam_total": 512.5996748169284,
+    "opening_total": 193.58617118672208,
+    "elastic_total": 494.0,
+    "knee_total": null,
+    "thigh_total": null,
+    "_y_hip": -87.69758942534469,
+    "_wb_h": 31.5,
+    "_cuff_h": 50.5,
+    "_waist_relaxed": 494.0,
+    "_pk_b": 0.0,
+    "_R": 159.4501625915358,
+    "_hip_total": 691.9875100438697,
+    "_drop": 0.0,
+    "_back_drop": 1.1592929011416064,
+    "_elastic": 494.0,
+    "_cuff_len": 193.58617118672208,
+    "_hem_c": 276.5516731238887,
+    "_blouse": 0.0
+  },
+  "measures_mm": {
+    "chest": 600.0,
+    "waist": 550.0,
+    "hip": 630.0,
+    "head": 515.0,
+    "neck": 280.0,
+    "inseam": 510.0,
+    "side_length": 685.0,
+    "arm": 440.0,
+    "back_length": 285.0,
+    "shoulder": 96.0,
+    "height": 1160.0,
+    "crotch_depth": 175.0,
+    "thigh": 352.8,
+    "knee": 252.0,
+    "ankle": 170.1,
+    "upper_arm": 180.0,
+    "wrist": 120.0
+  },
+  "finished_mm": {
+    "hip_circ": 692.0,
+    "thigh_circ": 440.0,
+    "knee_circ": 344.8,
+    "opening": 193.6,
+    "waist_relaxed": 494.0,
+    "waist_max": 664.0,
+    "outseam": 703.5,
+    "inseam": 512.6,
+    "front_rise": 191.0,
+    "back_rise": 207.1,
+    "waistband_h": 31.5,
+    "cuff_h": 50.5,
+    "crotch_seam": 456.5
+  },
+  "pieces": [
+    {
+      "key": "front",
+      "name": "Front leg",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "crotch",
+          "label": "Crotch seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 177.7
+        },
+        {
+          "name": "inseam",
+          "label": "Inseam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 464.0
+        },
+        {
+          "name": "hem",
+          "label": "Cuff seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 128.3
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 623.3
+        },
+        {
+          "name": "waistband",
+          "label": "Waistband seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 168.0
+        }
+      ]
+    },
+    {
+      "key": "back",
+      "name": "Back leg",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "crotch",
+          "label": "Crotch seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 215.8
+        },
+        {
+          "name": "inseam",
+          "label": "Inseam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 464.0
+        },
+        {
+          "name": "hem",
+          "label": "Cuff seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 148.3
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 623.3
+        },
+        {
+          "name": "waistband",
+          "label": "Waistband seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 164.0
+        }
+      ]
+    },
+    {
+      "key": "waistband",
+      "name": "Waistband (elastic)",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 332.0
+        },
+        {
+          "name": "right",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 63.0
+        },
+        {
+          "name": "top",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 332.0
+        },
+        {
+          "name": "left",
+          "label": "Centre front",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 63.0
+        }
+      ]
+    },
+    {
+      "key": "leg_cuff",
+      "name": "Leg cuff",
+      "cut_count": 2,
+      "mirror": false,
+      "fabric": "Rib knit",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 193.6
+        },
+        {
+          "name": "right",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 101.0
+        },
+        {
+          "name": "top",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 193.6
+        },
+        {
+          "name": "left",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 101.0
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "group": "Seam pairs",
+      "name": "Side seam front ↔ back",
+      "status": "OK",
+      "target": "62.3 cm",
+      "actual": "62.3 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Inseam front ↔ back",
+      "status": "OK",
+      "target": "46.4 cm",
+      "actual": "46.4 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Front crotch seam (left ↔ right piece)",
+      "status": "OK",
+      "target": "17.8 cm",
+      "actual": "17.8 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Back crotch seam (left ↔ right piece)",
+      "status": "OK",
+      "target": "21.6 cm",
+      "actual": "21.6 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Waistband ↔ pants top edge",
+      "status": "OK",
+      "target": "66.4 cm",
+      "actual": "66.4 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Leg cuff ↔ leg opening (stretched)",
+      "status": "OK",
+      "target": "70–85 % of 27.7 cm",
+      "actual": "19.4 cm = 70 %",
+      "delta": "-83.0 mm",
+      "note": "rib band is stretched while sewing"
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Centre front ↔ waistband",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Centre back ↔ waistband",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "-0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Crotch ↔ inseam (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "180.7°",
+      "delta": "+0.7°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Inseam ↔ hem front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem ↔ side seam front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.1°",
+      "delta": "+0.1°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Inseam ↔ hem back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem ↔ side seam back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.1°",
+      "delta": "+0.1°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Side seam ↔ waistband back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.1°",
+      "delta": "+0.1°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Side seam ↔ waistband (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "180.1°",
+      "delta": "+0.1°",
+      "note": ""
+    },
+    {
+      "group": "Measurements",
+      "name": "Hip circumference pattern = body + ease",
+      "status": "OK",
+      "target": "69.2 cm",
+      "actual": "69.2 cm",
+      "delta": "-0.0 %",
+      "note": "target from measurement/override"
+    },
+    {
+      "group": "Measurements",
+      "name": "Top edge fits over the hip",
+      "status": "OK",
+      "target": "≥ 64.3 cm",
+      "actual": "76.4 cm",
+      "delta": "+120.9 mm",
+      "note": "top edge incl. usable stretch ≥ hip"
+    },
+    {
+      "group": "Measurements",
+      "name": "Front rise plausible",
+      "status": "OK",
+      "target": "13.9 cm – 23.2 cm",
+      "actual": "19.1 cm",
+      "delta": "+0.0 mm",
+      "note": "body rise 17.5 cm"
+    },
+    {
+      "group": "Measurements",
+      "name": "Inseam length plausible",
+      "status": "OK",
+      "target": "36.8 cm – 57.1 cm",
+      "actual": "51.3 cm",
+      "delta": "+0.0 mm",
+      "note": "body inseam 51.0 cm"
+    },
+    {
+      "group": "Measurements",
+      "name": "Foot fits through the leg opening",
+      "status": "OK",
+      "target": "≥ 23.0 cm",
+      "actual": "28.7 cm",
+      "delta": "+56.9 mm",
+      "note": "heel-instep circumference ≈ 1.35 × ankle"
+    },
+    {
+      "group": "Geometry",
+      "name": "Front leg: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Front leg: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Back leg: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Back leg: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Waistband (elastic): outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Waistband (elastic): grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Leg cuff: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Leg cuff: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2",
+      "delta": "",
+      "note": "Rib knit"
+    }
+  ],
+  "fabric_mm": {
+    "Main fabric": {
+      "width": 1500.0,
+      "need": 850.0
+    },
+    "Rib knit": {
+      "width": 700.0,
+      "need": 200.0
+    }
+  }
+}

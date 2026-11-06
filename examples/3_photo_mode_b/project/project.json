@@ -1,0 +1,180 @@
+{
+  "module": "pants_basic",
+  "fit": "normal",
+  "options": {
+    "style": "jogger",
+    "waistband": "casing",
+    "cuffs": true,
+    "pockets": [],
+    "fabric": "sweat",
+    "waistband_height": 31.5,
+    "cuff_height": 50.5,
+    "elastic_total": 494.0,
+    "blouse": 0.0,
+    "crotch_drop": 0.0,
+    "fit": "normal",
+    "hip_total": 691.9875100438697,
+    "fork_factor": 0.9847048937226544,
+    "front_rise_total": 190.9501625915358,
+    "inseam_total": 512.5996748169284,
+    "opening_total": 193.58617118672208
+  },
+  "params": {
+    "hip_total": 691.9875100438697,
+    "fork_factor": 0.9847048937226544,
+    "front_rise_total": 190.9501625915358,
+    "inseam_total": 512.5996748169284,
+    "opening_total": 193.58617118672208
+  },
+  "size_estimate": 116,
+  "flat_mm": {
+    "waist_flat": 247.0,
+    "hip_flat": 346.0,
+    "thigh_flat": 220.75,
+    "knee_flat": 171.5,
+    "opening_flat": 97.0,
+    "front_rise": 191.0,
+    "inseam": 512.5,
+    "outseam": 703.5,
+    "waistband_h": 31.5,
+    "cuff_h": 50.5,
+    "leg_splay_deg": 6.054635227932765
+  },
+  "target_mm": {
+    "hip_circ": 692.0,
+    "thigh_circ": 441.5,
+    "knee_circ": 343.0,
+    "opening": 194.0,
+    "waist_relaxed": 494.0,
+    "front_rise": 191.0,
+    "inseam": 512.5,
+    "outseam": 703.5,
+    "waistband_h": 31.5,
+    "cuff_h": 50.5
+  },
+  "actual_mm": {
+    "hip_circ": 691.9875100438696,
+    "thigh_circ": 440.0009806697241,
+    "knee_circ": 344.8164508210945,
+    "opening": 193.58617118672208,
+    "waist_relaxed": 494.0,
+    "waist_max": 663.9561052575975,
+    "outseam": 703.5498374084642,
+    "inseam": 512.5996748169284,
+    "front_rise": 190.9501625915358,
+    "back_rise": 207.1094554926774,
+    "waistband_h": 31.5,
+    "cuff_h": 50.5,
+    "crotch_seam": 456.53745967747835
+  },
+  "piece_graph": {
+    "pieces": [
+      {
+        "id": "front",
+        "name": "Front leg",
+        "cut": "cut 2 (mirrored pair)",
+        "fabric": "Main fabric",
+        "on_fold": false,
+        "edges": [
+          "Crotch seam",
+          "Inseam",
+          "Cuff seam",
+          "Side seam",
+          "Waistband seam"
+        ]
+      },
+      {
+        "id": "back",
+        "name": "Back leg",
+        "cut": "cut 2 (mirrored pair)",
+        "fabric": "Main fabric",
+        "on_fold": false,
+        "edges": [
+          "Crotch seam",
+          "Inseam",
+          "Cuff seam",
+          "Side seam",
+          "Waistband seam"
+        ]
+      },
+      {
+        "id": "waistband",
+        "name": "Waistband (elastic)",
+        "cut": "cut 1 on fold",
+        "fabric": "Main fabric",
+        "on_fold": true,
+        "edges": [
+          "Seam edge",
+          "Cross seam",
+          "Seam edge",
+          "Centre front"
+        ]
+      },
+      {
+        "id": "leg_cuff",
+        "name": "Leg cuff",
+        "cut": "cut 2",
+        "fabric": "Rib knit",
+        "on_fold": false,
+        "edges": [
+          "Seam edge",
+          "Cross seam",
+          "Seam edge",
+          "Cross seam"
+        ]
+      }
+    ],
+    "seams": [
+      {
+        "seam": "Side seam front ↔ back",
+        "a": "Front leg.Side seam",
+        "b": "Back leg.Side seam",
+        "type": "equal"
+      },
+      {
+        "seam": "Inseam front ↔ back",
+        "a": "Front leg.Inseam",
+        "b": "Back leg.Inseam",
+        "type": "equal"
+      },
+      {
+        "seam": "Front crotch seam (left ↔ right piece)",
+        "a": "Front leg.Crotch seam",
+        "b": "Front leg.Crotch seam",
+        "type": "equal"
+      },
+      {
+        "seam": "Back crotch seam (left ↔ right piece)",
+        "a": "Back leg.Crotch seam",
+        "b": "Back leg.Crotch seam",
+        "type": "equal"
+      },
+      {
+        "seam": "Waistband ↔ pants top edge",
+        "a": "Front leg.Waistband seam + Back leg.Waistband seam",
+        "b": "Waistband (elastic).Seam edge",
+        "type": "equal"
+      },
+      {
+        "seam": "Leg cuff ↔ leg opening (stretched)",
+        "a": "Front leg.Cuff seam + Back leg.Cuff seam",
+        "b": "Leg cuff.Seam edge",
+        "type": "ratio"
+      }
+    ],
+    "module": "pants_basic",
+    "options": {
+      "style": "jogger",
+      "waistband": "casing",
+      "cuffs": true,
+      "pockets": [],
+      "fabric": "sweat"
+    },
+    "missing_photos": [
+      "Optional, for a more accurate crotch curve: fold one leg inwards so that the front and back crotch seams lie flat, and photograph from above (with the card).",
+      "Photograph the back flat too if there are pockets/yokes at the back."
+    ]
+  },
+  "source": "/home/user/sewing-pattern-generator/examples/3_photo_mode_b/photo_flat_with_reference_card.jpg",
+  "saved": "2026-11-06"
+}

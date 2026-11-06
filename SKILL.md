@@ -1,148 +1,156 @@
 ---
-name: schnittmuster-generator
-description: Erstellt nähbare, maßhaltige und druckfertige Schnittmuster (Vektor-PDF 1:1) aus einer freien Beschreibung, Größe/Körpermaßen und/oder Fotos eines Kleidungsstücks. Auslösen bei „Schnittmuster erstellen/konstruieren/generieren“, „Nähmuster nach Maßen“, „Schnitt nach Foto/Vorbild“, „Kleidungsstück abnehmen/nachnähen“, „Lieblingshose kopieren“, Plotter-/Rollendruck, A0/A1 oder A4 zum Kleben. Hosen (Jogginghose, Haremshose, Leggings, Stoffhose), T-Shirt/Raglan, Hoodie/Sweatshirt, Rock, Mütze, Loop.
+name: sewing-pattern-generator
+description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt, skirt, beanie, loop scarf.
 ---
 
-# Schnittmuster-Generator
+# Sewing pattern generator
 
-Konstruiert Schnittmuster **parametrisch** (Konstruktionsregeln, keine Bildgenerierung),
-prüft sie auf Nähbarkeit und erzeugt Druckdateien, Zuschnittplan, Stoffverbrauch und
-Nähanleitung. Alle Ausgaben an den Nutzer auf **Deutsch**.
+Drafts sewing patterns **parametrically** (drafting rules, no image generation), checks
+that they can be sewn, and produces print files, a cutting layout, fabric consumption
+and sewing instructions. All generated files are in English. Reply to the user in the
+language they write in.
 
-Nur eigene Konstruktionen: keine geschützten Schnittmuster nachbauen oder kopieren. Bei
-Designer-Vorbildern entsteht eine eigene Konstruktion im gleichen Stil für den privaten
-Gebrauch.
+Own constructions only: never rebuild or copy protected commercial patterns. When the
+user shows a designer garment, draft an original pattern in a similar style for private
+use.
 
-## Einrichtung (einmalig)
+## Setup (once)
 
 ```bash
 pip install -r requirements.txt   # numpy scipy shapely opencv-contrib-python-headless reportlab matplotlib pillow pypdf
 ```
 
-Alle Skripte liegen in `scripts/` und werden von dort oder mit Pfad aufgerufen.
+All scripts live in `scripts/` and are called from there or with their path.
 
-## Ablauf
+## Workflow
 
-### 1. Eingabe verstehen
-Aus der Nachricht herauslesen: Kleidungsstück + Varianten, Größe oder Maße, Stoff und
-Dehnung, Passform, Ausgabeformat. Fotos? → Schritt 3.
+### 1. Understand the request
+Pick out: garment and variants, size or measurements, fabric and stretch, fit, output
+format. Photos? → step 3.
 
-### 2. Rückfragen – genau EINE Runde, nur was wirklich fehlt
-Fehlende Punkte gesammelt in einer kurzen Nachricht fragen, mit Vorschlag als Standard
-(„Wenn du nichts sagst, nehme ich …“). Typische Lücken:
-- Kleidungsstück/Varianten (Taschen, Bündchen, Länge, Kapuze …)
-- Größe (Kinder 86–176, Damen 34–56, Herren 44–60) **oder** Körpermaße
-  (Körperhöhe, Brust, Taille, Hüfte, Schrittlänge, Seitenlänge, Armlänge, Kopfumfang)
-- Stoff (Webware / Jersey / Jersey mit Elasthan / Interlock / Sweat / Fleece) und Dehnung in %
-- Passform (eng / normal / weit / oversized; bei Hosen auch harem)
-- Ausgabe: Rolle (Breite in mm, Standard 610), A0, A1, A4 oder US-Letter zum Kleben
+### 2. Questions: exactly ONE round, only what is really missing
+Ask for the missing points together in one short message, each with a default
+("If you don't say otherwise, I'll use …"). Typical gaps:
+- Garment and variants (pockets, cuffs, length, hood …)
+- Size (kids 86–176, women 34–56, men 44–60) **or** body measurements
+  (height, chest, waist, hip, inseam, side length, arm length, head)
+- Fabric (woven / jersey / jersey with elastane / interlock / sweat / fleece) and stretch in %
+- Fit (slim / normal / wide / oversized; for pants also harem)
+- Output: roll (width in mm, default 610), A0, A1, A4 or US Letter to tape together
 
-Danach nicht erneut fragen; Unklares mit sinnvollem Standard lösen und im Ergebnis nennen.
+Do not ask again afterwards; resolve anything unclear with a sensible default and say
+so in the result.
 
-### 3. Fotos (optional)
-Erst entscheiden, welcher Modus vorliegt (Details: `references/photo_guide.md`):
+### 3. Photos (optional)
+First decide which mode applies (details: `references/photo_guide.md`):
 
-**Modus A – Inspirationsfoto** (getragen, Katalog, Pinterest): Du siehst dir das Foto an
-und füllst das Merkmals-JSON (Schema in `scripts/photo_analyze.py`, jedes Merkmal mit
-`wert` + `konfidenz` 0–1). Dann:
+**Mode A: inspiration photo** (worn, catalogue, Pinterest). Look at the photo and fill in
+the feature JSON (schema in `scripts/photo_analyze.py`, each feature with `value` and
+`confidence` 0–1). Then:
 ```bash
-python scripts/photo_analyze.py merkmale.json        # Bestätigungstext + Modul/Optionen + „nicht abgedeckt“
-python scripts/photo_analyze.py --bild flatlay.jpg   # Hosen-Silhouette automatisch (nur Proportionen)
+python scripts/photo_analyze.py features.json        # confirmation text + module/options + "not covered"
+python scripts/photo_analyze.py --image flatlay.jpg  # pants silhouette automatically (proportions only)
 ```
-Merkmalsliste mit Konfidenz zeigen und bestätigen lassen („Ich erkenne … – stimmt das?“).
-Nicht abgedeckte Merkmale offen nennen und die ausgegebene Alternative anbieten, nicht
-improvisieren. **Körpermaße kommen immer vom Nutzer**, nie aus dem Inspirationsfoto.
+Show the feature list with confidences and ask the user to confirm ("I can see … is that
+right?"). Name features that are not covered openly and offer the alternative the script
+prints; do not improvise. **Body measurements always come from the user**, never from an
+inspiration photo.
 
-**Modus B – Kleidungsstück abnehmen** (flach hingelegt, senkrecht von oben, mit
-Referenzkarte `assets/referenzkarte.pdf` oder Zollstock): Reverse Engineering.
+**Mode B: copy a garment** (laid flat, photographed straight from above, with the
+reference card `assets/reference-card.pdf` or a folding ruler): reverse engineering.
 ```bash
-cd scripts && python -m reverse.pipeline foto.jpg --type hose --out projekt/
+cd scripts && python -m reverse.pipeline photo.jpg --type pants --out project/
 ```
-Ergebnis: `overlay_messung.png` (erkannte Kontur und Maße, dem Nutzer zur Bestätigung
-zeigen), `reverse_bericht.md` (Teile-/Nahtgraph, Soll/Ist/Δ-Abweichungsbericht,
-Nähbarkeits-Prüfung) und `projekt.json` (speicherbar für „wie letztes Mal, 2 Größen
-größer“ → `reverse.pipeline.regrade(projekt.json, 2)`). Maßband-Werte des Nutzers haben
-Vorrang: `photo_measure.measure(..., tape={"inseam": 48})`. Fehlt die Karte, sagt der
-Skill genau, was zu tun ist. Fehlende Fotos (z. B. Schrittkurve) nennt
-`reverse.decompose.missing_photos`. Toleranz: Längen ± 1 cm, Weiten ± 2 %.
-Danach Druckdateien:
+Results: `overlay_measurement.png` (detected outline and measurements; show it to the
+user to confirm), `reverse_report.md` (piece/seam graph, target/actual/Δ deviation
+report, sewability check) and `project.json` (keep it for "like last time, 2 sizes
+bigger" → `reverse.pipeline.regrade("project.json", 2)`). Tape-measure values from the
+user take precedence: `photo_measure.measure(..., tape={"inseam": 48})`. If the card is
+missing, the skill says exactly what to do. Missing photos (e.g. for the crotch curve)
+are listed by `reverse.decompose.missing_photos`. Tolerance: lengths ± 1 cm, widths ± 2 %.
+Then the print files:
 ```bash
-python scripts/generate.py --projekt projekt/projekt.json --format rolle610,a4 --out out/nachbau
+python scripts/generate.py --project project/project.json --format roll610,a4 --out out/copy
 ```
-Modus B ist für **Hosen** vollständig automatisiert; Oberteile werden grob vermessen
-(`--type oberteil`: Brustweite, Saumweite, Länge, Ärmel) und über
-`tshirt_basic.fit_to_targets` angepasst – Armloch/Ausschnitt dann per Maßband erfragen.
+Mode B is fully automated for **pants**; tops are measured roughly (`--type top`: chest
+width, hem width, length, sleeve) and fitted with `tshirt_basic.fit_to_targets`. Ask for
+armhole and neckline measurements with a tape measure in that case.
 
-### 4. Maße
-`measurements.complete_measures(gegebene_cm, größe)` ergänzt fehlende Maße aus der
-Größentabelle bzw. Körperhöhe und meldet Plausibilitätswarnungen. Angegebene Maße haben
-Vorrang vor der Tabelle. Tabellen und Herkunft: `references/size_tables.md`.
+### 4. Measurements
+`measurements.complete_measures(given_cm, size)` fills in missing measurements from the
+size table or body height and reports plausibility warnings. Given measurements take
+precedence over the table. Tables and sources: `references/size_tables.md`.
 
-### 5. Konstruktion, Validierung, Layout, Render – ein Aufruf
+### 5. Draft, validate, lay out, render: one call
 ```bash
-python scripts/generate.py --garment pants_basic --style haremshose --size 122 \
-    --fabric sweat --format rolle610,a4 --out out/harem122
-# weitere Beispiele
-python scripts/generate.py --garment tshirt_basic --size 140 --options '{"sleeve_style":"raglan","sleeve_length":"lang"}' --format a4
-python scripts/generate.py --garment hoodie --size d38 --fabric sweat --format rolle914,a0
-python scripts/generate.py --garment skirt --size 128 --style teller --format a1
-python scripts/generate.py --spec auftrag.json          # alles als JSON (siehe Kopf von generate.py)
+python scripts/generate.py --garment pants_basic --style harem --size 122 \
+    --fabric sweat --format roll610,a4 --out out/harem122
+# more examples
+python scripts/generate.py --garment tshirt_basic --size 140 --options '{"sleeve_style":"raglan","sleeve_length":"long"}' --format a4
+python scripts/generate.py --garment hoodie --size w38 --fabric sweat --format roll914,a0
+python scripts/generate.py --garment skirt --size 128 --style circle --format a1
+python scripts/generate.py --spec order.json          # everything as JSON (see the header of generate.py)
 ```
-Module und wichtigste Optionen:
+Sizes: kids as a number (`122`), women as `w38`, men as `m52`.
 
-| Modul | Stile/Optionen |
+Modules and main options:
+
+| Module | Styles/options |
 |---|---|
-| `pants_basic` | style: jogginghose, haremshose, leggings, stoffhose · fit · fabric · stretch · length (lang, 7/8, knie, kurz) · waistband (bund_gummi, buendchen, yoga, tunnel) · cuffs · pockets ([eingriff], [schraeg], [aufgesetzt_hinten]) |
-| `tshirt_basic` | fit · fabric · sleeve_style (eingesetzt, raglan) · sleeve_length (kurz, 3/4, lang) · neckline (rund, v) · length (normal, tunika) · sleeve_cuffs · hem_band |
-| `hoodie` | wie T-Shirt + hood, hood_lining, kangaroo (Standard: Sweat, weit, Bündchen) |
-| `skirt` | style: gerafft, a_linie, teller · length (mini, knie, midi, maxi) · gather · flare_deg |
-| `beanie` | brim (Umschlag), slouch |
-| `loop` | wraps (1 = einfach, 2 = doppelt gelegt), height |
+| `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side], [slant], [back_patch]) |
+| `tshirt_basic` | fit · fabric · sleeve_style (set_in, raglan) · sleeve_length (short, 3/4, long) · neckline (round, v) · length (normal, tunic) · sleeve_cuffs · hem_band |
+| `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) |
+| `skirt` | style: gathered, a_line, circle · length (mini, knee, midi, maxi) · gather · flare_deg |
+| `beanie` | brim, slouch |
+| `loop` | wraps (1 = single, 2 = worn doubled), height |
 
-Formate: `rolleNNN` (Seitenbreite = Rolle − 10 mm, Hochformat; Teile breiter als die
-Rolle werden automatisch in Bahnen mit Klebemarken geteilt), `a0`, `a1` (Teile ungeteilt,
-Übergrößen gekachelt), `a4`, `letter` (Kacheln mit 10 mm Überlappung, Übersichtsseite).
-Immer zusätzlich: SVG-Master 1:1, PNG-Vorschau, Zuschnittplan-PNG, Nähanleitung
-(MD + PDF), `schnitt.json`, `pruefbericht.md`.
+Fabrics: woven, jersey, jersey_elastane, interlock, sweat, fleece, rib.
+Fits: slim, normal, wide, oversized, harem.
 
-**Validierung ist Pflicht:** Schlägt eine Prüfung fehl (❌), beendet `generate.py` mit
-Exit-Code 2 und schreibt **keine** Druckdateien. Dann Ursache aus `pruefbericht.md`
-beheben (meist widersprüchliche Maße/Optionen) und neu erzeugen – nie einen Schnitt mit
-Fehlern ausliefern. Regeln: `references/drafting_rules.md`.
+Formats: `rollNNN` (page width = roll − 10 mm, portrait; pieces wider than the roll are
+split automatically into strips with glue marks), `a0`, `a1` (pieces whole, oversized
+pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page).
+Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
+instructions (MD + PDF), `pattern.json`, `validation_report.md`.
 
-### 6. Selbstprüfung der Vorschau
-Die PNG-Vorschau(en) und den Zuschnittplan **ansehen**, bevor du auslieferst: Teile
-vollständig, nichts überlappt, Beschriftung lesbar, Fadenlauf plausibel, Kontrollquadrat
-vorhanden. Auffälligkeiten beheben oder dem Nutzer offen sagen.
+**Validation is mandatory:** if a check fails (❌), `generate.py` exits with code 2 and
+writes **no** print files. Fix the cause from `validation_report.md` (usually
+contradictory measurements/options) and generate again. Never deliver a pattern with
+errors. Rules: `references/drafting_rules.md`.
 
-### 7. Auslieferung an den Nutzer
-- PDFs (Rolle/Bogen/A4), SVG-Master, Vorschau-PNG
-- Nähanleitung mit Stoffverbrauch und Zuschnittplan
-- **Validierungstabelle** (Inhalt von `pruefbericht.md`) in der Antwort
-- Druckhinweis: „In **100 % / tatsächlicher Größe** drucken, nicht ‚an Seite anpassen‘.
-  Kontrollquadrat nachmessen (5 × 5 cm).“ Für den Canon iPF650 (24"-Rolle): PDF als
-  benutzerdefiniertes Format 600 mm × Länge, Hochformat, über Direct Print & Share oder
-  Acrobat (`references/print_specs.md`).
-- **Hinweis Probeteil:** „Beim ersten Nähen eines neuen Schnitts bitte ein Probeteil
-  aus günstigem Stoff mit ähnlicher Dehnung nähen und die Passform prüfen.“
+### 6. Check the preview yourself
+**Look at** the PNG preview(s) and the cutting layout before delivering: all pieces
+present, nothing overlapping, labels readable, grainline plausible, control square
+present. Fix anything odd or tell the user openly.
 
-## Grenzen (offen kommunizieren)
-- Aus getragenen Fotos lassen sich **keine exakten Maße** ableiten, nur Stil und
-  Proportionen. Exakte Maße nur mit Modus B (Maßstab im Bild) oder Maßband.
-- Rückseite und verdeckte Details werden erfragt, nicht erfunden.
-- Nicht abgedeckt (Alternative anbieten): Kleider, Jacken mit Reißverschluss/Futter,
-  Hemden/Blusen mit Kragen und Knopfleiste, Jeans mit Hosenschlitz, Cargo-/Paspeltaschen,
-  Teilungsnähte, Schlaghosen.
-- Gradieren über Gradierregeln je Größensprung (`reverse/store.py`), nie durch lineares
-  Skalieren.
+### 7. Deliver to the user
+- PDFs (roll/sheets/A4), SVG master, preview PNG
+- Sewing instructions with fabric consumption and cutting layout
+- **Validation table** (content of `validation_report.md`) in the reply
+- Printing note: "Print at **100 % / Actual size**, not 'Fit to page'. Measure the control
+  square (5 × 5 cm)." For the Canon iPF650 (24" roll): set the PDF as a custom size
+  600 mm × length, portrait, via Direct Print & Share or Acrobat
+  (`references/print_specs.md`).
+- **Test garment note:** "The first time you sew a new pattern, please make a test
+  garment from inexpensive fabric with similar stretch and check the fit."
 
-## Dateien
-- `scripts/generate.py` – Gesamtablauf (CLI)
-- `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py` – Grundlagen
-- `scripts/garments/*.py` – Kleidungsmodule `draft(measures, options) -> Pattern`
-- `scripts/validate.py` – Nähbarkeitsprüfungen
-- `scripts/layout.py`, `render.py`, `instructions.py` – Anordnung, PDF/SVG/PNG, Anleitung
-- `scripts/photo_analyze.py`, `photo_measure.py`, `reverse/` – Foto-Modi A und B
-- `scripts/refcard.py` – erzeugt `assets/referenzkarte.pdf`; `photo_synth.py` – Testfotos
-- `references/` – Konstruktionsregeln, Maßtabellen, Druckvorgaben, Fotoanleitung
-- `tests/` – `python -m pytest tests`
+## Limits (say so openly)
+- **Exact measurements cannot be derived** from photos of worn garments, only style and
+  proportions. Exact measurements only with mode B (scale in the picture) or a tape
+  measure.
+- The back and hidden details are asked about, never invented.
+- Not covered (offer the alternative): dresses, jackets with zip/lining, shirts/blouses
+  with collar and button placket, jeans with a fly, cargo/welt pockets, style lines,
+  flared legs.
+- Grading uses grading rules per size step (`reverse/store.py`), never linear scaling.
+
+## Files
+- `scripts/generate.py`: complete flow (CLI)
+- `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`: foundations
+- `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
+- `scripts/validate.py`: sewability checks
+- `scripts/layout.py`, `render.py`, `instructions.py`: layout, PDF/SVG/PNG, instructions
+- `scripts/photo_analyze.py`, `photo_measure.py`, `reverse/`: photo modes A and B
+- `scripts/refcard.py`: writes `assets/reference-card.pdf`; `photo_synth.py`: test photos
+- `references/`: drafting rules, size tables, print specs, photo guide
+- `tests/`: `python -m pytest tests`
