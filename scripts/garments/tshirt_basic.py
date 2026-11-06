@@ -16,6 +16,7 @@ import numpy as np
 
 import ease as E
 import geometry as G
+from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
 DEFAULTS = dict(fit="normal", fabric="jersey", stretch=None, sleeve_style="set_in",
@@ -33,20 +34,27 @@ def resolve_options(options):
     return o
 
 
-def _body_frame(m, o, adult):
+def _body_frame(m, o, adult, C: Construction | None = None):
+    C = C or Construction()
     _, stretch, knit = E.fabric_info(o["fabric"], o["stretch"])
     be = E.body_ease(o["fit"], o["fabric"], stretch)
-    Ct = o["chest_total"] or m["chest"] * (1 + be)
+    Ct = C.val("chest_width", o["chest_total"] or m["chest"] * (1 + be),
+               "option chest_total" if o["chest_total"] else f"chest × (1 + {be * 100:.0f} % ease)")
     q = Ct / 4
-    nw = m["neck"] / 5 + 15 + o["neck_extra"]                          # half neckline width
-    fnd = nw + (25 if adult else 15) + (60 if o["neckline"] == "v" else 0) + o["neck_extra"]
-    bnd = (20 if adult else 15)
-    sh = m["shoulder"] + {"slim": -5, "normal": 0, "wide": 15, "oversized": 0.04 * m["chest"],
-                          "harem": 15}[o["fit"]]
+    nw = C.val("neck_width_half", m["neck"] / 5 + 15 + o["neck_extra"], "neck / 5 + 1.5 cm")
+    fnd = C.val("front_neck_depth", nw + (25 if adult else 15) + (60 if o["neckline"] == "v" else 0) + o["neck_extra"],
+                "neck_width_half + " + ("2.5 cm" if adult else "1.5 cm") + (" + 6 cm (V-neck)" if o["neckline"] == "v" else ""))
+    bnd = C.val("back_neck_depth", (20 if adult else 15), "fixed")
+    sh = C.val("shoulder_length", m["shoulder"] + {"slim": -5, "normal": 0, "wide": 15, "oversized": 0.04 * m["chest"],
+                                                   "harem": 15}[o["fit"]], f"shoulder + allowance for fit '{o['fit']}'")
     drop = sh * math.tan(math.radians(17))
     sx, sy = nw + sh * math.cos(math.radians(17)), -drop
-    AD = 0.18 * Ct + 25 + (0.03 * Ct if o["fit"] in ("wide", "oversized") else 0)
-    L = o["body_length"] or (m["back_length"] + 0.13 * m["height"] + (0.12 * m["height"] if o["length"] == "tunic" else 0))
+    AD = C.val("armhole_depth", 0.18 * Ct + 25 + (0.03 * Ct if o["fit"] in ("wide", "oversized") else 0),
+               "18 % of chest_width + 2.5 cm" + (" + 3 %" if o["fit"] in ("wide", "oversized") else ""))
+    L = C.val("body_length", o["body_length"] or (m["back_length"] + 0.13 * m["height"]
+                                                  + (0.12 * m["height"] if o["length"] == "tunic" else 0)),
+              "option body_length" if o["body_length"] else "back length + 13 % of height"
+              + (" + 12 % (tunic)" if o["length"] == "tunic" else ""))
     return dict(Ct=Ct, q=q, nw=nw, fnd=fnd, bnd=bnd, sx=sx, sy=sy, AD=AD, L=L, be=be, stretch=stretch,
                 knit=knit, sh=sh)
 
@@ -82,7 +90,8 @@ def _body_piece(key, name, F, depth, scoop, o, hem_y, flare, notches):
     hem = G.line(G.P(0, hem_y), hem_out)
     edges = [
         Edge("center", G.line(G.P(0, -depth), G.P(0, hem_y)), 0.0, True, "Centre (fold)"),
-        Edge("hem", hem, o["sa"] if o["hem_band"] else o["hem_sa"], label="Hem"),
+        Edge("hem", hem, o["sa"] if o["hem_band"] else o["hem_sa"], label="Hem",
+             turned=not o["hem_band"]),
         Edge("side", side, o["sa"], label="Side seam"),
         Edge("armhole", arm, o["sa"], label="Armhole"),
         Edge("shoulder", G.line(S, N), o["sa"], label="Shoulder"),
@@ -143,7 +152,8 @@ def _sleeve(F, o, m, cap_target, adult):
     edges = [
         Edge("cap_back", kb, o["sa"], label="Sleeve cap back"),
         Edge("seam_back", nh, o["sa"], label="Sleeve seam"),
-        Edge("hem", G.line(hb, hf), o["sa"] if o["sleeve_cuffs"] else o["hem_sa"], label="Sleeve hem"),
+        Edge("hem", G.line(hb, hf), o["sa"] if o["sleeve_cuffs"] else o["hem_sa"], label="Sleeve hem",
+             turned=not o["sleeve_cuffs"]),
         Edge("seam_front", nv, o["sa"], label="Sleeve seam"),
         Edge("cap_front", kf, o["sa"], label="Sleeve cap front"),
     ]
@@ -243,7 +253,8 @@ def _raglan(front, back, F, o, m, adult):
     edges = [
         Edge("raglan_back", kb[::-1], o["sa"], label="Raglan seam back"),
         Edge("seam_back", sb, o["sa"], label="Sleeve seam"),
-        Edge("hem", G.line(sb[-1], sf[-1]), o["sa"] if o["sleeve_cuffs"] else o["hem_sa"], label="Sleeve hem"),
+        Edge("hem", G.line(sb[-1], sf[-1]), o["sa"] if o["sleeve_cuffs"] else o["hem_sa"], label="Sleeve hem",
+             turned=not o["sleeve_cuffs"]),
         Edge("seam_front", sf[::-1], o["sa"], label="Sleeve seam"),
         Edge("raglan_front", kf, o["sa"], label="Raglan seam front"),
         Edge("neck", hals, o["sa"] * 0.7, label="Neckline"),
@@ -258,7 +269,8 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
     o = resolve_options(options)
     m = measures
     adult = m["height"] > 1650 and m["chest"] > 780
-    F = _body_frame(m, o, adult)
+    C = Construction(o.get("construction"))
+    F = _body_frame(m, o, adult, C)
     hem_band_h = (o["hem_band_h"] or (60 if adult else 45)) if o["hem_band"] else 0.0
     hem_y = -(F["L"] - hem_band_h)
     flare = 0.0 if o["hem_band"] or o["fit"] == "slim" else F["q"] * 0.04
@@ -388,6 +400,9 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
                            lo=m["arm"] * 0.9, hi=m["arm"] * 1.25, note=f"arm length {m['arm'] / 10:.1f} cm"))
     checks.append(dict(name="Body length plausible", kind="range", value=fin["length"],
                        lo=0.30 * m["height"], hi=0.62 * m["height"], note="from the neck point"))
+    pat.construction = C.rows()
+    if C.unknown_overrides():
+        pat.notes.append("Unknown construction value(s) ignored: " + ", ".join(C.unknown_overrides()))
     return pat
 
 

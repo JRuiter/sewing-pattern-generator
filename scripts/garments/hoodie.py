@@ -61,7 +61,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         edges = [
             Edge("neck", neck, sa, label="Neck seam"),
             Edge("center", back, sa, label="Hood centre seam"),
-            Edge("front_edge", G.line(Tp, G.P(0, 0)), 25.0, label="Front edge (casing/facing)"),
+            Edge("front_edge", G.line(Tp, G.P(0, 0)), 25.0, label="Front edge (casing/facing)", turned=True),
         ]
         hp = Piece("hood", "Hood", edges, cut_count=4 if lining else 2, mirror=True, fabric="Main fabric",
                    grain=(G.P(Wh * 0.4, Hh * 0.2), G.P(Wh * 0.4, Hh * 0.75)))

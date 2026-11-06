@@ -55,7 +55,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             top_c = G.tangent_curve(S0, perp_in, T0, (-1, 0), 0.4, 0.4)
             edges = [
                 Edge("center", G.line(T0, H0), 0.0, True, "Centre (fold)"),
-                Edge("hem", hem_c, hem_sa, label="Hem"),
+                Edge("hem", hem_c, hem_sa, label="Hem", turned=True),
                 Edge("side", G.line(S1, S0), sa, label="Side seam"),
                 Edge("waistband", top_c, sa, label="Waist"),
             ]
@@ -73,7 +73,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             inner = np.stack([r * np.cos(t), r * np.sin(t)], 1)[::-1]  # (r,0) → (0,-r)
             edges = [
                 Edge("center", G.line(G.P(0, -r), G.P(0, -R)), 0.0, True, "Centre (fold)"),
-                Edge("hem", outer, 15.0, label="Hem (narrow)"),
+                Edge("hem", outer, 15.0, label="Hem (narrow)", turned=True),
                 Edge("side", G.line(G.P(R, 0), G.P(r, 0)), sa, label="Side seam"),
                 Edge("waistband", inner, sa, label="Waist"),
             ]

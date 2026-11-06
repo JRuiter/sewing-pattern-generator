@@ -21,6 +21,7 @@ from shapely.ops import polylabel
 
 import geometry as G
 import layout as L
+import notches as N
 
 MM = 72.0 / 25.4        # pt je mm
 PT = 25.4 / 72.0        # mm je pt
@@ -136,19 +137,11 @@ def piece_prims(piece, pattern, extra_label=None):
     for e in piece.edges:
         if not e.fold:
             prims.append(Prim("line", "seam", e.pts))
-    # notches
-    for nt in piece.notches:
-        e = piece.edge(nt.edge)
-        s = nt.s if nt.s >= 0 else e.length + nt.s
-        for k in range(nt.count):
-            off = (k - (nt.count - 1) / 2) * 3.0
-            p = G.point_at(e.pts, s + off)
-            t = G.tangent_at(e.pts, s + off)
-            n = np.array([t[1], -t[0]])
-            if e.sa > 0:
-                prims.append(Prim("line", "notch", np.array([p - n * 2.0, p + n * e.sa])))
-            else:
-                prims.append(Prim("line", "notch", np.array([p, p - n * 6.0])))
+    # notches: projected onto the cutting line, also at corners (see notches.py)
+    style = pattern.options.get("notch_style", "slit") if isinstance(pattern.options, dict) else "slit"
+    for m in N.piece_marks(piece, style if style in N.SHAPES else "slit"):
+        for ln in m.lines:
+            prims.append(Prim("line", "notch", ln))
     # inner lines
     for mk in piece.marks:
         prims.append(Prim("line", "mark_fold" if mk.style == "fold" else "mark_placement", mk.pts))

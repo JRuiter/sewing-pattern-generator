@@ -303,14 +303,84 @@ def join_offsets(a: np.ndarray, b: np.ndarray, limit: float):
     return a, b  # bevel
 
 
-def offset_outline(edges: Sequence[np.ndarray], allowances: Sequence[float]) -> np.ndarray:
-    """Cutting outline from a closed CCW edge sequence with a seam allowance per edge."""
+def _extend_end(a: np.ndarray, d: float) -> np.ndarray:
+    return np.vstack([a, a[-1] + end_dir(a, 2.0) * d])
+
+
+def _extend_start(a: np.ndarray, d: float) -> np.ndarray:
+    return np.vstack([a[0] - start_dir(a, 2.0) * d, a])
+
+
+def _first_hit(a: np.ndarray, b: np.ndarray, near) -> np.ndarray | None:
+    inter = LineString(a).intersection(LineString(b))
+    if inter.is_empty:
+        return None
+    pts = []
+    for g in getattr(inter, "geoms", [inter]):
+        pts.extend(np.asarray(g.coords, float))
+    return min(pts, key=lambda q: float(np.linalg.norm(q - near)))
+
+
+def mirror_corner(side_off: np.ndarray, hem_off: np.ndarray, hem_pts: np.ndarray, hem_sa: float):
+    """Corner where a seam (side_off ends) meets a turned-up allowance (hem_off starts).
+
+    The allowance of a hem or casing is folded back onto the piece. For it to lie flat,
+    its end must be the mirror image of the neighbouring seam's cut line, reflected at the
+    fold line (= the hem's seam line). Returns (side_off, connector, hem_off) or None if
+    the geometry does not allow it (the caller then falls back to the plain mitre).
+    """
+    corner = hem_pts[0]
+    d_hem = start_dir(hem_pts, 3.0)
+    ext = 10.0 * hem_sa + 100.0
+    fold_line = np.array([corner - d_hem * 2000.0, corner + d_hem * 2000.0])
+    side_ext = _extend_end(side_off, ext)
+    x = _first_hit(side_ext, fold_line, side_off[-1])
+    if x is None:
+        return None
+    s_x = LineString(side_ext).project(Point(x))
+    tail_len = min(s_x, 10.0 * hem_sa + 100.0)
+    side_trim = sub(side_ext, 0.0, s_x)
+    tail = sub(side_ext, s_x - tail_len, s_x)            # inside the piece, runs towards x
+    mirrored = mirror_line(tail, fold_line[0], fold_line[1])[::-1]   # from x outwards
+    hem_ext = _extend_start(hem_off, ext)
+    y = _first_hit(mirrored, hem_ext, hem_off[0])
+    if y is None:
+        return None
+    s_y = LineString(mirrored).project(Point(y))
+    connector = sub(mirrored, 0.0, s_y)
+    hem_trim = sub(hem_ext, LineString(hem_ext).project(Point(y)), LineString(hem_ext).length)
+    if len(connector) < 2 or len(hem_trim) < 2 or len(side_trim) < 2:
+        return None
+    return side_trim, connector, hem_trim
+
+
+def offset_outline(edges: Sequence[np.ndarray], allowances: Sequence[float],
+                   turned: Sequence[bool] | None = None) -> np.ndarray:
+    """Cutting outline from a closed CCW edge sequence with a seam allowance per edge.
+
+    `turned[i]` marks an edge whose allowance is folded back (hem, casing). Its corners
+    are mirrored (see `mirror_corner`) instead of mitred, so the folded allowance matches
+    the tapered neighbouring seam.
+    """
     offs = [offset_polyline(e, sa) for e, sa in zip(edges, allowances)]
     n = len(offs)
+    turned = list(turned) if turned is not None else [False] * n
     limit = 4 * max(max(allowances), 5.0)
     for i in range(n):
         j = (i + 1) % n
-        offs[i], offs[j] = join_offsets(offs[i], offs[j], limit)
+        res = None
+        if turned[j] and not turned[i] and allowances[j] > 0:
+            res = mirror_corner(offs[i], offs[j], as_pts(edges[j]), allowances[j])
+            if res is not None:
+                side, conn, hem = res
+                offs[i], offs[j] = join(side, conn), hem
+        elif turned[i] and not turned[j] and allowances[i] > 0:
+            res = mirror_corner(offs[j][::-1], offs[i][::-1], as_pts(edges[i])[::-1], allowances[i])
+            if res is not None:
+                side, conn, hem = res
+                offs[i], offs[j] = join(hem[::-1], conn[::-1]), side[::-1]
+        if res is None:
+            offs[i], offs[j] = join_offsets(offs[i], offs[j], limit)
     ring = join(*offs)
     poly = Polygon(ring)
     if not poly.is_valid:

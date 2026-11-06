@@ -23,6 +23,7 @@ class Edge:
     sa: float = 10.0            # seam allowance in mm
     fold: bool = False          # cut on the fold
     label: str = ""             # e.g. "Hem", "Side seam"
+    turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
 
     @property
     def length(self) -> float:
@@ -34,6 +35,7 @@ class Notch:
     edge: str
     s: float                    # distance from the start of the edge in mm (negative: from the end)
     count: int = 1              # 1 = single (front), 2 = double (back)
+    shape: str | None = None    # slit | t | v; None = pattern default (option notch_style)
 
 
 @dataclass
@@ -75,7 +77,8 @@ class Piece:
         return r
 
     def cut_ring(self) -> np.ndarray:
-        return G.offset_outline([e.pts for e in self.edges], [e.sa for e in self.edges])
+        return G.offset_outline([e.pts for e in self.edges], [e.sa for e in self.edges],
+                                [e.turned for e in self.edges])
 
     @property
     def on_fold(self) -> bool:
@@ -155,6 +158,7 @@ class Pattern:
     checks: list[dict] = field(default_factory=list)      # further checks (circumferences …)
     finished: dict[str, float] = field(default_factory=dict)  # finished measurements (virtually sewn)
     notes: list[str] = field(default_factory=list)
+    construction: list[dict] = field(default_factory=list)  # named draft values (construction.py)
 
     def piece(self, key: str) -> Piece:
         for p in self.pieces:
@@ -178,6 +182,7 @@ class Pattern:
             "measures_mm": {k: round(v, 1) for k, v in self.measures.items()},
             "finished_mm": {k: round(v, 1) for k, v in self.finished.items()},
             "pieces": [p.to_json() for p in self.pieces],
+            "construction": self.construction,
         }
 
     def save_json(self, path: str) -> None:

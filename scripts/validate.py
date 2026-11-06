@@ -194,8 +194,67 @@ def check_geometry(pat: Pattern):
     return res
 
 
+def _fold_flat_error(pc, e, at_start: bool, boundary: LineString) -> float:
+    """Max distance (mm) between the turned-up allowance next to a corner, folded at the
+    seam line, and the neighbouring cut line. 0 = the hem lies flat under the seam allowance."""
+    if at_start:
+        corner, along = e.pts[0], G.start_dir(e.pts, 3.0)
+    else:
+        corner, along = e.pts[-1], -G.end_dir(e.pts, 3.0)
+    d = G.start_dir(e.pts, 3.0) if at_start else G.end_dir(e.pts, 3.0)
+    n_out = np.array([d[1], -d[0]])
+    ring = boundary.coords
+    pts = G.resample(np.asarray(ring, float), 0.5)
+    rel = pts - corner
+    dist = rel @ n_out
+    t = rel @ along
+    sel = pts[(dist > 0.5) & (dist < e.sa - 0.5) & (t < 0.5) & (t > -(4 * e.sa + 30))]
+    if len(sel) == 0:
+        return 0.0
+    folded = G.mirror_line(sel, corner, corner + d)
+    return max(boundary.distance(Point(q)) for q in folded)
+
+
+def check_turned(pat: Pattern):
+    """Hems and casings: the folded allowance must match the neighbouring seam (mirrored corners)."""
+    res = []
+    for pc in pat.pieces:
+        turned = [e for e in pc.edges if e.turned and e.sa > 0]
+        if not turned:
+            continue
+        cut = pc.cut_ring()
+        boundary = LineString(np.vstack([cut, cut[:1]]))
+        worst = 0.0
+        for e in turned:
+            for at_start in (True, False):
+                worst = max(worst, _fold_flat_error(pc, e, at_start, boundary))
+        # A mitred corner is still sewable, the folded hem just does not lie perfectly flat.
+        status = "OK" if worst <= 0.5 else "WARNING"
+        names = ", ".join(sorted({e.label or e.name for e in turned}))
+        res.append(Check("Geometry", f"{pc.name}: turned allowance lies flat", status, "≤ 0.5 mm",
+                         f"{worst:.1f} mm", "", f"{names}: corners mirrored at the fold line"))
+    return res
+
+
+def check_notches(pat: Pattern):
+    """Every notch starts on the cutting line (also at corners)."""
+    import notches as N
+    res = []
+    style = pat.options.get("notch_style", "slit") if isinstance(pat.options, dict) else "slit"
+    for pc in pat.pieces:
+        if not pc.notches:
+            continue
+        marks = N.piece_marks(pc, style if style in N.SHAPES else "slit")
+        errs = N.on_cut_line(pc, marks)
+        res.append(Check("Labels", f"{pc.name}: notches", "OK" if not errs else "ERROR", "on the cutting line",
+                         f"{len(marks)} notch mark(s)" if not errs else "; ".join(errs), "",
+                         f"{sum(m.corner for m in marks)} at corners" if any(m.corner for m in marks) else ""))
+    return res
+
+
 def validate(pat: Pattern, raise_on_error: bool = False):
-    report = check_seams(pat) + check_corners(pat) + check_values(pat) + check_geometry(pat)
+    report = (check_seams(pat) + check_corners(pat) + check_values(pat) + check_geometry(pat)
+              + check_turned(pat) + check_notches(pat))
     if raise_on_error and any(c.status == "ERROR" for c in report):
         raise ValidationError(report)
     return report

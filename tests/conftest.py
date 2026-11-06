@@ -17,6 +17,7 @@ SLOW_TESTS = {
     "test_svg_master_is_1to1",
     "test_sheets_a0_a1",
     "test_round_trip",
+    "test_generate_dxf_measure_file_and_construction",
 }
 SLOW_FIXTURES = {"roll_pdf", "a4_pdf"}
 

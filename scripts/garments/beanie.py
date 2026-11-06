@@ -26,7 +26,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
                   G.tangent_curve(G.P(W / 2, H), (-1, 0), G.P(0, Hs), (0, -1), 0.55, 0.55))
     left = G.line(G.P(0, Hs), G.P(0, 0))
     edges = [Edge("bottom", G.line(G.P(0, 0), G.P(W, 0)), sa if o["brim"] else o["hem_sa"],
-                  label="Brim seam" if o["brim"] else "Hem"),
+                  label="Brim seam" if o["brim"] else "Hem", turned=not o["brim"]),
              Edge("right", right, sa, label="Side seam"), Edge("crown", dome, sa, label="Crown seam"),
              Edge("left", left, sa, label="Side seam")]
     p = Piece("beanie", "Beanie", edges, cut_count=2, mirror=False, fabric="Main fabric",
