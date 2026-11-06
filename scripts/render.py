@@ -499,7 +499,6 @@ def _render_overview(c, pattern, lay, pages, page_w, page_h):
     top = 128.0
     avail_w, avail_h = page_w - 20, page_h - top - 15
     s = min(avail_w / lay.canvas_w, avail_h / max(lay.canvas_h, 1))
-    pw, ph = lay.meta["pw"], lay.meta["ph"]
     ox, oy = 10.0 + (avail_w - lay.canvas_w * s) / 2, top
 
     def tp(pts):
@@ -662,7 +661,7 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
             if p.kind == "line":
                 st = STYLES[p.style]
                 d = " ".join(f"{x:.2f},{y:.2f}" for x, y in p.pts)
-                col = "#%02x%02x%02x" % tuple(int(v * 255) for v in st["color"])
+                col = "#" + "".join(f"{int(v * 255):02x}" for v in st["color"])
                 out.append(f'<polyline points="{d}" fill="none" stroke="{col}" '
                            f'stroke-width="{st["w"] * PT:.3f}"{_svg_dash(p.style)} stroke-linejoin="round"/>')
             elif p.kind == "text":
@@ -687,7 +686,6 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.font_manager import FontProperties
 
     if lay.kind == "bogen":
         sheets = list(range(lay.sheets))
@@ -704,7 +702,7 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
     for si, s in enumerate(sheets):
         ax = axs[0][si]
         ax.add_patch(plt.Rectangle((0, 0), W, H, fill=False, ec="#999", lw=0.8))
-        for k, pl in enumerate([p for p in lay.placements if p.sheet == s]):
+        for pl in [p for p in lay.placements if p.sheet == s]:
             ring = L.placed_ring(pattern.pieces[pl.index].cut_ring(), pl)
             ax.fill(ring[:, 0], ring[:, 1], color=palette[pl.index % len(palette)], zorder=0)
         for p in prims:

@@ -10,7 +10,6 @@ import photo_measure as PM
 import photo_synth as S
 import refcard
 from garments import pants_basic as PB
-from reverse import fit as F
 from reverse import pipeline as P
 from reverse import store as ST
 from reverse import unfold as U

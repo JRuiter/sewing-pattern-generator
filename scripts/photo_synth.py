@@ -150,7 +150,6 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
     ch, cw = card.shape
     img[cyp:cyp + ch, cxp:cxp + cw] = card[:, :, None].astype(np.float32)
     scene_to_px = np.array([[px_per_mm, 0, ox * px_per_mm], [0, px_per_mm, oy * px_per_mm], [0, 0, 1]])
-    card_corners_scene = np.array([[card_pos[0], card_pos[1]]])
     return np.clip(img, 0, 255).astype(np.uint8), scene_to_px, card_pos
 
 

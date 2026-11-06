@@ -204,10 +204,8 @@ def measure_pants(mask, img, px_per_mm):
     rows = np.nonzero(mask.any(axis=1))[0]
     top, bottom = int(rows[0]), int(rows[-1])
     # Schrittpunkt: höchster Punkt der Lücke zwischen den Beinen (Hintergrund von unten)
-    inv = (mask == 0).astype(np.uint8)
     cols = np.nonzero(mask.any(axis=0))[0]
     xl, xr = int(cols[0]), int(cols[-1])
-    xc = (xl + xr) // 2
     y_start, runs = None, []
     for y in range(bottom - 2, top + (bottom - top) // 3, -2):
         rr = [r for r in _row_runs(mask[y]) if r[1] - r[0] > 20 * s]
@@ -288,7 +286,7 @@ def measure_pants(mask, img, px_per_mm):
         lb = int(lrows[-1])
         inseam = (lb - crotch[1]) / s
         def lw(y):
-            rr = _row_runs(lr[int(y)])
+            rr = _row_runs(lr[int(y)])  # noqa: B023 - called within the same iteration
             return (max(r[1] for r in rr) - min(r[0] for r in rr)) / s if rr else 0.0
         # Oberschenkel: senkrecht zur Beinachse, 2,5 cm unter dem Schritt
         lm2 = np.zeros_like(mask)
@@ -298,7 +296,7 @@ def measure_pants(mask, img, px_per_mm):
         else:
             lm2[y_up:, crotch[0]:] = mask[y_up:, crotch[0]:]
         lr2 = cv2.warpAffine(lm2, M, mask.shape[::-1], flags=cv2.INTER_NEAREST)
-        thigh = lw2 = 0.0
+        thigh = 0.0
         rr = _row_runs(lr2[int(crotch[1] + 25 * s)])
         if rr:
             thigh = (max(r[1] for r in rr) - min(r[0] for r in rr)) / s

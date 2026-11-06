@@ -1,9 +1,7 @@
 """Nähbarkeits-Prüfungen, Kleidungsstücke in 3 Größen und Druckausgabe."""
-import copy
 import re
 import shutil
 import subprocess
-import zlib
 
 import numpy as np
 import pytest

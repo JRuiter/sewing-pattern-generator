@@ -14,7 +14,6 @@ Kantenreihenfolge (gegen den Uhrzeigersinn):
 from __future__ import annotations
 
 import copy
-import math
 
 import numpy as np
 from scipy.interpolate import CubicSpline
@@ -392,7 +391,6 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     ]
 
     # ---------------------------------------------------------------- Winkel
-    top_f = "eingriff" if "eingriff" in pockets else "bund"
     corners += [
         dict(name="Vordere Mitte ↔ Bund", piece="vorderhose", a="bund", b="schritt", target=90),
         dict(name="Hintere Mitte ↔ Bund", piece="hinterhose", a="bund", b="schritt", target=90),
@@ -483,8 +481,6 @@ def finished_measures(pat: Pattern, wb_h=None, cuff_h=None, waist_relaxed=None, 
         opening = pat.piece("beinbuendchen").edge("unten").length
     else:
         opening = f.edge("saum").length + b.edge("saum").length
-    side = f.edge("seite").length + (pat.piece("seitenteil").edge("seite_oben").length
-                                     if pat.has("seitenteil") else 0.0)
     rise_f = -y_cr_f + wb_h
     # Rückenhöhe: höchster Punkt Hintere Mitte bis Schritt
     rise_b = float(b.edge("schritt").pts[0, 1]) - y_cr_b + wb_h

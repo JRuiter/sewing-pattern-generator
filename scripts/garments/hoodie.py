@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import numpy as np
 
-import ease as E
 import geometry as G
 from pattern import Edge, Mark, Pattern, Piece
 

@@ -4,8 +4,6 @@ from __future__ import annotations
 import math
 import os
 
-import numpy as np
-
 import ease as E
 import layout as L
 import measurements as M
@@ -138,6 +136,7 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
 def markdown_to_pdf(md: str, path: str, images: list[str] | None = None):
     """Einfacher Markdown→PDF-Satz (Überschriften, Listen, Tabellen) mit eingebetteter Schrift."""
     import re
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import ParagraphStyle
