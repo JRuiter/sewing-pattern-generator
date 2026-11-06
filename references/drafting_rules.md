@@ -185,3 +185,37 @@ a right angle (casing/facing 25 mm). Kangaroo pocket: 0.62 × q wide, slanted op
 | Notches | every notch mark starts on the cutting line |
 
 An error (❌) blocks the print files.
+
+## 8. Fit adjustments after a test garment (`scripts/adjust.py`)
+
+Feedback from the toile is given either as a signed change of a finished measurement
+(`{"hip": "+2cm"}`) or as a fit issue with an amount (`{"crotch_low": "1.5cm"}`). Units:
+`mm`, `cm` (default), `in`. The garment is drafted once, the drafted construction value is
+read and the garment is drafted again with value + Δ. Validation runs on the adjusted
+pattern as usual. Explicit `construction` overrides win over adjustments.
+
+**Pants (`pants_basic`)**
+
+| Adjustment | Fit issues | Acts on |
+|---|---|---|
+| `hip` | `hip_tight`, `hip_loose` | `hip_width` (+Δ circumference) |
+| `seat` | `seat_tight`, `seat_loose` | `back_crotch_extension` (+Δ/2 per leg) |
+| `rise` | `crotch_low` (−), `crotch_tight` (+) | `rise` (front rise / crotch depth) |
+| `inseam` | `legs_long`, `legs_short` | `inseam_finished` |
+| `opening` | `opening_tight`, `opening_wide` | `hem_width` (leg opening) |
+| `waist` | `waist_tight`, `waist_loose` | elastic length (relaxed waist) |
+
+**Tops (`tshirt_basic`, `hoodie`, `dress` without `length`)**
+
+| Adjustment | Fit issues | Acts on |
+|---|---|---|
+| `chest` | `chest_tight`, `chest_loose` | `chest_width` |
+| `length` | `too_long`, `too_short` | `body_length` |
+| `armhole` | `armhole_tight` (+), `armhole_low` (−) | `armhole_depth` |
+| `shoulder` | `shoulders_wide` (−), `shoulders_narrow` (+) | `shoulder_length` |
+| `neckline` | `neckline_gaping` (−), `neckline_tight` (+) | `neck_width_half` (per side) |
+| `sleeve_length` | `sleeves_long`, `sleeves_short` | sleeve length |
+
+The adjustments are stored in `options.adjustments` (pattern.json, project.json) and only
+there: they are re-applied on every run, so "same as last time, one size up" keeps them.
+The instructions show the finished measurements before and after.

@@ -151,6 +151,13 @@ rise, armhole depth, …) with how they were derived. To change one, e.g. after 
 still checks the result. Notch shape: `--notch-style slit|t|v` (v for cutting machines and
 projector use).
 
+**Toile feedback:** after delivery, offer once: "Tell me how the test garment fits (e.g. 'hip
+2 cm too tight, crotch 1.5 cm too low') and I'll adjust the pattern." Then
+`--adjust '{"hip_tight": "2cm", "crotch_low": "1.5cm"}'` (or signed changes such as
+`{"hip": "+2cm", "sleeve_length": "-3cm"}`; spec field `adjustments`). The instructions show
+before/after finished measurements; the adjustments stay in `pattern.json`/`project.json`
+and are re-applied in other sizes. Keys: `references/drafting_rules.md` §8.
+
 ### 6. Check the preview yourself
 **Look at** the PNG preview(s) and the cutting layout before delivering: all pieces
 present, nothing overlapping, labels readable, grainline plausible, control square
