@@ -88,7 +88,18 @@ limited to 0.75–1.45).
    Alternatives: rib (ratio see above), yoga waistband (60 mm × k), tunnel (turned down).
 10. **Pockets:** side pocket (side panel + pocket bag), slanted side pocket, back patch
     pocket. Pocket opening at the front: 0.28 × front width, depth at the side seam
-    0.62 × R (95–170 mm).
+    0.62 × R (95–170 mm). **Cargo pocket** (`pockets: [cargo]`): patch pocket on the front
+    thigh next to the side seam, top 12 % of the leg length + 4.5 cm × k below the crotch
+    line, about 15 × 17.5 cm × k (shrunk until it fits inside the leg), box pleat 2 cm × k
+    (`cargo_pleat`), flap (`cargo_flap`, 4 pieces).
+11. **Leg shape** (`leg_shape`, long legs without cuffs): the knee point (45 % of the leg
+    length) gets the width of the straight leg there (≥ knee × (1 + ease)); below it
+    `tapered` = 80 % of the narrower of knee and straight opening (foot must fit through,
+    ≥ 1.35 × ankle + 2 cm), `bootcut` / `flare` = knee width + `flare_cm` (defaults 6 / 16 cm
+    × k, children × 0.6). Inseam and side seams are matched front ↔ back as usual.
+12. **Shorts / knee length:** the leg opening is at least 92 % of the leg circumference at
+    the crotch line. `turn_up` (cm) adds twice its height to the hem allowance and marks
+    the hem edge and the turn-up fold.
 
 **Parameters for reverse engineering:** `hip_total`, `fork_factor`, `front_rise_total`,
 `inseam_total`, `opening_total`, `knee_total` (all can be overridden as options).

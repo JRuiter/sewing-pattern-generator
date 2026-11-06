@@ -31,12 +31,13 @@ SCHEMA = {
     "garment_type": ["pants", "jogger", "harem", "leggings", "shorts", "tshirt", "longsleeve",
                      "hoodie", "sweatshirt", "sweater", "skirt", "beanie", "loop", "dress", "jacket",
                      "blouse", "shirt", "jeans", "overalls", "body"],
-    "silhouette": ["slim", "straight", "wide", "oversized", "harem", "flared", "a-line", "circle_skirt"],
+    "silhouette": ["slim", "straight", "wide", "oversized", "harem", "flared", "bootcut", "tapered",
+                   "a-line", "circle_skirt"],
     "length": ["long", "7/8", "knee", "short", "mini", "midi", "maxi", "hip_length", "tunic"],
     "pockets": ["none", "side", "slant", "back_patch", "front_patch", "kangaroo",
                 "cargo", "welt", "jetted"],
     "waistband": ["elastic", "casing", "rib", "drawstring", "yoga", "button_zip"],
-    "leg_finish": ["rib", "hem", "drawstring"],
+    "leg_finish": ["rib", "hem", "drawstring", "turn_up"],
     "neckline": ["round", "v", "u-boot", "stand_collar", "collar", "hood"],
     "sleeve": ["set_in", "raglan", "dropped", "none"],
     "sleeve_length": ["short", "long", "3/4", "none"],
@@ -75,13 +76,11 @@ UNSUPPORTED = {
              "drawstring casing.",
     "overalls": "Overalls are not covered. Alternative: pants; the bib would have to be added separately.",
     "body": "Bodysuits are not covered. Alternative: the T-shirt module.",
-    "cargo": "Cargo pockets are not covered. Alternative: back patch pockets.",
     "welt": "Welt pockets are not covered. Alternative: side pockets.",
     "jetted": "Jetted pockets are not covered. Alternative: side pockets.",
     "front_patch": "Front patch pockets are not an option. Alternative: side pockets.",
     "button_zip": "A waistband with button and zip is not covered. Alternative: elastic waistband "
                   "(pull-on pants).",
-    "flared": "Flared legs are not covered. Alternative: wide fit.",
     "button_placket": "Button plackets are not covered. Alternative: no closure.",
     "zipper": "Zips are not covered. Alternative: no closure.",
     "snaps": "Snap plackets are not covered. Alternative: no closure.",
@@ -155,7 +154,7 @@ def map_to_module(features: dict) -> dict:
                 issues.append(UNSUPPORTED[x])
     sil = _val(f, "silhouette", "straight")
     fit = {"slim": "slim", "straight": "normal", "wide": "wide", "oversized": "oversized",
-           "harem": "harem", "flared": "wide"}.get(sil, "normal")
+           "harem": "harem", "flared": "normal", "bootcut": "normal", "tapered": "normal"}.get(sil, "normal")
     fabric = _val(f, "fabric")
     opts = {}
     if kind in ("pants", "jogger", "harem", "leggings", "shorts", "jeans", "overalls"):
@@ -172,8 +171,10 @@ def map_to_module(features: dict) -> dict:
         pk = []
         if any(x in ("side", "slant", "welt", "jetted", "front_patch") for x in t):
             pk.append("side")
-        if any(x in ("back_patch", "cargo") for x in t):
+        if "back_patch" in t:
             pk.append("back_patch")
+        if "cargo" in t:
+            pk.append("cargo")
         opts["pockets"] = pk
         b = _val(f, "waistband")
         if b:
@@ -183,6 +184,11 @@ def map_to_module(features: dict) -> dict:
         ba = _val(f, "leg_finish")
         if ba:
             opts["cuffs"] = ba == "rib"
+            if ba == "turn_up":
+                opts["turn_up"] = 3.0
+        if sil in ("flared", "bootcut", "tapered"):
+            opts["leg_shape"] = {"flared": "flare"}.get(sil, sil)
+            opts["cuffs"] = False
         lg = _val(f, "length")
         if kind == "shorts":
             lg = lg or "short"

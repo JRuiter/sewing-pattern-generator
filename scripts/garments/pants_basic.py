@@ -37,6 +37,13 @@ DEFAULTS = dict(style="jogger", fit=None, fabric=None, stretch=None, length=None
                 waistband=None, cuffs=None, pockets=None, cuff_fabric="rib",
                 cuff_stretch=None, waistband_height=None, cuff_height=None,
                 elastic_width=None, crotch_drop=None, blouse=None, sa=10.0, hem_sa=25.0,
+                # leg shape below the knee (without cuffs): straight, tapered, bootcut, flare;
+                # flare_cm = leg opening minus leg width at the knee (circumference, cm)
+                leg_shape="straight", flare_cm=None,
+                # shorts/knee length: fold-back turn-up (cm, 0 = none), part of the hem allowance
+                turn_up=None,
+                # cargo patch pocket on the thigh: box pleat and flap
+                cargo_pleat=True, cargo_flap=True,
                 # overrides (reverse engineering / fine tuning), all finished measurements in mm
                 hip_total=None, fork_factor=1.0, front_rise_total=None, inseam_total=None,
                 opening_total=None, elastic_total=None, knee_total=None, thigh_total=None)
@@ -58,7 +65,18 @@ def resolve_options(options: dict | None) -> dict:
         o["pockets"] = [] if o["pockets"] in ("", "none") else [o["pockets"]]
     if o["fit"] == "slim":
         o["pockets"] = [p for p in o["pockets"] if p != "side"]
+    if o["leg_shape"] not in LEG_SHAPES:
+        raise ValueError(f"leg_shape must be one of {', '.join(LEG_SHAPES)}")
+    if o["leg_shape"] != "straight" and (o["cuffs"] or o["length"] not in ("long", "7/8")):
+        o["leg_shape"] = "straight"      # shaping below the knee needs a long, uncuffed leg
+    if o["turn_up"] is None:
+        o["turn_up"] = 0.0
+    if o["turn_up"] and (o["cuffs"] or o["length"] not in ("short", "knee")):
+        o["turn_up"] = 0.0               # turn-ups only for shorts / knee length without cuffs
     return o
+
+
+LEG_SHAPES = ("straight", "tapered", "bootcut", "flare")
 
 
 def _leg_spline(y_top, x_top, y_bot, x_bot, slope_top, slope_bot=0.0, mid=None, step=2.0):
@@ -90,6 +108,9 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     _, stretch, knit = E.fabric_info(fabric, o["stretch"])
     o["stretch"] = stretch
     sa, hem_sa = o["sa"], o["hem_sa"]
+    turn_up = float(o["turn_up"] or 0.0) * 10        # cm → mm
+    if turn_up:
+        hem_sa = hem_sa + 2 * turn_up                # the turn-up is folded out twice its height
     k = m["height"] / 1220.0  # scale factor for small parts (child size 122 = 1)
     k = max(0.75, min(1.45, k))
 
@@ -158,9 +179,29 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             if length == "knee":
                 hem_c = max(hem_c, m["knee"] * (1.0 + max(he, 0.05)) * 1.05)
             if length == "short":
-                hem_c = max(hem_c, (Wf + Wb + fe + fbe) * 2 * 0.92)
-    hem_c = C.val("hem_width", hem_c, "cuff length / cuff stretch ratio" if cuffs else
-                  ("option opening_total" if o["opening_total"] else f"leg opening for fit '{fit}'"))
+                hem_c = max(hem_c, (Wf + Wb + fe + fbe) * 0.92)   # nearly as wide as the thigh
+    hem_how = "cuff length / cuff stretch ratio" if cuffs else \
+        ("option opening_total" if o["opening_total"] else f"leg opening for fit '{fit}'")
+    leg_shape = o["leg_shape"]
+    knee_shape = None
+    if leg_shape != "straight":
+        # leg width at the knee of the straight leg (thigh → straight hem, linear), then
+        # the shape below the knee: tapered narrows, bootcut/flare widen by flare_cm
+        top_w = Wf + fe + Wb + fbe
+        kt0 = top_w + (hem_c - top_w) * 0.45
+        if fit == "slim":
+            kt0 = m["knee"] * (1 + he + 0.02)
+        kt0 = max(kt0, m["knee"] * (1 + max(he, 0.05)))
+        knee_shape = C.val("knee_width", kt0, "leg width at the knee for the shaped leg")
+        if leg_shape == "tapered":
+            hem_c = max(m["ankle"] * 1.35 + 20, min(hem_c, knee_shape) * 0.8)
+            hem_how = "tapered: 80 % of the narrower of knee and straight opening (foot must fit)"
+        else:
+            default = {"bootcut": 60.0, "flare": 160.0}[leg_shape] * (k if adult else k * 0.6)
+            flare = float(o["flare_cm"]) * 10 if o["flare_cm"] is not None else default
+            hem_c = knee_shape + flare
+            hem_how = f"{leg_shape}: knee width + flare {flare / 10:.1f} cm"
+    hem_c = C.val("hem_width", hem_c, hem_how)
     hem_front, hem_back = hem_c / 2 - 2 * diff, hem_c / 2 + 2 * diff
 
     # ---------------------------------------------------------------- front leg
@@ -170,8 +211,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     crease_f = (Wf - fe) / 2
     knee_y = y_cr - leg_len * 0.45
     knee_fr = knee_bk = None
-    if length in ("long", "7/8") and (fit == "slim" or o["knee_total"]):
-        kt = o["knee_total"] or m["knee"] * (1 + he + 0.02)
+    if length in ("long", "7/8") and (fit == "slim" or o["knee_total"] or knee_shape):
+        kt = o["knee_total"] or knee_shape or m["knee"] * (1 + he + 0.02)
         knee_fr, knee_bk = kt / 2 - 2 * diff, kt / 2 + 2 * diff
 
     # front inseam first (the crotch angle depends on its start tangent)
@@ -340,6 +381,19 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
                          [px - pw / 2, py - ph], [px - pw / 2, py]])
         back.marks.append(Mark(rect, "placement", "Back pocket"))
 
+    if "cargo" in pockets:
+        _cargo(o, front, pieces, notes, side_f_leg, y_cr, leg_len, k, sa, adult)
+
+    # ---------------------------------------------------------------- turn-up marks
+    if turn_up:
+        for pc in (front, back):
+            h = pc.edge("hem").pts
+            pc.marks.append(Mark(np.array([h[0] + (0, -turn_up), h[-1] + (0, -turn_up)]), "fold",
+                                 "Turn-up fold"))
+            pc.marks.append(Mark(np.array([h[0], h[-1]]) + (0, 0.01), "fold", "Hem edge"))
+        notes.append(f"Turn-up {turn_up / 10:.1f} cm: the hem allowance includes twice its height "
+                     f"plus {o['hem_sa'] / 10:.1f} cm to turn under.")
+
     # ---------------------------------------------------------------- waistband
     top_parts = [("front", "waistband", 2), ("back", "waistband", 2)]
     if "side" in pockets:
@@ -469,6 +523,50 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     return pat
 
 
+def _cargo(o, front, pieces, notes, side_leg, y_cr, leg_len, k, sa, adult):
+    """Cargo patch pocket on the side of the thigh (front leg, next to the side seam)."""
+    from shapely.geometry import Polygon, box
+    poly = Polygon(front.seam_ring())
+    order = np.argsort(side_leg[:, 1])
+
+    def side_x(y):
+        return float(np.interp(y, side_leg[order, 1], side_leg[order, 0]))
+    ph = min(175.0 * k, 0.45 * leg_len)
+    pw = min(150.0 * k, 0.55 * G.width_at_y(front.seam_ring(), y_cr - 0.1 * leg_len))
+    y_top = y_cr - 0.12 * leg_len - 45.0 * k
+    gap = 12.0 * k
+    for _ in range(40):
+        x1 = min(side_x(y_top), side_x(y_top - ph)) - gap
+        rect = box(x1 - pw, y_top - ph, x1, y_top)
+        if poly.buffer(-3).contains(rect):
+            break
+        pw *= 0.95
+        ph *= 0.97
+    pleat = (20.0 * k) if o["cargo_pleat"] else 0.0
+    pocket = rect_piece("cargo_pocket", "Cargo pocket", pw + 2 * pleat, ph, sa=sa, cut_count=2,
+                        names=("bottom", "right", "top", "left"),
+                        labels=("", "", "Pocket facing", ""), sas=(sa, sa, 25.0, sa))
+    if pleat:
+        c = (pw + 2 * pleat) / 2
+        for dx, lab in ((-pleat, "Pleat fold"), (pleat, "Pleat fold")):
+            pocket.marks.append(Mark(G.line(G.P(c + dx, 0), G.P(c + dx, ph)), "fold", lab))
+        pocket.marks.append(Mark(G.line(G.P(c, 0), G.P(c, ph)), "placement", "Pleat centre"))
+    pieces.append(pocket)
+    rect = np.array([[x1 - pw, y_top], [x1, y_top], [x1, y_top - ph], [x1 - pw, y_top - ph], [x1 - pw, y_top]])
+    front.marks.append(Mark(rect, "placement", "Cargo pocket"))
+    if o["cargo_flap"]:
+        fh = 55.0 * k
+        flap = rect_piece("cargo_flap", "Cargo pocket flap", pw + 6.0, fh, sa=sa, cut_count=4,
+                          names=("bottom", "right", "top", "left"),
+                          labels=("Flap edge", "", "Stitching edge", ""))
+        flap.info.append("2 outer + 2 facing")
+        pieces.append(flap)
+        fy = y_top + 15.0
+        front.marks.append(Mark(G.line(G.P(x1 - pw - 3, fy), G.P(x1 + 3, fy)), "placement", "Flap"))
+    notes.append(f"Cargo pocket {pw / 10:.1f} × {ph / 10:.1f} cm" + (" with box pleat" if pleat else "")
+                 + (" and flap" if o["cargo_flap"] else "") + "; a snap or Velcro for the flap is optional.")
+
+
 def finished_measures(pat: Pattern, wb_h=None, cuff_h=None, waist_relaxed=None, pk_b=None) -> dict:
     """Virtual sewing: measurements of the finished pants (measured flat × 2 = circumference)."""
     o = pat.options
@@ -542,6 +640,18 @@ def sewing_steps(pat: Pattern) -> list[str]:
             "the opening edge) and sew the bag seam. Baste the side panel to the front leg at the top edge "
             "and side within the seam allowance.",
         ]
+    if "cargo" in o["pockets"]:
+        cargo = ["**Cargo pockets:** press the top edge 2.5 cm to the inside and topstitch."]
+        if o.get("cargo_pleat", True):
+            cargo.append("Fold the box pleat: bring both \"pleat fold\" lines to the pleat centre on the "
+                         "wrong side, press and baste across top and bottom.")
+        cargo.append("Press the other edges under by 1 cm and stitch the pocket onto the front leg at the "
+                     "\"Cargo pocket\" marking (edgestitch, reinforce the top corners).")
+        if o.get("cargo_flap", True):
+            cargo.append("Sew outer flap and facing right sides together along the sides and the flap edge, "
+                         "trim, turn, press and topstitch. Sew the open edge onto the \"Flap\" line upside "
+                         "down, fold it down and topstitch 7 mm from the fold.")
+        steps.append(" ".join(cargo))
     if "back_patch" in o["pockets"]:
         steps.append("**Back pockets:** press the top edge 2.5 cm to the inside and topstitch, press the other "
                      "edges under by 1 cm, then stitch the pockets onto the back legs at the marking.")
@@ -584,8 +694,12 @@ def sewing_steps(pat: Pattern) -> list[str]:
             "Slip the cuff over the right-side-out leg, put its seam at the inseam and sew it on while "
             "stretching. Press the seam allowance towards the pants.",
         ]
+    elif o.get("turn_up"):
+        steps.append(f"**Hem with turn-up:** press {o['hem_sa'] / 10:.1f} cm under and sew it down. Fold the "
+                     "leg to the inside along the \"Hem edge\", then fold the turn-up back to the outside "
+                     "along the \"Turn-up fold\" and tack it at the side seam and inseam.")
     else:
-        steps.append("**Hem:** press the hem allowance (2.5 cm) to the inside and sew it with a twin needle "
-                     "or a straight stitch.")
+        steps.append(f"**Hem:** press the hem allowance ({o['hem_sa'] / 10:.1f} cm) to the inside and sew it "
+                     "with a twin needle or a straight stitch.")
     steps.append("Done! Press all seams (with sweat: steam, do not press down hard).")
     return steps

@@ -102,7 +102,20 @@ def test_mode_a_unsupported_is_reported():
              "pockets": {"value": ["cargo"], "confidence": 0.8}}
     m = A.map_to_module(feats)
     assert any("Jeans" in x for x in m["not_covered"])
-    assert any("Cargo" in x for x in m["not_covered"])
+    assert "cargo" in m["options"]["pockets"]                 # cargo pockets are a module option now
+    assert not any("Cargo" in x for x in m["not_covered"])
+
+
+def test_mode_a_flared_cargo_shorts():
+    m = A.map_to_module({"garment_type": {"value": "pants", "confidence": 0.9},
+                         "silhouette": {"value": "flared", "confidence": 0.8},
+                         "pockets": {"value": ["cargo"], "confidence": 0.8}})
+    assert m["options"]["leg_shape"] == "flare" and m["options"]["cuffs"] is False
+    assert "cargo" in m["options"]["pockets"]
+    assert not m["not_covered"]
+    m = A.map_to_module({"garment_type": {"value": "shorts", "confidence": 0.9},
+                         "leg_finish": {"value": "turn_up", "confidence": 0.8}})
+    assert m["options"]["turn_up"] == 3.0 and m["options"]["length"] == "short"
 
 
 # ---------------------------------------------------------------------------
