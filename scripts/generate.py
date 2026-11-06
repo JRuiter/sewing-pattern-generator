@@ -43,6 +43,7 @@ import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
 import measure_files as MF  # noqa: E402
 import measurements as M  # noqa: E402
+import nested as NE  # noqa: E402
 import profiles as PR  # noqa: E402
 import render as R  # noqa: E402
 import units as U  # noqa: E402
@@ -109,12 +110,34 @@ def run(spec: dict, verbose: bool = True) -> dict:
     out = spec.get("out", "out")
     os.makedirs(out, exist_ok=True)
     spec, _ = PR.apply(spec)          # profile defaults (fit, output format) before drafting
-    pat, sources, warn = draft_from_spec(spec)
-    report = V.validate(pat)
-    report_md = V.to_markdown(report)
-    if pat.construction:
-        report_md += "\n\n" + K.to_markdown(pat.construction)
-    base = spec.get("basename") or _basename(pat)
+    sizes = NE.parse_sizes(spec.get("size"))
+    drafts = []                       # nested sizes: (label, pattern) per size
+    if len(sizes) > 1:
+        reports, report, warn, md_parts = [], [], [], []
+        for sz in sizes:
+            p_, sources, w_ = draft_from_spec({**spec, "size": sz})
+            r_ = V.validate(p_)
+            drafts.append((str(sz), p_))
+            reports.append(r_)
+            report += r_
+            warn += [w for w in w_ if w not in warn]
+            part = V.to_markdown(r_, title=f"Sewability check · {p_.size_label}")
+            if p_.construction:
+                part += "\n\n" + K.to_markdown(p_.construction)
+            md_parts.append(part)
+        report_md = "\n\n".join(md_parts)
+        pat = NE.build([d[1] for d in drafts], [d[0] for d in drafts])
+        big = pat.nest_big
+    else:
+        pat, sources, warn = draft_from_spec(spec)
+        big = pat
+        report = V.validate(pat)
+        report_md = V.to_markdown(report)
+        if pat.construction:
+            report_md += "\n\n" + K.to_markdown(pat.construction)
+    base = spec.get("basename") or (
+        f"{pat.title.lower().replace(' ', '_')}_sizes_{'_'.join(d[0] for d in drafts)}" if drafts
+        else _basename(pat))
     with open(os.path.join(out, "validation_report.md"), "w", encoding="utf-8") as f:
         f.write(report_md)
     result = dict(pattern=pat, report=report, report_md=report_md, files={}, warnings=warn, ok=V.is_ok(report))
@@ -196,31 +219,40 @@ def run(spec: dict, verbose: bool = True) -> dict:
     files["SVG master 1:1"] = svg
     for f in (x.lower() for x in formats):
         if f in ("dxf", "dxf14"):
-            dxf_lay = L.layout_roll(pat, 1600.0)         # pieces side by side, no page limits
-            p = os.path.join(out, f"{base}_aama{'_14' if f == 'dxf14' else ''}.dxf")
-            D.write_dxf(pat, p, dxf_lay, seam_layer="14" if f == "dxf14" else "8")
-            files["DXF for cutters/CAD (AAMA layers, mm, 1:1)"] = p
+            for lab, sp in (drafts or [("", pat)]):      # nested: one DXF per size
+                dxf_lay = L.layout_roll(sp, 1600.0)      # pieces side by side, no page limits
+                tag = f"_{lab}" if lab else ""
+                p = os.path.join(out, f"{base}{tag}_aama{'_14' if f == 'dxf14' else ''}.dxf")
+                D.write_dxf(sp, p, dxf_lay, seam_layer="14" if f == "dxf14" else "8")
+                files[f"DXF for cutters/CAD (AAMA layers, mm, 1:1){' size ' + lab if lab else ''}"] = p
     if spec.get("export_measures"):
         p = os.path.join(out, "body_measurements.smis")
         MF.write_file(p, pat.measures, notes=f"{pat.title}, {pat.size_label}")
         files["Body measurements (XML measurement file)"] = p
-    plans = I.fabric_consumption(pat, spec.get("fabric_widths_mm"), spec.get("fabric_layout", "auto"))
+    plans = I.fabric_consumption(big, spec.get("fabric_widths_mm"), spec.get("fabric_layout", "auto"))
     zp = os.path.join(out, "cutting_layout.png")
-    I.render_fabric_png(pat, plans, zp)
+    I.render_fabric_png(big, plans, zp)
     files["Cutting layout"] = zp
     md_path = os.path.join(out, "sewing_instructions.md")
     pdf_path = os.path.join(out, "sewing_instructions.pdf")
     files["Sewing instructions (PDF)"] = pdf_path
     files["Sewing instructions (Markdown)"] = md_path
-    step_images = DG.render_steps(pat, I.all_steps(pat), out)
-    md = I.build_markdown(pat, report_md, plans, files, sources, step_images)
+    step_images = DG.render_steps(big, I.all_steps(big), out)
+    md = I.build_markdown(big, report_md, plans, files, sources, step_images)
+    nested_rows = []
+    if drafts:
+        md, nested_rows = I.nested_section(md, pat, spec.get("fabric_widths_mm"),
+                                           spec.get("fabric_layout", "auto"))
     if warn:
         md = md.replace("## Body measurements", "## Body measurements\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
     I.markdown_to_pdf(md, pdf_path, images=[zp])
     js = os.path.join(out, "pattern.json")
-    data = pat.summary()
+    data = big.summary()
+    if drafts:
+        data["size"] = pat.size_label
+        data["nested_sizes"] = nested_rows
     data["validation"] = V.to_rows(report)
     data["fabric_mm"] = {k: {"width": v["width"], "need": v["need_mm"], "layout": v["mode"]}
                          for k, v in plans.items()}

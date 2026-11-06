@@ -105,6 +105,10 @@ python scripts/generate.py --spec order.json          # everything as JSON (see 
 ```
 Sizes: kids as a number (`122`), women as `w38`, men as `m52`; US/UK: `us8` (US women's),
 `uk12` (UK women's), `us3t` (US toddler), `usk8` (US kids), see `references/size_tables.md`.
+**Several sizes at once (nested):** `--size 98,110,122` (or a range `98-122` in kids' steps)
+drafts and validates every size and overlays them at a shared construction point, each size in
+its own colour/line, PDF layer (switch sizes on/off in Acrobat's *Layers* panel) and SVG group.
+Use it for siblings or to blend between sizes; all sizes share the same options.
 Imperial users: `--units imperial` (measurements in inches, reports in inches/yards).
 
 Modules and main options:

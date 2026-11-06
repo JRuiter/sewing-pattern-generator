@@ -922,3 +922,82 @@ def test_illustrated_instructions(tmp_path):
     from pypdf import PdfReader
     n_img = sum(len(pg.images) for pg in PdfReader(str(pdf)).pages)
     assert n_img >= len(imgs)
+
+
+def test_parse_sizes():
+    import nested as NE
+    assert NE.parse_sizes("98,110, 122") == ["98", "110", "122"]
+    assert NE.parse_sizes("98-122") == ["98", "104", "110", "116", "122"]
+    assert NE.parse_sizes(["w36", "w38"]) == ["w36", "w38"]
+    assert NE.parse_sizes("122") == ["122"] and NE.parse_sizes(122) == [122]
+
+
+def _line_prims(prims, layer=None):
+    return [(p.style, np.round(np.asarray(p.pts), 3)) for p in prims
+            if p.kind == "line" and p.style != "grain" and (layer is None or p.layer == layer)]
+
+
+def test_nested_layers_match_single_sizes():
+    import generate as GN
+    import nested as NE
+    sizes = ["98", "122", "140"]
+    singles = [GN.draft_from_spec({"garment": "tshirt_basic", "size": s})[0] for s in sizes]
+    nest = NE.build([GN.draft_from_spec({"garment": "tshirt_basic", "size": s})[0] for s in sizes], sizes)
+    for i, pc in enumerate(nest.pieces):
+        prims = R.nested_piece_prims(nest, i)
+        env = __import__("shapely.geometry", fromlist=["Polygon"]).Polygon(pc.cut_ring()).buffer(0.5)
+        for k, single in enumerate(singles):
+            got = _line_prims(prims, layer=k)
+            want = _line_prims(R.piece_prims(single.pieces[i], single))
+            assert len(got) == len(want)
+            for (s1, a), (s2, b) in zip(got, want):
+                assert s1 == s2 and np.allclose(a, b)
+            # the layout reserves the envelope: every size lies inside it
+            assert env.contains(__import__("shapely.geometry", fromlist=["Polygon"]).Polygon(
+                single.pieces[i].cut_ring()))
+    with pytest.raises(ValueError):
+        NE.build(singles[:1], sizes[:1])
+
+
+def test_nested_outputs(tmp_path):
+    from pypdf import PdfReader
+
+    import generate as GN
+    out = tmp_path / "n"
+    res = GN.run(dict(garment="beanie", size="98,122,140", formats=["roll610", "a4", "a1"], out=str(out)),
+                 verbose=False)
+    assert res["ok"]
+    pdfs = sorted(out.glob("*.pdf"))
+    pattern_pdfs = [p for p in pdfs if p.name != "sewing_instructions.pdf"]
+    assert len(pattern_pdfs) == 3
+    for p in pattern_pdfs:
+        r = PdfReader(str(p))
+        names = [o.get_object()["/Name"] for o in r.trailer["/Root"]["/OCProperties"]["/OCGs"]]
+        assert names == ["Size 98", "Size 122", "Size 140"]
+        data = b"".join(pg.get_contents().get_data() for pg in r.pages if pg.get_contents() is not None)
+        assert all(f"/OC /oc{k} BDC".encode() in data for k in range(3))
+    svg = next(out.glob("*_master_1to1.svg")).read_text(encoding="utf-8")
+    assert svg.count('class="size-layer"') == 3 and 'id="size_140"' in svg
+    rep = (out / "validation_report.md").read_text(encoding="utf-8")
+    assert rep.count("### Sewability check") == 3
+    md = (out / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "## Sizes in this pattern (nested)" in md and md.startswith("# Beanie · sizes 98 · 122 · 140")
+    js = __import__("json").loads((out / "pattern.json").read_text(encoding="utf-8"))
+    assert [s["layer"] for s in js["nested_sizes"]] == ["Size 98", "Size 122", "Size 140"]
+
+
+def test_nested_blocks_on_any_failing_size(tmp_path, monkeypatch):
+    import generate as GN
+    real = V.validate
+
+    def fake(pat, raise_on_error=False):
+        rep = real(pat)
+        if "122" in pat.size_label:
+            rep.append(V.Check("Measurements", "forced", "ERROR", "", "", ""))
+        return rep
+
+    monkeypatch.setattr(GN.V, "validate", fake)
+    res = GN.run(dict(garment="beanie", size="98,122", formats=["a4"], out=str(tmp_path / "f")), verbose=False)
+    assert not res["ok"]
+    assert not list((tmp_path / "f").glob("*.pdf"))
+    assert (tmp_path / "f" / "validation_report.md").read_text(encoding="utf-8").count("### Sewability check") == 2

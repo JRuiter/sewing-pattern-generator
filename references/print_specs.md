@@ -70,6 +70,21 @@ For projector sewing (projecting the pattern straight onto the fabric):
 - `projector_dark`: black background, white cutting line, yellow seam line, cyan grainline,
   dark grey grid; easier to see on most fabrics in a darkened room.
 
+## Nested sizes (`--size 98,110,122`)
+
+- Every size is drafted and validated on its own; one failing size blocks all print files.
+- The pieces are overlaid at the drafting origin, which every module puts on a construction
+  point shared by all sizes (centre front/back with the waist or hem, the corner of a band).
+- The layout packs the envelope (union) of all sizes, so every size fits on every format.
+- Each size has its own colour and cutting-line dash (red solid, blue long dashes, green short
+  dashes, purple dash-dot, …) and a size tag on its outline. Label block and grainline are
+  drawn once, inside the smallest size.
+- PDF: one optional content group per size ("Size 98" …, all on by default, the viewer opens
+  with the layers panel). The header has a size legend in the same layers. SVG: one
+  `<g class="size-layer" inkscape:groupmode="layer">` per size. DXF: one file per size.
+- Instructions, cutting layout and fabric refer to the largest size; the size table lists the
+  fabric and finished measurements of every size.
+
 ## Additional files
 
 - `*_master_1to1.svg`: SVG with unit mm (`width="…mm"`), 1:1, for plotter/CAD software.
