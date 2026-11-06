@@ -51,7 +51,7 @@ Detected module: **Joggers**, fit **normal**, estimated size ≈ 116
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband (front + back) | 180° | 180.1° | +0.1° | ✅ OK |  |
-| Measurements | Hip circumference pattern = body + ease | 69.2 cm | 69.2 cm | -0.0 % | ✅ OK | target from measurement/override |
+| Measurements | Hip circumference pattern = body + ease | 69.2 cm | 69.2 cm | +0.0 % | ✅ OK | target from measurement/override |
 | Measurements | Top edge fits over the hip | ≥ 64.3 cm | 76.4 cm | +120.9 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 13.9 cm – 23.2 cm | 19.1 cm | +0.0 mm | ✅ OK | body rise 17.5 cm |
 | Measurements | Inseam length plausible | 36.8 cm – 57.1 cm | 51.3 cm | +0.0 mm | ✅ OK | body inseam 51.0 cm |
@@ -64,5 +64,7 @@ Detected module: **Joggers**, fit **normal**, estimated size ≈ 116
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Leg cuff: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Leg cuff: grainline & cutting | present | cut 2 |  | ✅ OK | Rib knit |
+| Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
+| Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 28 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.

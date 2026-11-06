@@ -36,7 +36,7 @@
     "_R": 242.7,
     "_hip_total": 858.0,
     "_drop": 73.2,
-    "_back_drop": 3.2565875659050914,
+    "_back_drop": 3.256587565905038,
     "_elastic": 504.0,
     "_cuff_len": 199.584,
     "_hem_c": 285.12,
@@ -238,6 +238,80 @@
           "length_mm": 140.0
         }
       ]
+    }
+  ],
+  "construction": [
+    {
+      "name": "hip_width",
+      "value": 858.0,
+      "formula": "hip × (1 + 30 % ease)",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_back_offset",
+      "value": 5.0,
+      "formula": "front quarter narrower, back quarter wider by this amount",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_width",
+      "value": 209.5,
+      "formula": "hip_width / 4 − front_back_offset",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_width",
+      "value": 219.5,
+      "formula": "hip_width / 4 + front_back_offset",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_crotch_extension",
+      "value": 42.9,
+      "formula": "5 % of hip_width",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_crotch_extension",
+      "value": 85.8,
+      "formula": "10 % of hip_width",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "rise",
+      "value": 242.7,
+      "formula": "(side length − inseam) + seat ease + harem drop − waistband height",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "inseam_finished",
+      "value": 481.8,
+      "formula": "inseam − allowance to the floor − harem drop + blousing",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "hem_width",
+      "value": 285.12,
+      "formula": "cuff length / cuff stretch ratio",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
     }
   ],
   "validation": [
@@ -492,6 +566,24 @@
       "actual": "cut 2",
       "delta": "",
       "note": "Rib knit"
+    },
+    {
+      "group": "Labels",
+      "name": "Front leg: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "3 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Back leg: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "6 notch mark(s)",
+      "delta": "",
+      "note": ""
     }
   ],
   "fabric_mm": {

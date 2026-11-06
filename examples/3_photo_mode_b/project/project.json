@@ -13,17 +13,17 @@
     "blouse": 0.0,
     "crotch_drop": 0.0,
     "fit": "normal",
-    "hip_total": 691.9875100438697,
-    "fork_factor": 0.9847048937226544,
-    "front_rise_total": 190.9501625915358,
-    "inseam_total": 512.5996748169284,
+    "hip_total": 691.987510043869,
+    "fork_factor": 0.9847048937226653,
+    "front_rise_total": 190.95016259153567,
+    "inseam_total": 512.5996748169287,
     "opening_total": 193.58617118672208
   },
   "params": {
-    "hip_total": 691.9875100438697,
-    "fork_factor": 0.9847048937226544,
-    "front_rise_total": 190.9501625915358,
-    "inseam_total": 512.5996748169284,
+    "hip_total": 691.987510043869,
+    "fork_factor": 0.9847048937226653,
+    "front_rise_total": 190.95016259153567,
+    "inseam_total": 512.5996748169287,
     "opening_total": 193.58617118672208
   },
   "size_estimate": 116,
@@ -53,19 +53,19 @@
     "cuff_h": 50.5
   },
   "actual_mm": {
-    "hip_circ": 691.9875100438696,
-    "thigh_circ": 440.0009806697241,
-    "knee_circ": 344.8164508210945,
+    "hip_circ": 691.987510043869,
+    "thigh_circ": 440.00098066972464,
+    "knee_circ": 344.8164508210948,
     "opening": 193.58617118672208,
     "waist_relaxed": 494.0,
-    "waist_max": 663.9561052575975,
-    "outseam": 703.5498374084642,
-    "inseam": 512.5996748169284,
-    "front_rise": 190.9501625915358,
-    "back_rise": 207.1094554926774,
+    "waist_max": 663.9561052575966,
+    "outseam": 703.5498374084643,
+    "inseam": 512.5996748169287,
+    "front_rise": 190.95016259153567,
+    "back_rise": 207.10945549267734,
     "waistband_h": 31.5,
     "cuff_h": 50.5,
-    "crotch_seam": 456.53745967747835
+    "crotch_seam": 456.537459677479
   },
   "piece_graph": {
     "pieces": [

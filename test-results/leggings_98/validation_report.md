@@ -27,5 +27,25 @@
 | Labels | Back leg: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Wide yoga waistband: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Wide yoga waistband: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
+| Geometry | Front leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Back leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
+| Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 25 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 29 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"hip_width": 522}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `hip_width` | 52.2 cm | hip × (1 + -8 % ease) |  |
+| `front_back_offset` | 0.5 cm | front quarter narrower, back quarter wider by this amount |  |
+| `front_width` | 12.5 cm | hip_width / 4 − front_back_offset |  |
+| `back_width` | 13.5 cm | hip_width / 4 + front_back_offset |  |
+| `front_crotch_extension` | 2.1 cm | 4 % of hip_width |  |
+| `back_crotch_extension` | 4.2 cm | 8 % of hip_width |  |
+| `rise` | 11.4 cm | (side length − inseam) + seat ease − waistband height |  |
+| `inseam_finished` | 38.5 cm | inseam − allowance to the floor |  |
+| `hem_width` | 15.4 cm | leg opening for fit 'slim' |  |
