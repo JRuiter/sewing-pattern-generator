@@ -455,3 +455,39 @@ def test_no_allowance_fabric_consumption_includes_allowances():
     with_sa = L.layout_fabric(_draft_sa("tshirt_basic"), mode="single")["Main fabric"]["length"]
     none = L.layout_fabric(_draft_sa("tshirt_basic", seam_allowance="none"), mode="single")["Main fabric"]["length"]
     assert none == pytest.approx(with_sa, abs=10)
+# ---------------------------------------------------------------------------
+# Projector output (#9)
+# ---------------------------------------------------------------------------
+
+GRID = 100.0 / 25.4 * 72.0          # 283.46 pt
+
+
+@pytest.mark.parametrize("dark", [False, True])
+def test_projector_pdf(harem_mod, tmp_path, dark):
+    lay = L.layout_projector(harem_mod, 1500)
+    p = tmp_path / "proj.pdf"
+    R.render_projector_pdf(harem_mod, lay, str(p), dark=dark)
+    rd, streams = _page_streams(p)
+    assert len(rd.pages) == 1
+    box_ = rd.pages[0].mediabox
+    assert abs(float(box_.width) - 1500 / 25.4 * 72) < 0.1          # 1:1 page
+    s = streams[0]
+    assert _has_control_square(s)
+    cells = [m for m in re.finditer(r"(-?[\d.]+) (-?[\d.]+) re", s)
+             if abs(float(m.group(1)) - GRID) < 0.01 and abs(float(m.group(2)) - GRID) < 0.01]
+    assert len(cells) == int(lay.page_w // 100) * int(lay.page_h // 100)
+    widths = [float(w) for w in re.findall(r"([\d.]+) w\b", s)]
+    assert widths and min(widths) >= 1.0                             # lines ≥ 1 pt
+    if dark:
+        assert "0 0 0 rg" in s                                       # black background
+    # grainlines parallel to the long page edge
+    for pl in lay.placements:
+        g = pl.apply(np.array(harem_mod.pieces[pl.index].grain))
+        assert abs(g[1, 0] - g[0, 0]) < 0.5
+
+
+def test_projector_format_in_generate(tmp_path):
+    import generate as GN
+    rc = GN.main(["--garment", "beanie", "--size", "122", "--format", "projector", "--out", str(tmp_path)])
+    assert rc == 0
+    assert list(tmp_path.glob("*_projector.pdf"))

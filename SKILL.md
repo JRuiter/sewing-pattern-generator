@@ -122,7 +122,9 @@ narrow circle-skirt hem keep their construction allowance.
 Formats: `rollNNN` (page width = roll − 10 mm, portrait; pieces wider than the roll are
 split automatically into strips with glue marks), `a0`, `a1` (pieces whole, oversized
 pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `dxf` /
-`dxf14` (DXF for cutting machines and CAD, AAMA layers, see `references/print_specs.md`).
+`dxf14` (DXF for cutting machines and CAD, AAMA layers, see `references/print_specs.md`),
+`projector` / `projector_dark` (one page 1:1 for projector sewing, 10 cm calibration grid,
+thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
 instructions (MD + PDF), `pattern.json`, `validation_report.md`.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of

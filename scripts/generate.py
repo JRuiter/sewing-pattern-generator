@@ -16,7 +16,8 @@ Spec JSON (all fields optional except garment and size/measures):
    "fabric_layout": "auto"}   # auto | folded | single (cutting layout on the fabric)
 
 Formats: roll610 (any roll width), a4, letter, a1, a0, dxf (AAMA layers, seam line on
-layer 8), dxf14 (same, seam line on layer 14).
+layer 8), dxf14 (same, seam line on layer 14), projector / projector_dark (one page 1:1
+for projector sewing, width `projector_width_mm`, default 1500).
 Measurements can be read from an XML measurement file (.smis/.vit, `measures_file`);
 `measures_cm` values take precedence over the file. `export_measures` writes the
 measurements used as body_measurements.smis next to the pattern.
@@ -151,6 +152,13 @@ def run(spec: dict, verbose: bool = True) -> dict:
             files[f"Preview {f.upper()} tiles"] = png
             if master_lay is None:
                 master_lay = lay
+        elif f in ("projector", "projector_dark"):
+            width = float(spec.get("projector_width_mm", 1500.0))
+            lay = L.layout_projector(pat, width)
+            dark = f == "projector_dark"
+            p = os.path.join(out, f"{base}_projector{'_dark' if dark else ''}.pdf")
+            R.render_projector_pdf(pat, lay, p, dark=dark)
+            files[f"PDF projector{' (dark)' if dark else ''}, 1 page 1:1 ({lay.page_w:.0f} × {lay.page_h:.0f} mm)"] = p
         elif f in ("a0", "a1"):
             lay, tiled = L.layout_sheets(pat, f.upper())
             p = os.path.join(out, f"{base}_{f}.pdf")
@@ -228,7 +236,8 @@ def main(argv=None):
     ap.add_argument("--notch-style", choices=["slit", "t", "v"], help="notch shape (default slit)")
     ap.add_argument("--construction", help='override construction values in mm as JSON, e.g. \'{"rise": 250}\'')
     ap.add_argument("--format", default="roll610,a4",
-                    help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14 (comma-separated)")
+                    help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14, projector, projector_dark "
+                         "(comma-separated)")
     ap.add_argument("--fabric-layout", choices=L.FABRIC_LAYOUTS,
                     help="cutting layout: folded (double layer), single or auto (shorter one; default)")
     ap.add_argument("--seam-allowance", help="seam allowance in mm for all seams, or 'none' (pattern without allowances)")
