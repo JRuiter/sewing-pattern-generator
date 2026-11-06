@@ -58,5 +58,24 @@ Apply to every output of `scripts/render.py`. Checked automatically by
 
 - `*_master_1to1.svg`: SVG with unit mm (`width="…mm"`), 1:1, for plotter/CAD software.
 - `*_preview.png`: coloured preview with page/strip grid.
+- `*_aama.dxf` (format `dxf`) / `*_aama_14.dxf` (format `dxf14`): DXF R12 ASCII, unit mm,
+  1:1, y up, readable by LibreCAD, Inkscape, cutter software and pattern CAD. Each piece is
+  one BLOCK, inserted at its position from a 1600 mm wide layout. Layers follow the AAMA
+  convention used in the apparel industry:
+
+  | Layer | Content |
+  |---|---|
+  | 1 | cutting line (closed polyline incl. seam allowance) and piece texts (`Piece Name:`, `Size:`, `Quantity:`, `Material:`) |
+  | 8 | seam line (`dxf`) and internal lines (pocket placement, fold-over lines) |
+  | 14 | seam line (`dxf14`, for programs that expect it there) |
+  | 6 | fold edges ("cut on fold" = mirror line) |
+  | 4 | notches, one line per notch starting on the cutting line |
+  | 7 | grainline |
+
+  A 50 × 50 mm control square on layer 8 sits below the pieces. Umlauts in texts are
+  transliterated (R12 is ASCII).
+- `body_measurements.smis` (with `--export-measures`): the body measurements used, as an
+  XML measurement file that pattern CAD programs can open; can be read back with
+  `--measures-file`.
 - `cutting_layout.png`: position of the pieces on the fabric (single layer, grainline
   parallel to the selvage, all copies, mirrored pieces flipped) with fabric consumption.

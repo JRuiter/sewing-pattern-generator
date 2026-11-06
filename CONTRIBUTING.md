@@ -63,9 +63,16 @@ short description).
   (net outline); the cut line is computed from each edge's `sa` (seam allowance in mm).
 - Consecutive edges must meet (gap ≤ 0.5 mm) – `Piece.check_closed()` and the validation check this.
 - Fold edges: `Edge(..., sa=0, fold=True)`; they are drawn dash-dotted and the cutting layout unfolds them.
+- Hems and casings whose allowance is folded back: `Edge(..., turned=True)`. Their corners are mirrored
+  at the fold line so the folded allowance matches a tapered neighbouring seam.
 - Every piece needs a `grain` (two points for the grainline arrow), a `cut_count`, `mirror` (cut as a
   mirrored pair) and a `fabric` (main fabric, rib, lining …; this groups the cutting layout).
 - `notches`, `marks` (pocket placement, fold lines, elastic casing) and `info` lines are optional.
+  A `Notch` sits on the seam line; rendering and DXF project it onto the cutting line (bisector at
+  corners), so a notch at an edge end (`s=-1`) is fine.
+- Record important derived values with `construction.Construction`
+  (`C.val("rise", value, "formula text")`) and set `pat.construction = C.rows()`: they appear in the
+  report and can be overridden by the user with the option `construction`.
 - `rect_piece(...)` builds rectangular pieces (bands, cuffs, pockets) with one call.
 
 Geometry helpers live in `scripts/geometry.py`: `G.P`, `G.line`, `G.tangent_curve`, `G.join`,
@@ -99,7 +106,8 @@ angles once two pieces are sewn together, use `sum=[(piece, a, b), …]`.
 (plausibility, defaults to a warning).
 
 The geometric checks (closed outline, no self-intersection, seam allowance on every non-fold edge,
-grainline present) run automatically for every piece.
+grainline present, turned allowances lie flat, notches on the cutting line) run automatically for
+every piece.
 
 ### 4. Minimal example
 

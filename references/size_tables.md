@@ -86,6 +86,35 @@ Plausibility check (`validate_measures`) relative to body height: inseam 0.35–
 length 0.50–0.66, rise 0.10–0.20, arm length 0.36–0.62; also waist ≤ 1.15 × hip. Deviations
 appear as a warning in the sewing instructions; nothing is corrected silently.
 
+## Measurement files (.smis / .vit)
+
+`scripts/measure_files.py` reads and writes the XML measurement files of open-source
+pattern CAD programs. Units mm, cm and inch are converted; values may be simple formulas
+referencing other measurements in the file. Name mapping:
+
+| Skill key | Name in the file |
+|---|---|
+| `height` | `height` |
+| `chest` | `bust_circ` (fallback `body_bust_circ`, `highbust_circ`) |
+| `waist` | `waist_circ` |
+| `hip` | `hip_circ` |
+| `head` | `head_circ` |
+| `neck` | `neck_circ` (fallback `neck_mid_circ`) |
+| `inseam` | `leg_crotch_to_floor` |
+| `side_length` | `height_waist_side` |
+| `crotch_depth` | `rise_length_side_sitting` |
+| `arm` | `arm_shoulder_tip_to_wrist` |
+| `back_length` | `neck_back_to_waist_b` (fallback `neck_back_to_waist_side`) |
+| `shoulder` | `shoulder_length` |
+| `upper_arm` | `arm_upper_circ` |
+| `wrist` | `arm_wrist_circ` |
+| `thigh` | `leg_thigh_upper_circ` (fallback `leg_thigh_mid_circ`) |
+| `knee` | `leg_knee_circ` |
+| `ankle` | `leg_ankle_circ` (fallback `leg_ankle_high_circ`) |
+
+Other measurements in the file are ignored (listed as a warning). The kids' table is
+checked by a test: every column grows with the size and no step is an outlier.
+
 ## How to measure (short version for users)
 
 - **Chest:** horizontally around the fullest part, loosely, without constricting.
