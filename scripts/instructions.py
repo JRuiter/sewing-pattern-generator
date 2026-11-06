@@ -8,6 +8,7 @@ import allowance as A
 import ease as E
 import layout as L
 import measurements as M
+import units as U
 
 FABRIC_DEFAULT_WIDTH = {"Main fabric": 1500.0, "Rib knit": 700.0, "Lining": 1400.0}
 
@@ -36,6 +37,7 @@ def render_fabric_png(pattern, plans, path):
 
     n = len(plans)
     fig, axs = plt.subplots(1, n, figsize=(4.2 * n, 7), squeeze=False)
+    units = U.of(pattern)
     palette = ["#cfe2f3", "#fce5cd", "#d9ead3", "#ead1dc", "#fff2cc", "#d0e0e3", "#f4cccc"]
     for ax, (fab, pl) in zip(axs[0], plans.items()):
         W, H = pl["width"], pl["length"]
@@ -72,7 +74,8 @@ def render_fabric_png(pattern, plans, path):
         ax.set_aspect("equal")
         ax.axis("off")
         how = "folded (double layer)" if folded else "single layer"
-        ax.set_title(f"{fab}: {W / 10:.0f} cm wide, {how}\nneeded ≈ {pl['need_mm'] / 1000:.2f} m",
+        ax.set_title(f"{fab}: {U.fabric_width(W, units)} wide, {how}\n"
+                     f"needed ≈ {U.fabric_length(pl['need_mm'], units)}",
                      fontsize=8)
     fig.suptitle(f"Cutting layout · {pattern.title} {pattern.size_label}", fontsize=10)
     fig.tight_layout()
@@ -81,7 +84,7 @@ def render_fabric_png(pattern, plans, path):
     return path
 
 
-def layout_text(pl) -> str:
+def layout_text(pl, units: str = "metric") -> str:
     if pl.get("mode") == "folded":
         t = "folded selvage to selvage, cut on fold pieces at the fold"
     else:
@@ -89,7 +92,7 @@ def layout_text(pl) -> str:
     alt = pl.get("alternative")
     if alt:
         other = "folded" if alt["mode"] == "folded" else "single layer"
-        t += f", incl. 10 % for shrinkage; {other} would need {alt['need_mm'] / 1000:.2f} m"
+        t += f", incl. 10 % for shrinkage; {other} would need {U.fabric_length(alt['need_mm'], units)}"
     else:
         t += ", incl. 10 % for shrinkage"
     return t
@@ -98,7 +101,7 @@ def layout_text(pl) -> str:
 def piece_table(pattern):
     rows = ["| Piece | Cutting | Fabric | Seam allowance |", "|---|---|---|---|"]
     for p in pattern.pieces:
-        rows.append(f"| {p.name} | {p.cut_text()} | {p.fabric} | {p.sa_text()} |")
+        rows.append(f"| {p.name} | {p.cut_text()} | {p.fabric} | {p.sa_text(U.of(pattern))} |")
     return "\n".join(rows)
 
 
@@ -109,7 +112,7 @@ def finished_table(pattern):
     rows = ["| Finished measurement | Value |", "|---|---|"]
     for k, v in pattern.finished.items():
         lab = labels.get(k, (k,))[0]
-        rows.append(f"| {lab} | {v / 10:.1f} cm |")
+        rows.append(f"| {lab} | {U.length(v, U.of(pattern))} |")
     return "\n".join(rows)
 
 
@@ -120,7 +123,7 @@ def measures_table(pattern, sources=None):
     for k in keys:
         if k in pattern.measures:
             src = (sources or {}).get(k, "table")
-            rows.append(f"| {M.LABELS.get(k, k)} | {pattern.measures[k] / 10:.1f} cm | {src} |")
+            rows.append(f"| {M.LABELS.get(k, k)} | {U.length(pattern.measures[k], U.of(pattern))} | {src} |")
     return "\n".join(rows)
 
 
@@ -145,7 +148,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
         lines.append(f"- {k}: `{os.path.basename(v)}`")
     lines += ["", "## Printing", "",
               "- Always print at **100 % / \"Actual size\"** (not \"Fit to page\").",
-              "- Measure the **5 × 5 cm** control square before you cut.",
+              ("- Measure the **5 × 5 cm** control square (or the **1 inch** square) before you cut."
+               if U.of(pattern) == "imperial" else "- Measure the **5 × 5 cm** control square before you cut."),
               "- Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
               "a custom paper size with exactly this width and length, and turn rotation/scaling off.",
               "", "## Body measurements", "", measures_table(pattern, sources), "",
@@ -153,8 +157,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
               "## Pattern pieces", "", piece_table(pattern), "",
               "## Fabric needed", ""]
     for fab, pl in plans.items():
-        lines.append(f"- **{fab}:** about {pl['need_mm'] / 1000:.2f} m at {pl['width'] / 10:.0f} cm width "
-                     f"({layout_text(pl)})")
+        lines.append(f"- **{fab}:** about {U.fabric_length(pl['need_mm'], U.of(pattern))} at "
+                     f"{U.fabric_width(pl['width'], U.of(pattern))} width ({layout_text(pl, U.of(pattern))})")
         if pl.get("note"):
             lines.append(f"  - ⚠️ {pl['note']}")
     for n in pattern.notes:

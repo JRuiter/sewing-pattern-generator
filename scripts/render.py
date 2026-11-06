@@ -23,6 +23,7 @@ import allowance as A
 import geometry as G
 import layout as L
 import notches as N
+import units as U
 
 MM = 72.0 / 25.4        # pt je mm
 PT = 25.4 / 72.0        # mm je pt
@@ -180,7 +181,7 @@ def piece_prims(piece, pattern, extra_label=None):
              piece.cut_text() + f" ({piece.fabric})"]
     if piece.on_fold:
         lines.append("place this edge on the fold")
-    lines.append(piece.sa_text())
+    lines.append(piece.sa_text(U.of(pattern)))
     if piece.stretch_dir:
         lines.append(piece.stretch_dir)
     for info in piece.info:

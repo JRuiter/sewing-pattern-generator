@@ -13,7 +13,8 @@ Spec JSON (all fields optional except garment and size/measures):
    "formats": ["roll610", "a4"], "out": "out/harem122",
    "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700},
    "measures_file": "lena.smis", "export_measures": true,
-   "fabric_layout": "auto"}   # auto | folded | single (cutting layout on the fabric)
+   "fabric_layout": "auto",   # auto | folded | single (cutting layout on the fabric)
+   "units": "metric"}         # or "imperial": reports in inches/yards; "measures_in" = inches
 
 Formats: roll610 (any roll width), a4, letter, a1, a0, dxf (AAMA layers, seam line on
 layer 8), dxf14 (same, seam line on layer 14), projector / projector_dark (one page 1:1
@@ -42,6 +43,7 @@ import layout as L  # noqa: E402
 import measure_files as MF  # noqa: E402
 import measurements as M  # noqa: E402
 import render as R  # noqa: E402
+import units as U  # noqa: E402
 import validate as V  # noqa: E402
 from garments import get  # noqa: E402
 
@@ -49,8 +51,7 @@ from garments import get  # noqa: E402
 def size_label(size, measures_cm) -> str:
     if size is None:
         return "made to measure"
-    system, n = M.parse_size(size)
-    lab = {"kids": "size %g", "women": "women's size %g", "men": "men's size %g"}[system] % n
+    lab = M.size_label(size)
     if measures_cm:
         lab += " (adjusted)"
     return lab
@@ -77,7 +78,8 @@ def draft_from_spec(spec: dict):
     if spec.get("project"):
         spec = spec_from_project(spec["project"], spec)
     mod = get(spec["garment"])
-    given = dict(spec.get("measures_cm") or {})
+    units = U.check(spec.get("units"))
+    given = {**(U.to_cm(spec.get("measures_in"), "imperial") or {}), **(spec.get("measures_cm") or {})}
     file_warn = []
     if spec.get("measures_file"):
         from_file, file_warn = MF.read_file(spec["measures_file"])
@@ -85,6 +87,7 @@ def draft_from_spec(spec: dict):
     measures, sources = M.complete_measures(given or None, spec.get("size"))
     warn = file_warn + M.validate_measures(measures)
     pat = A.draft(mod, measures, spec.get("options", {}))
+    pat.options["units"] = units
     pat.size_label = spec.get("size_label") or size_label(spec.get("size"), given or None)
     return pat, sources, warn
 
@@ -242,6 +245,8 @@ def main(argv=None):
                     help="cutting layout: folded (double layer), single or auto (shorter one; default)")
     ap.add_argument("--seam-allowance", help="seam allowance in mm for all seams, or 'none' (pattern without allowances)")
     ap.add_argument("--hem-allowance", type=float, help="allowance in mm for turned-up hems")
+    ap.add_argument("--units", choices=["metric", "imperial"],
+                    help="units of --measures and of all reports (imperial: inches and yards)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     if a.spec:
@@ -268,12 +273,17 @@ def main(argv=None):
         size = a.size
         if size is not None and size.replace(".", "").isdigit():
             size = float(size)
+        measures = json.loads(a.measures) if a.measures else None
+        imperial = a.units == "imperial"
         spec = dict(garment=a.garment, size=size, options=opts, out=a.out,
-                    measures_cm=json.loads(a.measures) if a.measures else None,
+                    measures_cm=None if imperial else measures,
+                    measures_in=measures if imperial else None,
                     formats=[x.strip() for x in a.format.split(",")],
                     measures_file=a.measures_file, export_measures=a.export_measures)
     if a.fabric_layout:
         spec["fabric_layout"] = a.fabric_layout
+    if a.units:
+        spec["units"] = a.units
     res = run(spec)
     return 0 if res["ok"] else 2
 

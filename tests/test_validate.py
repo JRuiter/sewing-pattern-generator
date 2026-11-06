@@ -451,10 +451,6 @@ def test_cli_seam_allowance(tmp_path):
     assert "NO seam allowance" in md
 
 
-def test_no_allowance_fabric_consumption_includes_allowances():
-    with_sa = L.layout_fabric(_draft_sa("tshirt_basic"), mode="single")["Main fabric"]["length"]
-    none = L.layout_fabric(_draft_sa("tshirt_basic", seam_allowance="none"), mode="single")["Main fabric"]["length"]
-    assert none == pytest.approx(with_sa, abs=10)
 # ---------------------------------------------------------------------------
 # Projector output (#9)
 # ---------------------------------------------------------------------------
@@ -491,3 +487,66 @@ def test_projector_format_in_generate(tmp_path):
     rc = GN.main(["--garment", "beanie", "--size", "122", "--format", "projector", "--out", str(tmp_path)])
     assert rc == 0
     assert list(tmp_path.glob("*_projector.pdf"))
+
+
+def test_no_allowance_fabric_consumption_includes_allowances():
+    with_sa = L.layout_fabric(_draft_sa("tshirt_basic"), mode="single")["Main fabric"]["length"]
+    none = L.layout_fabric(_draft_sa("tshirt_basic", seam_allowance="none"), mode="single")["Main fabric"]["length"]
+    assert none == pytest.approx(with_sa, abs=10)
+
+
+# ---------------------------------------------------------------------------
+# Imperial units and US/UK sizes (#13)
+# ---------------------------------------------------------------------------
+
+def test_unit_conversion():
+    import units as U
+    assert U.inch_text(25.4) == '1"'
+    assert U.inch_text(10.0) == '3/8"'
+    assert U.inch_text(63.5) == '2 1/2"'
+    assert U.yards(914.4) == 1.0
+    assert U.yards(915.0) == 1.125                       # always rounded up to 1/8 yd
+    assert U.fabric_length(1000.0, "imperial") == "1 1/8 yd"
+    assert U.fabric_length(500.0, "imperial") == "5/8 yd"
+    assert U.fabric_width(1500.0, "imperial") == '59"'
+    assert U.to_cm({"hip": 10}, "imperial") == {"hip": pytest.approx(25.4)}
+    assert U.length(100.0) == "10.0 cm"
+    with pytest.raises(ValueError):
+        U.check("furlongs")
+
+
+@pytest.mark.parametrize("size,system,base", [
+    ("us8", "us_women", ("women", 38)), ("uk12", "uk_women", ("women", 38)),
+    ("US 0", "us_women", ("women", 30)), ("us3t", "us_toddler", ("kids", 98)),
+    ("usk8", "us_kids", ("kids", 128)), ("us kids 9", "us_kids", ("kids", 134)),
+    ("w38", "women", ("women", 38)), (122, "kids", ("kids", 122)),
+])
+def test_us_uk_sizes(size, system, base):
+    sys_, n = M.parse_size(size)
+    assert sys_ == system
+    assert M.base_size(sys_, n) == (base[0], pytest.approx(base[1]))
+
+
+def test_us_size_out_of_range():
+    with pytest.raises(ValueError):
+        M.parse_size("us24")
+
+
+def test_imperial_us8_pattern(tmp_path):
+    import generate as GN
+    rc = GN.main(["--garment", "tshirt_basic", "--size", "us8", "--units", "imperial", "--format", "letter",
+                  "--out", str(tmp_path)])
+    assert rc == 0
+    md = (tmp_path / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "US women's size 8" in md
+    assert 'seam allowance 3/8" included' in md
+    assert re.search(r"about (\d+ )?(\d/8|\d) yd at 59\" width", md)
+    assert " cm |" not in md.split("## Validation report")[0]   # no metric values in the user tables
+
+
+def test_imperial_measures_input():
+    import generate as GN
+    pat, src, _ = GN.draft_from_spec(dict(garment="pants_basic", size="usk8", units="imperial",
+                                          measures_in={"hip": 28}))
+    assert pat.measures["hip"] == pytest.approx(28 * 25.4)
+    assert src["hip"] == "user"

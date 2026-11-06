@@ -115,10 +115,12 @@ class Piece:
             return "cut 2 (mirrored pair)"
         return f"cut {self.cut_count}"
 
-    def sa_text(self) -> str:
+    def sa_text(self, units: str = "metric") -> str:
+        import units as U
+
         def cm(v):
-            t = f"{v / 10:.2f}"
-            return t[:-1] if t.endswith("0") else t
+            return U.allowance(v, units).removesuffix(" cm")
+        unit = "" if U.check(units) == "imperial" else " cm"
 
         def grouped(attr):
             vals: dict = {}
@@ -129,7 +131,7 @@ class Piece:
 
         def describe(vals):
             common = max(vals, key=lambda k: len(vals[k]))
-            rest = [f"{', '.join(sorted(set(names)))}: {cm(k)} cm" for k, names in vals.items() if k != common]
+            rest = [f"{', '.join(sorted(set(names)))}: {cm(k)}{unit}" for k, names in vals.items() if k != common]
             return common, rest
 
         vals = grouped("sa")
@@ -140,9 +142,9 @@ class Piece:
             if not hints:
                 return "NO seam allowance included"
             common, rest = describe(hints)
-            return "; ".join([f"NO seam allowance included: add {cm(common)} cm"] + rest)
+            return "; ".join([f"NO seam allowance included: add {cm(common)}{unit}"] + rest)
         common, rest = describe(vals)
-        return "; ".join([f"seam allowance {cm(common)} cm included"] + rest)
+        return "; ".join([f"seam allowance {cm(common)}{unit} included"] + rest)
 
     def transformed(self, fn) -> Piece:
         """Copy with all points transformed by fn."""
