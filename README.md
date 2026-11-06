@@ -98,7 +98,7 @@ python scripts/generate.py --garment skirt --size 128 --style circle --format a1
 python scripts/generate.py --spec order.json                 # everything as JSON
 
 # photo mode B: measure a flat-lay photo with the reference card, rebuild the pattern, print it
-cd scripts && python -m reverse.pipeline ../photo.jpg --type pants --out ../project
+cd scripts && python -m reverse.pipeline ../photo.jpg --type pants --out ../project   # or --type top (T-shirt / raglan)
 python generate.py --project ../project/project.json --format roll610 --out ../out/copy
 ```
 

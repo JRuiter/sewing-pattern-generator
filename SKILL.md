@@ -80,9 +80,17 @@ Then the print files:
 ```bash
 python scripts/generate.py --project project/project.json --format roll610,a4 --out out/copy
 ```
-Mode B is fully automated for **pants**; tops are measured roughly (`--type top`: chest
-width, hem width, length, sleeve) and fitted with `tshirt_basic.fit_to_targets`. Ask for
-armhole and neckline measurements with a tape measure in that case.
+Mode B works for **pants** (`--type pants`) and for **T-shirts / raglan tops**
+(`--type top`, module `tshirt_basic`). For tops the photo gives chest and hem width, length,
+underarm depth, the front neckline (width and depth), back neck depth, the shoulder point,
+the sleeve top line, upper-arm width, sleeve reach and opening; set-in or raglan is detected
+from the neckline (a raglan seam leaves it at a sharp corner) and shown in the overlay for
+the user to confirm (`base_options={"sleeve_style": "raglan"}` overrides it). The fit drafts
+candidate patterns, lays them out flat virtually (`flatlay.py`: front ∪ back, sleeve folded
+along its top line) and matches every photo feature by least squares. The scale comes from
+the 10 cm card; for a garment 1.5 m wide (long sleeves spread out) a slight camera tilt can
+shift it by up to 2 %: if the user can, have them measure the chest width flat with a tape
+and pass it as `tape={"chest_flat": 37.2}` (cm): every photo value is then rescaled to it.
 
 ### 4. Measurements
 `measurements.complete_measures(given_cm, size)` fills in missing measurements from the

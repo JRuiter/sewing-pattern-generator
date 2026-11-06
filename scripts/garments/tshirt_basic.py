@@ -23,7 +23,8 @@ DEFAULTS = dict(fit="normal", fabric="jersey", stretch=None, sleeve_style="set_i
                 sleeve_length="short", neckline="round", length="normal", band_fabric="rib",
                 band_stretch=None, sleeve_cuffs=False, hem_band=False, sa=10.0, hem_sa=20.0,
                 neck_band_h=None, chest_total=None, body_length=None, sleeve_len_total=None,
-                sleeve_opening=None, neck_extra=0.0, cuff_h=None, hem_band_h=None)
+                sleeve_opening=None, neck_extra=0.0, cuff_h=None, hem_band_h=None,
+                bicep_total=None, hem_total=None)
 
 
 def resolve_options(options):
@@ -47,8 +48,9 @@ def _body_frame(m, o, adult, C: Construction | None = None):
     bnd = C.val("back_neck_depth", (20 if adult else 15), "fixed")
     sh = C.val("shoulder_length", m["shoulder"] + {"slim": -5, "normal": 0, "wide": 15, "oversized": 0.04 * m["chest"],
                                                    "harem": 15}[o["fit"]], f"shoulder + allowance for fit '{o['fit']}'")
-    drop = sh * math.tan(math.radians(17))
-    sx, sy = nw + sh * math.cos(math.radians(17)), -drop
+    slope = math.radians(C.val("shoulder_slope", 17.0, "fixed", unit="°"))
+    drop = sh * math.tan(slope)
+    sx, sy = nw + sh * math.cos(slope), -drop
     AD = C.val("armhole_depth", 0.18 * Ct + 25 + (0.03 * Ct if o["fit"] in ("wide", "oversized") else 0),
                "18 % of chest_width + 2.5 cm" + (" + 3 %" if o["fit"] in ("wide", "oversized") else ""))
     L = C.val("body_length", o["body_length"] or (m["back_length"] + 0.13 * m["height"]
@@ -109,7 +111,7 @@ def _sleeve(F, o, m, cap_target, adult):
     arm_ease = {"slim": 0.08, "normal": 0.18, "wide": 0.30, "oversized": 0.40, "harem": 0.30}[o["fit"]]
     if not knit:
         arm_ease += 0.08
-    SW = m["upper_arm"] * (1 + arm_ease)
+    SW = o["bicep_total"] or m["upper_arm"] * (1 + arm_ease)
     sl_full = m["arm"] + 10 - (F["sx"] - F["nw"] - m["shoulder"])   # subtract the dropped shoulder
     SL0 = o["sleeve_len_total"] or {"short": 0.0, "3/4": 0.72 * sl_full, "long": sl_full}[o["sleeve_length"]]
     cuff_h = (o["cuff_h"] or (40 if adult else 30) * 1.0) if o["sleeve_cuffs"] else 0.0
@@ -191,7 +193,7 @@ def _raglan(front, back, F, o, m, adult):
     cf = np.linalg.norm(rf[-1] - rf[0])
     cb = np.linalg.norm(rb[-1] - rb[0])
     arm_ease = {"slim": 0.08, "normal": 0.18, "wide": 0.30, "oversized": 0.40, "harem": 0.30}[o["fit"]]
-    SWh = max(m["upper_arm"] * (1 + arm_ease) / 2, t / 2 + 20)
+    SWh = max((o["bicep_total"] or m["upper_arm"] * (1 + arm_ease)) / 2, t / 2 + 20)
     dx = SWh - t / 2
     dy = math.sqrt(max(cf ** 2 - dx ** 2, (0.3 * cf) ** 2))
     Nf, Uf = G.P(t / 2, 0), G.P(t / 2 + math.sqrt(max(cf ** 2 - dy ** 2, 1)), -dy)
@@ -274,6 +276,8 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
     hem_band_h = (o["hem_band_h"] or (60 if adult else 45)) if o["hem_band"] else 0.0
     hem_y = -(F["L"] - hem_band_h)
     flare = 0.0 if o["hem_band"] or o["fit"] == "slim" else F["q"] * 0.04
+    if o["hem_total"] and not o["hem_band"]:
+        flare = max(-0.15 * F["q"], o["hem_total"] / 4 - F["q"])
     front = _body_piece("front", "Front", F, F["fnd"], 0.62, o, hem_y, flare,
                         [Notch("armhole", G.length(_armhole(F["sx"], F["sy"], F["q"], F["AD"], 0.62, F["nw"])) * 0.45, 1)])
     back = _body_piece("back", "Back", F, F["bnd"], 0.5, o, hem_y, flare,
@@ -435,17 +439,6 @@ FINISHED_LABELS = {
     "sleeve_len": ("Sleeve length", "length"), "sleeve_opening": ("Sleeve opening", "width"),
     "bicep_circ": ("Upper-arm width", "width"), "neckline": ("Neckline circumference", "width"),
 }
-
-
-def fit_to_targets(targets, base_options, size=None, **kw):
-    """Top reconstruction: chest width and length directly from the measurement (closed form)."""
-    import measurements as M
-    size = size or 122
-    opts = dict(base_options)
-    opts.update(chest_total=targets["chest_circ"], body_length=targets["length"])
-    pat = draft(M.size_measures(size), opts)
-    return dict(cost=0.0, fit=opts.get("fit", "normal"), params=dict(chest_total=targets["chest_circ"],
-                body_length=targets["length"]), options=opts, size=size, pattern=pat)
 
 
 def sewing_steps(pat):

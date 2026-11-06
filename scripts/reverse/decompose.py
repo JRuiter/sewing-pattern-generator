@@ -14,7 +14,8 @@ def features_from_measurement(garment: str, meas_mm: dict) -> dict:
     if garment in ("pants", "pants_basic"):
         return dict(module="pants_basic", waistband=meas_mm.get("waistband_h", 0) > 5,
                     cuffs=meas_mm.get("cuff_h", 0) > 10, pockets=[])
-    return dict(module="tshirt_basic")
+    return dict(module="tshirt_basic", options=dict(sleeve_style=meas_mm.get("_sleeve_style", "set_in")),
+                front_neck="front_neck" in meas_mm)
 
 
 def options_from_features(feat: dict) -> dict:
@@ -55,7 +56,13 @@ def missing_photos(feat: dict) -> list[str]:
         return ["Optional, for a more accurate crotch curve: fold one leg inwards so that the "
                 "front and back crotch seams lie flat, and photograph from above (with the card).",
                 "Photograph the back flat too if there are pockets/yokes at the back."]
-    return ["Fold the sleeve out and photograph the armhole flat."]
+    out = []
+    if not feat.get("front_neck", True):
+        out.append("The front neckline was not found: photograph the neckline flat in good light, or "
+                   "measure the front neck depth (centre back to centre front) with a tape.")
+    out.append("Optional, for the exact armhole curve: fold the sleeve back over the body and "
+               "photograph the armhole seam flat (with the card).")
+    return out
 
 
 def describe(g: dict) -> str:
