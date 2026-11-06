@@ -35,6 +35,12 @@ Each folder holds `validation_report.md` (the full check table) and a preview PN
 | circle skirt | 98 | 14 | 14 | 0 | 0 | [image](circle_skirt_98/circle_skirt_98_roll610_preview.png) |
 | circle skirt | 140 | 14 | 14 | 0 | 0 | [image](circle_skirt_140/circle_skirt_140_roll610_preview.png) |
 | circle skirt | women's 38 | 14 | 14 | 0 | 0 | [image](circle_skirt_w38/circle_skirt_w38_roll610_preview.png) |
+| dress gathered | 98 | 46 | 46 | 0 | 0 | [image](dress_gathered_98/dress_gathered_98_roll610_preview.png) |
+| dress gathered | 140 | 46 | 46 | 0 | 0 | [image](dress_gathered_140/dress_gathered_140_roll610_preview.png) |
+| dress gathered | women's 38 | 46 | 46 | 0 | 0 | [image](dress_gathered_w38/dress_gathered_w38_roll610_preview.png) |
+| tshirt dress | 98 | 34 | 34 | 0 | 0 | [image](tshirt_dress_98/tshirt_dress_98_roll610_preview.png) |
+| tshirt dress | 140 | 34 | 34 | 0 | 0 | [image](tshirt_dress_140/tshirt_dress_140_roll610_preview.png) |
+| tshirt dress | women's 38 | 34 | 34 | 0 | 0 | [image](tshirt_dress_w38/tshirt_dress_w38_roll610_preview.png) |
 | beanie | 98 | 11 | 11 | 0 | 0 | [image](beanie_98/beanie_98_roll610_preview.png) |
 | beanie | 140 | 11 | 11 | 0 | 0 | [image](beanie_140/beanie_140_roll610_preview.png) |
 | beanie | women's 38 | 11 | 11 | 0 | 0 | [image](beanie_w38/beanie_w38_roll610_preview.png) |
@@ -42,4 +48,4 @@ Each folder holds `validation_report.md` (the full check table) and a preview PN
 | loop | 140 | 6 | 6 | 0 | 0 | [image](loop_140/loop_140_roll610_preview.png) |
 | loop | women's 38 | 6 | 6 | 0 | 0 | [image](loop_w38/loop_w38_roll610_preview.png) |
 
-**Total:** 876 checks, 876 OK, 0 warnings, 0 errors.
+**Total:** 1116 checks, 1116 OK, 0 warnings, 0 errors.

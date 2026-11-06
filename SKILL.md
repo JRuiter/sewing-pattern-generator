@@ -1,6 +1,6 @@
 ---
 name: sewing-pattern-generator
-description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt, skirt, beanie, loop scarf.
+description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt/zip jacket, skirt, dress, beanie, loop scarf.
 ---
 
 # Sewing pattern generator
@@ -109,6 +109,7 @@ Modules and main options:
 | `tshirt_basic` | fit · fabric · sleeve_style (set_in, raglan) · sleeve_length (short, 3/4, long) · neckline (round, v) · length (normal, tunic) · sleeve_cuffs · hem_band |
 | `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) · front (closed, zip: zip-up jacket with split front, side pockets, zip guard, zip length in the notes) · zip_guard |
 | `skirt` | style: gathered, a_line, circle · length (mini, knee, midi, maxi) · gather · flare_deg |
+| `dress` | style: waist_seam (T-shirt bodice + skirt: gathered, a_line, circle; gather 1.0–2.5; waist_elastic; pockets in the side seam), shirt_dress (A-line T-shirt dress, flare_cm) · length (mini, knee, midi, maxi) · all T-shirt sleeve/neckline options |
 | `beanie` | brim, slouch |
 | `loop` | wraps (1 = single, 2 = worn doubled), height |
 
@@ -165,7 +166,7 @@ present. Fix anything odd or tell the user openly.
   proportions. Exact measurements only with mode B (scale in the picture) or a tape
   measure.
 - The back and hidden details are asked about, never invented.
-- Not covered (offer the alternative): dresses, lined/woven jackets, shirts/blouses
+- Not covered (offer the alternative): dresses with closures/darts (woven fitted bodices), lined/woven jackets, shirts/blouses
   with collar and button placket, jeans with a fly, cargo/welt pockets, style lines,
   flared legs.
 - Grading uses grading rules per size step (`reverse/store.py`), never linear scaling.

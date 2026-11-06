@@ -34,6 +34,8 @@ VARIANTS = [
     ("gathered_skirt", "skirt", {"style": "gathered"}),
     ("a_line_skirt", "skirt", {"style": "a_line"}),
     ("circle_skirt", "skirt", {"style": "circle"}),
+    ("dress_gathered", "dress", {"style": "waist_seam", "skirt": "gathered", "pockets": True}),
+    ("tshirt_dress", "dress", {"style": "shirt_dress"}),
     ("beanie", "beanie", {}),
     ("loop", "loop", {}),
 ]
