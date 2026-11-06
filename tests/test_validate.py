@@ -550,3 +550,64 @@ def test_imperial_measures_input():
                                           measures_in={"hip": 28}))
     assert pat.measures["hip"] == pytest.approx(28 * 25.4)
     assert src["hip"] == "user"
+
+
+# ---------------------------------------------------------------------------
+# Pants: leg shapes, cargo pockets, shorts with turn-up (#7)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("shape", ["straight", "tapered", "bootcut", "flare"])
+@pytest.mark.parametrize("size", [98, 152, "w38", "m52"])
+def test_leg_shapes_sewable(shape, size):
+    pat = draft("pants_basic", size, style="trousers", leg_shape=shape)
+    report = V.validate(pat)
+    assert not [(c.name, c.actual) for c in report if c.status == "ERROR"]
+    st = statuses(report)
+    assert st["Inseam front ↔ back"] == "OK" and st["Side seam front ↔ back"] == "OK"
+
+
+def test_flare_matches_flare_cm():
+    for size in (122, "w38"):
+        pat = draft("pants_basic", size, style="trousers", leg_shape="flare", flare_cm=14)
+        o = pat.options
+        knee = next(r for r in pat.construction if r["name"] == "knee_width")["value"]
+        assert pat.finished["opening"] == pytest.approx(knee + 140, abs=3)
+        assert o["_hem_c"] == pytest.approx(knee + 140, abs=0.5)
+        straight = draft("pants_basic", size, style="trousers")
+        tapered = draft("pants_basic", size, style="trousers", leg_shape="tapered")
+        boot = draft("pants_basic", size, style="trousers", leg_shape="bootcut")
+        assert tapered.finished["opening"] < straight.finished["opening"] < boot.finished["opening"] \
+            < pat.finished["opening"]
+
+
+def test_leg_shape_needs_long_uncuffed_leg():
+    pat = draft("pants_basic", 122, style="jogger", leg_shape="flare")      # joggers have cuffs
+    assert pat.options["leg_shape"] == "straight"
+    with pytest.raises(ValueError):
+        draft("pants_basic", 122, leg_shape="balloon")
+
+
+@pytest.mark.parametrize("size", [98, 122, "m52"])
+def test_cargo_pocket(size):
+    pat = draft("pants_basic", size, style="trousers", pockets=["side", "cargo"])
+    assert not [c.name for c in V.validate(pat) if c.status == "ERROR"]
+    assert pat.has("cargo_pocket") and pat.has("cargo_flap")
+    mark = next(mk for mk in pat.piece("front").marks if mk.label == "Cargo pocket")
+    from shapely.geometry import Polygon
+    assert Polygon(pat.piece("front").seam_ring()).contains(Polygon(mark.pts))
+    pk = pat.piece("cargo_pocket")
+    w_pocket = pk.edge("top").length
+    assert w_pocket == pytest.approx(np.ptp(mark.pts[:, 0]) + 2 * 20.0 * max(0.75, min(1.45, pat.measures["height"] / 1220)), abs=0.5)
+    steps = " ".join(get("pants_basic").sewing_steps(pat))
+    assert "Cargo pockets" in steps and "box pleat" in steps
+
+
+@pytest.mark.parametrize("size", [122, "w38"])
+def test_shorts_with_turn_up(size):
+    plain = draft("pants_basic", size, style="trousers", length="short")
+    pat = draft("pants_basic", size, style="trousers", length="short", turn_up=3)
+    assert not [c.name for c in V.validate(plain) if c.status == "ERROR"]
+    assert not [c.name for c in V.validate(pat) if c.status == "ERROR"]
+    assert pat.piece("front").edge("hem").sa == pytest.approx(plain.piece("front").edge("hem").sa + 60)
+    assert any(mk.label == "Turn-up fold" for mk in pat.piece("back").marks)
+    assert "turn-up" in " ".join(get("pants_basic").sewing_steps(pat)).lower()
