@@ -1,2 +1,2 @@
-"""Reverse Engineering (Foto-Modus B): Zerlegen → Vermessen → Abwickeln → Rekonstruieren
-→ Verifizieren → Ableiten/Gradieren. Siehe reverse/pipeline.py für den Gesamtablauf."""
+"""Reverse engineering (photo mode B): decompose → measure → unfold → reconstruct
+→ verify → derive/grade. See reverse/pipeline.py for the complete flow."""

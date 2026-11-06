@@ -1,5 +1,5 @@
-"""Foto-Modus A und B: Messgenauigkeit an synthetischen Testbildern mit bekannter Geometrie,
-Merkmalsliste/Mapping und Rundlauf-Test (Schnitt → Foto → Reverse Engineering → Schnitt)."""
+"""Photo modes A and B: measuring accuracy on synthetic test images with known geometry,
+feature list/mapping and round-trip test (pattern → photo → reverse engineering → pattern)."""
 import cv2
 import numpy as np
 import pytest
@@ -15,8 +15,8 @@ from reverse import store as ST
 from reverse import unfold as U
 from reverse import verify as VF
 
-# (Größe, Stil, Seed) – drei Testbilder
-PHOTOS = [(122, "haremshose", 0), (98, "jogginghose", 1), (152, "leggings", 2)]
+# (size, style, seed): three test images
+PHOTOS = [(122, "harem", 0), (98, "jogger", 1), (152, "leggings", 2)]
 LENGTHS = ["front_rise", "inseam", "outseam", "waistband_h", "cuff_h"]
 WIDTHS = ["hip_circ", "thigh_circ", "opening", "waist_relaxed"]
 
@@ -25,13 +25,13 @@ WIDTHS = ["hip_circ", "thigh_circ", "opening", "waist_relaxed"]
 def synthetic(request, tmp_path_factory):
     size, style, seed = request.param
     pat = PB.draft(M.size_measures(size), {"style": style})
-    path = tmp_path_factory.mktemp("foto") / f"hose_{size}.jpg"
+    path = tmp_path_factory.mktemp("photo") / f"pants_{size}.jpg"
     _, truth = S.synth_pants_photo(pat, str(path), seed=seed)
     return dict(path=str(path), truth=truth, style=style, size=size)
 
 
 # ---------------------------------------------------------------------------
-# Referenzkarte
+# Reference card
 # ---------------------------------------------------------------------------
 
 def test_reference_card_markers_detected():
@@ -41,20 +41,20 @@ def test_reference_card_markers_detected():
     assert found == [0, 1, 2, 3]
 
 
-def test_missing_card_gives_german_error():
+def test_missing_card_gives_clear_error():
     img = np.full((600, 800, 3), 180, np.uint8)
-    with pytest.raises(PM.MeasureError, match="Referenzkarte"):
+    with pytest.raises(PM.MeasureError, match="Reference card"):
         PM.measure(img)
 
 
 # ---------------------------------------------------------------------------
-# Modus B: Messgenauigkeit (Längen < 1 cm, Weiten < 2 %)
+# Mode B: measuring accuracy (lengths < 1 cm, widths < 2 %)
 # ---------------------------------------------------------------------------
 
 def test_mode_b_measurement_accuracy(synthetic, tmp_path):
-    r = PM.measure(synthetic["path"], "hose", overlay_path=str(tmp_path / "overlay.png"))
+    r = PM.measure(synthetic["path"], "pants", overlay_path=str(tmp_path / "overlay.png"))
     assert (tmp_path / "overlay.png").exists()
-    t = U.unfold("hose", r["measures_mm"])
+    t = U.unfold("pants", r["measures_mm"])
     truth = synthetic["truth"]
     for k in LENGTHS:
         assert abs(t[k] - truth[k]) < 10.0, (k, t[k], truth[k])
@@ -63,34 +63,34 @@ def test_mode_b_measurement_accuracy(synthetic, tmp_path):
 
 
 def test_tape_values_override_photo(synthetic):
-    r = PM.measure(synthetic["path"], "hose", tape={"inseam": 40.0})
+    r = PM.measure(synthetic["path"], "pants", tape={"inseam": 40.0})
     assert abs(r["measures_mm"]["inseam"] - 400.0) < 1e-6
 
 
 # ---------------------------------------------------------------------------
-# Modus A: Merkmalsliste mit Konfidenz → Modul + Optionen
+# Mode A: feature list with confidence → module + options
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("size,style,expected", [(122, "haremshose", "harem"), (128, "jogginghose", "gerade"),
-                                                 (140, "leggings", "eng")])
+@pytest.mark.parametrize("size,style,expected", [(122, "harem", "harem"), (128, "jogger", "straight"),
+                                                 (140, "leggings", "slim")])
 def test_mode_a_silhouette_from_flatlay(size, style, expected):
     pat = PB.draft(M.size_measures(size), {"style": style})
     info = S.pants_silhouette(pat, splay_deg=4)
     scene, _, _ = S.render_scene(info, px_per_mm=1.5, seed=size)
     feats = A.classify_pants(A.pants_proportions(scene))
-    assert feats["silhouette"]["wert"] == expected
-    assert 0 < feats["silhouette"]["konfidenz"] <= 1
+    assert feats["silhouette"]["value"] == expected
+    assert 0 < feats["silhouette"]["confidence"] <= 1
 
 
 def test_mode_a_mapping_and_confirmation():
-    feats = {"kleidungsart": {"wert": "jogginghose", "konfidenz": 0.9},
-             "silhouette": {"wert": "harem", "konfidenz": 0.7},
-             "taschen": {"wert": ["eingriff"], "konfidenz": 0.6},
-             "bein_abschluss": {"wert": "buendchen", "konfidenz": 0.9},
-             "bund": {"wert": "tunnelzug", "konfidenz": 0.5},
-             "stoff": {"wert": "sweat", "konfidenz": 0.6}}
+    feats = {"garment_type": {"value": "jogger", "confidence": 0.9},
+             "silhouette": {"value": "harem", "confidence": 0.7},
+             "pockets": {"value": ["side"], "confidence": 0.6},
+             "leg_finish": {"value": "rib", "confidence": 0.9},
+             "waistband": {"value": "drawstring", "confidence": 0.5},
+             "fabric": {"value": "sweat", "confidence": 0.6}}
     txt = A.confirmation_text(feats)
-    assert txt.startswith("Ich erkenne") and "Stimmt das" in txt.replace("stimmt das", "Stimmt das")
+    assert txt.startswith("I can see") and "Is that right?" in txt
     m = A.map_to_module(feats)
     assert m["module"] == "pants_basic"
     assert m["options"]["fit"] == "harem"
@@ -98,30 +98,30 @@ def test_mode_a_mapping_and_confirmation():
 
 
 def test_mode_a_unsupported_is_reported():
-    feats = {"kleidungsart": {"wert": "jeans", "konfidenz": 0.9},
-             "taschen": {"wert": ["cargo"], "konfidenz": 0.8}}
+    feats = {"garment_type": {"value": "jeans", "confidence": 0.9},
+             "pockets": {"value": ["cargo"], "confidence": 0.8}}
     m = A.map_to_module(feats)
-    assert any("Jeans" in x for x in m["nicht_abgedeckt"])
-    assert any("Cargo" in x for x in m["nicht_abgedeckt"])
+    assert any("Jeans" in x for x in m["not_covered"])
+    assert any("Cargo" in x for x in m["not_covered"])
 
 
 # ---------------------------------------------------------------------------
-# Rundlauf: Schnitt → Foto → Reverse Engineering → Schnitt
+# Round trip: pattern → photo → reverse engineering → pattern
 # ---------------------------------------------------------------------------
 
 def test_round_trip(synthetic, tmp_path):
-    res = P.run(synthetic["path"], "hose", str(tmp_path / "projekt"))
+    res = P.run(synthetic["path"], "pants", str(tmp_path / "project"))
     assert VF.all_ok(res["rows"]), VF.to_markdown(res["rows"])
-    assert not any(c.status == "FEHLER" for c in res["report"])
+    assert not any(c.status == "ERROR" for c in res["report"])
     rec, truth = res["pattern"].finished, synthetic["truth"]
     for k in ("front_rise", "inseam", "outseam"):
         assert abs(rec[k] - truth[k]) < 10.0, (k, rec[k], truth[k])
     for k in ("hip_circ", "thigh_circ", "opening", "waist_relaxed"):
         assert abs(rec[k] - truth[k]) / truth[k] < 0.02, (k, rec[k], truth[k])
-    expected_fit = {"haremshose": "harem", "jogginghose": "normal", "leggings": "eng"}[synthetic["style"]]
+    expected_fit = {"harem": "harem", "jogger": "normal", "leggings": "slim"}[synthetic["style"]]
     assert res["fit"]["fit"] == expected_fit
-    # Projekt gespeichert und wieder ladbar, Gradieren um 2 Größen
-    proj = ST.load(str(tmp_path / "projekt" / "projekt.json"))
-    assert proj["modul"] == "pants_basic"
-    g, targets = P.regrade(str(tmp_path / "projekt" / "projekt.json"), 2)
+    # project saved and loadable again, grading by 2 sizes
+    proj = ST.load(str(tmp_path / "project" / "project.json"))
+    assert proj["module"] == "pants_basic"
+    g, targets = P.regrade(str(tmp_path / "project" / "project.json"), 2)
     assert g["pattern"].finished["hip_circ"] > rec["hip_circ"]

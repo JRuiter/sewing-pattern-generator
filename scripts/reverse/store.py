@@ -1,8 +1,8 @@
-"""Projekt speichern/laden (Teilegraph + Parameter + Messwerte) und Gradieren.
+"""Save/load a project (piece graph + parameters + measurements) and grading.
 
-„Wie das Teil vom letzten Mal, aber 2 Größen größer“: Die gemessenen Fertigmaße werden
-mit den Differenzen der Körpermaße zwischen den Größen fortgeschrieben (Gradierregeln
-je Größensprung) – nicht linear vergrößert.
+"Like the one from last time, but 2 sizes bigger": the measured finished measurements
+are carried forward with the differences in body measurements between the sizes
+(grading rules per size step), not scaled linearly.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ KIDS_SIZES = sorted(M.KIDS_TABLE)
 def save(path: str, project: dict) -> str:
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     data = dict(project)
-    data.setdefault("gespeichert", date.today().isoformat())
+    data.setdefault("saved", date.today().isoformat())
     data.pop("pattern", None)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, default=float)
@@ -31,16 +31,16 @@ def load(path: str) -> dict:
 
 
 def size_step(size: float, steps: int) -> float:
-    """Kindergrößen springen in 6-cm-Schritten."""
+    """Kids' sizes go up in 6 cm steps."""
     s = min(KIDS_SIZES, key=lambda k: abs(k - size))
     i = KIDS_SIZES.index(s) + steps
     i = max(0, min(len(KIDS_SIZES) - 1, i))
     return float(KIDS_SIZES[i])
 
 
-# Gradierregeln Hose: Fertigmaß ← Körpermaß-Differenz × Faktor
+# grading rules for pants: finished measurement ← body measurement difference × factor
 PANTS_RULES = {
-    "hip_circ": ("hip", None),          # Faktor = Mehrweite des Originals (Hc / Hüfte)
+    "hip_circ": ("hip", None),          # factor = ease of the original (Hc / hip)
     "thigh_circ": ("thigh", None),
     "waist_relaxed": ("waist", 0.9),
     "opening": ("ankle", 1.12),
@@ -59,7 +59,7 @@ def grade_targets(targets: dict, src_size: float, dst_size: float) -> dict:
             continue
         f = fac if fac is not None else targets[k] / a[body]
         out[k] = targets[k] + (b[body] - a[body]) * f
-    # Bund-/Bündchenhöhe: leicht mit der Körperhöhe
+    # waistband/cuff height: slightly with body height
     r = b["height"] / a["height"]
     for k in ("waistband_h", "cuff_h"):
         if targets.get(k):

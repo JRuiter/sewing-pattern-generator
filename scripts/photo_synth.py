@@ -1,11 +1,12 @@
-"""Synthetische „Flach-hingelegt“-Fotos aus einem Schnitt (für Tests und Rundlauf).
+"""Synthetic "laid flat" photos from a pattern (for tests and the round trip).
 
-Der Schnitt wird virtuell zusammengenäht und flach (2 Lagen) hingelegt: Bund oben,
-Beine leicht gespreizt, Bündchen unten. Daneben liegt die Referenzkarte. Danach wird
-eine Kamera mit leichter Schrägstellung (Perspektive), Drehung, Unschärfe, Rauschen,
-Helligkeitsverlauf und JPEG-Kompression simuliert.
+The pattern is sewn together virtually and laid flat (2 layers): waistband at the top,
+legs slightly spread, cuffs at the bottom. The reference card lies next to it. Then a
+camera with slight tilt (perspective), rotation, blur, noise, brightness gradient and
+JPEG compression is simulated.
 
-Rückgabe enthält die Wahrheit (Fertigmaße) für die Prüfung der Messgenauigkeit.
+The result contains the ground truth (finished measurements) for checking the
+measuring accuracy.
 """
 from __future__ import annotations
 
@@ -26,21 +27,21 @@ def _widths(ring, ys):
 
 
 def pants_silhouette(pat, splay_deg: float = 5.0, step: float = 2.0):
-    """Flache Silhouette (mm, y nach unten, x=0 Mitte) + Regionen + Nahtlinien."""
+    """Flat silhouette (mm, y down, x=0 centre) + regions + seam lines."""
     o, fin = pat.options, pat.finished
-    f, b = pat.piece("vorderhose"), pat.piece("hinterhose")
+    f, b = pat.piece("front"), pat.piece("back")
     fr = f.seam_ring()
-    if pat.has("seitenteil"):
-        u = Polygon(fr).union(Polygon(pat.piece("seitenteil").seam_ring()))
+    if pat.has("side_panel"):
+        u = Polygon(fr).union(Polygon(pat.piece("side_panel").seam_ring()))
         fr = np.asarray(u.exterior.coords)
     br = b.seam_ring()
     wb, cuff_h = o["_wb_h"], o["_cuff_h"]
-    y_cr_f = float(f.edge("innenbein").pts[0, 1])
-    y_cr_b = float(b.edge("innenbein").pts[0, 1])
-    y_hem = float(f.edge("saum").pts[0, 1])
+    y_cr_f = float(f.edge("inseam").pts[0, 1])
+    y_cr_b = float(b.edge("inseam").pts[0, 1])
+    y_hem = float(f.edge("hem").pts[0, 1])
     y_hip = o["_y_hip"]
     band_w = fin["waist_relaxed"] / 2
-    # Rumpf
+    # torso
     ys = np.arange(-0.5, y_cr_f + 0.5, -step)
     full = _widths(fr, ys) + _widths(br, ys)
     blend_end = y_hip * 0.6
@@ -50,7 +51,7 @@ def pants_silhouette(pat, splay_deg: float = 5.0, step: float = 2.0):
     sy = wb - ys
     torso = Polygon(np.vstack([np.stack([-torso_w / 2, sy], 1), np.stack([torso_w[::-1] / 2, sy[::-1]], 1)]))
     band = box(-band_w / 2, 0, band_w / 2, wb + 0.5) if wb > 0 else None
-    # Beine
+    # legs
     leg_len = y_cr_f - y_hem
     ts = np.arange(0.5, leg_len + 0.01, step)
     circ = _widths(fr, y_cr_f - ts) + _widths(br, y_cr_b - ts)
@@ -71,7 +72,7 @@ def pants_silhouette(pat, splay_deg: float = 5.0, step: float = 2.0):
             cy0 = crotch_sy + leg_len
             cuff = box(side * c0 - cuff_w / 2, cy0 - 0.5, side * c0 + cuff_w / 2, cy0 + cuff_h)
             seams.append(("cuff", side, cy0))
-        ang = side * splay_deg   # Drehung um den Schrittpunkt nach außen
+        ang = side * splay_deg   # rotate outwards around the crotch point
         leg = srotate(leg, -ang, origin=(0, crotch_sy), use_radians=False)
         legs.append(leg)
         if cuff is not None:
@@ -97,7 +98,7 @@ def _texture(h, w, base, rng, stripes=False, amp=10):
 
 def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(150, 152, 165),
                  rib_rgb=(120, 122, 140), bg_rgb=(176, 140, 104)):
-    """Draufsicht (ideal, ohne Perspektive) rendern. Rückgabe: Bild, Szene→Pixel-Matrix."""
+    """Render the top view (ideal, no perspective). Returns: image, scene→pixel matrix, card position."""
     rng = np.random.default_rng(seed)
     sil = sil_info["silhouette"]
     x0, y0, x1, y1 = sil.bounds
@@ -127,7 +128,7 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
     garment = np.where(rib_mask[:, :, None] > 0, rib, fabric)
     a = (mask.astype(np.float32) / 255)[:, :, None]
     img = bg * (1 - a) + garment * a
-    # Nähte (dunkle Linien) an Bundansatz, Bündchenansatz und Schrittnaht
+    # seams (dark lines) at the waistband seam, cuff seams and crotch seam
     dark = (garment_rgb[2] * 0.55, garment_rgb[1] * 0.55, garment_rgb[0] * 0.55)
     lw = max(1, int(px_per_mm * 0.8))
     if sil_info["wb"] > 0:
@@ -139,10 +140,10 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
         cv2.line(img, tuple(to_px([top[0]])[0] // 8), tuple(to_px([top[1]])[0] // 8), dark, lw)
     cx, cy = sil_info["crotch"]
     cv2.line(img, tuple(to_px([[0, sil_info["wb"]]])[0] // 8), tuple(to_px([[cx, cy]])[0] // 8), dark, lw)
-    # Schatten unter dem Stoff (leicht)
+    # shadow under the fabric (slight)
     shadow = cv2.GaussianBlur(mask, (0, 0), px_per_mm * 2).astype(np.float32) / 255
     img = img * (1 - 0.12 * np.clip(shadow - a[:, :, 0], 0, 1))[:, :, None]
-    # Referenzkarte
+    # reference card
     card = refcard.raster_card(px_per_mm)
     if card_pos is None:
         card_pos = (x1 + 25, y1 - refcard.CARD - 40)
@@ -154,7 +155,7 @@ def render_scene(sil_info, px_per_mm=3.0, seed=0, card_pos=None, garment_rgb=(15
 
 
 def camera(img, seed=0, tilt=0.04, rot_deg=4.0, blur=1.0, noise=3.0, jpeg=88, out_long=2600):
-    """Kamera simulieren: Perspektive (tilt = relative Eckverschiebung), Drehung, Unschärfe…"""
+    """Simulate a camera: perspective (tilt = relative corner shift), rotation, blur …"""
     rng = np.random.default_rng(seed + 100)
     h, w = img.shape[:2]
     src = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
@@ -171,7 +172,7 @@ def camera(img, seed=0, tilt=0.04, rot_deg=4.0, blur=1.0, noise=3.0, jpeg=88, ou
     size = (int(dst[:, 0].max()) + 1, int(dst[:, 1].max()) + 1)
     out = cv2.warpPerspective(img, Hm, size, flags=cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_REFLECT)
-    # Helligkeitsverlauf / Vignette
+    # brightness gradient / vignette
     yy, xx = np.mgrid[0:size[1], 0:size[0]].astype(np.float32)
     grad = 1.0 + 0.10 * (xx / size[0] - 0.5) - 0.06 * (yy / size[1] - 0.5)
     vig = 1 - 0.15 * (((xx / size[0] - 0.5) ** 2 + (yy / size[1] - 0.5) ** 2) * 2)

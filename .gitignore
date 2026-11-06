@@ -8,10 +8,10 @@ venv/
 build/
 dist/
 .DS_Store
-# eigene Ausgaben (Beispiele liegen unter examples/)
+# local outputs (examples live in examples/)
 /out/
-/projekt/
-/messung/
+/project/
+/measurement/
 .mypy_cache/
 .ruff_cache/
 .coverage

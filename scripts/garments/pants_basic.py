@@ -1,15 +1,14 @@
-"""Hosen-Grundschnitt: Jogginghose, Haremshose, Leggings.
+"""Pants block: jogger, harem pants, leggings, pull-on trousers.
 
-Eigene parametrische Konstruktion nach den allgemeinen Prinzipien der Hosen-
-Grundschnittkonstruktion (Hüftweite in Viertel geteilt, Vorderhose schmaler als
-Hinterhose, Schrittverlängerung vorne ≈ 1/20, hinten ≈ 1/10 der Hüftweite,
-Hintere Mitte schräg und erhöht). Die Kurven werden so gesetzt, dass alle
-Nahtenden rechtwinklig anschließen.
+Original parametric draft following the general principles of pants block drafting
+(hip width split into quarters, front leg narrower than back leg, crotch extension
+front ≈ 1/20 and back ≈ 1/10 of the hip width, centre back slanted and raised). The
+curves are placed so that every seam end meets at a right angle.
 
-Koordinaten: mm, y nach oben. Oberkante der Hosenteile (Bundansatz) bei y = 0,
-Vordere/Hintere Mitte auf Hüfthöhe bei x = 0, Seitennaht rechts.
-Kantenreihenfolge (gegen den Uhrzeigersinn):
-  schritt (Mitte + Schrittkurve) → innenbein → saum → seite → bund
+Coordinates: mm, y up. Top edge of the legs (waistband seam) at y = 0, centre
+front/back at hip level at x = 0, side seam to the right.
+Edge order (counter-clockwise):
+  crotch (centre + crotch curve) → inseam → hem → side → waistband
 """
 from __future__ import annotations
 
@@ -23,46 +22,46 @@ import geometry as G
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
 STYLES = {
-    "jogginghose": dict(fit="normal", fabric="sweat", cuffs=True, waistband="bund_gummi",
-                        pockets=["eingriff"], length="lang"),
-    "haremshose": dict(fit="harem", fabric="sweat", cuffs=True, waistband="bund_gummi",
-                       pockets=[], length="lang"),
-    "leggings": dict(fit="eng", fabric="jersey_elastan", cuffs=False, waistband="yoga",
-                     pockets=[], length="lang"),
-    "stoffhose": dict(fit="normal", fabric="webware", cuffs=False, waistband="tunnel",
-                      pockets=["eingriff"], length="lang"),
+    "jogger": dict(fit="normal", fabric="sweat", cuffs=True, waistband="casing",
+                        pockets=["side"], length="long"),
+    "harem": dict(fit="harem", fabric="sweat", cuffs=True, waistband="casing",
+                       pockets=[], length="long"),
+    "leggings": dict(fit="slim", fabric="jersey_elastane", cuffs=False, waistband="yoga",
+                     pockets=[], length="long"),
+    "trousers": dict(fit="normal", fabric="woven", cuffs=False, waistband="tunnel",
+                      pockets=["side"], length="long"),
 }
 
-DEFAULTS = dict(style="jogginghose", fit=None, fabric=None, stretch=None, length=None,
-                waistband=None, cuffs=None, pockets=None, cuff_fabric="buendchen",
+DEFAULTS = dict(style="jogger", fit=None, fabric=None, stretch=None, length=None,
+                waistband=None, cuffs=None, pockets=None, cuff_fabric="rib",
                 cuff_stretch=None, waistband_height=None, cuff_height=None,
                 elastic_width=None, crotch_drop=None, blouse=None, sa=10.0, hem_sa=25.0,
-                # Overrides (Reverse Engineering / Feineinstellung), alles Fertigmaße in mm
+                # overrides (reverse engineering / fine tuning), all finished measurements in mm
                 hip_total=None, fork_factor=1.0, front_rise_total=None, inseam_total=None,
                 opening_total=None, elastic_total=None, knee_total=None, thigh_total=None)
 
-TITLES = {"jogginghose": "Jogginghose", "haremshose": "Haremshose", "leggings": "Leggings",
-          "stoffhose": "Schlupfhose"}
+TITLES = {"jogger": "Joggers", "harem": "Harem pants", "leggings": "Leggings",
+          "trousers": "Pull-on trousers"}
 
 
 def resolve_options(options: dict | None) -> dict:
     o = dict(DEFAULTS)
     o.update({k: v for k, v in (options or {}).items() if v is not None or k not in o})
-    style = STYLES.get(o["style"], STYLES["jogginghose"])
+    style = STYLES.get(o["style"], STYLES["jogger"])
     for k, v in style.items():
         if o.get(k) is None:
             o[k] = copy.deepcopy(v)
     if o["pockets"] is None:
         o["pockets"] = []
     if isinstance(o["pockets"], str):
-        o["pockets"] = [] if o["pockets"] in ("", "keine") else [o["pockets"]]
-    if o["fit"] == "eng":
-        o["pockets"] = [p for p in o["pockets"] if p != "eingriff"]
+        o["pockets"] = [] if o["pockets"] in ("", "none") else [o["pockets"]]
+    if o["fit"] == "slim":
+        o["pockets"] = [p for p in o["pockets"] if p != "side"]
     return o
 
 
 def _leg_spline(y_top, x_top, y_bot, x_bot, slope_top, slope_bot=0.0, mid=None, step=2.0):
-    """x(y)-Spline von oben nach unten, Steigung dx/dy an den Enden vorgegeben."""
+    """x(y) spline from top to bottom with given slopes dx/dy at the ends."""
     ys = [y_bot, y_top]
     xs = [x_bot, x_top]
     if mid is not None:
@@ -90,24 +89,24 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     _, stretch, knit = E.fabric_info(fabric, o["stretch"])
     o["stretch"] = stretch
     sa, hem_sa = o["sa"], o["hem_sa"]
-    k = m["height"] / 1220.0  # Skalierfaktor für Kleinteile (Kind Gr. 122 = 1)
+    k = m["height"] / 1220.0  # scale factor for small parts (child size 122 = 1)
     k = max(0.75, min(1.45, k))
 
-    # ---------------------------------------------------------------- Weiten
+    # ---------------------------------------------------------------- widths
     he = E.hip_ease(fit, fabric, stretch)
     Hc = o["hip_total"] or m["hip"] * (1 + he)
     diff = 10.0 if adult else 5.0
     Wf, Wb = Hc / 4 - diff, Hc / 4 + diff
-    if fit == "eng":
+    if fit == "slim":
         fe, fbe = Hc * 0.040, Hc * 0.080
     else:
         fe, fbe = Hc * 0.050, Hc * 0.100
     fe *= o["fork_factor"]
     fbe *= o["fork_factor"]
 
-    # ---------------------------------------------------------------- Höhen
+    # ---------------------------------------------------------------- heights
     wb_type = o["waistband"]
-    wb_h = o["waistband_height"] or {"bund_gummi": 30, "buendchen": 35, "yoga": 60,
+    wb_h = o["waistband_height"] or {"casing": 30, "rib": 35, "yoga": 60,
                                       "tunnel": 0}[wb_type] * (k if adult else 1.0)
     if wb_type == "tunnel":
         wb_h = 0.0
@@ -126,16 +125,16 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     if blouse is None:
         blouse = (30.0 if fit == "harem" else 15.0) * k if cuffs else 0.0
     length = o["length"]
-    leg_frac = {"lang": None, "7/8": 0.82, "knie": 0.45, "kurz": 0.18}[length]
+    leg_frac = {"long": None, "7/8": 0.82, "knee": 0.45, "short": 0.18}[length]
     if o["inseam_total"]:
         inseam_fin = o["inseam_total"]
     elif leg_frac is None:
         inseam_fin = m["inseam"] - (25 if adult else 15) - drop + blouse
     else:
         inseam_fin = m["inseam"] * leg_frac - drop + (blouse if length == "7/8" else 0)
-    leg_len = inseam_fin - cuff_h          # senkrechte Länge Schrittlinie → Saumkante
+    leg_len = inseam_fin - cuff_h          # vertical length crotch line → hem edge
 
-    # ---------------------------------------------------------------- Beinöffnung
+    # ---------------------------------------------------------------- leg opening
     ratio_cuff = E.band_ratio(o["cuff_fabric"], o["cuff_stretch"]) if cuffs else 1.0
     if cuffs:
         cuff_len = o["opening_total"] or max(m["ankle"] * 1.12, m["ankle"] + 15)
@@ -145,35 +144,35 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         if o["opening_total"]:
             hem_c = o["opening_total"]
         else:
-            hem_c = {"eng": m["ankle"] * (1.08 if stretch < 50 else 1.0), "normal": 0.46 * Hc,
-                     "weit": 0.62 * Hc, "oversized": 0.66 * Hc, "harem": 0.40 * Hc}[fit]
-            if length == "knie":
+            hem_c = {"slim": m["ankle"] * (1.08 if stretch < 50 else 1.0), "normal": 0.46 * Hc,
+                     "wide": 0.62 * Hc, "oversized": 0.66 * Hc, "harem": 0.40 * Hc}[fit]
+            if length == "knee":
                 hem_c = max(hem_c, m["knee"] * (1.0 + max(he, 0.05)) * 1.05)
-            if length == "kurz":
+            if length == "short":
                 hem_c = max(hem_c, (Wf + Wb + fe + fbe) * 2 * 0.92)
     hem_front, hem_back = hem_c / 2 - 2 * diff, hem_c / 2 + 2 * diff
 
-    # ---------------------------------------------------------------- Vorderhose
+    # ---------------------------------------------------------------- front leg
     y_hip = -0.55 * R
     y_cr = -R
     y_hem = y_cr - leg_len
     crease_f = (Wf - fe) / 2
     knee_y = y_cr - leg_len * 0.45
     knee_fr = knee_bk = None
-    if length in ("lang", "7/8") and (fit == "eng" or o["knee_total"]):
+    if length in ("long", "7/8") and (fit == "slim" or o["knee_total"]):
         kt = o["knee_total"] or m["knee"] * (1 + he + 0.02)
         knee_fr, knee_bk = kt / 2 - 2 * diff, kt / 2 + 2 * diff
 
-    # Innenbein vorne zuerst (Schrittwinkel hängt von seiner Starttangente ab)
-    slope_in = 0.0 if fit in ("harem", "weit", "oversized") else None
+    # front inseam first (the crotch angle depends on its start tangent)
+    slope_in = 0.0 if fit in ("harem", "wide", "oversized") else None
     inner_hem = crease_f - hem_front / 2
     if slope_in is None:
-        # dx/dy < 0: Innenbein läuft nach unten leicht nach innen
+        # dx/dy < 0: the inseam runs slightly inwards going down
         slope_in = -0.15 if fit == "normal" else -0.25
     mid_in = (crease_f - knee_fr / 2, knee_y) if knee_fr else None
     inseam_f = _leg_spline(y_cr, -fe, y_hem, inner_hem, slope_in, 0.0, mid_in)
     d_in = G.start_dir(inseam_f)
-    arrive = np.array([d_in[1], -d_in[0]])          # ⟂ zum Innenbein
+    arrive = np.array([d_in[1], -d_in[0]])          # ⟂ to the inseam
     cf_top = G.P(0, 0)
     cf_bot = G.P(0, y_hip)
     curve_f = G.tangent_curve(cf_bot, (0, -1), G.P(-fe, y_cr), arrive, 0.55, 0.45)
@@ -186,43 +185,43 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     pieces = []
     seams, corners, checks, notes = [], [], [], []
 
-    pk_a = max(35.0, 0.28 * Wf)                  # Eingriff: Abstand an der Oberkante
-    pk_b = max(95.0, min(0.62 * R, 170.0))       # Eingriff: Tiefe an der Seitennaht
-    if "eingriff" in pockets:
+    pk_a = max(35.0, 0.28 * Wf)                  # pocket opening: distance along the top edge
+    pk_b = max(95.0, min(0.62 * R, 170.0))       # pocket opening: depth along the side seam
+    if "side" in pockets:
         side_top = G.P(Wf, -pk_b)
         seite_f = G.join(side_f_leg, G.line(side_f_leg[-1], side_top))
         eingriff = G.line(side_top, G.P(Wf - pk_a, 0))
         bund_f = G.line(G.P(Wf - pk_a, 0), cf_top)
         f_edges = [
-            Edge("schritt", schritt_f, sa, label="Schrittnaht"),
-            Edge("innenbein", inseam_f, sa, label="Innenbein"),
-            Edge("saum", saum_f, sa if cuffs else hem_sa, label="Bündchenansatz" if cuffs else "Saum"),
-            Edge("seite", seite_f, sa, label="Seitennaht"),
-            Edge("eingriff", eingriff, sa, label="Eingriff"),
-            Edge("bund", bund_f, sa if wb_type != "tunnel" else el_w + 15, label="Bund"),
+            Edge("crotch", schritt_f, sa, label="Crotch seam"),
+            Edge("inseam", inseam_f, sa, label="Inseam"),
+            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+            Edge("side", seite_f, sa, label="Side seam"),
+            Edge("pocket_opening", eingriff, sa, label="Pocket opening"),
+            Edge("waistband", bund_f, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam"),
         ]
     else:
         seite_f = G.join(side_f_leg, G.line(side_f_leg[-1], G.P(Wf, 0)))
         f_edges = [
-            Edge("schritt", schritt_f, sa, label="Schrittnaht"),
-            Edge("innenbein", inseam_f, sa, label="Innenbein"),
-            Edge("saum", saum_f, sa if cuffs else hem_sa, label="Bündchenansatz" if cuffs else "Saum"),
-            Edge("seite", seite_f, sa, label="Seitennaht"),
-            Edge("bund", G.line(G.P(Wf, 0), cf_top), sa if wb_type != "tunnel" else el_w + 15,
-                 label="Bund"),
+            Edge("crotch", schritt_f, sa, label="Crotch seam"),
+            Edge("inseam", inseam_f, sa, label="Inseam"),
+            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+            Edge("side", seite_f, sa, label="Side seam"),
+            Edge("waistband", G.line(G.P(Wf, 0), cf_top), sa if wb_type != "tunnel" else el_w + 15,
+                 label="Waistband seam"),
         ]
-    front = Piece("vorderhose", "Vorderhose", f_edges, cut_count=2, mirror=True,
-                  fabric="Oberstoff",
+    front = Piece("front", "Front leg", f_edges, cut_count=2, mirror=True,
+                  fabric="Main fabric",
                   grain=(G.P(crease_f, y_cr - 40), G.P(crease_f, max(y_hem + 60, y_cr - leg_len * 0.6))))
     side_notch = 0.5 * G.length(side_f_leg)
-    front.notches += [Notch("seite", side_notch, 1), Notch("innenbein", 80, 1),
-                      Notch("schritt", G.length(schritt_f) * 0.5, 1)]
+    front.notches += [Notch("side", side_notch, 1), Notch("inseam", 80, 1),
+                      Notch("crotch", G.length(schritt_f) * 0.5, 1)]
     if wb_type == "tunnel":
-        front.marks.append(Mark(G.line(G.P(Wf - (pk_a if "eingriff" in pockets else 0), el_w + 7),
-                                       G.P(0, el_w + 7)), "fold", "Tunnel umbügeln"))
+        front.marks.append(Mark(G.line(G.P(Wf - (pk_a if "side" in pockets else 0), el_w + 7),
+                                       G.P(0, el_w + 7)), "fold", "Fold casing"))
 
-    # ---------------------------------------------------------------- Hinterhose
-    rb = (25.0 if adult else 15.0) if fit != "eng" else (35.0 if adult else 20.0)
+    # ---------------------------------------------------------------- back leg
+    rb = (25.0 if adult else 15.0) if fit != "slim" else (35.0 if adult else 20.0)
     sb = (25.0 if adult else 15.0)
     crease_b = (Wb - fbe) / 2
     inner_hem_b = crease_b - hem_back / 2
@@ -256,30 +255,30 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     waist_arrive = np.array([cb_dir[1], -cb_dir[0]])
     bund_b = G.tangent_curve(G.P(Wb, 0), (-1, 0), cb_top, waist_arrive, 0.35, 0.35)
     saum_b = G.line(inseam_b[-1], side_b_leg[0])
-    back = Piece("hinterhose", "Hinterhose", [
-        Edge("schritt", schritt_b, sa, label="Schrittnaht"),
-        Edge("innenbein", inseam_b, sa, label="Innenbein"),
-        Edge("saum", saum_b, sa if cuffs else hem_sa, label="Bündchenansatz" if cuffs else "Saum"),
-        Edge("seite", seite_b, sa, label="Seitennaht"),
-        Edge("bund", bund_b, sa if wb_type != "tunnel" else el_w + 15, label="Bund"),
-    ], cut_count=2, mirror=True, fabric="Oberstoff",
+    back = Piece("back", "Back leg", [
+        Edge("crotch", schritt_b, sa, label="Crotch seam"),
+        Edge("inseam", inseam_b, sa, label="Inseam"),
+        Edge("hem", saum_b, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+        Edge("side", seite_b, sa, label="Side seam"),
+        Edge("waistband", bund_b, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam"),
+    ], cut_count=2, mirror=True, fabric="Main fabric",
         grain=(G.P(crease_b, y_cr - 40), G.P(crease_b, max(y_hem + 60, y_cr - leg_len * 0.6))))
-    back.notches += [Notch("seite", side_notch, 2), Notch("innenbein", 80, 2),
-                     Notch("schritt", G.length(schritt_b) * 0.5, 2)]
+    back.notches += [Notch("side", side_notch, 2), Notch("inseam", 80, 2),
+                     Notch("crotch", G.length(schritt_b) * 0.5, 2)]
     if wb_type == "tunnel":
         back.marks.append(Mark(G.line(G.P(Wb, el_w + 7), G.P(sb, rb + el_w + 7)), "fold",
-                               "Tunnel umbügeln"))
+                               "Fold casing"))
 
-    # Seitennähte auf gleiche Länge bringen (Hinterhose oben minimal anpassen)
-    dl = G.length(seite_b) - (G.length(seite_f) + (pk_b if "eingriff" in pockets else 0.0))
+    # make the side seams equal (adjust the top of the back leg slightly)
+    dl = G.length(seite_b) - (G.length(seite_f) + (pk_b if "side" in pockets else 0.0))
     if abs(dl) > 0.3:
         back.edges[3].pts = G.join(side_b_leg, G.line(side_b_leg[-1], G.P(Wb, -dl)))
         back.edges[4].pts = G.tangent_curve(G.P(Wb, -dl), (-1, 0), cb_top, waist_arrive, 0.35, 0.35)
 
     pieces += [front, back]
 
-    # ---------------------------------------------------------------- Taschen
-    if "eingriff" in pockets:
+    # ---------------------------------------------------------------- pockets
+    if "side" in pockets:
         bag_depth = pk_b + 45 * k
         x0 = max(Wf - pk_a - 35 * k, 20.0)
         T0, T1, S1 = G.P(x0, 0), G.P(Wf, 0), G.P(Wf, -bag_depth)
@@ -288,286 +287,286 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
                      G.tangent_curve(G.P(x0, -bag_depth + r), (0, -1), G.P(x0 + r, -bag_depth), (1, 0), 0.55, 0.55),
                      G.line(G.P(x0 + r, -bag_depth), S1))
         E_ = G.P(Wf, -pk_b)
-        side_panel = Piece("seitenteil", "Seitenteil (Taschenbeutel außen)", [
-            Edge("beutel", bag, sa, label="Beutelnaht"),
-            Edge("seite_unten", G.line(S1, E_), sa, label="Seitennaht"),
-            Edge("seite_oben", G.line(E_, T1), sa, label="Seitennaht"),
-            Edge("bund_aussen", G.line(T1, G.P(Wf - pk_a, 0)), sa, label="Bund"),
-            Edge("bund_innen", G.line(G.P(Wf - pk_a, 0), T0), sa, label="Bund"),
-        ], cut_count=2, mirror=True, fabric="Oberstoff",
+        side_panel = Piece("side_panel", "Side panel (outer pocket bag)", [
+            Edge("bag", bag, sa, label="Pocket bag seam"),
+            Edge("side_lower", G.line(S1, E_), sa, label="Side seam"),
+            Edge("side_upper", G.line(E_, T1), sa, label="Side seam"),
+            Edge("waist_outer", G.line(T1, G.P(Wf - pk_a, 0)), sa, label="Waistband seam"),
+            Edge("waist_inner", G.line(G.P(Wf - pk_a, 0), T0), sa, label="Waistband seam"),
+        ], cut_count=2, mirror=True, fabric="Main fabric",
             grain=(G.P((x0 + Wf) / 2, -bag_depth + 30), G.P((x0 + Wf) / 2, -25)))
-        side_panel.marks.append(Mark(G.line(E_, G.P(Wf - pk_a, 0)), "placement", "Eingriff"))
-        lining = Piece("taschenbeutel", "Taschenbeutel innen", [
-            Edge("beutel", bag.copy(), sa, label="Beutelnaht"),
-            Edge("seite", G.line(S1, E_), sa, label="Seitennaht"),
-            Edge("eingriff", G.line(E_, G.P(Wf - pk_a, 0)), sa, label="Eingriff"),
-            Edge("bund", G.line(G.P(Wf - pk_a, 0), T0), sa, label="Bund"),
-        ], cut_count=2, mirror=True, fabric="Oberstoff oder Baumwolljersey",
+        side_panel.marks.append(Mark(G.line(E_, G.P(Wf - pk_a, 0)), "placement", "Pocket opening"))
+        lining = Piece("pocket_bag", "Inner pocket bag", [
+            Edge("bag", bag.copy(), sa, label="Pocket bag seam"),
+            Edge("side", G.line(S1, E_), sa, label="Side seam"),
+            Edge("pocket_opening", G.line(E_, G.P(Wf - pk_a, 0)), sa, label="Pocket opening"),
+            Edge("waistband", G.line(G.P(Wf - pk_a, 0), T0), sa, label="Waistband seam"),
+        ], cut_count=2, mirror=True, fabric="Main fabric or cotton jersey",
             grain=(G.P(x0 + 25, -bag_depth + 30), G.P(x0 + 25, -25)))
         pieces += [side_panel, lining]
         seams += [
-            dict(name="Eingriff: Vorderhose ↔ Taschenbeutel", a=[("vorderhose", "eingriff", 1)],
-                 b=[("taschenbeutel", "eingriff", 1)], type="equal"),
-            dict(name="Beutelnaht: Taschenbeutel ↔ Seitenteil", a=[("taschenbeutel", "beutel", 1)],
-                 b=[("seitenteil", "beutel", 1)], type="equal"),
-            dict(name="Taschenbeutel ↔ Seitenteil an der Seitennaht", a=[("taschenbeutel", "seite", 1)],
-                 b=[("seitenteil", "seite_unten", 1)], type="equal"),
+            dict(name="Pocket opening: front leg ↔ pocket bag", a=[("front", "pocket_opening", 1)],
+                 b=[("pocket_bag", "pocket_opening", 1)], type="equal"),
+            dict(name="Pocket bag seam: pocket bag ↔ side panel", a=[("pocket_bag", "bag", 1)],
+                 b=[("side_panel", "bag", 1)], type="equal"),
+            dict(name="Pocket bag ↔ side panel at the side seam", a=[("pocket_bag", "side", 1)],
+                 b=[("side_panel", "side_lower", 1)], type="equal"),
         ]
-    if "aufgesetzt_hinten" in pockets:
+    if "back_patch" in pockets:
         pw, ph = 110 * k, 120 * k
-        pocket = rect_piece("gesaesstasche", "Gesäßtasche (aufgesetzt)", pw, ph, sa=sa,
-                            cut_count=2, names=("unten", "rechts", "oben", "links"),
-                            labels=("", "", "Taschenbeleg", ""), sas=(sa, sa, 25.0, sa))
+        pocket = rect_piece("back_pocket", "Back patch pocket", pw, ph, sa=sa,
+                            cut_count=2, names=("bottom", "right", "top", "left"),
+                            labels=("", "", "Pocket facing", ""), sas=(sa, sa, 25.0, sa))
         pieces.append(pocket)
         px = Wb * 0.55
         py = -0.15 * R
         rect = np.array([[px - pw / 2, py], [px + pw / 2, py], [px + pw / 2, py - ph],
                          [px - pw / 2, py - ph], [px - pw / 2, py]])
-        back.marks.append(Mark(rect, "placement", "Gesäßtasche"))
+        back.marks.append(Mark(rect, "placement", "Back pocket"))
 
-    # ---------------------------------------------------------------- Bund
-    top_parts = [("vorderhose", "bund", 2), ("hinterhose", "bund", 2)]
-    if "eingriff" in pockets:
-        top_parts.append(("seitenteil", "bund_aussen", 2))
+    # ---------------------------------------------------------------- waistband
+    top_parts = [("front", "waistband", 2), ("back", "waistband", 2)]
+    if "side" in pockets:
+        top_parts.append(("side_panel", "waist_outer", 2))
     top_len = sum(next(p for p in pieces if p.key == a).edge(e).length * n for a, e, n in top_parts)
     elastic_len = o["elastic_total"] or m["waist"] * (0.90 if not adult else 0.92)
-    if wb_type in ("bund_gummi", "buendchen", "yoga"):
-        if wb_type == "bund_gummi":
-            wb_fab, ratio, label = fabric, 1.0, "Bund (mit Gummi)"
-        elif wb_type == "buendchen":
-            wb_fab, ratio, label = "buendchen", E.band_ratio("buendchen"), "Bundbündchen"
+    if wb_type in ("casing", "rib", "yoga"):
+        if wb_type == "casing":
+            wb_fab, ratio, label = fabric, 1.0, "Waistband (elastic)"
+        elif wb_type == "rib":
+            wb_fab, ratio, label = "rib", E.band_ratio("rib"), "Rib waistband"
         else:
-            wb_fab, ratio, label = fabric, E.band_ratio(fabric, stretch), "Breiter Bund"
+            wb_fab, ratio, label = fabric, E.band_ratio(fabric, stretch), "Wide yoga waistband"
         bl = top_len * ratio
-        # Bund im Bruch (halbe Länge): spart Platz auf Rolle/Bogen, Quernaht nur hinten
-        band = rect_piece("bund", label, bl / 2, 2 * wb_h, sa=sa, cut_count=1, fold_left=True,
-                          fabric="Bündchen" if wb_fab == "buendchen" else "Oberstoff",
-                          names=("unten", "rechts", "oben", "links"),
-                          labels=("Ansatz", "Quernaht", "Ansatz", "Vordere Mitte"), grain_vertical=True)
-        band.marks.append(Mark(G.line(G.P(0, wb_h), G.P(bl / 2, wb_h)), "fold", "Umbruch"))
-        band.stretch_dir = "Dehnrichtung quer (entlang der Länge)"
+        # waistband on the fold (half length): saves space on roll/sheet, cross seam only at the back
+        band = rect_piece("waistband", label, bl / 2, 2 * wb_h, sa=sa, cut_count=1, fold_left=True,
+                          fabric="Rib knit" if wb_fab == "rib" else "Main fabric",
+                          names=("bottom", "right", "top", "left"),
+                          labels=("Seam edge", "Cross seam", "Seam edge", "Centre front"), grain_vertical=True)
+        band.marks.append(Mark(G.line(G.P(0, wb_h), G.P(bl / 2, wb_h)), "fold", "Fold line"))
+        band.stretch_dir = "Stretch direction: along the length"
         pieces.append(band)
-        if wb_type == "bund_gummi":
-            seams.append(dict(name="Bund ↔ Hosenoberkante", a=top_parts, b=[("bund", "unten", 2)],
+        if wb_type == "casing":
+            seams.append(dict(name="Waistband ↔ pants top edge", a=top_parts, b=[("waistband", "bottom", 2)],
                               type="equal"))
         else:
-            lo_r, hi_r = E.band_ratio_range("buendchen" if wb_type == "buendchen" else "jersey")
-            seams.append(dict(name="Bund ↔ Hosenoberkante (gedehnt)", a=top_parts,
-                              b=[("bund", "unten", 2)], type="ratio", lo=lo_r, hi=hi_r))
-        waist_relaxed = elastic_len if wb_type == "bund_gummi" else bl
+            lo_r, hi_r = E.band_ratio_range("rib" if wb_type == "rib" else "jersey")
+            seams.append(dict(name="Waistband ↔ pants top edge (stretched)", a=top_parts,
+                              b=[("waistband", "bottom", 2)], type="ratio", lo=lo_r, hi=hi_r))
+        waist_relaxed = elastic_len if wb_type == "casing" else bl
         if wb_type == "yoga":
             waist_relaxed = bl
     else:
         waist_relaxed = elastic_len
-    if wb_type in ("bund_gummi", "tunnel"):
-        notes.append(f"Gummiband {el_w:.0f} mm breit, Länge {elastic_len / 10:.0f} cm "
-                     f"(+2 cm Überlappung zum Zusammennähen)")
+    if wb_type in ("casing", "tunnel"):
+        notes.append(f"Elastic {el_w:.0f} mm wide, length {elastic_len / 10:.0f} cm "
+                     f"(+2 cm overlap for joining)")
 
-    # ---------------------------------------------------------------- Bündchen
+    # ---------------------------------------------------------------- cuffs
     if cuffs:
-        cuff = rect_piece("beinbuendchen", "Beinbündchen", cuff_len, 2 * cuff_h, sa=sa, cut_count=2,
-                          fabric="Bündchen", labels=("Ansatz", "Quernaht", "Ansatz", "Quernaht"),
+        cuff = rect_piece("leg_cuff", "Leg cuff", cuff_len, 2 * cuff_h, sa=sa, cut_count=2,
+                          fabric="Rib knit", labels=("Seam edge", "Cross seam", "Seam edge", "Cross seam"),
                           mirror=False)
-        cuff.marks.append(Mark(G.line(G.P(0, cuff_h), G.P(cuff_len, cuff_h)), "fold", "Umbruch"))
-        cuff.stretch_dir = "Dehnrichtung quer (entlang der Länge)"
+        cuff.marks.append(Mark(G.line(G.P(0, cuff_h), G.P(cuff_len, cuff_h)), "fold", "Fold line"))
+        cuff.stretch_dir = "Stretch direction: along the length"
         pieces.append(cuff)
         lo_r, hi_r = E.band_ratio_range(o["cuff_fabric"])
-        seams.append(dict(name="Beinbündchen ↔ Beinsaum (gedehnt)",
-                          a=[("vorderhose", "saum", 1), ("hinterhose", "saum", 1)],
-                          b=[("beinbuendchen", "unten", 1)], type="ratio", lo=lo_r, hi=hi_r))
+        seams.append(dict(name="Leg cuff ↔ leg opening (stretched)",
+                          a=[("front", "hem", 1), ("back", "hem", 1)],
+                          b=[("leg_cuff", "bottom", 1)], type="ratio", lo=lo_r, hi=hi_r))
 
-    # ---------------------------------------------------------------- Nahtpaare
-    side_a = [("vorderhose", "seite", 1)]
-    if "eingriff" in pockets:
-        side_a.append(("seitenteil", "seite_oben", 1))
+    # ---------------------------------------------------------------- seam pairs
+    side_a = [("front", "side", 1)]
+    if "side" in pockets:
+        side_a.append(("side_panel", "side_upper", 1))
     seams[:0] = [
-        dict(name="Seitennaht vorne ↔ hinten", a=side_a, b=[("hinterhose", "seite", 1)], type="equal"),
-        dict(name="Innenbeinnaht vorne ↔ hinten", a=[("vorderhose", "innenbein", 1)],
-             b=[("hinterhose", "innenbein", 1)], type="equal"),
-        dict(name="Schrittnaht vorne (linkes ↔ rechtes Teil)", a=[("vorderhose", "schritt", 1)],
-             b=[("vorderhose", "schritt", 1)], type="equal"),
-        dict(name="Schrittnaht hinten (linkes ↔ rechtes Teil)", a=[("hinterhose", "schritt", 1)],
-             b=[("hinterhose", "schritt", 1)], type="equal"),
+        dict(name="Side seam front ↔ back", a=side_a, b=[("back", "side", 1)], type="equal"),
+        dict(name="Inseam front ↔ back", a=[("front", "inseam", 1)],
+             b=[("back", "inseam", 1)], type="equal"),
+        dict(name="Front crotch seam (left ↔ right piece)", a=[("front", "crotch", 1)],
+             b=[("front", "crotch", 1)], type="equal"),
+        dict(name="Back crotch seam (left ↔ right piece)", a=[("back", "crotch", 1)],
+             b=[("back", "crotch", 1)], type="equal"),
     ]
 
-    # ---------------------------------------------------------------- Winkel
+    # ---------------------------------------------------------------- angles
     corners += [
-        dict(name="Vordere Mitte ↔ Bund", piece="vorderhose", a="bund", b="schritt", target=90),
-        dict(name="Hintere Mitte ↔ Bund", piece="hinterhose", a="bund", b="schritt", target=90),
-        dict(name="Schritt ↔ Innenbein (vorne + hinten)", sum=[("vorderhose", "schritt", "innenbein"),
-                                                             ("hinterhose", "schritt", "innenbein")],
+        dict(name="Centre front ↔ waistband", piece="front", a="waistband", b="crotch", target=90),
+        dict(name="Centre back ↔ waistband", piece="back", a="waistband", b="crotch", target=90),
+        dict(name="Crotch ↔ inseam (front + back)", sum=[("front", "crotch", "inseam"),
+                                                             ("back", "crotch", "inseam")],
              target=180),
-        dict(name="Innenbein ↔ Saum vorne", piece="vorderhose", a="innenbein", b="saum", target=90),
-        dict(name="Saum ↔ Seitennaht vorne", piece="vorderhose", a="saum", b="seite", target=90),
-        dict(name="Innenbein ↔ Saum hinten", piece="hinterhose", a="innenbein", b="saum", target=90),
-        dict(name="Saum ↔ Seitennaht hinten", piece="hinterhose", a="saum", b="seite", target=90),
-        dict(name="Seitennaht ↔ Bund hinten", piece="hinterhose", a="seite", b="bund", target=90),
+        dict(name="Inseam ↔ hem front", piece="front", a="inseam", b="hem", target=90),
+        dict(name="Hem ↔ side seam front", piece="front", a="hem", b="side", target=90),
+        dict(name="Inseam ↔ hem back", piece="back", a="inseam", b="hem", target=90),
+        dict(name="Hem ↔ side seam back", piece="back", a="hem", b="side", target=90),
+        dict(name="Side seam ↔ waistband back", piece="back", a="side", b="waistband", target=90),
     ]
-    if "eingriff" not in pockets:
-        corners.append(dict(name="Seitennaht ↔ Bund (vorne + hinten)",
-                            sum=[("vorderhose", "seite", "bund"), ("hinterhose", "seite", "bund")],
+    if "side" not in pockets:
+        corners.append(dict(name="Side seam ↔ waistband (front + back)",
+                            sum=[("front", "side", "waistband"), ("back", "side", "waistband")],
                             target=180))
     else:
-        corners.append(dict(name="Seitennaht ↔ Bund am Seitenteil", piece="seitenteil",
-                            a="seite_oben", b="bund_aussen", target=90))
+        corners.append(dict(name="Side seam ↔ waistband at the side panel", piece="side_panel",
+                            a="side_upper", b="waist_outer", target=90))
 
-    pat = Pattern("pants_basic", TITLES.get(o["style"], "Hose"), "", pieces, dict(m), o,
+    pat = Pattern("pants_basic", TITLES.get(o["style"], "Pants"), "", pieces, dict(m), o,
                   seams=seams, corners=corners, checks=checks, notes=notes)
 
-    # ---------------------------------------------------------------- Fertigmaße
+    # ---------------------------------------------------------------- finished measurements
     pat.options["_y_hip"] = y_hip
     fin = finished_measures(pat, wb_h=wb_h, cuff_h=cuff_h, waist_relaxed=waist_relaxed,
-                            pk_b=pk_b if "eingriff" in pockets else 0.0)
+                            pk_b=pk_b if "side" in pockets else 0.0)
     pat.finished = fin
     pat.options.update(dict(_wb_h=wb_h, _cuff_h=cuff_h, _waist_relaxed=waist_relaxed,
-                            _pk_b=pk_b if "eingriff" in pockets else 0.0, _R=R, _hip_total=Hc,
+                            _pk_b=pk_b if "side" in pockets else 0.0, _R=R, _hip_total=Hc,
                             _drop=drop, _back_drop=back_drop, _elastic=elastic_len,
                             _cuff_len=cuff_len, _hem_c=hem_c, _blouse=blouse))
 
-    # ---------------------------------------------------------------- Prüfwerte
+    # ---------------------------------------------------------------- checks
     tol_hip = 0.01
     checks += [
-        dict(name="Hüftumfang Schnitt = Körper + Mehrweite", kind="circ",
+        dict(name="Hip circumference pattern = body + ease", kind="circ",
              value=fin["hip_circ"], target=Hc, tol_rel=tol_hip,
-             note=f"Körper {m['hip'] / 10:.1f} cm + {he * 100:+.0f} % Mehrweite"
-             if not o["hip_total"] else "Zielwert aus Messung/Vorgabe"),
-        dict(name="Oberkante passt über die Hüfte", kind="min",
+             note=f"body {m['hip'] / 10:.1f} cm + {he * 100:+.0f} % ease"
+             if not o["hip_total"] else "target from measurement/override"),
+        dict(name="Top edge fits over the hip", kind="min",
              value=top_len * (1 + stretch / 100 * 0.6), target=m["hip"] * 1.02,
-             note="Oberkantenumfang inkl. nutzbarer Dehnung ≥ Hüftumfang"),
-        dict(name="Leibhöhe (vorne) plausibel", kind="range", value=R + wb_h,
+             note="top edge incl. usable stretch ≥ hip"),
+        dict(name="Front rise plausible", kind="range", value=R + wb_h,
              lo=0.12 * m["height"], hi=0.12 * m["height"] + rise_body * 0.3 + drop + 40,
-             note=f"Körper-Leibhöhe {rise_body / 10:.1f} cm" + (f", Harem-Absenkung {drop / 10:.1f} cm" if drop else "")),
-        dict(name="Innenbeinlänge plausibel", kind="range", value=fin["inseam"] + drop,
+             note=f"body rise {rise_body / 10:.1f} cm" + (f", harem drop {drop / 10:.1f} cm" if drop else "")),
+        dict(name="Inseam length plausible", kind="range", value=fin["inseam"] + drop,
              lo=m["inseam"] * (leg_frac or 0.85) * 0.85, hi=m["inseam"] * (leg_frac or 1.0) * 1.12,
-             note=f"Körper-Schrittlänge {m['inseam'] / 10:.1f} cm"),
-        dict(name="Fuß passt durch die Beinöffnung", kind="min",
+             note=f"body inseam {m['inseam'] / 10:.1f} cm"),
+        dict(name="Foot fits through the leg opening", kind="min",
              value=fin["opening"] * (1 + (E.fabric_info(o['cuff_fabric'])[1] if cuffs else stretch) / 100 * 0.6),
-             target=m["ankle"] * 1.35, note="Fersen-Rist-Umfang ≈ 1,35 × Knöchel"),
+             target=m["ankle"] * 1.35, note="heel-instep circumference ≈ 1.35 × ankle"),
     ]
-    if fit == "eng" and stretch < 30:
-        checks.append(dict(name="Stoff dehnbar genug für Leggings", kind="min", value=stretch,
-                           target=30, note="Leggings brauchen ≥ 30 % Querdehnung"))
+    if fit == "slim" and stretch < 30:
+        checks.append(dict(name="Fabric stretchy enough for leggings", kind="min", value=stretch,
+                           target=30, note="leggings need ≥ 30 % crosswise stretch"))
     pat.size_label = ""
     return pat
 
 
 def finished_measures(pat: Pattern, wb_h=None, cuff_h=None, waist_relaxed=None, pk_b=None) -> dict:
-    """Virtuelles Zusammennähen: Maße der fertigen Hose (flach gemessen ×2 = Umfang)."""
+    """Virtual sewing: measurements of the finished pants (measured flat × 2 = circumference)."""
     o = pat.options
     wb_h = o.get("_wb_h", 0.0) if wb_h is None else wb_h
     cuff_h = o.get("_cuff_h", 0.0) if cuff_h is None else cuff_h
     waist_relaxed = o.get("_waist_relaxed", 0.0) if waist_relaxed is None else waist_relaxed
     pk_b = o.get("_pk_b", 0.0) if pk_b is None else pk_b
-    f, b = pat.piece("vorderhose"), pat.piece("hinterhose")
+    f, b = pat.piece("front"), pat.piece("back")
     sf, sb = f.seam_ring(), b.seam_ring()
-    # Hüfthöhe: unteres Ende der geraden Mitte = Punkt mit x≈0 am weitesten unten
+    # hip level: lower end of the straight centre = lowest point with x≈0
     y_hip = o.get("_y_hip")
     if y_hip is None:
-        cf = f.edge("schritt").pts
+        cf = f.edge("crotch").pts
         y_hip = float(cf[np.abs(cf[:, 0]) < 1e-6][:, 1].min())
-    if pat.has("seitenteil"):  # Vorderhose + Seitenteil liegen im selben Koordinatensystem
+    if pat.has("side_panel"):  # front leg + side panel share one coordinate system
         from shapely.geometry import Polygon
-        u = Polygon(sf).union(Polygon(pat.piece("seitenteil").seam_ring()))
+        u = Polygon(sf).union(Polygon(pat.piece("side_panel").seam_ring()))
         sf_hip = np.asarray(u.exterior.coords)
     else:
         sf_hip = sf
     hip = 2 * (G.width_at_y(sf_hip, y_hip) + G.width_at_y(sb, y_hip))
-    y_cr_f = float(f.edge("innenbein").pts[0, 1])
-    y_cr_b = float(b.edge("innenbein").pts[0, 1])
-    thigh = G.width_at_y(sf, y_cr_f - 25) + G.width_at_y(sb, y_cr_b - 25)   # ein Bein
-    leg_len = y_cr_f - float(f.edge("saum").pts[0, 1])
+    y_cr_f = float(f.edge("inseam").pts[0, 1])
+    y_cr_b = float(b.edge("inseam").pts[0, 1])
+    thigh = G.width_at_y(sf, y_cr_f - 25) + G.width_at_y(sb, y_cr_b - 25)   # one leg
+    leg_len = y_cr_f - float(f.edge("hem").pts[0, 1])
     knee = G.width_at_y(sf, y_cr_f - 0.5 * leg_len) + G.width_at_y(sb, y_cr_b - 0.5 * leg_len)
-    if pat.has("beinbuendchen"):
-        opening = pat.piece("beinbuendchen").edge("unten").length
+    if pat.has("leg_cuff"):
+        opening = pat.piece("leg_cuff").edge("bottom").length
     else:
-        opening = f.edge("saum").length + b.edge("saum").length
+        opening = f.edge("hem").length + b.edge("hem").length
     rise_f = -y_cr_f + wb_h
-    # Rückenhöhe: höchster Punkt Hintere Mitte bis Schritt
-    rise_b = float(b.edge("schritt").pts[0, 1]) - y_cr_b + wb_h
-    y_hem = float(f.edge("saum").pts[0, 1])
-    # Längen senkrecht gemessen (wie mit dem Maßband an der flach liegenden Hose)
+    # back rise: highest point of centre back to crotch
+    rise_b = float(b.edge("crotch").pts[0, 1]) - y_cr_b + wb_h
+    y_hem = float(f.edge("hem").pts[0, 1])
+    # lengths measured vertically (like a tape measure on the pants lying flat)
     inseam = (y_cr_f - y_hem) + cuff_h
     outseam = -y_hem + wb_h + cuff_h
-    top = 2 * (f.edge("bund").length + b.edge("bund").length +
-               (pat.piece("seitenteil").edge("bund_aussen").length if pat.has("seitenteil") else 0.0))
+    top = 2 * (f.edge("waistband").length + b.edge("waistband").length +
+               (pat.piece("side_panel").edge("waist_outer").length if pat.has("side_panel") else 0.0))
     return dict(hip_circ=hip, thigh_circ=thigh, knee_circ=knee, opening=opening, waist_relaxed=waist_relaxed,
                 waist_max=top, outseam=outseam, inseam=inseam, front_rise=rise_f, back_rise=rise_b,
-                waistband_h=wb_h, cuff_h=cuff_h, crotch_seam=2 * 0 + f.edge("schritt").length +
-                b.edge("schritt").length + 2 * wb_h)
+                waistband_h=wb_h, cuff_h=cuff_h, crotch_seam=2 * 0 + f.edge("crotch").length +
+                b.edge("crotch").length + 2 * wb_h)
 
 
 FINISHED_LABELS = {
-    "hip_circ": ("Hüftweite", "weite"), "thigh_circ": ("Oberschenkelweite", "weite"),
-    "knee_circ": ("Beinweite Mitte (halbe Beinlänge)", "weite"),
-    "opening": ("Beinöffnung", "weite"), "waist_relaxed": ("Bundweite entspannt", "weite"),
-    "waist_max": ("Bundweite gedehnt (Oberkante Hose)", "weite"), "outseam": ("Seitenlänge", "laenge"),
-    "inseam": ("Innenbeinlänge", "laenge"), "front_rise": ("Leibhöhe vorne", "laenge"),
-    "back_rise": ("Leibhöhe hinten", "laenge"), "waistband_h": ("Bundhöhe", "laenge"),
-    "cuff_h": ("Bündchenhöhe", "laenge"), "crotch_seam": ("Schrittnaht gesamt", "laenge"),
+    "hip_circ": ("Hip width", "width"), "thigh_circ": ("Thigh width", "width"),
+    "knee_circ": ("Leg width at mid-leg", "width"),
+    "opening": ("Leg opening", "width"), "waist_relaxed": ("Waistband relaxed", "width"),
+    "waist_max": ("Waistband stretched (pants top edge)", "width"), "outseam": ("Outseam", "length"),
+    "inseam": ("Inseam", "length"), "front_rise": ("Front rise", "length"),
+    "back_rise": ("Back rise", "length"), "waistband_h": ("Waistband height", "length"),
+    "cuff_h": ("Cuff height", "length"), "crotch_seam": ("Crotch seam total", "length"),
 }
 
-# Messgrößen, die das Reverse Engineering anpasst: Option → (Fertigmaß, Startwert-Funktion)
+# measurements fitted by reverse engineering: option → (finished measurement, start-value function)
 FIT_PARAMS = ["hip_total", "fork_factor", "front_rise_total", "inseam_total", "opening_total"]
 
 
 def sewing_steps(pat: Pattern) -> list[str]:
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
-    st = "mit der Overlock oder einem schmalen Zickzack-/Stretchstich" if knit else "mit Geradstich, Kanten versäubern"
+    st = "with an overlocker or a narrow zigzag/stretch stitch" if knit else "with a straight stitch, then finish the edges"
     steps = []
-    if "eingriff" in o["pockets"]:
+    if "side" in o["pockets"]:
         steps += [
-            "**Eingrifftaschen:** Taschenbeutel innen rechts auf rechts auf die Eingriffkante der Vorderhose "
-            "legen und nähen. Nahtzugabe knapp einschneiden, Beutel nach innen wenden, Kante bügeln und "
-            "5 mm breit absteppen.",
-            "Seitenteil rechts auf rechts unter den Taschenbeutel legen (Markierung „Eingriff“ trifft die "
-            "Eingriffkante), Beutelnaht nähen. Seitenteil an Oberkante und Seite innerhalb der Nahtzugabe "
-            "an der Vorderhose festheften.",
+            "**Side pockets:** place the inner pocket bag right sides together on the pocket opening of the "
+            "front leg and sew. Clip the seam allowance, turn the bag to the inside, press the edge and "
+            "topstitch 5 mm from the edge.",
+            "Place the side panel right sides together under the pocket bag (the \"pocket opening\" mark meets "
+            "the opening edge) and sew the bag seam. Baste the side panel to the front leg at the top edge "
+            "and side within the seam allowance.",
         ]
-    if "aufgesetzt_hinten" in o["pockets"]:
-        steps.append("**Gesäßtaschen:** Oberkante 2,5 cm nach innen umbügeln und absteppen, übrige Kanten "
-                     "1 cm umbügeln, Taschen nach Markierung auf die Hinterhosen steppen.")
+    if "back_patch" in o["pockets"]:
+        steps.append("**Back pockets:** press the top edge 2.5 cm to the inside and topstitch, press the other "
+                     "edges under by 1 cm, then stitch the pockets onto the back legs at the marking.")
     steps += [
-        f"**Seitennähte:** Vorder- und Hinterhose rechts auf rechts legen (Passzeichen: einfach = vorne, "
-        f"doppelt = hinten), Seitennähte {st} schließen.",
-        "**Innenbeinnähte:** jeweils schließen; die Passzeichen am Innenbein treffen sich.",
-        "**Schrittnaht:** ein Hosenbein auf rechts wenden und in das andere (links) stecken, sodass die "
-        "Hosenbeine rechts auf rechts liegen. Schrittnaht in einem Zug von der vorderen zur hinteren "
-        "Oberkante nähen, die Innenbeinnähte treffen sich genau.",
+        f"**Side seams:** place front and back legs right sides together (notches: single = front, "
+        f"double = back) and sew the side seams {st}.",
+        "**Inseams:** sew each inseam; the notches on the inseam meet.",
+        "**Crotch seam:** turn one leg right side out and slip it into the other (wrong side out) so the "
+        "legs lie right sides together. Sew the crotch seam in one go from the front to the back top "
+        "edge; the inseams meet exactly.",
     ]
     wb = o["waistband"]
-    if wb == "bund_gummi":
+    if wb == "casing":
         steps += [
-            "**Bund:** Bundstreifen rechts auf rechts zur Runde legen und die Quernaht (hintere Mitte) "
-            "schließen; dabei 3 cm offen lassen (Gummidurchzug). Längs links auf links an der Umbruchlinie "
-            "falten.",
-            "Bund in Viertel teilen und markieren, ebenso die Hosenoberkante (vordere/hintere Mitte, Seiten). "
-            "Bund rechts auf rechts an die Hosenoberkante stecken (offene Stelle hinten innen) und annähen.",
-            "Gummiband einziehen, Enden 2 cm überlappend zusammennähen, Öffnung schließen. Gummi gleichmäßig "
-            "verteilen und an den Seitennähten im Nahtschatten fixieren.",
+            "**Waistband:** fold the waistband strip right sides together into a ring and sew the cross seam "
+            "(centre back), leaving 3 cm open for the elastic. Fold lengthwise wrong sides together along the "
+            "fold line.",
+            "Divide waistband and pants top edge into quarters and mark them (centre front/back, sides). "
+            "Pin the waistband right sides together to the top edge (opening at the back, inside) and sew.",
+            "Thread the elastic, overlap the ends by 2 cm and sew them together, close the opening. Spread the "
+            "gathers evenly and secure the elastic in the side seams by stitching in the ditch.",
         ]
-    elif wb in ("buendchen", "yoga"):
+    elif wb in ("rib", "yoga"):
         steps += [
-            "**Bund:** Bundteil zur Runde schließen (Quernaht hinten), längs links auf links falten. Bund und "
-            "Hosenoberkante in Viertel teilen und markieren.",
-            "Bund leicht gedehnt rechts auf rechts an die Hosenoberkante nähen (Quernaht trifft die hintere "
-            "Mitte). Nicht die Hose dehnen, nur den Bund.",
+            "**Waistband:** sew the waistband into a ring (cross seam at the back) and fold it lengthwise "
+            "wrong sides together. Divide waistband and pants top edge into quarters and mark them.",
+            "Sew the waistband to the pants top edge right sides together, stretching it slightly (cross seam "
+            "at centre back). Stretch only the waistband, not the pants.",
         ]
     else:
         steps += [
-            "**Tunnelzug:** Oberkante 7 mm umbügeln, dann an der Linie „Tunnel umbügeln“ nach innen "
-            "umschlagen und knappkantig festnähen; 3 cm Öffnung lassen. Gummi einziehen, Enden "
-            "überlappend vernähen, Öffnung schließen.",
+            "**Elastic casing:** press the top edge under by 7 mm, then fold it to the inside along the "
+            "\"fold casing\" line and edgestitch, leaving a 3 cm opening. Thread the elastic, sew the ends "
+            "together with an overlap and close the opening.",
         ]
     if o["cuffs"]:
         steps += [
-            "**Beinbündchen:** jeweils quer rechts auf rechts zur Runde nähen, längs links auf links falten. "
-            "Bündchen und Beinsaum in Viertel teilen und markieren.",
-            "Bündchen über das rechts liegende Hosenbein stülpen, Quernaht an die Innenbeinnaht legen und "
-            "gedehnt annähen. Nahtzugabe zur Hose bügeln.",
+            "**Leg cuffs:** sew each cuff into a ring right sides together, then fold it lengthwise wrong "
+            "sides together. Divide cuff and leg opening into quarters and mark them.",
+            "Slip the cuff over the right-side-out leg, put its seam at the inseam and sew it on while "
+            "stretching. Press the seam allowance towards the pants.",
         ]
     else:
-        steps.append("**Saum:** Saumzugabe (2,5 cm) nach innen bügeln und mit Zwillingsnadel bzw. "
-                     "Geradstich festnähen.")
-    steps.append("Fertig! Alle Nähte bügeln (bei Sweat Dampf, nicht drücken).")
+        steps.append("**Hem:** press the hem allowance (2.5 cm) to the inside and sew it with a twin needle "
+                     "or a straight stitch.")
+    steps.append("Done! Press all seams (with sweat: steam, do not press down hard).")
     return steps

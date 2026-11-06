@@ -1,19 +1,19 @@
-"""Foto-Modus B: Kleidungsstück flach fotografiert → Maße in mm.
+"""Photo mode B: garment photographed flat → measurements in mm.
 
-Ablauf:
-  1. Referenz erkennen (ArUco-Referenzkarte, 4 Marker) → Homographie Bild → mm-Ebene
-     (alternativ: 4 Punkte eines bekannten Rechtecks/Zollstock über `manual_ref`).
-  2. Bild entzerren (Draufsicht, `px_per_mm` Pixel je mm).
-  3. Kleidungsstück segmentieren (Abstand zur Hintergrundfarbe, Otsu, Morphologie),
-     Karte ausmaskieren, größte Kontur.
-  4. Messgrößen ableiten (Hose: Bund, Hüfte, Oberschenkel, Beinöffnung, Längen, Leibhöhe,
-     Bund-/Bündchenhöhe über Nahtlinien-Erkennung).
-  5. Overlay-PNG mit Kontur und Messlinien zur Bestätigung durch den Nutzer.
+Steps:
+  1. Detect the reference (ArUco reference card, 4 markers) → homography image → mm plane
+     (alternatively: 4 points of a known rectangle / folding ruler via `manual_ref`).
+  2. Rectify the image (top view, `px_per_mm` pixels per mm).
+  3. Segment the garment (distance to the background colour, Otsu, morphology),
+     mask out the card, take the largest contour.
+  4. Derive measurements (pants: waist, hip, thigh, leg opening, lengths, rise,
+     waistband/cuff height via seam line detection).
+  5. Overlay PNG with contour and measuring lines for the user to confirm.
 
-Alle Weiten sind **flach gemessen (eine Lage)**; die Umrechnung auf Umfänge (×2) erfolgt
-in reverse/unfold.py. Messwerte, die der Nutzer per Maßband nennt, haben Vorrang.
+All widths are **measured flat (one layer)**; conversion to circumferences (×2) happens
+in reverse/unfold.py. Values the user measures with a tape measure take precedence.
 
-CLI:  python photo_measure.py foto.jpg --type hose --out messung
+CLI:  python photo_measure.py photo.jpg --type pants --out measurement
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class MeasureError(Exception):
 
 
 # ---------------------------------------------------------------------------
-# 1–2 Referenz und Entzerrung
+# 1–2 Reference and rectification
 # ---------------------------------------------------------------------------
 
 def detect_card(img):
@@ -45,8 +45,8 @@ def detect_card(img):
     det = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(refcard.DICT_ID), params)
     corners, ids, _ = det.detectMarkers(gray)
     if ids is None:
-        raise MeasureError("Referenzkarte nicht gefunden. Bitte die Karte vollständig, flach und "
-                           "unverdeckt ins Bild legen (oder Zollstock-Maße angeben).")
+        raise MeasureError("Reference card not found. Please place the whole card flat and "
+                           "uncovered in the picture (or give folding-ruler measurements).")
     ref = refcard.marker_corners_mm()
     img_pts, mm_pts = [], []
     found = []
@@ -56,31 +56,31 @@ def detect_card(img):
             mm_pts.append(ref[int(i)])
             found.append(int(i))
     if not found:
-        raise MeasureError("Keine Marker der Referenzkarte erkannt.")
+        raise MeasureError("No markers of the reference card detected.")
     return np.vstack(img_pts), np.vstack(mm_pts), sorted(found)
 
 
 def homography(img, manual_ref=None):
-    """Homographie Bildpixel → mm (Kartenebene). manual_ref: dict(img=[[x,y]*4], mm=[[x,y]*4])."""
+    """Homography image pixels → mm (card plane). manual_ref: dict(img=[[x,y]*4], mm=[[x,y]*4])."""
     if manual_ref:
         ip = np.float32(manual_ref["img"])
         mp = np.float32(manual_ref["mm"])
         H, _ = cv2.findHomography(ip, mp)
-        return H, dict(method="manuell", markers=[])
+        return H, dict(method="manual", markers=[])
     ip, mp, found = detect_card(img)
     H, inl = cv2.findHomography(ip, mp, cv2.RANSAC if len(ip) > 4 else 0, 1.0)
-    # Restfehler auf der Karte
+    # residual error on the card
     proj = cv2.perspectiveTransform(ip.reshape(-1, 1, 2), H).reshape(-1, 2)
     err = float(np.sqrt(np.mean(np.sum((proj - mp) ** 2, axis=1))))
     if len(found) < 2:
-        note = "nur ein Marker erkannt – Genauigkeit eingeschränkt"
+        note = "only one marker detected: accuracy is limited"
     else:
         note = ""
-    return H, dict(method="Referenzkarte", markers=found, rms_mm=err, note=note)
+    return H, dict(method="reference card", markers=found, rms_mm=err, note=note)
 
 
 def rectify(img, H, px_per_mm=2.0, max_side_mm=2500):
-    """Draufsicht in mm-Raster. Rückgabe: Bild, Matrix mm→px des Ergebnisbilds."""
+    """Top view on a mm grid. Returns: image, validity mask, matrix mm→px of the result image."""
     h, w = img.shape[:2]
     corners = cv2.perspectiveTransform(np.float32([[0, 0], [w, 0], [w, h], [0, h]]).reshape(-1, 1, 2), H).reshape(-1, 2)
     x0, y0 = corners.min(axis=0)
@@ -95,19 +95,19 @@ def rectify(img, H, px_per_mm=2.0, max_side_mm=2500):
 
 
 # ---------------------------------------------------------------------------
-# 3 Segmentierung
+# 3 Segmentation
 # ---------------------------------------------------------------------------
 
 def segment(rect, valid, T, px_per_mm):
     lab = cv2.cvtColor(rect, cv2.COLOR_BGR2LAB).astype(np.float32)
     lab = cv2.GaussianBlur(lab, (0, 0), 1.5 * px_per_mm)
     v = valid > 0
-    # Kartenbereich (mm 0..100) ausblenden
+    # hide the card area (mm 0..100)
     card = np.zeros(valid.shape, np.uint8)
     cpts = np.float32([[-8, -8], [108, -8], [108, 108], [-8, 108]])
     cpx = (np.c_[cpts, np.ones(4)] @ T.T)[:, :2]
     cv2.fillPoly(card, [np.int32(cpx)], 255)
-    # Hintergrundfarbe vom Bildrand (gültiger Bereich) schätzen
+    # estimate the background colour from the image border (valid area)
     er = cv2.erode(valid, np.ones((15, 15), np.uint8))
     border = (er > 0) & (cv2.erode(er, np.ones((int(40 * px_per_mm),) * 2, np.uint8)) == 0)
     bg = np.median(lab[border], axis=0)
@@ -122,11 +122,11 @@ def segment(rect, valid, T, px_per_mm):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((k, k), np.uint8))
     n, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
     if n < 2:
-        raise MeasureError("Kleidungsstück nicht vom Hintergrund zu trennen – bitte auf "
-                           "einfarbigen, kontrastreichen Untergrund legen.")
+        raise MeasureError("Cannot separate the garment from the background. Please lay it on a "
+                           "plain, high-contrast surface.")
     best = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
     mask = (labels == best).astype(np.uint8) * 255
-    # Löcher füllen
+    # fill holes
     cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     filled = np.zeros_like(mask)
     cv2.drawContours(filled, cnts, -1, 255, -1)
@@ -134,7 +134,7 @@ def segment(rect, valid, T, px_per_mm):
 
 
 def upright(mask, rect, px_per_mm):
-    """Kleidungsstück so drehen, dass die Längsachse senkrecht steht und der Bund oben ist."""
+    """Rotate the garment so that its long axis is vertical and the waistband is at the top."""
     ys, xs = np.nonzero(mask)
     pts = np.stack([xs, ys], 1).astype(np.float32)
     mean = pts.mean(axis=0)
@@ -146,7 +146,7 @@ def upright(mask, rect, px_per_mm):
         ang -= 90
     while ang < -45:
         ang += 90
-    # nur sinnvolle Drehung, wenn das Teil deutlich schräg liegt
+    # fold the angle into ±45° so only a real tilt is corrected
     h, w = mask.shape
     diag = int(math.hypot(h, w)) + 4
     M = cv2.getRotationMatrix2D((float(mean[0]), float(mean[1])), ang, 1.0)
@@ -154,7 +154,7 @@ def upright(mask, rect, px_per_mm):
     M[1, 2] += diag / 2 - mean[1]
     mr = cv2.warpAffine(mask, M, (diag, diag), flags=cv2.INTER_NEAREST)
     rr = cv2.warpAffine(rect, M, (diag, diag), flags=cv2.INTER_LINEAR)
-    # Bund oben? Unten müssen zwei Beine (zwei Läufe) sein
+    # waistband at the top? The bottom must show two legs (two runs)
     def runs_at(m, frac):
         ys_, = np.nonzero(m.any(axis=1))
         y = int(ys_[0] + (ys_[-1] - ys_[0]) * frac)
@@ -169,7 +169,7 @@ def upright(mask, rect, px_per_mm):
 
 
 # ---------------------------------------------------------------------------
-# 4 Messen: Hose
+# 4 Measuring: pants
 # ---------------------------------------------------------------------------
 
 def _row_runs(row):
@@ -179,7 +179,7 @@ def _row_runs(row):
 
 
 def _seam_from_profile(gray, mask, y_from, y_to, x_from=None, x_to=None, px_per_mm=2.0):
-    """Waagerechte Nahtlinie: Zeile mit stärkstem vertikalem Gradienten im Bereich."""
+    """Horizontal seam line: the row with the strongest vertical gradient in the range."""
     y_from, y_to = int(max(y_from, 0)), int(min(y_to, gray.shape[0] - 1))
     if y_to <= y_from + 3:
         return None, 0.0
@@ -203,7 +203,7 @@ def measure_pants(mask, img, px_per_mm):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     rows = np.nonzero(mask.any(axis=1))[0]
     top, bottom = int(rows[0]), int(rows[-1])
-    # Schrittpunkt: höchster Punkt der Lücke zwischen den Beinen (Hintergrund von unten)
+    # crotch point: highest point of the gap between the legs (background from below)
     cols = np.nonzero(mask.any(axis=0))[0]
     xl, xr = int(cols[0]), int(cols[-1])
     y_start, runs = None, []
@@ -213,11 +213,11 @@ def measure_pants(mask, img, px_per_mm):
             y_start, runs = y - int(10 * s), rr
             break
     if y_start is None:
-        raise MeasureError("Hosenbeine unten nicht getrennt erkennbar – Beine leicht auseinanderlegen.")
+        raise MeasureError("The legs cannot be told apart at the bottom. Please spread the legs slightly.")
     runs = sorted(runs, key=lambda r: r[1] - r[0], reverse=True)[:2]
     runs.sort()
     seed = ((runs[0][1] + runs[1][0]) // 2, y_start)
-    # Hintergrund "zwischen" Stoff: links und rechts davon liegt in derselben Zeile Stoff
+    # background "between" fabric: there is fabric left and right of it in the same row
     m = mask > 0
     left_any = np.maximum.accumulate(m, axis=1)
     right_any = np.maximum.accumulate(m[:, ::-1], axis=1)[:, ::-1]
@@ -225,13 +225,13 @@ def measure_pants(mask, img, px_per_mm):
     n_, lab_ = cv2.connectedComponents(between)
     lid = lab_[seed[1], seed[0]]
     if lid == 0:
-        raise MeasureError("Schrittpunkt nicht gefunden.")
+        raise MeasureError("Crotch point not found.")
     gy, gx = np.nonzero(lab_ == lid)
     k = int(np.argmin(gy))
     crotch = (int(np.median(gx[gy == gy[k]])), int(gy[k]))
-    # Verfeinern: Innenkanten der Beine (knapp unterhalb der Lückenspitze) als Geraden
-    # nach oben verlängern; ihr Schnittpunkt ist der Schrittpunkt (Unschärfe/Morphologie
-    # schließen die Spitze der Lücke sonst um einige mm).
+    # Refine: extend the inner leg edges (just below the tip of the gap) upwards as
+    # straight lines; their intersection is the crotch point (blur/morphology would
+    # otherwise close the tip of the gap by a few mm).
     ys_fit, xl_fit, xr_fit = [], [], []
     comp = lab_ == lid
     for y in range(int(crotch[1] + 2 * s), int(crotch[1] + 45 * s)):
@@ -252,7 +252,7 @@ def measure_pants(mask, img, px_per_mm):
             xc_ = np.polyval(np.polyfit(ys_a, mid, 1), yc)
             crotch = (int(round(xc_)), int(round(yc)))
     front_rise = (crotch[1] - top) / s
-    # Bundnaht oben
+    # waistband seam at the top
     wb_y, wb_q = _seam_from_profile(gray, mask, top + 8 * s, top + min(110 * s, (crotch[1] - top) * 0.45),
                                     px_per_mm=s)
     wb_h = (wb_y - top) / s if (wb_y is not None and wb_q > 2.5) else 0.0
@@ -262,7 +262,7 @@ def measure_pants(mask, img, px_per_mm):
     waist_flat = np.median([width_at(top + (wb_h * s if wb_h else 30 * s) * f) for f in (0.3, 0.5, 0.7)])
     hip_y = top + (wb_h + 0.55 * (front_rise - wb_h)) * s
     hip_flat = width_at(hip_y)
-    # Beine einzeln, an der eigenen Achse ausgerichtet
+    # legs one by one, aligned to their own axis
     legs = []
     for side in (-1, 1):
         lm = np.zeros_like(mask)
@@ -278,7 +278,7 @@ def measure_pants(mask, img, px_per_mm):
         u = evecs[:, np.argmax(evals)]
         if u[1] < 0:
             u = -u
-        ang = math.degrees(math.atan2(u[0], u[1]))      # Abweichung von senkrecht
+        ang = math.degrees(math.atan2(u[0], u[1]))      # deviation from vertical
         M = cv2.getRotationMatrix2D((float(crotch[0]), float(crotch[1])), -ang, 1.0)
         lr = cv2.warpAffine(lm, M, mask.shape[::-1], flags=cv2.INTER_NEAREST)
         gr = cv2.warpAffine(gray, M, mask.shape[::-1], flags=cv2.INTER_LINEAR)
@@ -288,7 +288,7 @@ def measure_pants(mask, img, px_per_mm):
         def lw(y):
             rr = _row_runs(lr[int(y)])  # noqa: B023 - called within the same iteration
             return (max(r[1] for r in rr) - min(r[0] for r in rr)) / s if rr else 0.0
-        # Oberschenkel: senkrecht zur Beinachse, 2,5 cm unter dem Schritt
+        # thigh: perpendicular to the leg axis, 2.5 cm below the crotch
         lm2 = np.zeros_like(mask)
         y_up = int(crotch[1] - 60 * s)
         if side < 0:
@@ -317,12 +317,12 @@ def measure_pants(mask, img, px_per_mm):
         leg_splay_deg=avg("angle") if False else float(np.mean([abs(l["angle"]) for l in legs])),
     )
     geo = dict(top=top, bottom=bottom, crotch=crotch, hip_y=hip_y, wb_y=top + wb_h * s, legs=legs, xl=xl, xr=xr)
-    # Plausibilität
+    # plausibility
     warn = []
     if abs(legs[0]["inseam"] - legs[1]["inseam"]) > 15:
-        warn.append("Beinlängen links/rechts weichen > 1,5 cm ab – Hose glattstreichen?")
+        warn.append("Left/right leg lengths differ by more than 1.5 cm. Smooth the pants out?")
     if wb_h == 0:
-        warn.append("Bundnaht nicht sicher erkannt – Bundhöhe bitte per Maßband angeben.")
+        warn.append("Waistband seam not detected reliably. Please measure the waistband height with a tape measure.")
     return res, geo, warn
 
 
@@ -331,9 +331,9 @@ def measure_pants(mask, img, px_per_mm):
 # ---------------------------------------------------------------------------
 
 LABELS = {
-    "waist_flat": "Bund (flach)", "hip_flat": "Hüfte (flach)", "thigh_flat": "Oberschenkel (flach)", "knee_flat": "Beinweite Mitte (flach)",
-    "opening_flat": "Beinöffnung (flach)", "front_rise": "Leibhöhe vorne", "inseam": "Innenbein",
-    "outseam": "Seitenlänge", "waistband_h": "Bundhöhe", "cuff_h": "Bündchenhöhe",
+    "waist_flat": "Waist (flat)", "hip_flat": "Hip (flat)", "thigh_flat": "Thigh (flat)", "knee_flat": "Mid-leg width (flat)",
+    "opening_flat": "Leg opening (flat)", "front_rise": "Front rise", "inseam": "Inseam",
+    "outseam": "Outseam", "waistband_h": "Waistband height", "cuff_h": "Cuff height",
 }
 
 
@@ -366,7 +366,7 @@ def overlay(img, mask, cnt, geo, res, px_per_mm, path):
     d = ImageDraw.Draw(pil)
     font_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "fonts", "DejaVuSans.ttf")
     f = ImageFont.truetype(font_path, 22)
-    lines = ["Erkannte Maße (bitte prüfen):"] + [f"{LABELS[k]}: {v / 10:.1f} cm".replace(".", ",")
+    lines = ["Detected measurements (please check):"] + [f"{LABELS[k]}: {v / 10:.1f} cm"
                                                  for k, v in res.items() if k in LABELS]
     box_w = 420
     d.rectangle([8, 8, 8 + box_w, 16 + 28 * len(lines)], fill=(255, 255, 255))
@@ -380,25 +380,25 @@ def overlay(img, mask, cnt, geo, res, px_per_mm, path):
 # API
 # ---------------------------------------------------------------------------
 
-def measure(image, garment="hose", px_per_mm=2.0, overlay_path=None, manual_ref=None, tape=None):
-    """Hauptfunktion. image: Pfad oder BGR-Array. tape: Maßband-Werte in cm (Vorrang)."""
+def measure(image, garment="pants", px_per_mm=2.0, overlay_path=None, manual_ref=None, tape=None):
+    """Main function. image: path or BGR array. tape: tape-measure values in cm (take precedence)."""
     img = cv2.imread(image) if isinstance(image, str) else image
     if img is None:
-        raise MeasureError(f"Bild nicht lesbar: {image}")
+        raise MeasureError(f"Cannot read image: {image}")
     H, ref_info = homography(img, manual_ref)
     rect, valid, T = rectify(img, H, px_per_mm)
     mask, cnt = segment(rect, valid, T, px_per_mm)
     mask_u, rect_u, ang = upright(mask, rect, px_per_mm)
-    if garment in ("hose", "pants", "pants_basic"):
+    if garment in ("pants", "pants_basic"):
         res, geo, warn = measure_pants(mask_u, rect_u, px_per_mm)
-    elif garment in ("oberteil", "tshirt", "tshirt_basic", "hoodie"):
+    elif garment in ("top", "tshirt", "tshirt_basic", "hoodie"):
         res, geo, warn = measure_top(mask_u, rect_u, px_per_mm)
     else:
-        raise MeasureError(f"Messung für '{garment}' nicht unterstützt (hose, oberteil).")
-    source = {k: "Foto" for k in res}
+        raise MeasureError(f"Measuring '{garment}' is not supported (pants, top).")
+    source = {k: "photo" for k in res}
     for k, v in (tape or {}).items():
         res[k] = float(v) * 10
-        source[k] = "Maßband"
+        source[k] = "tape measure"
     if overlay_path:
         overlay(rect_u, mask_u, None, geo, res, px_per_mm, overlay_path)
     return dict(measures_mm=res, source=source, reference=ref_info, warnings=warn,
@@ -406,11 +406,11 @@ def measure(image, garment="hose", px_per_mm=2.0, overlay_path=None, manual_ref=
 
 
 # ---------------------------------------------------------------------------
-# Oberteil (T-Shirt/Hoodie): Breite, Länge, Ärmel
+# Top (T-shirt/hoodie): width, length, sleeves
 # ---------------------------------------------------------------------------
 
 def measure_top(mask, img, px_per_mm):
-    """T-Shirt flach, Ärmel seitlich ausgebreitet. Maße flach (eine Lage)."""
+    """T-shirt lying flat, sleeves spread out sideways. Measurements flat (one layer)."""
     s = px_per_mm
     rows = np.nonzero(mask.any(axis=1))[0]
     top, bottom = int(rows[0]), int(rows[-1])
@@ -422,9 +422,9 @@ def measure_top(mask, img, px_per_mm):
     widths = np.array(widths) / s
     cols = np.nonzero(mask.any(axis=0))[0]
     xc = (cols[0] + cols[-1]) / 2
-    # Rumpfbreite unten (Saum) und Länge
+    # body width at the bottom (hem) and length
     hem_w = float(np.median(widths[-int(15 * s):-int(5 * s)]))
-    # Achselpunkt: von unten nach oben, wo die Breite sprunghaft zunimmt (Ärmel beginnen)
+    # underarm point: going up from the bottom, where the width jumps (sleeves begin)
     body_w = []
     for y in range(bottom, top, -1):
         rr = _row_runs(mask[y])
@@ -434,7 +434,7 @@ def measure_top(mask, img, px_per_mm):
     full_w = widths[::-1][:len(body_w)]
     jump = np.nonzero(full_w > body_w + 30)[0]
     if len(jump) == 0:
-        raise MeasureError("Ärmel nicht erkannt – Ärmel seitlich ausbreiten.")
+        raise MeasureError("Sleeves not detected. Please spread the sleeves out sideways.")
     underarm_y = bottom - int(jump[0])
     chest_flat = float(np.median(body_w[max(0, jump[0] - int(30 * s)):jump[0] - int(20 * s)]))
     length = (bottom - top) / s
@@ -444,21 +444,21 @@ def measure_top(mask, img, px_per_mm):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Kleidungsstück aus Foto vermessen (Modus B)")
+    ap = argparse.ArgumentParser(description="Measure a garment from a photo (mode B)")
     ap.add_argument("image")
-    ap.add_argument("--type", default="hose")
-    ap.add_argument("--out", default="messung")
-    ap.add_argument("--tape", help='Maßband-Werte in cm als JSON, z. B. {"inseam": 48}')
+    ap.add_argument("--type", default="pants")
+    ap.add_argument("--out", default="measurement")
+    ap.add_argument("--tape", help='tape-measure values in cm as JSON, e.g. {"inseam": 48}')
     a = ap.parse_args(argv)
     os.makedirs(a.out, exist_ok=True)
     r = measure(a.image, a.type, overlay_path=os.path.join(a.out, "overlay.png"),
                 tape=json.loads(a.tape) if a.tape else None)
-    with open(os.path.join(a.out, "messung.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(a.out, "measurement.json"), "w", encoding="utf-8") as f:
         json.dump(r, f, ensure_ascii=False, indent=2, default=float)
     for k, v in r["measures_mm"].items():
         print(f"{LABELS.get(k, k)}: {v / 10:.1f} cm ({r['source'][k]})")
     for w in r["warnings"]:
-        print("Hinweis:", w)
+        print("Note:", w)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
-"""Datenmodell für Schnittteile und Schnittmuster.
+"""Data model for pattern pieces and patterns.
 
-Ein Schnittteil (Piece) besteht aus einer geschlossenen, gegen den Uhrzeigersinn
-laufenden Folge benannter Kanten (Edge). Jede Kante trägt ihre eigene Nahtzugabe;
-Bruchkanten haben Nahtzugabe 0 und werden als Strich-Punkt-Linie gezeichnet.
-Die Kanten beschreiben die **Nählinie** (Nettokontur); die Schnittlinie wird über
-geometry.offset_outline daraus berechnet.
+A pattern piece (Piece) is a closed, counter-clockwise sequence of named edges
+(Edge). Every edge carries its own seam allowance; fold edges have a seam allowance
+of 0 and are drawn as dash-dot lines. The edges describe the **seam line** (net
+outline); the cutting line is computed from it with geometry.offset_outline.
 """
 from __future__ import annotations
 
@@ -21,9 +20,9 @@ import geometry as G
 class Edge:
     name: str
     pts: np.ndarray
-    sa: float = 10.0            # Nahtzugabe in mm
-    fold: bool = False          # Stoffbruch
-    label: str = ""             # z. B. "Saum", "Seitennaht"
+    sa: float = 10.0            # seam allowance in mm
+    fold: bool = False          # cut on the fold
+    label: str = ""             # e.g. "Hem", "Side seam"
 
     @property
     def length(self) -> float:
@@ -33,13 +32,13 @@ class Edge:
 @dataclass
 class Notch:
     edge: str
-    s: float                    # Abstand vom Kantenanfang in mm (negativ: vom Ende)
-    count: int = 1              # 1 = einfach (vorne), 2 = doppelt (hinten)
+    s: float                    # distance from the start of the edge in mm (negative: from the end)
+    count: int = 1              # 1 = single (front), 2 = double (back)
 
 
 @dataclass
 class Mark:
-    """Innenlinie, z. B. Taschenposition, Umbruchlinie, Gummidurchzug."""
+    """Inner line, e.g. pocket placement, fold-over line, elastic casing."""
     pts: np.ndarray
     style: str = "mark"         # mark | fold | placement
     label: str = ""
@@ -51,20 +50,20 @@ class Piece:
     name: str
     edges: list[Edge]
     cut_count: int = 2
-    mirror: bool = True                 # Paar gegengleich zuschneiden
-    fabric: str = "Oberstoff"
-    grain: tuple | None = None          # (p0, p1) Fadenlaufpfeil
+    mirror: bool = True                 # cut as a mirrored pair
+    fabric: str = "Main fabric"
+    grain: tuple | None = None          # (p0, p1) grainline arrow
     notches: list[Notch] = field(default_factory=list)
     marks: list[Mark] = field(default_factory=list)
-    info: list[str] = field(default_factory=list)   # zusätzliche Beschriftung
-    stretch_dir: str = ""                # Hinweis zur Dehnrichtung
+    info: list[str] = field(default_factory=list)   # additional labels
+    stretch_dir: str = ""                # note on the stretch direction
 
-    # ----------------------------------------------------------------- Geometrie
+    # ----------------------------------------------------------------- geometry
     def edge(self, name: str) -> Edge:
         for e in self.edges:
             if e.name == name:
                 return e
-        raise KeyError(f"{self.name}: Kante '{name}' fehlt")
+        raise KeyError(f"{self.name}: edge '{name}' missing")
 
     def edge_index(self, name: str) -> int:
         return [e.name for e in self.edges].index(name)
@@ -89,20 +88,20 @@ class Piece:
             a = self.edges[i].pts[-1]
             b = self.edges[(i + 1) % n].pts[0]
             if np.linalg.norm(a - b) > tol:
-                errs.append(f"Lücke {np.linalg.norm(a - b):.1f} mm zwischen "
-                            f"'{self.edges[i].name}' und '{self.edges[(i + 1) % n].name}'")
+                errs.append(f"gap of {np.linalg.norm(a - b):.1f} mm between "
+                            f"'{self.edges[i].name}' and '{self.edges[(i + 1) % n].name}'")
         if G.signed_area(self.seam_ring()) <= 0:
-            errs.append("Kontur läuft im Uhrzeigersinn")
+            errs.append("outline runs clockwise")
         return errs
 
     def cut_text(self) -> str:
         if self.on_fold:
             if self.cut_count == 1:
-                return "1× im Stoffbruch zuschneiden"
-            return f"{self.cut_count}× im Stoffbruch zuschneiden"
+                return "cut 1 on fold"
+            return f"cut {self.cut_count} on fold"
         if self.cut_count == 2 and self.mirror:
-            return "2× gegengleich zuschneiden"
-        return f"{self.cut_count}× zuschneiden"
+            return "cut 2 (mirrored pair)"
+        return f"cut {self.cut_count}"
 
     def sa_text(self) -> str:
         vals = {}
@@ -111,18 +110,18 @@ class Piece:
                 continue
             vals.setdefault(round(e.sa), []).append(e.label or e.name)
         if not vals:
-            return "ohne Nahtzugabe"
+            return "no seam allowance"
         common = max(vals, key=lambda k: len(vals[k]))
         def cm(v):
-            return f"{v / 10:.1f}".replace(".", ",")
-        parts = [f"Nahtzugabe {cm(common)} cm inkl."]
+            return f"{v / 10:.1f}"
+        parts = [f"seam allowance {cm(common)} cm included"]
         for k, names in vals.items():
             if k != common:
                 parts.append(f"{', '.join(sorted(set(names)))}: {cm(k)} cm")
         return "; ".join(parts)
 
     def transformed(self, fn) -> Piece:
-        """Kopie mit allen Punkten durch fn transformiert."""
+        """Copy with all points transformed by fn."""
         import copy
         p = copy.deepcopy(self)
         for e in p.edges:
@@ -145,16 +144,16 @@ class Piece:
 
 @dataclass
 class Pattern:
-    garment: str                     # Modulname, z. B. pants_basic
-    title: str                       # z. B. "Haremshose"
+    garment: str                     # module name, e.g. pants_basic
+    title: str                       # e.g. "Harem pants"
     size_label: str                  # z. B. "Gr. 122"
     pieces: list[Piece]
-    measures: dict[str, float]       # Körpermaße in mm
+    measures: dict[str, float]       # body measurements in mm
     options: dict[str, Any]
-    seams: list[dict] = field(default_factory=list)       # Nahtpaare für Validierung
-    corners: list[dict] = field(default_factory=list)     # Winkelprüfungen
-    checks: list[dict] = field(default_factory=list)      # weitere Prüfungen (Umfänge …)
-    finished: dict[str, float] = field(default_factory=dict)  # Fertigmaße (virtuell genäht)
+    seams: list[dict] = field(default_factory=list)       # seam pairs for validation
+    corners: list[dict] = field(default_factory=list)     # angle checks
+    checks: list[dict] = field(default_factory=list)      # further checks (circumferences …)
+    finished: dict[str, float] = field(default_factory=dict)  # finished measurements (virtually sewn)
     notes: list[str] = field(default_factory=list)
 
     def piece(self, key: str) -> Piece:
@@ -167,7 +166,7 @@ class Pattern:
         return any(p.key == key for p in self.pieces)
 
     def edge_len(self, ref: str) -> float:
-        """Länge einer Kante, Referenz 'teil.kante' oder 'teil.kante1+kante2'."""
+        """Length of an edge, reference 'piece.edge' or 'piece.edge1+edge2'."""
         key, names = ref.split(".", 1)
         p = self.piece(key)
         return sum(p.edge(n).length for n in names.split("+"))
@@ -188,10 +187,10 @@ class Pattern:
 
 def rect_piece(key: str, name: str, w: float, h: float, *, sa: float = 10.0,
                fold_left: bool = False, fold_bottom: bool = False, cut_count: int = 1,
-               fabric: str = "Oberstoff", names=("unten", "rechts", "oben", "links"),
+               fabric: str = "Main fabric", names=("bottom", "right", "top", "left"),
                labels=("", "", "", ""), mirror: bool = False, grain_vertical: bool = True,
                sas=None) -> Piece:
-    """Rechteckiges Teil (Bund, Bündchen, Loop …) mit Ursprung unten links."""
+    """Rectangular piece (waistband, rib band, loop …) with its origin at the bottom left."""
     c = [G.P(0, 0), G.P(w, 0), G.P(w, h), G.P(0, h)]
     sas = sas or (sa, sa, sa, sa)
     edges = [

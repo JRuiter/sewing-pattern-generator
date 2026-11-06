@@ -1,28 +1,28 @@
-"""Körpermaße: Größentabellen, Ableitung fehlender Maße, Plausibilitätsprüfung.
+"""Body measurements: size tables, deriving missing measurements, plausibility checks.
 
-Die Tabellen sind **gerundete Richtwerte**, die aus allgemein zugänglichen
-Größenübersichten (Konfektionsgrößen nach Körperhöhe, DIN EN 13402 / übliche deutsche
-Konfektionsgrößen) gemittelt wurden. Sie sind keine Kopie einer bestimmten Schnitttabelle.
-Werte in der Tabelle: cm. Intern rechnet der Skill in mm.
+The tables are **rounded reference values** averaged from publicly available size
+charts (children's sizes by body height, DIN EN 13402 / common German ready-to-wear
+sizes). They are not a copy of any particular pattern company's chart.
+Table values: cm. Internally the skill works in mm.
 
-Maßnamen (intern):
-  height        Körperhöhe
-  chest         Brustumfang
-  waist         Taillenumfang
-  hip           Hüftumfang (Gesäß)
-  head          Kopfumfang
-  neck          Halsumfang
-  inseam        Schrittlänge (Innenbein, Schritt–Boden)
-  side_length   Seitenlänge (Taille–Boden)
-  crotch_depth  Leibhöhe / Schritttiefe (= side_length − inseam)
-  arm           Armlänge (Schulterpunkt–Handgelenk)
-  back_length   Rückenlänge (7. Halswirbel–Taille)
-  shoulder      Schulterbreite (eine Schulter, Halsansatz–Schulterpunkt)
-  upper_arm     Oberarmumfang
-  wrist         Handgelenkumfang
-  thigh         Oberschenkelumfang
-  knee          Knieumfang
-  ankle         Knöchelumfang
+Measurement names (internal):
+  height        body height
+  chest         chest circumference
+  waist         waist circumference
+  hip           hip circumference (seat)
+  head          head circumference
+  neck          neck circumference
+  inseam        inseam (inside leg, crotch to floor)
+  side_length   side length (waist to floor)
+  crotch_depth  rise / crotch depth (= side_length − inseam)
+  arm           arm length (shoulder point to wrist)
+  back_length   back length (7th cervical vertebra to waist)
+  shoulder      shoulder width (one shoulder, neck point to shoulder point)
+  upper_arm     upper-arm circumference
+  wrist         wrist circumference
+  thigh         thigh circumference
+  knee          knee circumference
+  ankle         ankle circumference
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ import re
 
 import numpy as np
 
-# Kinder: Größe = Körperhöhe (cm)
+# children: size = body height (cm)
 # size: chest, waist, hip, head, neck, inseam, side_length, arm, back_length, shoulder
 KIDS_COLS = ["chest", "waist", "hip", "head", "neck", "inseam", "side_length", "arm",
              "back_length", "shoulder"]
@@ -53,12 +53,12 @@ KIDS_TABLE = {
     176: [91.0, 72.0, 96.0, 56.5, 36.0, 83.0, 106.0, 72.0, 43.0, 13.3],
 }
 
-# Damen 34–56 und Herren 44–60: Formeln je Größensprung (2 Größen-Nummern)
-DAMEN_SIZES = list(range(34, 58, 2))
-HERREN_SIZES = list(range(44, 62, 2))
+# women 34–56 and men 44–60: formulas per size step (2 size numbers)
+WOMEN_SIZES = list(range(34, 58, 2))
+MEN_SIZES = list(range(44, 62, 2))
 
 
-def _damen(size: float) -> dict:
+def _women(size: float) -> dict:
     step = (size - 36) / 2
     chest = 84 + 4 * min(step, 4) + 6 * max(step - 4, 0)          # 36→84, 44→100, 56→136
     return {"height": 168.0, "chest": chest, "waist": chest - 16 + 0.5 * max(step - 4, 0) * 2,
@@ -67,7 +67,7 @@ def _damen(size: float) -> dict:
             "back_length": 41.0 + 0.2 * step, "shoulder": 12.3 + 0.15 * step}
 
 
-def _herren(size: float) -> dict:
+def _men(size: float) -> dict:
     step = (size - 48) / 2
     chest = 2.0 * size
     return {"height": 178.0 + 1.0 * min(max(step, -2), 3), "chest": chest,
@@ -77,47 +77,56 @@ def _herren(size: float) -> dict:
             "shoulder": 14.5 + 0.2 * step}
 
 
+# Accepted input names (English and German) → internal name
 ALIASES = {
+    "body_height": "height", "hip_circ": "hip", "chest_circ": "chest", "waist_circ": "waist",
+    "head_circ": "head", "neck_circ": "neck", "inside_leg": "inseam", "rise": "crotch_depth",
+    "arm_length": "arm", "shoulder_width": "shoulder", "bicep": "upper_arm",
     "koerperhoehe": "height", "körperhöhe": "height", "groesse_cm": "height", "hoehe": "height",
     "brust": "chest", "brustumfang": "chest", "oberweite": "chest",
-    "taille": "waist", "taillenumfang": "waist", "bund": "waist", "bundweite": "waist",
+    "taille": "waist", "taillenumfang": "waist", "waistband": "waist", "bundweite": "waist",
     "huefte": "hip", "hüfte": "hip", "hueftumfang": "hip", "hüftumfang": "hip", "gesaess": "hip",
-    "kopf": "head", "kopfumfang": "head", "hals": "neck", "halsumfang": "neck",
-    "schrittlaenge": "inseam", "schrittlänge": "inseam", "innenbein": "inseam",
+    "kopf": "head", "kopfumfang": "head", "neck": "neck", "halsumfang": "neck",
+    "schrittlaenge": "inseam", "schrittlänge": "inseam", "inseam": "inseam",
     "seitenlaenge": "side_length", "seitenlänge": "side_length",
     "leibhoehe": "crotch_depth", "leibhöhe": "crotch_depth", "schritttiefe": "crotch_depth",
     "armlaenge": "arm", "armlänge": "arm", "rueckenlaenge": "back_length", "rückenlänge": "back_length",
-    "schulterbreite": "shoulder", "schulter": "shoulder", "oberarm": "upper_arm",
+    "schulterbreite": "shoulder", "shoulder": "shoulder", "oberarm": "upper_arm",
     "oberarmumfang": "upper_arm", "handgelenk": "wrist", "oberschenkel": "thigh",
-    "oberschenkelumfang": "thigh", "knie": "knee", "knoechel": "ankle", "knöchel": "ankle",
+    "oberschenkelumfang": "thigh", "knee": "knee", "knoechel": "ankle", "knöchel": "ankle",
 }
 
-LABELS_DE = {
-    "height": "Körperhöhe", "chest": "Brustumfang", "waist": "Taillenumfang", "hip": "Hüftumfang",
-    "head": "Kopfumfang", "neck": "Halsumfang", "inseam": "Schrittlänge", "side_length": "Seitenlänge",
-    "crotch_depth": "Leibhöhe", "arm": "Armlänge", "back_length": "Rückenlänge",
-    "shoulder": "Schulterbreite", "upper_arm": "Oberarmumfang", "wrist": "Handgelenkumfang",
-    "thigh": "Oberschenkelumfang", "knee": "Knieumfang", "ankle": "Knöchelumfang",
+LABELS = {
+    "height": "Body height", "chest": "Chest", "waist": "Waist", "hip": "Hip",
+    "head": "Head", "neck": "Neck", "inseam": "Inseam", "side_length": "Side length",
+    "crotch_depth": "Rise (crotch depth)", "arm": "Arm length", "back_length": "Back length",
+    "shoulder": "Shoulder width", "upper_arm": "Upper arm", "wrist": "Wrist",
+    "thigh": "Thigh", "knee": "Knee", "ankle": "Ankle",
 }
 
 
 def parse_size(size) -> tuple[str, float]:
-    """'122', 'Gr. 122', 'Damen 38', 'H50' → (system, Zahl)."""
+    """'122', 'size 122', 'w38', 'women 38', 'm50', 'men 50' → (system, number).
+
+    German forms are accepted too: 'Gr. 122', 'Damen 38'/'d38', 'Herren 50'/'h50'.
+    """
     if isinstance(size, (int, float)):
         n = float(size)
-        return ("kinder" if n >= 80 else "damen"), n
-    s = str(size).lower().replace("gr.", "").replace("größe", "").strip()
+        return ("kids" if n >= 80 else "women"), n
+    s = str(size).lower().replace("gr.", "").replace("größe", "").replace("size", "").strip()
     system = None
-    if s.startswith(("d", "damen")):
-        system = "damen"
-    elif s.startswith(("h", "herren")):
-        system = "herren"
+    if s.startswith(("w", "d")):          # women / Damen
+        system = "women"
+    elif s.startswith(("m", "h")):        # men / Herren
+        system = "men"
+    elif s.startswith("k"):               # kids
+        system = "kids"
     m = re.search(r"(\d+(?:[.,]\d+)?)", s)
     if not m:
-        raise ValueError(f"Größe nicht erkannt: {size}")
+        raise ValueError(f"Size not recognised: {size}")
     n = float(m.group(1).replace(",", "."))
     if system is None:
-        system = "kinder" if n >= 80 else "damen"
+        system = "kids" if n >= 80 else "women"
     return system, n
 
 
@@ -134,25 +143,25 @@ def _derived_cm(m: dict, adult: bool) -> dict:
 
 def size_measures_cm(size) -> dict:
     system, n = parse_size(size)
-    if system == "kinder":
+    if system == "kids":
         keys = sorted(KIDS_TABLE)
         n_c = min(max(n, keys[0]), keys[-1])
         arr = np.array([KIDS_TABLE[k] for k in keys])
         vals = [float(np.interp(n_c, keys, arr[:, i])) for i in range(arr.shape[1])]
         m = dict(zip(KIDS_COLS, vals))
         m["height"] = n
-        if n != n_c:  # außerhalb der Tabelle: Längen proportional zur Höhe
+        if n != n_c:  # outside the table: lengths proportional to height
             f = n / n_c
             for k in ("inseam", "side_length", "arm", "back_length"):
                 m[k] *= f
         return _derived_cm(m, adult=False)
-    if system == "damen":
-        return _derived_cm(_damen(n), adult=True)
-    return _derived_cm(_herren(n), adult=True)
+    if system == "women":
+        return _derived_cm(_women(n), adult=True)
+    return _derived_cm(_men(n), adult=True)
 
 
 def size_measures(size) -> dict:
-    """Maße in mm für eine Konfektionsgröße."""
+    """Measurements in mm for a ready-to-wear size."""
     return {k: v * 10 for k, v in size_measures_cm(size).items()}
 
 
@@ -165,70 +174,70 @@ def normalize_keys(given: dict) -> dict:
 
 
 def complete_measures(given_cm: dict | None = None, size=None, system: str | None = None):
-    """Fehlende Maße ergänzen. Eingabe in cm, Ausgabe in mm.
+    """Fill in missing measurements. Input in cm, output in mm.
 
-    Rückgabe: (maße_mm, quelle) mit quelle[maß] in {'Nutzer', 'Tabelle', 'abgeleitet'}.
-    Ist keine Größe angegeben, wird bei Kindern die Größe aus der Körperhöhe bestimmt;
-    Längenmaße werden dann proportional zur Körperhöhe skaliert.
+    Returns (measures_mm, source) with source[name] in {'user', 'table', 'derived'}.
+    Without a size, children's sizes are taken from the body height; length
+    measurements are then scaled proportionally to the body height.
     """
     g = normalize_keys(given_cm or {})
     if size is None:
         if "height" not in g:
-            raise ValueError("Bitte Größe oder Körperhöhe angeben.")
-        if system in (None, "kinder") and g["height"] <= 176:
+            raise ValueError("Please give a size or the body height.")
+        if system in (None, "kids") and g["height"] <= 176:
             size = round(g["height"])
         else:
-            size = f"{'h' if system == 'herren' else 'd'}{38 if system != 'herren' else 50}"
+            size = f"{'m' if system == 'men' else 'w'}{38 if system != 'men' else 50}"
     base = size_measures_cm(size)
-    src = {k: "Tabelle" for k in base}
+    src = {k: "table" for k in base}
     if "height" in g and abs(g["height"] - base["height"]) > 0.5:
         f = g["height"] / base["height"]
         for k in ("inseam", "side_length", "arm", "back_length", "crotch_depth"):
             base[k] *= f
-            src[k] = "abgeleitet"
-    # Umfänge, die der Nutzer nicht nennt, aus genannten Umfängen nachführen
+            src[k] = "derived"
+    # circumferences the user did not give follow the ones they did give
     if "hip" in g and "thigh" not in g:
         base["thigh"] = g["hip"] * base["thigh"] / base["hip"]
-        src["thigh"] = "abgeleitet"
+        src["thigh"] = "derived"
     if "chest" in g and "upper_arm" not in g:
         base["upper_arm"] = g["chest"] * base["upper_arm"] / base["chest"]
-        src["upper_arm"] = "abgeleitet"
+        src["upper_arm"] = "derived"
     for k, v in g.items():
         base[k] = v
-        src[k] = "Nutzer"
+        src[k] = "user"
     if ("side_length" in g or "inseam" in g) and "crotch_depth" not in g:
         base["crotch_depth"] = base["side_length"] - base["inseam"]
-        src["crotch_depth"] = "abgeleitet"
+        src["crotch_depth"] = "derived"
     if "crotch_depth" in g and "side_length" not in g:
         base["side_length"] = base["inseam"] + g["crotch_depth"]
-        src["side_length"] = "abgeleitet"
+        src["side_length"] = "derived"
     return {k: v * 10 for k, v in base.items()}, src
 
 
 def validate_measures(m_mm: dict) -> list[str]:
-    """Plausibilitätsprüfung der Körpermaße. Liefert Warnungen (deutsch)."""
+    """Plausibility check of the body measurements. Returns warnings."""
     w = []
     h = m_mm.get("height", 0)
     if h <= 0:
-        return ["Körperhöhe fehlt"]
+        return ["Body height missing"]
     if not 0.35 <= m_mm["inseam"] / h <= 0.50:
-        w.append(f"Schrittlänge {m_mm['inseam'] / 10:.0f} cm wirkt ungewöhnlich für {h / 10:.0f} cm Körperhöhe")
+        w.append(f"Inseam {m_mm['inseam'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     if not 0.50 <= m_mm["side_length"] / h <= 0.66:
-        w.append(f"Seitenlänge {m_mm['side_length'] / 10:.0f} cm wirkt ungewöhnlich für {h / 10:.0f} cm Körperhöhe")
+        w.append(f"Side length {m_mm['side_length'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     cd = m_mm["side_length"] - m_mm["inseam"]
     if not 0.10 <= cd / h <= 0.20:
-        w.append(f"Leibhöhe {cd / 10:.1f} cm (Seitenlänge − Schrittlänge) wirkt unplausibel")
+        w.append(f"Rise {cd / 10:.1f} cm (side length − inseam) looks implausible")
     if m_mm["waist"] > m_mm["hip"] * 1.15:
-        w.append("Taille deutlich größer als Hüfte – bitte nachmessen")
+        w.append("Waist much larger than hip, please measure again")
     if m_mm["hip"] < m_mm["waist"] * 0.85:
-        w.append("Hüfte deutlich kleiner als Taille – bitte nachmessen")
+        w.append("Hip much smaller than waist, please measure again")
     if not 0.36 <= m_mm["arm"] / h <= 0.62 and "arm" in m_mm:
-        w.append(f"Armlänge {m_mm['arm'] / 10:.0f} cm wirkt ungewöhnlich für {h / 10:.0f} cm Körperhöhe")
+        w.append(f"Arm length {m_mm['arm'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     return w
 
 
 def table_markdown() -> str:
-    head = "| Gr. | " + " | ".join(LABELS_DE[c] for c in KIDS_COLS) + " |"
+    head = "| Size | " + " | ".join(LABELS[c] for c in KIDS_COLS) + " |"
     sep = "|" + "---|" * (len(KIDS_COLS) + 1)
     rows = [f"| {k} | " + " | ".join(f"{v:g}" for v in vals) + " |" for k, vals in KIDS_TABLE.items()]
     return "\n".join([head, sep] + rows)

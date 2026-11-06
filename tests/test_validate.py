@@ -1,4 +1,4 @@
-"""Nähbarkeits-Prüfungen, Kleidungsstücke in 3 Größen und Druckausgabe."""
+"""Sewability checks, garments in 3 sizes and print output."""
 import re
 import shutil
 import subprocess
@@ -14,20 +14,20 @@ import validate as V
 from garments import get
 
 SIZES = [98, 122, 152]
-ADULT = ["d38", "h52"]
+ADULT = ["w38", "m52"]
 CASES = [
-    ("pants_basic", {"style": "haremshose", "fabric": "sweat"}),
-    ("pants_basic", {"style": "jogginghose"}),
+    ("pants_basic", {"style": "harem", "fabric": "sweat"}),
+    ("pants_basic", {"style": "jogger"}),
     ("pants_basic", {"style": "leggings"}),
-    ("pants_basic", {"style": "stoffhose"}),
+    ("pants_basic", {"style": "trousers"}),
     ("tshirt_basic", {}),
-    ("tshirt_basic", {"sleeve_style": "raglan", "sleeve_length": "lang"}),
-    ("tshirt_basic", {"neckline": "v", "fabric": "jersey_elastan"}),
+    ("tshirt_basic", {"sleeve_style": "raglan", "sleeve_length": "long"}),
+    ("tshirt_basic", {"neckline": "v", "fabric": "jersey_elastane"}),
     ("hoodie", {}),
     ("hoodie", {"sleeve_style": "raglan", "hood_lining": True}),
-    ("skirt", {"style": "gerafft"}),
-    ("skirt", {"style": "a_linie"}),
-    ("skirt", {"style": "teller"}),
+    ("skirt", {"style": "gathered"}),
+    ("skirt", {"style": "a_line"}),
+    ("skirt", {"style": "circle"}),
     ("beanie", {}),
     ("loop", {}),
 ]
@@ -43,7 +43,7 @@ def statuses(report, area=None):
 
 
 # ---------------------------------------------------------------------------
-# Jedes Kleidungsstück in 3 Größen (+ Erwachsene)
+# Every garment in 3 sizes (+ adults)
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("garment,opts", CASES, ids=[f"{g}-{'-'.join(map(str, o.values())) or 'standard'}" for g, o in CASES])
@@ -51,7 +51,7 @@ def statuses(report, area=None):
 def test_garment_is_sewable(garment, opts, size):
     pat = draft(garment, size, **opts)
     report = V.validate(pat)
-    bad = [(c.name, c.actual) for c in report if c.status == "FEHLER"]
+    bad = [(c.name, c.actual) for c in report if c.status == "ERROR"]
     assert not bad, bad
     for pc in pat.pieces:
         assert pc.grain is not None, pc.name
@@ -60,102 +60,102 @@ def test_garment_is_sewable(garment, opts, size):
 
 
 # ---------------------------------------------------------------------------
-# Jede Prüfung muss einen kaputten Schnitt erkennen (Negativtests)
+# Every check must detect a broken pattern (negative tests)
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
 def harem():
-    return draft("pants_basic", 122, style="haremshose", fabric="sweat")
+    return draft("pants_basic", 122, style="harem", fabric="sweat")
 
 
 def test_seam_length_mismatch_detected(harem):
-    e = harem.piece("hinterhose").edge("seite")
+    e = harem.piece("back").edge("side")
     e.pts = e.pts.copy()
-    e.pts[-1] = e.pts[-1] + np.array([0.0, 8.0])          # Seitennaht 8 mm länger
+    e.pts[-1] = e.pts[-1] + np.array([0.0, 8.0])          # side seam 8 mm longer
     st = statuses(V.check_seams(harem))
-    assert st["Seitennaht vorne ↔ hinten"] == "FEHLER"
+    assert st["Side seam front ↔ back"] == "ERROR"
 
 
 def test_rib_ratio_out_of_range_detected(harem):
     seam = next(s for s in harem.seams if s.get("type") == "ratio")
-    seam["lo"], seam["hi"] = 0.95, 0.99                    # Bündchen wäre viel zu kurz
+    seam["lo"], seam["hi"] = 0.95, 0.99                    # the rib would be far too short
     assert any(c.status != "OK" for c in V.check_seams(harem) if c.name == seam["name"])
 
 
 def test_sleeve_cap_ease_checked():
     pat = draft("tshirt_basic", 122)
     seam = next(s for s in pat.seams if s.get("type") == "ease")
-    seam["lo"], seam["hi"] = 40.0, 60.0                    # unplausible Einhaltemenge
-    assert any(c.status == "FEHLER" for c in V.check_seams(pat) if c.name == seam["name"])
+    seam["lo"], seam["hi"] = 40.0, 60.0                    # implausible amount of ease
+    assert any(c.status == "ERROR" for c in V.check_seams(pat) if c.name == seam["name"])
 
 
 def test_corner_angle_detected(harem):
     corner = next(c for c in harem.corners if "sum" not in c)
-    corner["target"] = corner["target"] + 20                # Ecke weicht 20° ab
-    assert any(c.status == "FEHLER" for c in V.check_corners(harem) if c.name == corner["name"])
+    corner["target"] = corner["target"] + 20                # corner is off by 20°
+    assert any(c.status == "ERROR" for c in V.check_corners(harem) if c.name == corner["name"])
 
 
 def test_joined_corner_detected(harem):
     corner = next(c for c in harem.corners if "sum" in c)
     corner["target"] = corner["target"] - 15
-    assert any(c.status == "FEHLER" for c in V.check_corners(harem) if c.name == corner["name"])
+    assert any(c.status == "ERROR" for c in V.check_corners(harem) if c.name == corner["name"])
 
 
 def test_circumference_check_detected(harem):
     chk = next(c for c in harem.checks if c["kind"] == "circ")
-    chk["value"] = chk["target"] * 1.05                     # 5 % daneben
-    assert any(c.status == "FEHLER" for c in V.check_values(harem) if c.name == chk["name"])
+    chk["value"] = chk["target"] * 1.05                     # 5 % off
+    assert any(c.status == "ERROR" for c in V.check_values(harem) if c.name == chk["name"])
 
 
 def test_head_opening_check():
     pat = draft("tshirt_basic", 122)
-    chk = next(c for c in pat.checks if "Kopf" in c["name"])
+    chk = next(c for c in pat.checks if "head" in c["name"])
     chk["value"] = chk["target"] * 0.8
-    assert any(c.status == "FEHLER" for c in V.check_values(pat) if c.name == chk["name"])
+    assert any(c.status == "ERROR" for c in V.check_values(pat) if c.name == chk["name"])
 
 
 def test_self_intersection_detected(harem):
-    pc = harem.piece("vorderhose")
-    e = pc.edge("seite")
+    pc = harem.piece("front")
+    e = pc.edge("side")
     pts = e.pts.copy()
     mid = len(pts) // 2
-    pts[mid] = pts[mid] + np.array([-400.0, 0.0])           # Spitze quer durchs Teil
+    pts[mid] = pts[mid] + np.array([-400.0, 0.0])           # spike across the piece
     e.pts = pts
     st = statuses(V.check_geometry(harem))
-    assert st[f"{pc.name}: Kontur & Nahtzugabe"] == "FEHLER"
+    assert st[f"{pc.name}: outline & seam allowance"] == "ERROR"
 
 
 def test_missing_seam_allowance_detected(harem):
-    pc = harem.piece("vorderhose")
-    pc.edge("seite").sa = 0.0
+    pc = harem.piece("front")
+    pc.edge("side").sa = 0.0
     st = statuses(V.check_geometry(harem))
-    assert st[f"{pc.name}: Kontur & Nahtzugabe"] == "FEHLER"
+    assert st[f"{pc.name}: outline & seam allowance"] == "ERROR"
 
 
 def test_missing_grainline_detected(harem):
-    pc = harem.piece("vorderhose")
+    pc = harem.piece("front")
     pc.grain = None
     st = statuses(V.check_geometry(harem))
-    assert st[f"{pc.name}: Fadenlauf & Zuschnitt"] == "FEHLER"
+    assert st[f"{pc.name}: grainline & cutting"] == "ERROR"
 
 
 def test_raise_on_error(harem):
-    harem.piece("vorderhose").grain = None
+    harem.piece("front").grain = None
     with pytest.raises(V.ValidationError):
         V.validate(harem, raise_on_error=True)
 
 
-def test_report_table_is_german(harem):
+def test_report_table(harem):
     md = V.to_markdown(V.validate(harem))
-    assert "Nähbarkeits-Prüfung" in md and "✅ OK" in md
-    assert "nähbar" in md
+    assert "Sewability check" in md and "✅ OK" in md
+    assert "sewable" in md
 
 
 # ---------------------------------------------------------------------------
-# Druckausgabe
+# Print output
 # ---------------------------------------------------------------------------
 
-CTRL = 50.0 / 25.4 * 72.0          # 141,73 pt
+CTRL = 50.0 / 25.4 * 72.0          # 141.73 pt
 
 
 def _page_streams(path):
@@ -178,13 +178,13 @@ def _has_control_square(stream):
 
 @pytest.fixture(scope="module")
 def harem_mod():
-    return draft("pants_basic", 122, style="haremshose", fabric="sweat")
+    return draft("pants_basic", 122, style="harem", fabric="sweat")
 
 
 @pytest.fixture(scope="module")
 def roll_pdf(harem_mod, tmp_path_factory):
     lay = L.layout_roll(harem_mod, 610)
-    p = tmp_path_factory.mktemp("rolle") / "rolle.pdf"
+    p = tmp_path_factory.mktemp("roll") / "roll.pdf"
     R.render_roll_pdf(harem_mod, lay, str(p))
     return lay, p
 
@@ -214,7 +214,7 @@ def test_control_square_on_every_a4_page(a4_pdf):
 def test_fonts_embedded_and_no_hairlines(roll_pdf, a4_pdf):
     for _, p in (roll_pdf, a4_pdf):
         raw = open(p, "rb").read()
-        assert b"/FontFile2" in raw                    # TrueType eingebettet
+        assert b"/FontFile2" in raw                    # TrueType embedded
         rd, streams = _page_streams(p)
         for s in streams:
             widths = [float(x) for x in re.findall(r"(?<![\w.])([\d.]+) w\b", s)]
@@ -234,7 +234,7 @@ def test_roll_page_size_and_portrait(roll_pdf):
 def test_roll_layout_gap_and_width(harem_mod, roll):
     lay = L.layout_roll(harem_mod, roll)
     assert abs(lay.page_w - (roll - 10)) < 1e-6
-    assert lay.page_h >= lay.page_w                      # Hochformat
+    assert lay.page_h >= lay.page_w                      # portrait
     assert len(lay.placements) == len(harem_mod.pieces)
     rings = [pc.cut_ring() for pc in harem_mod.pieces]
     assert L.min_gap(rings, lay.placements) >= 10.0 - 0.5
@@ -247,10 +247,10 @@ def test_a4_tiles_no_empty_pages_and_labels(a4_pdf, harem_mod):
     lay, p = a4_pdf
     pages = [t for t in lay.tiles if not t["empty"]]
     rd, _ = _page_streams(p)
-    assert len(rd.pages) == len(pages) + 1                # + Übersichtsseite
+    assert len(rd.pages) == len(pages) + 1                # + overview page
     assert all(re.fullmatch(r"[A-Z]\d+", t["label"]) for t in pages)
     text = rd.pages[0].extract_text()
-    assert "100" in text                                   # Hinweis „100 % drucken“
+    assert "100" in text                                   # note "print at 100 %"
 
 
 def test_a4_overlap_windows():
@@ -262,11 +262,11 @@ def test_a4_overlap_windows():
             assert abs((x1 - right[0]["window"][0]) - L.OVERLAP) < 1e-9
 
 
-@pytest.mark.skipif(shutil.which("pdftoppm") is None, reason="pdftoppm (poppler) fehlt")
+@pytest.mark.skipif(shutil.which("pdftoppm") is None, reason="pdftoppm (poppler) missing")
 def test_a4_overlap_content_identical(harem_mod, tmp_path, monkeypatch):
-    """Nach dem Übereinanderkleben müssen die Schnittlinien im Überlappungsstreifen deckungsgleich sein."""
+    """After gluing the pages together, the pattern lines in the overlap strip must coincide."""
     from PIL import Image
-    # Seitendekorationen (Klebemarken, Kontrollquadrate) ausblenden: es zählt nur der Schnitt
+    # hide page decorations (glue marks, control squares): only the pattern counts
     monkeypatch.setattr(R, "_tile_decorations", lambda lay: [])
     monkeypatch.setattr(R, "_draw_deco", lambda *a, **k: None)
     monkeypatch.setattr(R, "control_squares_pdf", lambda *a, **k: None)
@@ -275,7 +275,7 @@ def test_a4_overlap_content_identical(harem_mod, tmp_path, monkeypatch):
     p = tmp_path / "a4.pdf"
     R.render_tiles_pdf(harem_mod, lay, str(p))
     pages = [t for t in lay.tiles if not t["empty"]]
-    by = {(t["row"], t["col"]): i + 2 for i, t in enumerate(pages)}   # Seite 1 = Übersicht
+    by = {(t["row"], t["col"]): i + 2 for i, t in enumerate(pages)}   # page 1 = overview
     dpi = 150
     pxmm = dpi / 25.4
     m, pw, ph, ov = lay.meta["margin"], lay.meta["pw"], lay.meta["ph"], L.OVERLAP
@@ -291,7 +291,7 @@ def test_a4_overlap_content_identical(harem_mod, tmp_path, monkeypatch):
             f = next(tmp_path.glob(f"p{n}*.png"))
             imgs.append(np.asarray(Image.open(f)) < 110)
         a, b = imgs
-        ya, yb = int((m + 15) * pxmm), int((m + ph - 2) * pxmm)        # Kopfzeile auslassen
+        ya, yb = int((m + 15) * pxmm), int((m + ph - 2) * pxmm)        # skip the header line
         xa0, xa1 = int((m + pw - ov + 1.5) * pxmm), int((m + pw - 1.5) * pxmm)
         xb0 = int((m + 1.5) * pxmm)
         sa = a[ya:yb, xa0:xa1]
@@ -314,16 +314,16 @@ def test_sheets_a0_a1(harem_mod):
 
 
 def test_oversize_piece_on_roll_is_tiled(tmp_path):
-    """Tellerrock Damen: Teil breiter als die Rolle → Bahnen zum Kleben statt Abbruch."""
+    """Women's circle skirt: piece wider than the roll → strips to glue instead of failing."""
     import generate as GN
-    pat = draft("skirt", "d38", style="teller")
+    pat = draft("skirt", "w38", style="circle")
     with pytest.raises(ValueError):
         L.layout_roll(pat, 610)
-    res = GN.run(dict(garment="skirt", size="d38", options={"style": "teller"}, formats=["rolle610"],
+    res = GN.run(dict(garment="skirt", size="w38", options={"style": "circle"}, formats=["roll610"],
                       out=str(tmp_path)), verbose=False)
     assert res["ok"]
-    assert any("Bahnen" in k for k in res["files"])
-    assert any("breiter als die Rolle" in w for w in res["warnings"])
+    assert any("strips" in k for k in res["files"])
+    assert any("wider than the roll" in w for w in res["warnings"])
 
 
 def test_svg_master_is_1to1(harem_mod, tmp_path):

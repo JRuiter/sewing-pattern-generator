@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""Hauptskript: Maße → Konstruktion → Validierung → Layout → Druckdateien → Anleitung.
+"""Main script: measurements → drafting → validation → layout → print files → instructions.
 
-Beispiele:
-  python generate.py --garment pants_basic --style haremshose --size 122 --fabric sweat \
-      --format rolle610 --out out/harem122
-  python generate.py --spec auftrag.json
-  python generate.py --projekt projekt/projekt.json --format rolle610 --out out/nachbau
+Examples:
+  python generate.py --garment pants_basic --style harem --size 122 --fabric sweat \
+      --format roll610 --out out/harem122
+  python generate.py --spec order.json
+  python generate.py --project project/project.json --format roll610 --out out/copy
 
-Spec-JSON (alle Felder optional außer garment und size/measures):
+Spec JSON (all fields optional except garment and size/measures):
   {"garment": "pants_basic", "size": 122, "measures_cm": {"hip": 68},
-   "options": {"style": "haremshose", "fabric": "sweat"},
-   "formats": ["rolle610", "a4"], "out": "out/harem122",
-   "fabric_widths_mm": {"Oberstoff": 1500, "Bündchen": 700}}
+   "options": {"style": "harem", "fabric": "sweat"},
+   "formats": ["roll610", "a4"], "out": "out/harem122",
+   "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700}}
 
-Exit-Code 2, wenn die Nähbarkeits-Validierung Fehler meldet (dann werden KEINE
-Druckdateien geschrieben, nur der Prüfbericht).
+Exit code 2 if the sewability validation reports errors (then NO print files are
+written, only the validation report).
 """
 from __future__ import annotations
 
@@ -35,29 +35,34 @@ from garments import get  # noqa: E402
 
 def size_label(size, measures_cm) -> str:
     if size is None:
-        return "nach Maß"
+        return "made to measure"
     system, n = M.parse_size(size)
-    lab = {"kinder": "Gr. %g", "damen": "Damen Gr. %g", "herren": "Herren Gr. %g"}[system] % n
+    lab = {"kids": "size %g", "women": "women's size %g", "men": "men's size %g"}[system] % n
     if measures_cm:
-        lab += " (angepasst)"
+        lab += " (adjusted)"
     return lab
 
 
+def _basename(pat) -> str:
+    lab = pat.size_label.split(" (")[0].replace("size ", "size").replace("'s", "")
+    return f"{pat.title.lower().replace(' ', '_')}_{lab.replace(' ', '_').lower()}"
+
+
 def spec_from_project(path: str, spec: dict | None = None) -> dict:
-    """Gespeichertes Reverse-Engineering-Projekt (projekt.json) in einen Auftrag umwandeln."""
+    """Turn a saved reverse-engineering project (project.json) into a spec."""
     from reverse import store as S
     p = S.load(path)
-    out = dict(garment=p["modul"], size=p["groesse_geschaetzt"],
-               options={k: v for k, v in p["optionen"].items() if not k.startswith("_")},
-               size_label=f"nach Vorbild (≈ Gr. {p['groesse_geschaetzt']})")
+    out = dict(garment=p["module"], size=p["size_estimate"],
+               options={k: v for k, v in p["options"].items() if not k.startswith("_")},
+               size_label=f"copied from garment (≈ size {p['size_estimate']})")
     out.update(spec or {})
-    out.pop("projekt", None)
+    out.pop("project", None)
     return out
 
 
 def draft_from_spec(spec: dict):
-    if spec.get("projekt"):
-        spec = spec_from_project(spec["projekt"], spec)
+    if spec.get("project"):
+        spec = spec_from_project(spec["project"], spec)
     mod = get(spec["garment"])
     measures, sources = M.complete_measures(spec.get("measures_cm"), spec.get("size"))
     warn = M.validate_measures(measures)
@@ -72,128 +77,128 @@ def run(spec: dict, verbose: bool = True) -> dict:
     pat, sources, warn = draft_from_spec(spec)
     report = V.validate(pat)
     report_md = V.to_markdown(report)
-    base = spec.get("basename") or f"{pat.title.lower().replace(' ', '_')}_{pat.size_label.split(' (')[0].replace('Gr. ', 'gr').replace(' ', '_').lower()}"
-    with open(os.path.join(out, "pruefbericht.md"), "w", encoding="utf-8") as f:
+    base = spec.get("basename") or _basename(pat)
+    with open(os.path.join(out, "validation_report.md"), "w", encoding="utf-8") as f:
         f.write(report_md)
     result = dict(pattern=pat, report=report, report_md=report_md, files={}, warnings=warn, ok=V.is_ok(report))
     if not V.is_ok(report):
         if verbose:
             print(report_md)
-            print("\nVALIDIERUNG FEHLGESCHLAGEN – keine Druckdateien erzeugt.", file=sys.stderr)
+            print("\nVALIDATION FAILED: no print files were written.", file=sys.stderr)
         return result
     files = {}
-    formats = spec.get("formats", ["rolle610", "a4"])
+    formats = spec.get("formats", ["roll610", "a4"])
     master_lay = None
     for fmt in formats:
         f = fmt.lower()
-        if f.startswith("rolle"):
-            width = float(f[5:] or 610)
+        if f.startswith("roll"):
+            width = float(f[4:] or 610)
             try:
                 lay = L.layout_roll(pat, width)
             except ValueError as ex:
-                if "breiter als die Rolle" not in str(ex):
+                if "wider than the roll" not in str(ex):
                     raise
-                # Übergroße Teile (z. B. Tellerrock für Erwachsene): in rollenbreite
-                # Bahnen mit Überlappung und Klebemarken kacheln.
-                key = f"ROLLE{int(width)}"
+                # Oversized pieces (e.g. an adult circle skirt): tile into roll-wide
+                # strips with overlap and glue marks.
+                key = f"ROLL{int(width)}"
                 L.PAPER[key] = (width, 1200.0)
                 lay = L.layout_tiles(pat, key)
-                p = os.path.join(out, f"{base}_rolle{int(width)}_bahnen.pdf")
+                p = os.path.join(out, f"{base}_roll{int(width)}_strips.pdf")
                 R.render_tiles_pdf(pat, lay, p)
                 n = sum(not t["empty"] for t in lay.tiles)
-                files[f"PDF Rolle {int(width)} mm, {n} Bahnen à 120 cm zum Kleben (Teil breiter als die Rolle)"] = p
-                warn.append(f"Mindestens ein Teil ist breiter als die Rolle ({width / 10:.0f} cm). "
-                            f"Es wird auf {n} Bahnen mit 1 cm Überlappung verteilt, bitte zusammenkleben.")
-                png = os.path.join(out, f"{base}_rolle{int(width)}_vorschau.png")
+                files[f"PDF roll {int(width)} mm, {n} strips of 120 cm to glue (piece wider than the roll)"] = p
+                warn.append(f"At least one piece is wider than the roll ({width / 10:.0f} cm). "
+                            f"It is split across {n} strips with 1 cm overlap; please glue them together.")
+                png = os.path.join(out, f"{base}_roll{int(width)}_preview.png")
                 R.render_png(pat, lay, png)
-                files[f"Vorschau Rolle {int(width)} mm"] = png
+                files[f"Preview roll {int(width)} mm"] = png
                 master_lay = master_lay or lay
                 continue
-            p = os.path.join(out, f"{base}_rolle{int(width)}.pdf")
+            p = os.path.join(out, f"{base}_roll{int(width)}.pdf")
             R.render_roll_pdf(pat, lay, p)
-            files[f"PDF Rolle {int(width)} mm ({lay.page_w:.0f} × {lay.page_h:.0f} mm)"] = p
-            png = os.path.join(out, f"{base}_rolle{int(width)}_vorschau.png")
+            files[f"PDF roll {int(width)} mm ({lay.page_w:.0f} × {lay.page_h:.0f} mm)"] = p
+            png = os.path.join(out, f"{base}_roll{int(width)}_preview.png")
             R.render_png(pat, lay, png)
-            files[f"Vorschau Rolle {int(width)} mm"] = png
+            files[f"Preview roll {int(width)} mm"] = png
             master_lay = master_lay or lay
         elif f in ("a4", "letter"):
             lay = L.layout_tiles(pat, f.upper())
-            p = os.path.join(out, f"{base}_{f}_kleben.pdf")
+            p = os.path.join(out, f"{base}_{f}_tiled.pdf")
             _, sq_warn = R.render_tiles_pdf(pat, lay, p)
             n = sum(not t["empty"] for t in lay.tiles)
-            files[f"PDF {f.upper()} zum Kleben ({n} Seiten + Übersicht)"] = p
-            png = os.path.join(out, f"{base}_{f}_vorschau.png")
+            files[f"PDF {f.upper()} tiles to glue ({n} pages + overview)"] = p
+            png = os.path.join(out, f"{base}_{f}_preview.png")
             R.render_png(pat, lay, png)
-            files[f"Vorschau {f.upper()}-Kacheln"] = png
+            files[f"Preview {f.upper()} tiles"] = png
             if master_lay is None:
                 master_lay = lay
         elif f in ("a0", "a1"):
             lay, tiled = L.layout_sheets(pat, f.upper())
             p = os.path.join(out, f"{base}_{f}.pdf")
             R.render_sheets_pdf(pat, lay, p, tiled)
-            files[f"PDF {f.upper()} ({lay.sheets} Bogen" + (", Übergrößen gekachelt" if tiled else "") + ")"] = p
-            png = os.path.join(out, f"{base}_{f}_vorschau.png")
+            files[f"PDF {f.upper()} ({lay.sheets} sheet(s)" + (", oversized pieces tiled" if tiled else "") + ")"] = p
+            png = os.path.join(out, f"{base}_{f}_preview.png")
             R.render_png(pat, lay, png)
-            files[f"Vorschau {f.upper()}"] = png
+            files[f"Preview {f.upper()}"] = png
             master_lay = master_lay or lay
         else:
-            raise ValueError(f"Unbekanntes Format {fmt}")
+            raise ValueError(f"Unknown format {fmt}")
     if master_lay is None:
         master_lay = L.layout_roll(pat, 610)
-    svg = os.path.join(out, f"{base}_master_1zu1.svg")
+    svg = os.path.join(out, f"{base}_master_1to1.svg")
     R.render_svg(pat, master_lay, svg)
-    files["SVG-Master 1:1"] = svg
+    files["SVG master 1:1"] = svg
     plans = I.fabric_consumption(pat, spec.get("fabric_widths_mm"))
-    zp = os.path.join(out, "zuschnittplan.png")
+    zp = os.path.join(out, "cutting_layout.png")
     I.render_fabric_png(pat, plans, zp)
-    files["Zuschnittplan"] = zp
-    md_path = os.path.join(out, "naehanleitung.md")
-    pdf_path = os.path.join(out, "naehanleitung.pdf")
-    files["Nähanleitung (PDF)"] = pdf_path
-    files["Nähanleitung (Markdown)"] = md_path
+    files["Cutting layout"] = zp
+    md_path = os.path.join(out, "sewing_instructions.md")
+    pdf_path = os.path.join(out, "sewing_instructions.pdf")
+    files["Sewing instructions (PDF)"] = pdf_path
+    files["Sewing instructions (Markdown)"] = md_path
     md = I.build_markdown(pat, report_md, plans, files, sources)
     if warn:
-        md = md.replace("## Körpermaße", "## Körpermaße\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
+        md = md.replace("## Body measurements", "## Body measurements\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
     I.markdown_to_pdf(md, pdf_path, images=[zp])
-    js = os.path.join(out, "schnitt.json")
+    js = os.path.join(out, "pattern.json")
     data = pat.summary()
     data["validation"] = V.to_rows(report)
     data["fabric_mm"] = {k: {"width": v["width"], "need": v["need_mm"]} for k, v in plans.items()}
     with open(js, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-    files["Schnittdaten (JSON)"] = js
+    files["Pattern data (JSON)"] = js
     result["files"] = files
     result["plans"] = plans
     if verbose:
         print(report_md)
-        print("\nDateien:")
+        print("\nFiles:")
         for k, v in files.items():
             print(f"  {k}: {v}")
     return result
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Schnittmuster erzeugen")
-    ap.add_argument("--spec", help="JSON-Datei mit Auftrag")
-    ap.add_argument("--projekt", help="projekt.json aus dem Foto-Modus B (Reverse Engineering)")
+    ap = argparse.ArgumentParser(description="Generate a sewing pattern")
+    ap.add_argument("--spec", help="JSON file with the order/spec")
+    ap.add_argument("--project", help="project.json from photo mode B (reverse engineering)")
     ap.add_argument("--garment", default="pants_basic")
     ap.add_argument("--size")
-    ap.add_argument("--measures", help='Körpermaße in cm als JSON, z. B. \'{"hip": 68}\'')
+    ap.add_argument("--measures", help='body measurements in cm as JSON, e.g. \'{"hip": 68}\'')
     ap.add_argument("--style")
     ap.add_argument("--fit")
     ap.add_argument("--fabric")
     ap.add_argument("--stretch", type=float)
-    ap.add_argument("--options", help="weitere Optionen als JSON")
-    ap.add_argument("--format", default="rolle610,a4", help="rolle610, rolle914, a4, letter, a1, a0 (kommagetrennt)")
+    ap.add_argument("--options", help="further options as JSON")
+    ap.add_argument("--format", default="roll610,a4", help="roll610, roll914, a4, letter, a1, a0 (comma-separated)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     if a.spec:
         with open(a.spec, encoding="utf-8") as f:
             spec = json.load(f)
-    elif a.projekt:
-        spec = dict(projekt=a.projekt, out=a.out, formats=[x.strip() for x in a.format.split(",")])
+    elif a.project:
+        spec = dict(project=a.project, out=a.out, formats=[x.strip() for x in a.format.split(",")])
     else:
         opts = json.loads(a.options) if a.options else {}
         for k in ("style", "fit", "fabric", "stretch"):

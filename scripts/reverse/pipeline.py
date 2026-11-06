@@ -1,6 +1,6 @@
-"""Gesamtablauf Foto-Modus B (Reverse Engineering) mit Zwischenergebnissen.
+"""Complete flow of photo mode B (reverse engineering) with intermediate results.
 
-  python -m reverse.pipeline foto.jpg --type hose --out projekt/   (aus scripts/)
+  python -m reverse.pipeline photo.jpg --type pants --out project/   (from scripts/)
 """
 from __future__ import annotations
 
@@ -20,66 +20,66 @@ from . import unfold as U  # noqa: E402
 from . import verify as VF  # noqa: E402
 
 
-def run(image, garment="hose", out="projekt", tape=None, base_options=None, fits=None,
+def run(image, garment="pants", out="project", tape=None, base_options=None, fits=None,
         grade_steps: int = 0, max_rounds: int = 2):
     os.makedirs(out, exist_ok=True)
     steps = {}
-    # 2 Vermessen (inkl. Referenz/Perspektive)
-    meas = PM.measure(image, garment, overlay_path=os.path.join(out, "overlay_messung.png"), tape=tape)
-    steps["vermessung"] = meas
+    # 2 measure (incl. reference/perspective)
+    meas = PM.measure(image, garment, overlay_path=os.path.join(out, "overlay_measurement.png"), tape=tape)
+    steps["measurement"] = meas
     flat = meas["measures_mm"]
-    # 1 Zerlegen
+    # 1 decompose
     feat = D.features_from_measurement(garment, flat)
     feat.update(base_options or {})
     graph = D.decompose(feat)
-    steps["teilegraph"] = graph
-    # 3 Abwickeln
+    steps["piece_graph"] = graph
+    # 3 unfold
     targets = U.unfold(garment, flat)
-    steps["fertigmasse_soll"] = targets
-    # 4 Rekonstruieren (+ 5 Verifizieren, ggf. Wiederholung mit allen Passformen)
+    steps["targets"] = targets
+    # 4 reconstruct (+ 5 verify, repeat with all fits if needed)
     opts = D.options_from_features(feat)
     kw = dict(fits=fits) if fits else {}
     res = F.fit(garment, targets, opts, **kw)
     rows = VF.compare(res["pattern"], targets)
     rounds = 1
     while not VF.all_ok(rows) and rounds < max_rounds:
-        res = F.fit(garment, targets, opts, fits=("harem", "normal", "weit", "oversized", "eng"))
+        res = F.fit(garment, targets, opts, fits=("harem", "normal", "wide", "oversized", "slim"))
         rows = VF.compare(res["pattern"], targets)
         rounds += 1
     pat = res["pattern"]
-    pat.size_label = f"nach Vorbild (≈ Gr. {res['size']})"
+    pat.size_label = f"copied from garment (≈ size {res['size']})"
     report = V.validate(pat)
-    steps["abweichung"] = rows
-    project = dict(modul=pat.garment, passform=res["fit"], optionen=res["options"], parameter=res["params"],
-                   groesse_geschaetzt=res["size"], messung_flach_mm=flat, fertigmasse_soll_mm=targets,
-                   fertigmasse_ist_mm=pat.finished, teilegraph=graph, quelle=str(image))
-    S.save(os.path.join(out, "projekt.json"), project)
-    md = ["## Reverse Engineering – Ergebnis", "",
-          f"Erkanntes Modul: **{pat.title}**, Passform **{res['fit']}**, geschätzte Größe ≈ {res['size']}", "",
+    steps["deviation"] = rows
+    project = dict(module=pat.garment, fit=res["fit"], options=res["options"], params=res["params"],
+                   size_estimate=res["size"], flat_mm=flat, target_mm=targets,
+                   actual_mm=pat.finished, piece_graph=graph, source=str(image))
+    S.save(os.path.join(out, "project.json"), project)
+    md = ["## Reverse engineering: result", "",
+          f"Detected module: **{pat.title}**, fit **{res['fit']}**, estimated size ≈ {res['size']}", "",
           D.describe(graph), "", VF.to_markdown(rows), "", V.to_markdown(report)]
-    with open(os.path.join(out, "reverse_bericht.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out, "reverse_report.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(md))
     return dict(pattern=pat, rows=rows, report=report, project=project, steps=steps, fit=res,
                 markdown="\n".join(md))
 
 
 def regrade(project_path, steps: int):
-    """Gespeichertes Projekt um n Größen verschieben und neu rekonstruieren."""
+    """Shift a saved project by n sizes and reconstruct it again."""
     p = S.load(project_path)
-    src = p["groesse_geschaetzt"]
+    src = p["size_estimate"]
     dst = S.size_step(src, steps)
-    t = S.grade_targets(p["fertigmasse_soll_mm"], src, dst)
-    opts = {k: v for k, v in p["optionen"].items() if not k.startswith("_") and k not in F.PANTS_PARAMS + ["knee_total"]}
-    res = F.fit("pants_basic", t, opts, fits=(p["passform"],), size=dst)
-    res["pattern"].size_label = f"nach Vorbild, Gr. {dst:g}"
+    t = S.grade_targets(p["target_mm"], src, dst)
+    opts = {k: v for k, v in p["options"].items() if not k.startswith("_") and k not in F.PANTS_PARAMS + ["knee_total"]}
+    res = F.fit("pants_basic", t, opts, fits=(p["fit"],), size=dst)
+    res["pattern"].size_label = f"copied from garment, size {dst:g}"
     return res, t
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Photo mode B: reverse-engineer a pattern from a flat photo")
     ap.add_argument("image")
-    ap.add_argument("--type", default="hose")
-    ap.add_argument("--out", default="projekt")
+    ap.add_argument("--type", default="pants")
+    ap.add_argument("--out", default="project")
     a = ap.parse_args(argv)
     r = run(a.image, a.type, a.out)
     print(r["markdown"])

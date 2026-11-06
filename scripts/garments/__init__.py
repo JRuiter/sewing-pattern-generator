@@ -1,18 +1,18 @@
-"""Kleidungsmodule. Jedes Modul bietet draft(measures_mm, options) -> Pattern,
-DEFAULTS (Standardoptionen) und finished_measures(pattern) für die Verifikation."""
+"""Garment modules. Each module offers draft(measures_mm, options) -> Pattern,
+DEFAULTS (default options) and finished_measures(pattern) for verification."""
 from importlib import import_module
 
 GARMENTS = {
-    "pants_basic": "Hose (Jogginghose, Haremshose, Leggings)",
-    "tshirt_basic": "T-Shirt / Longsleeve (eingesetzter Ärmel oder Raglan)",
-    "hoodie": "Hoodie / Kapuzenpulli",
-    "skirt": "Rock (Gummizug, gerade oder ausgestellt)",
-    "beanie": "Beanie / Mütze",
-    "loop": "Loop / Schlauchschal",
+    "pants_basic": "Pants (joggers, harem pants, leggings, pull-on trousers)",
+    "tshirt_basic": "T-shirt / long sleeve (set-in or raglan sleeve)",
+    "hoodie": "Hoodie / sweatshirt",
+    "skirt": "Skirt (elastic waist: gathered, A-line, circle)",
+    "beanie": "Beanie",
+    "loop": "Loop scarf",
 }
 
 
 def get(name: str):
     if name not in GARMENTS:
-        raise ValueError(f"Kein Modul '{name}'. Verfügbar: {', '.join(GARMENTS)}")
+        raise ValueError(f"No module '{name}'. Available: {', '.join(GARMENTS)}")
     return import_module(f"garments.{name}")

@@ -1,9 +1,9 @@
-"""Abwickeln: flach gemessene Werte → Fertigmaße (Umfänge, entspannte Längen).
+"""Unfold: values measured flat → finished measurements (circumferences, relaxed lengths).
 
-- Doppellage: flach liegendes Teil = 2 Lagen → Umfang = 2 × Breite.
-- Bündchen/Gummibund werden entspannt gemessen; die Schnittkante, an die sie genäht
-  werden, ist um das Bündchenverhältnis länger (das rechnet das Kleidungsmodul).
-- Bei gedehnt gemessenen Werten (Nutzerangabe) wird die Dehnung herausgerechnet.
+- Double layer: a garment lying flat = 2 layers → circumference = 2 × width.
+- Cuffs/elastic waistbands are measured relaxed; the pattern edge they are sewn to is
+  longer by the cuff ratio (the garment module computes that).
+- For values measured stretched (user input) the stretch is taken out.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def unfold_pants(flat: dict, stretched: dict | None = None) -> dict:
         waistband_h=flat.get("waistband_h", 0.0),
         cuff_h=flat.get("cuff_h", 0.0),
     )
-    # gedehnt gemessene Umfänge (z. B. Bund gedehnt) auf entspannt zurückrechnen
+    # convert circumferences measured stretched (e.g. waistband) back to relaxed
     for k, (val, pct) in st.items():
         t[k] = val / (1 + pct / 100.0)
     return t
@@ -34,6 +34,6 @@ def unfold_top(flat: dict) -> dict:
 
 
 def unfold(garment: str, flat: dict, **kw) -> dict:
-    if garment in ("hose", "pants", "pants_basic"):
+    if garment in ("pants", "pants_basic"):
         return unfold_pants(flat, **kw)
     return unfold_top(flat)

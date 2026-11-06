@@ -1,4 +1,4 @@
-"""Nähanleitung, Zuschnittplan und Stoffverbrauch (Markdown + PDF + PNG)."""
+"""Sewing instructions, cutting layout and fabric consumption (Markdown + PDF + PNG)."""
 from __future__ import annotations
 
 import math
@@ -8,7 +8,7 @@ import ease as E
 import layout as L
 import measurements as M
 
-FABRIC_DEFAULT_WIDTH = {"Oberstoff": 1500.0, "Bündchen": 700.0, "Futter": 1400.0}
+FABRIC_DEFAULT_WIDTH = {"Main fabric": 1500.0, "Rib knit": 700.0, "Lining": 1400.0}
 
 
 def fabric_consumption(pattern, widths: dict | None = None):
@@ -16,8 +16,8 @@ def fabric_consumption(pattern, widths: dict | None = None):
     plans = L.layout_fabric(pattern, widths)
     out = {}
     for fab, pl in plans.items():
-        knit_extra = 1.10      # 10 % für Einlaufen/Vorwaschen und Geradeschneiden
-        need = math.ceil(pl["length"] * knit_extra / 50.0) * 50.0   # auf 5 cm aufrunden
+        knit_extra = 1.10      # 10 % for shrinkage/pre-washing and straightening
+        need = math.ceil(pl["length"] * knit_extra / 50.0) * 50.0   # round up to 5 cm
         pl["need_mm"] = need
         out[fab] = pl
     return out
@@ -40,17 +40,17 @@ def render_fabric_png(pattern, plans, path):
             ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6)
             c = ring.mean(axis=0)
             nm = pattern.pieces[pi].name.split(" (")[0]
-            ax.text(c[0], c[1], nm + (" (gespiegelt)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
+            ax.text(c[0], c[1], nm + (" (flipped)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
-        ax.text(W + 55, H / 2, "Fadenlauf / Webkante", rotation=90, fontsize=6, va="center")
+        ax.text(W + 55, H / 2, "grainline / selvage", rotation=90, fontsize=6, va="center")
         ax.set_xlim(-30, W + 90)
         ax.set_ylim(H + 30, -60)
         ax.set_aspect("equal")
         ax.axis("off")
-        ax.set_title(f"{fab}: {W / 10:.0f} cm breit, einlagig\nVerbrauch ≈ {pl['need_mm'] / 1000:.2f} m".replace(".", ","),
+        ax.set_title(f"{fab}: {W / 10:.0f} cm wide, single layer\nneeded ≈ {pl['need_mm'] / 1000:.2f} m",
                      fontsize=8)
-    fig.suptitle(f"Zuschnittplan – {pattern.title} {pattern.size_label}", fontsize=10)
+    fig.suptitle(f"Cutting layout · {pattern.title} {pattern.size_label}", fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
@@ -58,7 +58,7 @@ def render_fabric_png(pattern, plans, path):
 
 
 def piece_table(pattern):
-    rows = ["| Teil | Zuschnitt | Stoff | Nahtzugabe |", "|---|---|---|---|"]
+    rows = ["| Piece | Cutting | Fabric | Seam allowance |", "|---|---|---|---|"]
     for p in pattern.pieces:
         rows.append(f"| {p.name} | {p.cut_text()} | {p.fabric} | {p.sa_text()} |")
     return "\n".join(rows)
@@ -68,21 +68,21 @@ def finished_table(pattern):
     from garments import get
     mod = get(pattern.garment)
     labels = getattr(mod, "FINISHED_LABELS", {})
-    rows = ["| Fertigmaß | Wert |", "|---|---|"]
+    rows = ["| Finished measurement | Value |", "|---|---|"]
     for k, v in pattern.finished.items():
         lab = labels.get(k, (k,))[0]
-        rows.append(f"| {lab} | {v / 10:.1f} cm |".replace(".", ","))
+        rows.append(f"| {lab} | {v / 10:.1f} cm |")
     return "\n".join(rows)
 
 
 def measures_table(pattern, sources=None):
-    rows = ["| Körpermaß | Wert | Quelle |", "|---|---|---|"]
+    rows = ["| Body measurement | Value | Source |", "|---|---|---|"]
     keys = ["height", "chest", "waist", "hip", "head", "neck", "inseam", "side_length", "arm",
             "back_length", "shoulder", "thigh", "ankle"]
     for k in keys:
         if k in pattern.measures:
-            src = (sources or {}).get(k, "Tabelle")
-            rows.append(f"| {M.LABELS_DE.get(k, k)} | {pattern.measures[k] / 10:.1f} cm | {src} |".replace(".", ",", 1))
+            src = (sources or {}).get(k, "table")
+            rows.append(f"| {M.LABELS.get(k, k)} | {pattern.measures[k] / 10:.1f} cm | {src} |")
     return "\n".join(rows)
 
 
@@ -91,50 +91,50 @@ def sewing_steps(pattern):
     mod = get(pattern.garment)
     if hasattr(mod, "sewing_steps"):
         return mod.sewing_steps(pattern)
-    return ["Teile nach Passzeichen rechts auf rechts zusammennähen."]
+    return ["Sew the pieces right sides together, matching the notches."]
 
 
 def build_markdown(pattern, report_md, plans, files: dict, sources=None):
     o = pattern.options
     fab_label, stretch, knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))
     lines = [f"# {pattern.title} · {pattern.size_label}", "",
-             f"*{E.describe(o.get('fit', 'normal'), o.get('fabric', 'jersey'), o.get('stretch'))}* – "
-             "eigene Konstruktion, nur für den privaten Gebrauch.", "",
-             "> **Wichtig:** Bei einem neuen Schnitt zuerst ein **Probeteil** aus günstigem, ähnlich "
-             "dehnbarem Stoff nähen und die Passform prüfen.", "",
-             "## Dateien", ""]
+             f"*{E.describe(o.get('fit', 'normal'), o.get('fabric', 'jersey'), o.get('stretch'))}* · "
+             "original parametric draft. The pattern is yours to use.", "",
+             "> **Important:** With a new pattern, first sew a **test garment** from inexpensive fabric "
+             "with similar stretch and check the fit.", "",
+             "## Files", ""]
     for k, v in files.items():
         lines.append(f"- {k}: `{os.path.basename(v)}`")
-    lines += ["", "## Drucken", "",
-              "- Immer mit **100 % / „Tatsächliche Größe“** drucken (nicht „An Seite anpassen“).",
-              "- Kontrollquadrat **5 × 5 cm** nachmessen, bevor du zuschneidest.",
-              "- Plotter (Rolle 610 mm): Seite ist 600 mm breit im Hochformat – im Druckdialog "
-              "benutzerdefiniertes Papierformat mit genau dieser Breite und Länge wählen, Drehen/Skalieren aus.",
-              "", "## Körpermaße", "", measures_table(pattern, sources), "",
-              "## Fertigmaße (virtuell zusammengenäht)", "", finished_table(pattern), "",
-              "## Schnittteile", "", piece_table(pattern), "",
-              "## Stoffverbrauch", ""]
+    lines += ["", "## Printing", "",
+              "- Always print at **100 % / \"Actual size\"** (not \"Fit to page\").",
+              "- Measure the **5 × 5 cm** control square before you cut.",
+              "- Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
+              "a custom paper size with exactly this width and length, and turn rotation/scaling off.",
+              "", "## Body measurements", "", measures_table(pattern, sources), "",
+              "## Finished measurements (virtually sewn)", "", finished_table(pattern), "",
+              "## Pattern pieces", "", piece_table(pattern), "",
+              "## Fabric needed", ""]
     for fab, pl in plans.items():
-        lines.append(f"- **{fab}:** ca. {pl['need_mm'] / 1000:.2f} m bei {pl['width'] / 10:.0f} cm Breite "
-                     f"(einlagig gelegt, inkl. 10 % für Einlaufen)".replace(".", ",", 1))
+        lines.append(f"- **{fab}:** about {pl['need_mm'] / 1000:.2f} m at {pl['width'] / 10:.0f} cm width "
+                     f"(single layer, incl. 10 % for shrinkage)")
         if pl.get("note"):
             lines.append(f"  - ⚠️ {pl['note']}")
     for n in pattern.notes:
         lines.append(f"- {n}")
-    lines += ["", "Zuschnittplan: siehe `zuschnittplan.png` (Fadenlaufpfeil parallel zur Webkante, "
-              "„gespiegelt“ = Teil umgedreht auflegen).", "",
-              "## Nähanleitung", "",
-              "Nahtzugabe ist im Schnitt enthalten (siehe Tabelle). "
-              + ("Für Jersey/Sweat eine Jersey-/Stretchnadel verwenden." if knit else ""), ""]
-    for i, s in enumerate(["**Vorbereiten:** Stoff vorwaschen, Schnittteile ausschneiden, Passzeichen "
-                           "3–4 mm einknipsen."] + sewing_steps(pattern), 1):
+    lines += ["", "Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
+              "\"flipped\" = place the piece face down).", "",
+              "## Sewing instructions", "",
+              "Seam allowance is included in the pattern (see table). "
+              + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]
+    for i, s in enumerate(["**Prepare:** pre-wash the fabric, cut out the pieces, snip the notches "
+                           "3–4 mm deep."] + sewing_steps(pattern), 1):
         lines.append(f"{i}. {s}")
-    lines += ["", "## Prüfbericht", "", report_md, ""]
+    lines += ["", "## Validation report", "", report_md, ""]
     return "\n".join(lines)
 
 
 def markdown_to_pdf(md: str, path: str, images: list[str] | None = None):
-    """Einfacher Markdown→PDF-Satz (Überschriften, Listen, Tabellen) mit eingebetteter Schrift."""
+    """Simple Markdown→PDF typesetting (headings, lists, tables) with an embedded font."""
     import re
 
     from reportlab.lib import colors
@@ -206,6 +206,6 @@ def markdown_to_pdf(md: str, path: str, images: list[str] | None = None):
             tw = th * w / h
         story.append(Image(img, width=tw, height=th))
     doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm,
-                            topMargin=15 * mm, bottomMargin=15 * mm, title="Nähanleitung")
+                            topMargin=15 * mm, bottomMargin=15 * mm, title="Sewing instructions")
     doc.build(story)
     return path

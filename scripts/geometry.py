@@ -1,9 +1,9 @@
-"""Geometrie-Grundlagen für die Schnittkonstruktion.
+"""Geometry primitives for pattern drafting.
 
-Alle Koordinaten in Millimetern, mathematisches Koordinatensystem (x nach rechts,
-y nach oben). Kurven werden als dicht abgetastete Polylinien (numpy-Arrays der Form
-(n, 2)) geführt; Bézierkurven werden beim Erzeugen abgetastet. Das hält alle weiteren
-Operationen (Länge, Offset, Schnittpunkte, Transformation) einfach und robust.
+All coordinates in millimetres, mathematical coordinate system (x to the right,
+y up). Curves are kept as densely sampled polylines (numpy arrays of shape (n, 2));
+Bézier curves are sampled when they are created. This keeps all further operations
+(length, offset, intersections, transformations) simple and robust.
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import numpy as np
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import substring
 
-STEP = 1.0  # Standard-Abtastschritt in mm
+STEP = 1.0  # default sampling step in mm
 
 
 def P(x: float, y: float) -> np.ndarray:
@@ -29,7 +29,7 @@ def as_pts(pts) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Erzeugen von Linien und Kurven
+# Creating lines and curves
 # ---------------------------------------------------------------------------
 
 def line(p0, p1, step: float = STEP) -> np.ndarray:
@@ -40,7 +40,7 @@ def line(p0, p1, step: float = STEP) -> np.ndarray:
 
 
 def cubic(p0, p1, p2, p3, step: float = STEP) -> np.ndarray:
-    """Kubische Bézierkurve, abgetastet mit ca. `step` mm Punktabstand."""
+    """Cubic Bézier curve, sampled with about `step` mm between points."""
     p0, p1, p2, p3 = (np.asarray(p, float) for p in (p0, p1, p2, p3))
     approx = (np.linalg.norm(p1 - p0) + np.linalg.norm(p2 - p1) + np.linalg.norm(p3 - p2))
     n = max(8, int(math.ceil(approx / step)) + 1)
@@ -62,10 +62,10 @@ def unit(v) -> np.ndarray:
 
 def tangent_curve(p0, dir0, p3, dir3, k0: float = 0.4, k3: float = 0.4,
                   step: float = STEP) -> np.ndarray:
-    """Bézierkurve von p0 nach p3 mit vorgegebenen Tangentenrichtungen.
+    """Bézier curve from p0 to p3 with given tangent directions.
 
-    dir0: Richtung, in die die Kurve p0 verlässt. dir3: Richtung, in der sie p3
-    erreicht. k0/k3: Länge der Kontrollarme als Anteil der Sehnenlänge.
+    dir0: direction in which the curve leaves p0. dir3: direction in which it
+    arrives at p3. k0/k3: control-arm length as a fraction of the chord length.
     """
     p0, p3 = np.asarray(p0, float), np.asarray(p3, float)
     c = np.linalg.norm(p3 - p0)
@@ -73,7 +73,7 @@ def tangent_curve(p0, dir0, p3, dir3, k0: float = 0.4, k3: float = 0.4,
 
 
 def join(*parts: np.ndarray) -> np.ndarray:
-    """Polylinien aneinanderhängen, doppelte Stoßpunkte entfernen."""
+    """Concatenate polylines, dropping duplicate joint points."""
     out = [as_pts(parts[0])]
     for p in parts[1:]:
         p = as_pts(p)
@@ -84,7 +84,7 @@ def join(*parts: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Messen
+# Measuring
 # ---------------------------------------------------------------------------
 
 def length(pts) -> float:
@@ -100,7 +100,7 @@ def cumlen(pts) -> np.ndarray:
 
 
 def point_at(pts, s: float) -> np.ndarray:
-    """Punkt in Abstand s (mm) vom Anfang entlang der Polylinie (negativ: vom Ende)."""
+    """Point at distance s (mm) from the start along the polyline (negative: from the end)."""
     pts = as_pts(pts)
     cl = cumlen(pts)
     if s < 0:
@@ -132,20 +132,20 @@ def end_dir(pts, probe: float = 3.0) -> np.ndarray:
 
 
 def angle_deg(v1, v2) -> float:
-    """Ungerichteter Winkel zwischen zwei Vektoren in Grad (0..180)."""
+    """Undirected angle between two vectors in degrees (0..180)."""
     v1, v2 = unit(v1), unit(v2)
     return math.degrees(math.acos(max(-1.0, min(1.0, float(np.dot(v1, v2))))))
 
 
 def corner_angle(edge_in, edge_out) -> float:
-    """Innenwinkel an der Ecke zwischen dem Ende von edge_in und dem Anfang von edge_out."""
+    """Interior angle at the corner between the end of edge_in and the start of edge_out."""
     a = -end_dir(edge_in, 1.5)
     b = start_dir(edge_out, 1.5)
     return angle_deg(a, b)
 
 
 def sub(pts, s0: float, s1: float) -> np.ndarray:
-    """Teilstück der Polylinie zwischen den Bogenlängen s0 und s1."""
+    """Part of the polyline between arc lengths s0 and s1."""
     ls = LineString(as_pts(pts))
     g = substring(ls, s0, s1)
     return np.asarray(g.coords, float)
@@ -170,7 +170,7 @@ def bbox(pts):
 
 
 def width_at_y(poly, y: float) -> float:
-    """Breite eines Polygons auf Höhe y (Summe aller Schnittsegmente)."""
+    """Width of a polygon at height y (sum of all intersection segments)."""
     p = Polygon(as_pts(poly))
     x0, _, x1, _ = p.bounds
     inter = p.intersection(LineString([(x0 - 10, y), (x1 + 10, y)]))
@@ -178,7 +178,7 @@ def width_at_y(poly, y: float) -> float:
 
 
 # ---------------------------------------------------------------------------
-# Transformationen
+# Transformations
 # ---------------------------------------------------------------------------
 
 def rot_matrix(angle_deg_: float) -> np.ndarray:
@@ -196,14 +196,14 @@ def translate(pts, dx: float, dy: float) -> np.ndarray:
 
 
 def mirror_x(pts, x0: float = 0.0) -> np.ndarray:
-    """An der senkrechten Linie x = x0 spiegeln."""
+    """Mirror about the vertical line x = x0."""
     p = as_pts(pts).copy()
     p[:, 0] = 2 * x0 - p[:, 0]
     return p
 
 
 def mirror_line(pts, a, b) -> np.ndarray:
-    """An der Geraden durch a und b spiegeln."""
+    """Mirror about the line through a and b."""
     a, b = np.asarray(a, float), np.asarray(b, float)
     d = unit(b - a)
     p = as_pts(pts) - a
@@ -212,8 +212,8 @@ def mirror_line(pts, a, b) -> np.ndarray:
 
 
 def rigid_place(pts, src_a, src_b, dst_a, dst_b_dir=None, dst_b=None) -> np.ndarray:
-    """Polylinie starr so bewegen, dass src_a auf dst_a liegt und die Sehne
-    src_a→src_b in Richtung dst_b (bzw. dst_b_dir) zeigt. Länge bleibt erhalten."""
+    """Move a polyline rigidly so that src_a lies on dst_a and the chord
+    src_a→src_b points towards dst_b (or dst_b_dir). Length is preserved."""
     src_a, src_b, dst_a = (np.asarray(v, float) for v in (src_a, src_b, dst_a))
     v_src = src_b - src_a
     v_dst = (np.asarray(dst_b, float) - dst_a) if dst_b is not None else np.asarray(dst_b_dir, float)
@@ -222,11 +222,11 @@ def rigid_place(pts, src_a, src_b, dst_a, dst_b_dir=None, dst_b=None) -> np.ndar
 
 
 # ---------------------------------------------------------------------------
-# Offset (Nahtzugabe) und Schnittpunkte
+# Offset (seam allowance) and intersections
 # ---------------------------------------------------------------------------
 
 def normals_right(pts) -> np.ndarray:
-    """Normale je Punkt, rechts der Laufrichtung (bei CCW-Polygon = außen)."""
+    """Normal per point, to the right of the direction of travel (outside for a CCW polygon)."""
     p = as_pts(pts)
     d = np.zeros_like(p)
     d[1:-1] = p[2:] - p[:-2]
@@ -239,16 +239,16 @@ def normals_right(pts) -> np.ndarray:
 
 
 def offset_polyline(pts, d: float) -> np.ndarray:
-    """Polylinie um d mm nach rechts (außen) versetzen; Schleifen werden entfernt."""
+    """Offset a polyline by d mm to the right (outside); loops are removed."""
     p = as_pts(pts)
     if abs(d) < 1e-9:
         return p.copy()
     ls = LineString(p)
-    off = ls.offset_curve(-d, join_style="mitre", mitre_limit=3.0)  # shapely: + = links
+    off = ls.offset_curve(-d, join_style="mitre", mitre_limit=3.0)  # shapely: + = left
     if off.geom_type == "MultiLineString":
         off = max(off.geoms, key=lambda g: g.length)
     out = np.asarray(off.coords, float)
-    # Laufrichtung beibehalten
+    # keep the direction of travel
     if np.linalg.norm(out[0] - (p[0] + normals_right(p)[0] * d)) > \
             np.linalg.norm(out[-1] - (p[0] + normals_right(p)[0] * d)):
         out = out[::-1]
@@ -256,7 +256,7 @@ def offset_polyline(pts, d: float) -> np.ndarray:
 
 
 def ray_intersection(p, d, q, e):
-    """Schnittpunkt der Geraden p + t d und q + u e. Gibt (Punkt, t, u) oder None."""
+    """Intersection of the lines p + t d and q + u e. Returns (point, t, u) or None."""
     p, d, q, e = (np.asarray(v, float) for v in (p, d, q, e))
     m = np.array([[d[0], -e[0]], [d[1], -e[1]]])
     det = np.linalg.det(m)
@@ -279,7 +279,7 @@ def _trim_start(a: np.ndarray, pt) -> np.ndarray:
 
 
 def join_offsets(a: np.ndarray, b: np.ndarray, limit: float):
-    """Zwei versetzte Kanten an der Ecke verbinden (Ende von a, Anfang von b)."""
+    """Join two offset edges at a corner (end of a, start of b)."""
     la, lb = LineString(a), LineString(b)
     inter = la.intersection(lb)
     if not inter.is_empty:
@@ -300,11 +300,11 @@ def join_offsets(a: np.ndarray, b: np.ndarray, limit: float):
         x, t, u = r
         if t >= -1e-6 and u <= 1e-6 and np.linalg.norm(x - a[-1]) < limit and np.linalg.norm(x - b[0]) < limit:
             return np.vstack([a, x]), np.vstack([x, b])
-    return a, b  # Fase
+    return a, b  # bevel
 
 
 def offset_outline(edges: Sequence[np.ndarray], allowances: Sequence[float]) -> np.ndarray:
-    """Schnittkontur aus geschlossener Kantenfolge (CCW) mit Nahtzugabe je Kante."""
+    """Cutting outline from a closed CCW edge sequence with a seam allowance per edge."""
     offs = [offset_polyline(e, sa) for e, sa in zip(edges, allowances)]
     n = len(offs)
     limit = 4 * max(max(allowances), 5.0)
@@ -324,11 +324,11 @@ def offset_outline(edges: Sequence[np.ndarray], allowances: Sequence[float]) -> 
 
 
 # ---------------------------------------------------------------------------
-# Glätten freier Konturen (Reverse Engineering)
+# Smoothing free-form contours (reverse engineering)
 # ---------------------------------------------------------------------------
 
 def smooth_contour(pts, smoothing: float = 2.0, closed: bool = False, step: float = STEP) -> np.ndarray:
-    """Geglättete Spline-Approximation (kubisch) einer verrauschten Kontur."""
+    """Smoothed cubic spline approximation of a noisy contour."""
     from scipy.interpolate import splev, splprep
 
     p = as_pts(pts)
@@ -355,4 +355,4 @@ def fmt_mm(v: float) -> str:
 
 
 def fmt_cm(v_mm: float, nd: int = 1) -> str:
-    return (f"{v_mm / 10:.{nd}f} cm").replace(".", ",")
+    return f"{v_mm / 10:.{nd}f} cm"

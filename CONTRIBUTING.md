@@ -50,7 +50,7 @@ consumption and sewing instructions – works on that `Pattern` and needs no cha
 |---|---|---|
 | `DEFAULTS: dict` | yes | default options; user options override them |
 | `draft(measures: dict, options: dict \| None) -> Pattern` | yes | builds the pattern; `measures` are body measurements in mm (see `measurements.py` for the keys: `height`, `chest`, `waist`, `hip`, `head`, `inseam`, …) |
-| `FINISHED_LABELS: dict` | recommended | `key → (label, kind)`: display names for the keys of `pattern.finished` in the finished-measure table and the photo-mode-B deviation report. `kind` (`"laenge"` = length, `"weite"` = width) documents the key; the tolerances themselves (±1 cm lengths, ±2 % widths) come from `WIDTH_KEYS` in `scripts/reverse/fit.py` |
+| `FINISHED_LABELS: dict` | recommended | `key → (label, kind)`: display names for the keys of `pattern.finished` in the finished-measure table and the photo-mode-B deviation report. `kind` (`"length"` or `"width"`) documents the key; the tolerances themselves (±1 cm lengths, ±2 % widths) come from `WIDTH_KEYS` in `scripts/reverse/fit.py` |
 | `sewing_steps(pattern) -> list[str]` | recommended | numbered sewing steps (Markdown) appended to the generic cutting instructions |
 | `finished_measures(pattern) -> dict` | optional | needed only if the module supports reverse engineering in photo mode B |
 
@@ -116,7 +116,7 @@ import geometry as G
 from pattern import Mark, Pattern, rect_piece
 
 DEFAULTS = dict(fabric="jersey", stretch=None, width=100.0, sa=7.0)
-FINISHED_LABELS = {"circ": ("Circumference", "weite"), "width": ("Width (double layer)", "laenge")}
+FINISHED_LABELS = {"circ": ("Circumference", "width"), "width": ("Width (double layer)", "length")}
 
 
 def draft(measures: dict, options: dict | None = None) -> Pattern:
@@ -156,8 +156,8 @@ Then: `python scripts/generate.py --garment headband --size 122 --format a4 --ou
       offers it; remove it from the "not covered" texts.
 - [ ] `SKILL.md`: module table, trigger words in the description, limits section.
 - [ ] `README.md`: garments table.
-- [ ] Generate a validation report and preview for three sizes into the test-results folder
-      (`python scripts/generate.py … --format rolle610 --out <folder>`; keep `pruefbericht.md` and the
+- [ ] Generate a validation report and preview for three sizes into `test-results/`
+      (`python scripts/generate.py … --format roll610 --out <folder>`; keep `validation_report.md` and the
       preview PNG) and link them from its overview page.
 - [ ] Look at the preview PNGs yourself: all pieces present, nothing overlapping, labels readable.
 

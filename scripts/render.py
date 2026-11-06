@@ -1,8 +1,8 @@
-"""Druckausgabe: Vektor-PDF (1:1, Schriften eingebettet), SVG-Master (1:1), PNG-Vorschau.
+"""Print output: vector PDF (1:1, embedded fonts), SVG master (1:1), PNG preview.
 
-Linienarten: Schnittlinie durchgezogen (1,0 pt), Nählinie gestrichelt (0,6 pt),
-Stoffbruch Strich-Punkt (1,0 pt). Keine Linie dünner als 0,5 pt.
-Auf jeder Seite ein Kontrollquadrat 5 × 5 cm (141,73 pt) und ein 1-inch-Quadrat.
+Line types: cutting line solid (1.0 pt), seam line dashed (0.6 pt), fold dash-dot
+(1.0 pt). No line thinner than 0.5 pt. Every page carries a 5 × 5 cm control square
+(141.73 pt) and a 1-inch square.
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def text_w_mm(text, size_pt, bold=False):
 
 
 # ---------------------------------------------------------------------------
-# Primitive
+# primitives
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -68,20 +68,20 @@ class Prim:
     text: str = ""
     size: float = 9.0         # pt
     bold: bool = False
-    angle: float = 0.0        # Grad (gegen Uhrzeigersinn, y-oben)
+    angle: float = 0.0        # degrees (counter-clockwise, y up)
     fill: tuple | None = None
-    ly: float = 0.0           # Versatz der Grundlinie senkrecht zur Schreibrichtung (mm)
+    ly: float = 0.0           # baseline offset perpendicular to the writing direction (mm)
     sheet: int = 0
 
 
 def text_pos(p):
-    """Grundlinien-Mitte eines Textes in Leinwandkoordinaten (y unten)."""
+    """Baseline centre of a text in canvas coordinates (y down)."""
     a = math.radians(p.angle)
     return np.array([p.pts[0] - p.ly * math.sin(a), p.pts[1] - p.ly * math.cos(a)])
 
 
 def _split_cut_ring(piece):
-    """Schnittkontur in Abschnitte 'cut' / 'fold' teilen."""
+    """Split the cutting outline into 'cut' / 'fold' runs."""
     ring = piece.cut_ring()
     ring = np.vstack([ring, ring[:1]])
     folds = [LineString(e.pts) for e in piece.edges if e.fold]
@@ -112,7 +112,7 @@ def _arrow_heads(p0, p1, size=6.0):
 
 
 def _fit_text_block(poly, lines, sizes, bolds):
-    """Ankerpunkt und Winkel für den Beschriftungsblock suchen (passt ins Teil)."""
+    """Find anchor point and angle for the label block (fits inside the piece)."""
     inner = poly.buffer(-4)
     if inner.is_empty:
         inner = poly
@@ -136,7 +136,7 @@ def piece_prims(piece, pattern, extra_label=None):
     for e in piece.edges:
         if not e.fold:
             prims.append(Prim("line", "seam", e.pts))
-    # Passzeichen
+    # notches
     for nt in piece.notches:
         e = piece.edge(nt.edge)
         s = nt.s if nt.s >= 0 else e.length + nt.s
@@ -149,7 +149,7 @@ def piece_prims(piece, pattern, extra_label=None):
                 prims.append(Prim("line", "notch", np.array([p - n * 2.0, p + n * e.sa])))
             else:
                 prims.append(Prim("line", "notch", np.array([p, p - n * 6.0])))
-    # Innenlinien
+    # inner lines
     for mk in piece.marks:
         prims.append(Prim("line", "mark_fold" if mk.style == "fold" else "mark_placement", mk.pts))
         if mk.label:
@@ -159,7 +159,7 @@ def piece_prims(piece, pattern, extra_label=None):
             if ang > 90 or ang < -90:
                 ang += 180
             prims.append(Prim("text", text=mk.label, size=7, pts=mid, angle=ang, ly=1.5))
-    # Fadenlauf
+    # grainline
     if piece.grain is not None:
         g0, g1 = np.asarray(piece.grain[0], float), np.asarray(piece.grain[1], float)
         prims.append(Prim("line", "grain", np.array([g0, g1])))
@@ -169,8 +169,8 @@ def piece_prims(piece, pattern, extra_label=None):
         ang = math.degrees(math.atan2(d[1], d[0]))
         if ang > 90 or ang < -90:
             ang += 180
-        prims.append(Prim("text", text="Fadenlauf", size=7, pts=(g0 + g1) / 2, angle=ang, ly=1.5))
-    # Stoffbruch-Beschriftung
+        prims.append(Prim("text", text="Grainline", size=7, pts=(g0 + g1) / 2, angle=ang, ly=1.5))
+    # fold label
     for e in piece.edges:
         if e.fold:
             mid = G.point_at(e.pts, e.length / 2)
@@ -179,13 +179,13 @@ def piece_prims(piece, pattern, extra_label=None):
             ang = math.degrees(math.atan2(t[1], t[0]))
             if ang > 90 or ang < -90:
                 ang += 180
-            prims.append(Prim("text", text="◄ STOFFBRUCH ►", size=8, bold=True,
+            prims.append(Prim("text", text="◄ PLACE ON FOLD ►", size=8, bold=True,
                               pts=mid + n_in * 6.0, angle=ang))
-    # Beschriftungsblock
+    # label block
     lines = [piece.name, f"{pattern.title} · {pattern.size_label}".strip(" ·"),
              piece.cut_text() + f" ({piece.fabric})"]
     if piece.on_fold:
-        lines.append("Bruchkante an den Stoffbruch legen")
+        lines.append("place this edge on the fold")
     lines.append(piece.sa_text())
     if piece.stretch_dir:
         lines.append(piece.stretch_dir)
@@ -216,8 +216,8 @@ def transform_prims(prims, pl: L.Placement):
         elif p.kind == "text":
             q.pts = pl.apply(np.asarray(p.pts).reshape(1, 2))[0]
             a = (p.angle + pl.angle + 180) % 360 - 180
-            if a > 100 or a < -100:      # nie kopfüber: Block um 180° drehen
-                a = a + 180 if a < 0 else a - 180   # ly bleibt: Zeilenfolge bleibt lesbar
+            if a > 100 or a < -100:      # never upside down: rotate the block by 180°
+                a = a + 180 if a < 0 else a - 180   # keep ly: line order stays readable
             q.angle = a
         out.append(q)
     return out
@@ -235,16 +235,16 @@ def layout_prims(pattern, lay: L.Layout):
 
 
 # ---------------------------------------------------------------------------
-# Zeichnen: reportlab
+# Drawing: reportlab
 # ---------------------------------------------------------------------------
 
 class PdfPage:
-    """Abbildung Leinwand (mm, y unten) → PDF-Seite (pt, y oben) mit Fenster."""
+    """Map canvas (mm, y down) → PDF page (pt, y up) through a window."""
 
     def __init__(self, c, page_w, page_h, window=None, offset=(0.0, 0.0)):
         self.c, self.pw, self.ph = c, page_w, page_h
-        self.window = window          # (x0, y0, x1, y1) Leinwand
-        self.offset = offset          # Lage des Fensters auf der Seite (mm, links/oben)
+        self.window = window          # (x0, y0, x1, y1) canvas
+        self.offset = offset          # position of the window on the page (mm, left/top)
 
     def to_pdf(self, x, y):
         wx, wy = (self.window[0], self.window[1]) if self.window else (0.0, 0.0)
@@ -291,8 +291,8 @@ class PdfPage:
 
 
 def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
-    """5 × 5 cm und 1 × 1 inch, linke obere Ecke bei (x_mm, y_top_mm) von oben gemessen.
-    Gibt die belegte Fläche (Breite, Höhe) in mm zurück."""
+    """5 × 5 cm and 1 × 1 inch, top-left corner at (x_mm, y_top_mm) measured from the top.
+    Returns the area used (width, height) in mm."""
     c.setDash([])
     c.setStrokeColor(black)
     c.setLineWidth(0.75)
@@ -303,8 +303,8 @@ def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
     c.setFont(FONT_B, 9)
     c.drawCentredString(x + side / 2, y + side / 2 + 4, "5 × 5 cm")
     c.setFont(FONT, 6.5)
-    c.drawCentredString(x + side / 2, y + side / 2 - 6, "Kontrollquadrat")
-    c.drawCentredString(x + side / 2, y + side / 2 - 14, "nachmessen!")
+    c.drawCentredString(x + side / 2, y + side / 2 - 6, "control square")
+    c.drawCentredString(x + side / 2, y + side / 2 - 14, "measure it!")
     inch = 72.0
     xi = x + side + 5 * MM
     yi = y + side - inch
@@ -315,8 +315,8 @@ def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
 
 
 def legend_pdf(c, x_mm, y_top_mm, page_h_mm):
-    items = [("cut", "Schnittlinie (inkl. Nahtzugabe)"), ("seam", "Nählinie"),
-             ("fold", "Stoffbruch"), ("mark_fold", "Umbruch-/Bügellinie")]
+    items = [("cut", "Cutting line (seam allowance included)"), ("seam", "Seam line"),
+             ("fold", "Fold"), ("mark_fold", "Fold-over / pressing line")]
     page = PdfPage(c, 0, page_h_mm)
     for k, (st, label) in enumerate(items):
         y = y_top_mm + 4 + k * 6
@@ -325,20 +325,20 @@ def legend_pdf(c, x_mm, y_top_mm, page_h_mm):
     page.line(np.array([[x_mm, y_top_mm + 28], [x_mm + 18, y_top_mm + 28]]), "grain")
     for h in _arrow_heads(np.array([x_mm, y_top_mm + 28]), np.array([x_mm + 18, y_top_mm + 28]), 3):
         page.line(h, "grain")
-    page.text(x_mm + 21, y_top_mm + 29.2, "Fadenlauf (parallel zur Webkante)", 7.5, center=False)
+    page.text(x_mm + 21, y_top_mm + 29.2, "Grainline (parallel to the selvage)", 7.5, center=False)
     page.line(np.array([[x_mm + 9, y_top_mm + 31], [x_mm + 9, y_top_mm + 37]]), "notch")
-    page.text(x_mm + 21, y_top_mm + 35.2, "Passzeichen (einfach vorne, doppelt hinten)", 7.5, center=False)
+    page.text(x_mm + 21, y_top_mm + 35.2, "Notches (single = front, double = back)", 7.5, center=False)
 
 
 def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, compact=False):
     page = PdfPage(c, page_w_mm, page_h_mm)
     page.text(left, top + 7, f"{pattern.title} · {pattern.size_label}", 16, True, center=False)
     page.text(left, top + 13.5, subtitle, 8.5, center=False)
-    page.text(left, top + 19, "Mit 100 % / „Tatsächliche Größe“ drucken – NICHT „An Seite anpassen“.",
+    page.text(left, top + 19, "Print at 100 % / \"Actual size\". Do NOT use \"Fit to page\".",
               8, center=False)
-    page.text(left, top + 23.5, "Kontrollquadrat vor dem Zuschneiden nachmessen.", 8, center=False)
-    page.text(left, top + 28, "Eigene Konstruktion – nur für den privaten Gebrauch. "
-              "Beim ersten Mal ein Probeteil nähen.", 7.5, center=False)
+    page.text(left, top + 23.5, "Measure the control square before cutting.", 8, center=False)
+    page.text(left, top + 28, "Original parametric draft. "
+              "Sew a test garment the first time you use this pattern.", 7.5, center=False)
     if compact:
         control_squares_pdf(c, left, top + 33, page_h_mm)
     else:
@@ -350,16 +350,16 @@ def _setup_canvas(path, w_mm, h_mm, title):
     register_fonts()
     c = rl_canvas.Canvas(path, pagesize=(w_mm * MM, h_mm * MM), pageCompression=1)
     c.setTitle(title)
-    c.setAuthor("schnittmuster-generator")
-    c.setCreator("schnittmuster-generator (reportlab)")
+    c.setAuthor("sewing-pattern-generator")
+    c.setCreator("sewing-pattern-generator (reportlab)")
     return c
 
 
 def render_roll_pdf(pattern, lay: L.Layout, path):
     c = _setup_canvas(path, lay.page_w, lay.page_h, f"{pattern.title} {pattern.size_label}")
     header_pdf(c, pattern, lay.page_w, lay.page_h,
-               f"Rolle {lay.meta['roll']:.0f} mm · Seitenformat {lay.page_w:.0f} × {lay.page_h:.0f} mm "
-               f"(Hochformat) · {len(pattern.pieces)} Schnittteile")
+               f"Roll {lay.meta['roll']:.0f} mm · page size {lay.page_w:.0f} × {lay.page_h:.0f} mm "
+               f"(portrait) · {len(pattern.pieces)} pattern pieces")
     page = PdfPage(c, lay.page_w, lay.page_h)
     for p in layout_prims(pattern, lay):
         page.prim(p)
@@ -375,7 +375,7 @@ def render_sheets_pdf(pattern, lay: L.Layout, path, tiled: L.Layout | None = Non
     total = lay.sheets + n_tiled
     for s in range(lay.sheets):
         header_pdf(c, pattern, lay.page_w, lay.page_h,
-                   f"{lay.meta['paper']}-Bogen {s + 1} von {total} · {lay.page_w:.0f} × {lay.page_h:.0f} mm")
+                   f"{lay.meta['paper']} sheet {s + 1} of {total} · {lay.page_w:.0f} × {lay.page_h:.0f} mm")
         page = PdfPage(c, lay.page_w, lay.page_h)
         for p in prims:
             if p.sheet == s:
@@ -388,11 +388,11 @@ def render_sheets_pdf(pattern, lay: L.Layout, path, tiled: L.Layout | None = Non
 
 
 # ---------------------------------------------------------------------------
-# Kacheln
+# Tiles
 # ---------------------------------------------------------------------------
 
 def _ink_raster(prims, cw, ch, res=1.0):
-    """Belegungsraster (1 mm) aller Linien und Texte – für freie Plätze der Kontrollquadrate."""
+    """Occupancy raster (1 mm) of all lines and texts, to find free spots for the control squares."""
     from PIL import Image, ImageDraw
     img = Image.new("1", (int(cw / res) + 2, int(ch / res) + 2), 0)
     d = ImageDraw.Draw(img)
@@ -427,13 +427,13 @@ def _find_free(ink, window, size_w, size_h, exclude=10.0, res=1.0):
     free = np.argwhere(s == 0)
     if len(free) == 0:
         return None
-    # möglichst unten links (weg vom Seitenkopf)
+    # prefer the bottom left (away from the page header)
     r, cc = free[np.argmax(free[:, 0] * 10 - free[:, 1])]
     return (xa + cc) * res, (ya + r) * res
 
 
 def _tile_decorations(lay: L.Layout):
-    """Klebeflächen, Anlegelinien, Rauten – in Leinwandkoordinaten (auf beiden Seiten gleich)."""
+    """Glue areas, alignment lines, diamonds, in canvas coordinates (identical on both pages)."""
     pw, ph = lay.meta["pw"], lay.meta["ph"]
     sx, sy = pw - L.OVERLAP, ph - L.OVERLAP
     nrows, ncols = lay.grid
@@ -482,20 +482,20 @@ def _draw_deco(page: PdfPage, deco, behind: bool):
 
 def _render_overview(c, pattern, lay, pages, page_w, page_h):
     header_pdf(c, pattern, page_w, page_h,
-               f"Übersicht · {lay.meta['paper']} zum Kleben · {len(pages)} Druckseiten + diese Übersicht",
+               f"Overview · {lay.meta['paper']} tiles · {len(pages)} pages to print + this overview",
                compact=True)
     pg = PdfPage(c, page_w, page_h)
     lines = [
-        "So geht's:",
-        "1. Alle Seiten mit 100 % drucken. Kontrollquadrat (5 × 5 cm) nachmessen.",
-        "2. Bei jeder Seite den linken und oberen Rand an der gestrichelten Linie abschneiden.",
-        "3. Seiten nach dem Plan unten auf die grauen Klebeflächen der Nachbarseite legen:",
-        "   Rauten und Linien müssen deckungsgleich sein. Dann festkleben.",
-        "4. Teile entlang der durchgezogenen Schnittlinie ausschneiden (Nahtzugabe ist enthalten).",
+        "How to assemble:",
+        "1. Print all pages at 100 %. Measure the control square (5 × 5 cm).",
+        "2. On every page, trim the left and top margin along the dashed line.",
+        "3. Lay the pages onto the grey glue areas of their neighbours as in the plan below:",
+        "   diamonds and lines must match exactly. Then glue them down.",
+        "4. Cut the pieces out along the solid cutting line (seam allowance is included).",
     ]
     for k, t in enumerate(lines):
         pg.text(10, 95 + k * 5, t, 8 if k else 9, bold=(k == 0), center=False)
-    # Plan
+    # plan
     top = 128.0
     avail_w, avail_h = page_w - 20, page_h - top - 15
     s = min(avail_w / lay.canvas_w, avail_h / max(lay.canvas_h, 1))
@@ -509,7 +509,7 @@ def _render_overview(c, pattern, lay, pages, page_w, page_h):
         rect = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]])
         if t["empty"]:
             pg.line(tp(rect), "tile")
-            pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s, "leer", 6, color=(0.5, 0.5, 0.5))
+            pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s, "empty", 6, color=(0.5, 0.5, 0.5))
         else:
             pg.line(tp(rect), "diamond")
             pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s + 2,
@@ -546,7 +546,7 @@ def _render_tiles(c, pattern, lay: L.Layout, start_no=1, total=None, overview=Tr
         clip = c.beginPath()
         clip.rect(x0, y0, x1 - x0, y1 - y0)
         c.clipPath(clip, stroke=0, fill=0)
-        # große Seitenkennung im Hintergrund
+        # large page label in the background
         cx, cy = (win[0] + win[2]) / 2, (win[1] + win[3]) / 2
         page.text(cx, cy + 15, t["label"], 90, True, color=(0.9, 0.9, 0.93))
         _draw_deco(page, deco, behind=True)
@@ -562,21 +562,21 @@ def _render_tiles(c, pattern, lay: L.Layout, start_no=1, total=None, overview=Tr
             page.prim(p)
         _draw_deco(page, deco, behind=False)
         c.restoreState()
-        # Rahmen (Schnittkante) und Seitenbeschriftung
+        # frame (trim edge) and page caption
         frame = np.array([[win[0], win[1]], [win[2], win[1]], [win[2], win[3]], [win[0], win[3]], [win[0], win[1]]])
         page.line(frame, "tile")
         r, col = t["row"], t["col"]
         nb = []
         if col > 0:
-            nb.append(f"links: {chr(65 + r)}{col}")
+            nb.append(f"left: {chr(65 + r)}{col}")
         if r > 0:
-            nb.append(f"oben: {chr(64 + r)}{col + 1}")
-        info = f"Seite {t['page_no']}/{total} · {t['label']} · {pattern.title} {pattern.size_label}"
+            nb.append(f"top: {chr(64 + r)}{col + 1}")
+        info = f"Page {t['page_no']}/{total} · {t['label']} · {pattern.title} {pattern.size_label}"
         if nb:
-            info += " · kleben an " + ", ".join(nb)
+            info += " · glue to " + ", ".join(nb)
         page.text(win[0] + (L.OVERLAP if col > 0 else 0) + 2, win[1] + (L.OVERLAP if r > 0 else 0) + 4,
                   info, 6.5, center=False, color=(0.25, 0.25, 0.25))
-        # Kontrollquadrate an freier Stelle
+        # control squares in a free spot
         spot = _find_free(ink, win, 84, 56)
         if spot is None:
             spot = _find_free(ink, win, 56, 56)
@@ -620,7 +620,7 @@ def render_tiles_pdf(pattern, lay: L.Layout, path):
 
 
 # ---------------------------------------------------------------------------
-# SVG-Master
+# SVG master
 # ---------------------------------------------------------------------------
 
 def _svg_dash(style):
@@ -629,10 +629,10 @@ def _svg_dash(style):
 
 
 def render_svg(pattern, lay: L.Layout, path, header_h=None):
-    """SVG in 1:1 (Einheiten mm). Bei Kachel-/Bogen-Layouts wird ein Kopfbereich ergänzt."""
-    if lay.kind == "rolle":
+    """SVG at 1:1 (units mm). Tile/sheet layouts get an extra header area."""
+    if lay.kind == "roll":
         W, H, oy, sheets = lay.page_w, lay.page_h, 0.0, [0]
-    elif lay.kind == "bogen":
+    elif lay.kind == "sheets":
         W, H, oy, sheets = lay.page_w, lay.page_h, 0.0, list(range(lay.sheets))
     else:
         W, H, oy, sheets = lay.canvas_w, lay.canvas_h + 85.0, 85.0, [0]
@@ -640,15 +640,15 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
     total_h = H * len(sheets) + 20 * (len(sheets) - 1)
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.2f}mm" height="{total_h:.2f}mm" '
            f'viewBox="0 0 {W:.2f} {total_h:.2f}">',
-           f"<title>{escape(pattern.title)} {escape(pattern.size_label)} – Maßstab 1:1 (Einheit mm)</title>",
+           f"<title>{escape(pattern.title)} {escape(pattern.size_label)} · scale 1:1 (unit mm)</title>",
            '<style>text{font-family:"DejaVu Sans",Arial,sans-serif}</style>']
     for si, s in enumerate(sheets):
         base = si * (H + 20)
         out.append(f'<g transform="translate(0 {base:.2f})">')
         out.append(f'<rect x="0" y="0" width="{W:.2f}" height="{H:.2f}" fill="white" stroke="#bbb" stroke-width="0.3"/>')
         out.append(f'<text x="8" y="13" font-size="5.6" font-weight="bold">{escape(pattern.title)} · {escape(pattern.size_label)}</text>')
-        out.append('<text x="8" y="19.5" font-size="3">Mit 100 % / tatsächlicher Größe drucken. '
-                   'Kontrollquadrat 5 × 5 cm nachmessen.</text>')
+        out.append('<text x="8" y="19.5" font-size="3">Print at 100 % / actual size. '
+                   'Measure the 5 × 5 cm control square.</text>')
         sx = W - 88.4
         out.append(f'<rect x="{sx:.2f}" y="10" width="50" height="50" fill="none" stroke="black" stroke-width="0.26"/>')
         out.append(f'<text x="{sx + 25:.2f}" y="36" font-size="3.2" text-anchor="middle" font-weight="bold">5 × 5 cm</text>')
@@ -679,7 +679,7 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
 
 
 # ---------------------------------------------------------------------------
-# PNG-Vorschau
+# PNG preview
 # ---------------------------------------------------------------------------
 
 def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=True, title=None):
@@ -687,12 +687,12 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    if lay.kind == "bogen":
+    if lay.kind == "sheets":
         sheets = list(range(lay.sheets))
         W, H = lay.page_w, lay.page_h
     else:
         sheets = [0]
-        W, H = (lay.canvas_w, lay.canvas_h) if lay.kind == "kacheln" else (lay.page_w, lay.page_h)
+        W, H = (lay.canvas_w, lay.canvas_h) if lay.kind == "tiles" else (lay.page_w, lay.page_h)
     fig_w = W * len(sheets) / 25.4 * dpi_mm / 2 + 0.5 * len(sheets)
     fig_h = H / 25.4 * dpi_mm / 2 + 0.6
     scale_fig = min(1.0, 22 / max(fig_w, fig_h))
@@ -717,23 +717,23 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
                 ax.text(tx, ty, p.text, fontsize=max(3.5, p.size * 0.42), rotation=p.angle,
                         ha="center", va="bottom", rotation_mode="anchor",
                         fontweight="bold" if p.bold else "normal")
-        if lay.kind == "kacheln" and show_tiles:
+        if lay.kind == "tiles" and show_tiles:
             for t in lay.tiles:
                 x0, y0, x1, y1 = t["window"]
                 ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False,
                                            ec="#c33" if not t["empty"] else "#ccc", lw=0.5, ls="--"))
                 ax.text((x0 + x1) / 2, (y0 + y1) / 2, t["label"], color="#c33" if not t["empty"] else "#bbb",
                         fontsize=7, ha="center", va="center", alpha=0.6)
-        if lay.kind == "rolle":
+        if lay.kind == "roll":
             ax.add_patch(plt.Rectangle((W - 88.4, 10), 50, 50, fill=False, ec="k", lw=0.6))
             ax.text(8, 14, f"{pattern.title} · {pattern.size_label}", fontsize=8, fontweight="bold")
         ax.set_xlim(-5, W + 5)
         ax.set_ylim(H + 5, -5)
         ax.set_aspect("equal")
         ax.axis("off")
-        if lay.kind == "bogen":
-            ax.set_title(f"{lay.meta['paper']}-Bogen {s + 1}", fontsize=8)
-    fig.suptitle(title or f"{pattern.title} {pattern.size_label} – Vorschau ({lay.kind})", fontsize=10)
+        if lay.kind == "sheets":
+            ax.set_title(f"{lay.meta['paper']} sheet {s + 1}", fontsize=8)
+    fig.suptitle(title or f"{pattern.title} {pattern.size_label} · preview ({lay.kind})", fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=110)
     plt.close(fig)

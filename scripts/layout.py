@@ -1,11 +1,11 @@
-"""Anordnung der Schnittteile auf Rolle, Einzelbögen (A0/A1) und Kachelseiten (A4/Letter).
+"""Arranging pattern pieces on a roll, single sheets (A0/A1) and tiled pages (A4/Letter).
 
-Koordinaten der Anordnung ("Leinwand"): mm, x nach rechts, y nach **unten** (Seitenoben = 0).
-Ein Teil wird um `angle` (Grad, gegen den Uhrzeigersinn im Teil-Koordinatensystem)
-gedreht und dann verschoben: canvas = (xr + dx, −yr + dy). Der Fadenlauf dreht mit.
+Layout ("canvas") coordinates: mm, x to the right, y **down** (top of page = 0).
+A piece is rotated by `angle` (degrees, counter-clockwise in piece coordinates) and then
+moved: canvas = (xr + dx, −yr + dy). The grainline rotates with the piece.
 
-Packverfahren: Rasterbasiertes "tiefste Position zuerst" (Bottom-Left-Fill) mit
-FFT-Korrelation zur Kollisionsprüfung. Abstand zwischen Teilen ≥ `gap` mm.
+Packing: raster-based bottom-left fill with FFT correlation for collision checks.
+Distance between pieces ≥ `gap` mm.
 """
 from __future__ import annotations
 
@@ -19,25 +19,25 @@ from shapely.geometry import Polygon, box
 
 import geometry as G
 
-PAPER = {  # Breite × Höhe in mm (Hochformat)
+PAPER = {  # width × height in mm (portrait)
     "A4": (210.0, 297.0), "LETTER": (215.9, 279.4), "A1": (594.0, 841.0), "A0": (841.0, 1189.0),
 }
-TILE_MARGIN = 8.0       # Druckerrand A4/Letter (≥ 8 mm)
-SHEET_MARGIN = 10.0     # Rand bei A0/A1
-ROLL_MARGIN = 5.0       # seitlicher Rand auf der Rolle
-OVERLAP = 10.0          # Klebeüberlappung
-GAP = 10.0              # Mindestabstand zwischen Teilen
-ROLL_HEADER = 80.0      # Kopfbereich auf der Rolle (Titel, Legende, Kontrollquadrate)
+TILE_MARGIN = 8.0       # printer margin A4/Letter (≥ 8 mm)
+SHEET_MARGIN = 10.0     # margin on A0/A1
+ROLL_MARGIN = 5.0       # side margin on the roll
+OVERLAP = 10.0          # glue overlap
+GAP = 10.0              # minimum distance between pieces
+ROLL_HEADER = 80.0      # header area on the roll (title, legend, control squares)
 
 
 @dataclass
 class Placement:
-    index: int          # Index in pattern.pieces
+    index: int          # index into pattern.pieces
     angle: float
     dx: float
     dy: float
     sheet: int = 0
-    copy: int = 0       # für Zuschnittplan (welche Kopie)
+    copy: int = 0       # for the cutting layout (which copy)
     mirrored: bool = False
 
     def apply(self, pts):
@@ -50,16 +50,16 @@ class Placement:
 
 @dataclass
 class Layout:
-    kind: str                       # rolle | bogen | kacheln
+    kind: str                       # roll | sheets | tiles
     page_w: float
     page_h: float
     placements: list[Placement]
     canvas_w: float = 0.0
     canvas_h: float = 0.0
     sheets: int = 1
-    tiles: list = field(default_factory=list)   # Kacheln: dict(row, col, label, window)
+    tiles: list = field(default_factory=list)   # tiles: dict(row, col, label, window)
     grid: tuple = (0, 0)
-    reserved: list = field(default_factory=list)  # reservierte Rechtecke (x0, y0, x1, y1)
+    reserved: list = field(default_factory=list)  # reserved rectangles (x0, y0, x1, y1)
     meta: dict = field(default_factory=dict)
 
 
@@ -68,7 +68,7 @@ def _rings(piece):
 
 
 def _raster(pts, res, pad):
-    """Polygon (Leinwandkoordinaten) → Bool-Maske, Ursprung = bbox-Min."""
+    """Polygon (canvas coordinates) → boolean mask, origin = bbox minimum."""
     poly = Polygon(pts).buffer(pad, join_style=2)
     if poly.geom_type == "MultiPolygon":
         poly = max(poly.geoms, key=lambda g: g.area)
@@ -79,7 +79,7 @@ def _raster(pts, res, pad):
     ext = [((x - x0) / res + 0.5, (y - y0) / res + 0.5) for x, y in poly.exterior.coords]
     ImageDraw.Draw(img).polygon(ext, fill=1, outline=1)
     m = np.array(img, dtype=np.float32)
-    # konservativ: um 1 Pixel dilatieren
+    # conservative: dilate by 1 pixel
     m2 = m.copy()
     m2[1:, :] = np.maximum(m2[1:, :], m[:-1, :])
     m2[:-1, :] = np.maximum(m2[:-1, :], m[1:, :])
@@ -96,10 +96,10 @@ def _oriented(ring, angle, mirrored=False):
 
 def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
          order=None, mirrored=None, margin=0.0, prefer_angle=None, mode="bottom"):
-    """Teile auf einer Fläche der Breite `width` (und optional Höhe) packen.
+    """Pack pieces onto an area of width `width` (and optionally height).
 
-    rings: Liste der Schnittkonturen (Teilkoordinaten). angles: je Teil Liste erlaubter
-    Winkel (oder eine gemeinsame Liste). Rückgabe: (placements, unplaced_indices, used_height)
+    rings: list of cutting outlines (piece coordinates). angles: per piece a list of
+    allowed angles (or one shared list). Returns (placements, unplaced_indices, used_height)
     """
     n = len(rings)
     if angles is None:
@@ -157,7 +157,7 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
         mh, mw = mask.shape
         occ[rr:rr + mh, cc:cc + mw] = np.maximum(occ[rr:rr + mh, cc:cc + mw], mask)
         cur_max = max(cur_max, rr + mh)
-        # Verschiebung: bnd = gepufferte Bounds in orientierter Lage
+        # offset: bnd = buffered bounds in the rotated position
         dx = margin + cc * res - bnd[0] - 0.5 * res
         dy = margin + rr * res - bnd[1] - 0.5 * res
         placements.append(Placement(i, float(ang), float(dx), float(dy), mirrored=mirrored[i]))
@@ -169,8 +169,7 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
 
 
 def pack_best(rings, width, height=None, angle_step=15, quick=False, **kw):
-    """Mehrere Strategien (Winkelsätze × Reihenfolgen × Bewertung) probieren,
-    die kürzeste Anordnung gewinnt."""
+    """Try several strategies (angle sets × orders × scoring); the shortest layout wins."""
     n = len(rings)
     area = sorted(range(n), key=lambda i: -Polygon(rings[i]).area)
 
@@ -208,7 +207,7 @@ def min_gap(rings, placements) -> float:
 
 
 # ---------------------------------------------------------------------------
-# Rolle
+# Roll
 # ---------------------------------------------------------------------------
 
 def layout_roll(pattern, roll_width_mm: float = 610.0, angle_step: int = 15) -> Layout:
@@ -219,14 +218,14 @@ def layout_roll(pattern, roll_width_mm: float = 610.0, angle_step: int = 15) -> 
                                     reserved=reserved, margin=ROLL_MARGIN)
     if unplaced:
         names = ", ".join(pattern.pieces[i].name for i in unplaced)
-        raise ValueError(f"Teil(e) breiter als die Rolle: {names}")
-    page_h = max(used + ROLL_MARGIN + 5.0, page_w + 1.0)   # immer Hochformat
-    return Layout("rolle", page_w, page_h, pls, canvas_w=page_w, canvas_h=page_h,
+        raise ValueError(f"piece(s) wider than the roll: {names}")
+    page_h = max(used + ROLL_MARGIN + 5.0, page_w + 1.0)   # always portrait
+    return Layout("roll", page_w, page_h, pls, canvas_w=page_w, canvas_h=page_h,
                   reserved=reserved, meta=dict(roll=roll_width_mm))
 
 
 # ---------------------------------------------------------------------------
-# Kacheln (A4 / Letter, auch für übergroße Teile bei A0/A1)
+# Tiles (A4 / Letter, also for oversized pieces on A0/A1)
 # ---------------------------------------------------------------------------
 
 def _tile_windows(canvas_w, canvas_h, pw, ph):
@@ -280,26 +279,26 @@ def layout_tiles(pattern, paper: str = "A4", piece_indices=None, angle_step: int
         if best is None or score < best[0]:
             best = (score, pls, cw, ch, tiles, grid)
     if best is None:
-        raise ValueError("Teile konnten nicht angeordnet werden")
+        raise ValueError("pieces could not be arranged")
     _, pls, cw, ch, tiles, grid = best
-    return Layout("kacheln", page_w, page_h, pls, canvas_w=cw, canvas_h=ch, tiles=tiles,
+    return Layout("tiles", page_w, page_h, pls, canvas_w=cw, canvas_h=ch, tiles=tiles,
                   grid=grid, meta=dict(paper=paper.upper(), margin=margin, pw=pw, ph=ph))
 
 
 # ---------------------------------------------------------------------------
-# Einzelbögen A0 / A1
+# Single sheets A0 / A1
 # ---------------------------------------------------------------------------
 
 def layout_sheets(pattern, paper: str = "A0", angle_step: int = 15):
-    """Teile ungeteilt auf möglichst wenige Bögen. Übergroße Teile werden gekachelt.
+    """Whole pieces on as few sheets as possible. Oversized pieces are tiled.
 
-    Rückgabe: (Layout der Bögen, Layout der gekachelten Übergrößen oder None)
+    Returns (layout of the sheets, layout of the tiled oversized pieces or None)
     """
     page_w, page_h = PAPER[paper.upper()]
     rings = [_rings(p) for p in pattern.pieces]
     angles = list(range(0, 360, angle_step))
     remaining = sorted(range(len(rings)), key=lambda i: -Polygon(rings[i]).area)
-    # Übergröße feststellen
+    # detect oversized pieces
     oversize = []
     for i in list(remaining):
         fits = False
@@ -313,13 +312,13 @@ def layout_sheets(pattern, paper: str = "A0", angle_step: int = 15):
             oversize.append(i)
             remaining.remove(i)
     placements, sheet = [], 0
-    header = [(0, 0, page_w, 70.0)]   # Kopfbereich je Bogen
+    header = [(0, 0, page_w, 70.0)]   # header area per sheet
     while remaining:
         sub = [rings[i] for i in remaining]
         pls, unplaced, _ = pack(sub, page_w, page_h, angles=angles, margin=SHEET_MARGIN,
                                 reserved=header)
         if not pls:
-            raise ValueError("Teil passt auf keinen Bogen")
+            raise ValueError("piece does not fit on any sheet")
         placed_ids = []
         for p in pls:
             p.index = remaining[p.index]
@@ -328,7 +327,7 @@ def layout_sheets(pattern, paper: str = "A0", angle_step: int = 15):
             placed_ids.append(p.index)
         remaining = [i for i in remaining if i not in placed_ids]
         sheet += 1
-    lay = Layout("bogen", page_w, page_h, placements, canvas_w=page_w, canvas_h=page_h,
+    lay = Layout("sheets", page_w, page_h, placements, canvas_w=page_w, canvas_h=page_h,
                  sheets=sheet, reserved=header, meta=dict(paper=paper.upper()))
     tiled = layout_tiles(pattern, paper, piece_indices=oversize, angle_step=angle_step, max_cols=3) \
         if oversize else None
@@ -336,18 +335,18 @@ def layout_sheets(pattern, paper: str = "A0", angle_step: int = 15):
 
 
 # ---------------------------------------------------------------------------
-# Zuschnittplan (Stoff, Fadenlauf parallel zur Webkante)
+# Cutting layout (fabric, grainline parallel to the selvage)
 # ---------------------------------------------------------------------------
 
 def grain_angle(piece) -> float:
-    """Drehwinkel, der den Fadenlauf senkrecht (parallel zur Webkante) stellt."""
+    """Rotation that makes the grainline vertical (parallel to the selvage)."""
     g0, g1 = np.array(piece.grain[0]), np.array(piece.grain[1])
     v = g1 - g0
     return 90.0 - math.degrees(math.atan2(v[1], v[0]))
 
 
 def unfolded_ring(piece):
-    """Kontur für den einlagigen Zuschnitt: Teile im Bruch werden aufgeklappt."""
+    """Outline for single-layer cutting: pieces cut on the fold are unfolded."""
     ring = piece.cut_ring()
     folds = [e for e in piece.edges if e.fold]
     if not folds:
@@ -364,19 +363,19 @@ def unfolded_ring(piece):
 
 
 def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0):
-    """Zuschnittplan je Stoffart: einlagig, alle Kopien, Fadenlauf längs.
+    """Cutting layout per fabric: single layer, all copies, grainline lengthwise.
 
-    Rückgabe: dict stoff → dict(width, length, placements, rings, pieces)
+    Returns dict fabric → dict(width, length, placements, rings, pieces)
     """
     fabric_widths = fabric_widths or {}
     groups = {}
     for i, p in enumerate(pattern.pieces):
-        fab = "Bündchen" if p.fabric.startswith("Bündchen") else (
-            "Futter" if "Futter" in p.fabric else "Oberstoff")
+        fab = "Rib knit" if p.fabric.startswith("Rib knit") else (
+            "Lining" if "Lining" in p.fabric else "Main fabric")
         groups.setdefault(fab, []).append(i)
     plans = {}
     for fab, ids in groups.items():
-        width = fabric_widths.get(fab, 700.0 if fab == "Bündchen" else 1500.0)
+        width = fabric_widths.get(fab, 700.0 if fab == "Rib knit" else 1500.0)
         rings, meta, angles, mir = [], [], [], []
         for i in ids:
             p = pattern.pieces[i]
@@ -393,16 +392,16 @@ def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0):
                                    margin=10.0)
         note = None
         if unplaced:
-            # Teil länger als die Stoffbreite (z. B. Saumbündchen aus Schlauchware):
-            # Plan mit der nötigen Breite rechnen und Hinweis ausgeben.
+            # piece longer than the fabric width (e.g. a hem band from tubular rib):
+            # compute the plan with the width needed and add a note.
             need = max(float(np.ptp(np.asarray(r)[:, 0])) for r in rings) + 2 * 10.0 + gap
-            note = (f"Mindestens ein Teil ist breiter als {width / 10:.0f} cm: offene Breite ≥ "
-                    f"{need / 10:.0f} cm nötig oder das Teil mit Quernaht zweiteilig zuschneiden.")
+            note = (f"At least one piece is wider than {width / 10:.0f} cm: an open width ≥ "
+                    f"{need / 10:.0f} cm is needed, or cut the piece in two with a cross seam.")
             width = math.ceil(need / 50.0) * 50.0
             pls, unplaced, used = pack(rings, width, angles=angles, gap=gap, res=5.0, mirrored=mir,
                                        margin=10.0)
             if unplaced:
-                raise ValueError(f"{fab}: Teil passt nicht auf {width / 10:.0f} cm Stoffbreite")
+                raise ValueError(f"{fab}: piece does not fit on {width / 10:.0f} cm fabric width")
         for p in pls:
             pi, k = meta[p.index]
             p.copy = k
