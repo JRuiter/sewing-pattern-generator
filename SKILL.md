@@ -117,6 +117,8 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 `dxf14` (DXF for cutting machines and CAD, AAMA layers, see `references/print_specs.md`).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
 instructions (MD + PDF), `pattern.json`, `validation_report.md`.
+Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of
+folded selvage to selvage and single layer; see `references/print_specs.md`).
 
 **Validation is mandatory:** if a check fails (❌), `generate.py` exits with code 2 and
 writes **no** print files. Fix the cause from `validation_report.md` (usually

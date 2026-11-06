@@ -68,11 +68,11 @@
 
 ## Fabric needed
 
-- **Main fabric:** about 0.85 m at 150 cm width (single layer, incl. 10 % for shrinkage)
+- **Main fabric:** about 0.85 m at 150 cm width (folded selvage to selvage, cut on fold pieces at the fold, incl. 10 % for shrinkage; single layer would need 0.85 m)
 - **Rib knit:** about 0.20 m at 70 cm width (single layer, incl. 10 % for shrinkage)
 - Elastic 20 mm wide, length 49 cm (+2 cm overlap for joining)
 
-Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down).
+Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair).
 
 ## Sewing instructions
 
