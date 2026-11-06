@@ -1,0 +1,34 @@
+[project]
+name = "sewing-pattern-generator"
+version = "1.0.0"
+description = "Claude skill that drafts sewable, true-to-scale sewing patterns from measurements, a description, or photos of a garment."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "JRuiter" }]
+keywords = ["sewing", "sewing-patterns", "pattern-drafting", "claude-skill", "pdf", "opencv"]
+dependencies = [
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "shapely>=2.0",
+  "opencv-contrib-python-headless>=4.8",
+  "reportlab>=4.0",
+  "matplotlib>=3.7",
+  "pillow>=10.0",
+  "pypdf>=4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Repository = "https://github.com/JRuiter/sewing-pattern-generator"
+
+# Kein installierbares Paket: Die Skripte laufen direkt aus scripts/ (Claude-Skill-Layout).
+[tool.setuptools]
+packages = []
+py-modules = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

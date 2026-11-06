@@ -1,0 +1,180 @@
+{
+  "modul": "pants_basic",
+  "passform": "normal",
+  "optionen": {
+    "style": "jogginghose",
+    "waistband": "bund_gummi",
+    "cuffs": true,
+    "pockets": [],
+    "fabric": "sweat",
+    "waistband_height": 31.0,
+    "cuff_height": 50.25,
+    "elastic_total": 495.0,
+    "blouse": 0.0,
+    "crotch_drop": 0.0,
+    "fit": "normal",
+    "hip_total": 692.9932160606362,
+    "fork_factor": 1.0000897358642402,
+    "front_rise_total": 189.47457120331103,
+    "inseam_total": 513.8008575933783,
+    "opening_total": 192.28946058514
+  },
+  "parameter": {
+    "hip_total": 692.9932160606362,
+    "fork_factor": 1.0000897358642402,
+    "front_rise_total": 189.47457120331103,
+    "inseam_total": 513.8008575933783,
+    "opening_total": 192.28946058514
+  },
+  "groesse_geschaetzt": 116,
+  "messung_flach_mm": {
+    "waist_flat": 247.5,
+    "hip_flat": 346.5,
+    "thigh_flat": 221.5,
+    "knee_flat": 172.0,
+    "opening_flat": 96.25,
+    "front_rise": 189.5,
+    "inseam": 513.75,
+    "outseam": 703.25,
+    "waistband_h": 31.0,
+    "cuff_h": 50.25,
+    "leg_splay_deg": 6.063841091109941
+  },
+  "fertigmasse_soll_mm": {
+    "hip_circ": 693.0,
+    "thigh_circ": 443.0,
+    "knee_circ": 344.0,
+    "opening": 192.5,
+    "waist_relaxed": 495.0,
+    "front_rise": 189.5,
+    "inseam": 513.75,
+    "outseam": 703.25,
+    "waistband_h": 31.0,
+    "cuff_h": 50.25
+  },
+  "fertigmasse_ist_mm": {
+    "hip_circ": 692.9932160606361,
+    "thigh_circ": 442.22089398741394,
+    "knee_circ": 344.94378457900496,
+    "opening": 192.28946058514,
+    "waist_relaxed": 495.0,
+    "waist_max": 664.9747041905944,
+    "outseam": 703.2754287966893,
+    "inseam": 513.8008575933783,
+    "front_rise": 189.47457120331103,
+    "back_rise": 205.69038155317475,
+    "waistband_h": 31.0,
+    "cuff_h": 50.25,
+    "crotch_seam": 454.8928847109436
+  },
+  "teilegraph": {
+    "teile": [
+      {
+        "id": "vorderhose",
+        "name": "Vorderhose",
+        "cut": "2× gegengleich zuschneiden",
+        "fabric": "Oberstoff",
+        "im_bruch": false,
+        "kanten": [
+          "Schrittnaht",
+          "Innenbein",
+          "Bündchenansatz",
+          "Seitennaht",
+          "Bund"
+        ]
+      },
+      {
+        "id": "hinterhose",
+        "name": "Hinterhose",
+        "cut": "2× gegengleich zuschneiden",
+        "fabric": "Oberstoff",
+        "im_bruch": false,
+        "kanten": [
+          "Schrittnaht",
+          "Innenbein",
+          "Bündchenansatz",
+          "Seitennaht",
+          "Bund"
+        ]
+      },
+      {
+        "id": "bund",
+        "name": "Bund (mit Gummi)",
+        "cut": "1× im Stoffbruch zuschneiden",
+        "fabric": "Oberstoff",
+        "im_bruch": true,
+        "kanten": [
+          "Ansatz",
+          "Quernaht",
+          "Ansatz",
+          "Vordere Mitte"
+        ]
+      },
+      {
+        "id": "beinbuendchen",
+        "name": "Beinbündchen",
+        "cut": "2× zuschneiden",
+        "fabric": "Bündchen",
+        "im_bruch": false,
+        "kanten": [
+          "Ansatz",
+          "Quernaht",
+          "Ansatz",
+          "Quernaht"
+        ]
+      }
+    ],
+    "naehte": [
+      {
+        "naht": "Seitennaht vorne ↔ hinten",
+        "a": "Vorderhose.Seitennaht",
+        "b": "Hinterhose.Seitennaht",
+        "art": "equal"
+      },
+      {
+        "naht": "Innenbeinnaht vorne ↔ hinten",
+        "a": "Vorderhose.Innenbein",
+        "b": "Hinterhose.Innenbein",
+        "art": "equal"
+      },
+      {
+        "naht": "Schrittnaht vorne (linkes ↔ rechtes Teil)",
+        "a": "Vorderhose.Schrittnaht",
+        "b": "Vorderhose.Schrittnaht",
+        "art": "equal"
+      },
+      {
+        "naht": "Schrittnaht hinten (linkes ↔ rechtes Teil)",
+        "a": "Hinterhose.Schrittnaht",
+        "b": "Hinterhose.Schrittnaht",
+        "art": "equal"
+      },
+      {
+        "naht": "Bund ↔ Hosenoberkante",
+        "a": "Vorderhose.Bund + Hinterhose.Bund",
+        "b": "Bund (mit Gummi).Ansatz",
+        "art": "equal"
+      },
+      {
+        "naht": "Beinbündchen ↔ Beinsaum (gedehnt)",
+        "a": "Vorderhose.Bündchenansatz + Hinterhose.Bündchenansatz",
+        "b": "Beinbündchen.Ansatz",
+        "art": "ratio"
+      }
+    ],
+    "modul": "pants_basic",
+    "optionen": {
+      "style": "jogginghose",
+      "waistband": "bund_gummi",
+      "cuffs": true,
+      "pockets": [],
+      "fabric": "sweat"
+    },
+    "fehlende_fotos": [
+      "Optional für eine genauere Schrittkurve: ein Hosenbein nach innen falten, sodass die vordere und hintere Schrittnaht flach liegen, und von oben fotografieren (mit Karte).",
+      "Rückseite flach fotografieren, falls hinten Taschen/Passen sind."
+    ]
+  },
+  "quelle": "../examples/3_foto_modus_b/foto_flach_mit_referenzkarte.jpg",
+  "gespeichert": "2026-11-06"
+}

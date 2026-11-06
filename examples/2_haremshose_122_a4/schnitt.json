@@ -1,0 +1,507 @@
+{
+  "garment": "pants_basic",
+  "title": "Haremshose",
+  "size": "Gr. 122",
+  "options": {
+    "style": "haremshose",
+    "fit": "harem",
+    "fabric": "sweat",
+    "stretch": 25,
+    "length": "lang",
+    "waistband": "bund_gummi",
+    "cuffs": true,
+    "pockets": [],
+    "cuff_fabric": "buendchen",
+    "cuff_stretch": null,
+    "waistband_height": null,
+    "cuff_height": null,
+    "elastic_width": null,
+    "crotch_drop": null,
+    "blouse": null,
+    "sa": 10.0,
+    "hem_sa": 25.0,
+    "hip_total": null,
+    "fork_factor": 1.0,
+    "front_rise_total": null,
+    "inseam_total": null,
+    "opening_total": null,
+    "elastic_total": null,
+    "knee_total": null,
+    "thigh_total": null,
+    "_y_hip": -133.485,
+    "_wb_h": 30.0,
+    "_cuff_h": 70.0,
+    "_waist_relaxed": 504.0,
+    "_pk_b": 0.0,
+    "_R": 242.7,
+    "_hip_total": 858.0,
+    "_drop": 73.2,
+    "_back_drop": 3.2565875659050914,
+    "_elastic": 504.0,
+    "_cuff_len": 199.584,
+    "_hem_c": 285.12,
+    "_blouse": 30.0
+  },
+  "measures_mm": {
+    "chest": 620.0,
+    "waist": 560.0,
+    "hip": 660.0,
+    "head": 520.0,
+    "neck": 285.0,
+    "inseam": 540.0,
+    "side_length": 720.0,
+    "arm": 470.0,
+    "back_length": 295.0,
+    "shoulder": 100.0,
+    "height": 1220.0,
+    "crotch_depth": 180.0,
+    "thigh": 369.6,
+    "knee": 264.0,
+    "ankle": 178.2,
+    "upper_arm": 186.0,
+    "wrist": 124.0
+  },
+  "finished_mm": {
+    "hip_circ": 858.0,
+    "thigh_circ": 554.6,
+    "knee_circ": 420.0,
+    "opening": 199.6,
+    "waist_relaxed": 504.0,
+    "waist_max": 829.9,
+    "outseam": 754.5,
+    "inseam": 481.8,
+    "front_rise": 272.7,
+    "back_rise": 291.0,
+    "waistband_h": 30.0,
+    "cuff_h": 70.0,
+    "crotch_seam": 641.7
+  },
+  "pieces": [
+    {
+      "key": "vorderhose",
+      "name": "Vorderhose",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Oberstoff",
+      "edges": [
+        {
+          "name": "schritt",
+          "label": "Schrittnaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 269.1
+        },
+        {
+          "name": "innenbein",
+          "label": "Innenbein",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 417.0
+        },
+        {
+          "name": "saum",
+          "label": "Bündchenansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 132.6
+        },
+        {
+          "name": "seite",
+          "label": "Seitennaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 659.7
+        },
+        {
+          "name": "bund",
+          "label": "Bund",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 209.5
+        }
+      ]
+    },
+    {
+      "key": "hinterhose",
+      "name": "Hinterhose",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Oberstoff",
+      "edges": [
+        {
+          "name": "schritt",
+          "label": "Schrittnaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 312.6
+        },
+        {
+          "name": "innenbein",
+          "label": "Innenbein",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 417.0
+        },
+        {
+          "name": "saum",
+          "label": "Bündchenansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 152.6
+        },
+        {
+          "name": "seite",
+          "label": "Seitennaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 659.7
+        },
+        {
+          "name": "bund",
+          "label": "Bund",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 205.4
+        }
+      ]
+    },
+    {
+      "key": "bund",
+      "name": "Bund (mit Gummi)",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Oberstoff",
+      "edges": [
+        {
+          "name": "unten",
+          "label": "Ansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 414.9
+        },
+        {
+          "name": "rechts",
+          "label": "Quernaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 60.0
+        },
+        {
+          "name": "oben",
+          "label": "Ansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 414.9
+        },
+        {
+          "name": "links",
+          "label": "Vordere Mitte",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 60.0
+        }
+      ]
+    },
+    {
+      "key": "beinbuendchen",
+      "name": "Beinbündchen",
+      "cut_count": 2,
+      "mirror": false,
+      "fabric": "Bündchen",
+      "edges": [
+        {
+          "name": "unten",
+          "label": "Ansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 199.6
+        },
+        {
+          "name": "rechts",
+          "label": "Quernaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 140.0
+        },
+        {
+          "name": "oben",
+          "label": "Ansatz",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 199.6
+        },
+        {
+          "name": "links",
+          "label": "Quernaht",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 140.0
+        }
+      ]
+    }
+  ],
+  "validation": [
+    {
+      "group": "Nahtpaare",
+      "name": "Seitennaht vorne ↔ hinten",
+      "status": "OK",
+      "soll": "66,0 cm",
+      "ist": "66,0 cm",
+      "delta": "+0,0 mm",
+      "note": ""
+    },
+    {
+      "group": "Nahtpaare",
+      "name": "Innenbeinnaht vorne ↔ hinten",
+      "status": "OK",
+      "soll": "41,7 cm",
+      "ist": "41,7 cm",
+      "delta": "+0,0 mm",
+      "note": ""
+    },
+    {
+      "group": "Nahtpaare",
+      "name": "Schrittnaht vorne (linkes ↔ rechtes Teil)",
+      "status": "OK",
+      "soll": "26,9 cm",
+      "ist": "26,9 cm",
+      "delta": "+0,0 mm",
+      "note": ""
+    },
+    {
+      "group": "Nahtpaare",
+      "name": "Schrittnaht hinten (linkes ↔ rechtes Teil)",
+      "status": "OK",
+      "soll": "31,3 cm",
+      "ist": "31,3 cm",
+      "delta": "+0,0 mm",
+      "note": ""
+    },
+    {
+      "group": "Nahtpaare",
+      "name": "Bund ↔ Hosenoberkante",
+      "status": "OK",
+      "soll": "83,0 cm",
+      "ist": "83,0 cm",
+      "delta": "+0,0 mm",
+      "note": ""
+    },
+    {
+      "group": "Nahtpaare",
+      "name": "Beinbündchen ↔ Beinsaum (gedehnt)",
+      "status": "OK",
+      "soll": "70–85 % von 28,5 cm",
+      "ist": "20,0 cm = 70 %",
+      "delta": "-85,5 mm",
+      "note": "Bündchen wird beim Annähen gedehnt"
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Vordere Mitte ↔ Bund",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,0°",
+      "delta": "+0,0°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Hintere Mitte ↔ Bund",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,0°",
+      "delta": "-0,0°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Schritt ↔ Innenbein (vorne + hinten)",
+      "status": "OK",
+      "soll": "180°",
+      "ist": "180,9°",
+      "delta": "+0,9°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Innenbein ↔ Saum vorne",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,1°",
+      "delta": "+0,1°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Saum ↔ Seitennaht vorne",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,1°",
+      "delta": "+0,1°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Innenbein ↔ Saum hinten",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,2°",
+      "delta": "+0,2°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Saum ↔ Seitennaht hinten",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,2°",
+      "delta": "+0,2°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Seitennaht ↔ Bund hinten",
+      "status": "OK",
+      "soll": "90°",
+      "ist": "90,1°",
+      "delta": "+0,1°",
+      "note": ""
+    },
+    {
+      "group": "Winkel/Übergänge",
+      "name": "Seitennaht ↔ Bund (vorne + hinten)",
+      "status": "OK",
+      "soll": "180°",
+      "ist": "180,1°",
+      "delta": "+0,1°",
+      "note": ""
+    },
+    {
+      "group": "Maße",
+      "name": "Hüftumfang Schnitt = Körper + Mehrweite",
+      "status": "OK",
+      "soll": "85,8 cm",
+      "ist": "85,8 cm",
+      "delta": "+0,0 %",
+      "note": "Körper 66.0 cm + +30 % Mehrweite"
+    },
+    {
+      "group": "Maße",
+      "name": "Oberkante passt über die Hüfte",
+      "status": "OK",
+      "soll": "≥ 67,3 cm",
+      "ist": "95,4 cm",
+      "delta": "+281,1 mm",
+      "note": "Oberkantenumfang inkl. nutzbarer Dehnung ≥ Hüftumfang"
+    },
+    {
+      "group": "Maße",
+      "name": "Leibhöhe (vorne) plausibel",
+      "status": "OK",
+      "soll": "14,6 cm – 31,4 cm",
+      "ist": "27,3 cm",
+      "delta": "+0,0 mm",
+      "note": "Körper-Leibhöhe 18.0 cm, Harem-Absenkung 7.3 cm"
+    },
+    {
+      "group": "Maße",
+      "name": "Innenbeinlänge plausibel",
+      "status": "OK",
+      "soll": "39,0 cm – 60,5 cm",
+      "ist": "55,5 cm",
+      "delta": "+0,0 mm",
+      "note": "Körper-Schrittlänge 54.0 cm"
+    },
+    {
+      "group": "Maße",
+      "name": "Fuß passt durch die Beinöffnung",
+      "status": "OK",
+      "soll": "≥ 24,1 cm",
+      "ist": "29,5 cm",
+      "delta": "+54,8 mm",
+      "note": "Fersen-Rist-Umfang ≈ 1,35 × Knöchel"
+    },
+    {
+      "group": "Geometrie",
+      "name": "Vorderhose: Kontur & Nahtzugabe",
+      "status": "OK",
+      "soll": "geschlossen, NZ vorhanden",
+      "ist": "ok",
+      "delta": "",
+      "note": "Nahtzugabe 1,0 cm inkl."
+    },
+    {
+      "group": "Beschriftung",
+      "name": "Vorderhose: Fadenlauf & Zuschnitt",
+      "status": "OK",
+      "soll": "vorhanden",
+      "ist": "2× gegengleich zuschneiden",
+      "delta": "",
+      "note": "Oberstoff"
+    },
+    {
+      "group": "Geometrie",
+      "name": "Hinterhose: Kontur & Nahtzugabe",
+      "status": "OK",
+      "soll": "geschlossen, NZ vorhanden",
+      "ist": "ok",
+      "delta": "",
+      "note": "Nahtzugabe 1,0 cm inkl."
+    },
+    {
+      "group": "Beschriftung",
+      "name": "Hinterhose: Fadenlauf & Zuschnitt",
+      "status": "OK",
+      "soll": "vorhanden",
+      "ist": "2× gegengleich zuschneiden",
+      "delta": "",
+      "note": "Oberstoff"
+    },
+    {
+      "group": "Geometrie",
+      "name": "Bund (mit Gummi): Kontur & Nahtzugabe",
+      "status": "OK",
+      "soll": "geschlossen, NZ vorhanden",
+      "ist": "ok",
+      "delta": "",
+      "note": "Nahtzugabe 1,0 cm inkl."
+    },
+    {
+      "group": "Beschriftung",
+      "name": "Bund (mit Gummi): Fadenlauf & Zuschnitt",
+      "status": "OK",
+      "soll": "vorhanden",
+      "ist": "1× im Stoffbruch zuschneiden",
+      "delta": "",
+      "note": "Oberstoff"
+    },
+    {
+      "group": "Geometrie",
+      "name": "Beinbündchen: Kontur & Nahtzugabe",
+      "status": "OK",
+      "soll": "geschlossen, NZ vorhanden",
+      "ist": "ok",
+      "delta": "",
+      "note": "Nahtzugabe 1,0 cm inkl."
+    },
+    {
+      "group": "Beschriftung",
+      "name": "Beinbündchen: Fadenlauf & Zuschnitt",
+      "status": "OK",
+      "soll": "vorhanden",
+      "ist": "2× zuschneiden",
+      "delta": "",
+      "note": "Bündchen"
+    }
+  ],
+  "fabric_mm": {
+    "Oberstoff": {
+      "width": 1500.0,
+      "need": 900.0
+    },
+    "Bündchen": {
+      "width": 700.0,
+      "need": 250.0
+    }
+  }
+}
