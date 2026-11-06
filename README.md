@@ -31,6 +31,9 @@ erstellen", "Lieblingshose kopieren" …).
     right side shaded, the two edges to sew highlighted, matching notches marked
   - **DXF** for cutting machines and pattern CAD (AAMA layer convention: cut line, seam line, fold,
     notches, grainline on separate layers; one block per piece; mm, 1:1)
+- **Nested multi-size patterns**: `--size 98,110,122` overlays all sizes on one sheet, each with
+  its own colour, line style and **PDF layer** (toggle sizes before printing) and its own SVG group;
+  every size is validated on its own.
 - **Sews cleanly**: hem and casing allowances get mirrored corners, so a folded-up hem on a tapered
   leg or sleeve lies flat under the side seam; notches are projected onto the cutting line (also at
   corners) as slit, T or V notches.
@@ -134,7 +137,7 @@ full round trip pattern → photo → reverse engineering → pattern.
 ```
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          geometry, measurements, ease, garments/, validate, layout, render, instructions,
-                  notches, construction, adjust, diagrams, export_dxf, measure_files,
+                  notches, construction, adjust, diagrams, nested, export_dxf, measure_files,
                   photo_analyze, photo_measure, reverse/ (decompose, unfold, fit, verify, store)
 references/       drafting rules, size tables, print specs, photo guide
 assets/           printable reference card (ArUco), DejaVu fonts

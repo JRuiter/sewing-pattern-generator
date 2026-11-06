@@ -22,6 +22,7 @@ from shapely.ops import polylabel
 import allowance as A
 import geometry as G
 import layout as L
+import nested as NE
 import notches as N
 import units as U
 
@@ -75,6 +76,9 @@ class Prim:
     fill: tuple | None = None
     ly: float = 0.0           # baseline offset perpendicular to the writing direction (mm)
     sheet: int = 0
+    color: tuple | None = None   # overrides the style colour (nested sizes)
+    dash: tuple | None = None    # overrides the style dash (nested sizes, cutting line)
+    layer: int | None = None     # PDF optional content group (nested sizes)
 
 
 def text_pos(p):
@@ -218,8 +222,41 @@ def transform_prims(prims, pl: L.Placement):
     return out
 
 
+SIZE_LINES = ("cut", "fold", "seam", "notch", "mark_fold", "mark_placement")
+
+
+def nested_piece_prims(pattern, i):
+    """Prims of piece i of a nested pattern: lines per size (own colour, dash, layer), label
+    block and grainline once, inside the smallest size, and a size tag on each outline."""
+    small = pattern.nest_label_pattern
+    prims = [p for p in piece_prims(small.pieces[i], pattern) if p.kind == "text" or p.style == "grain"]
+    for n in pattern.nest:
+        pc = n["pattern"].pieces[i]
+        ring = pc.cut_ring()
+        centre = (ring.min(axis=0) + ring.max(axis=0)) / 2
+        direction = centre if np.linalg.norm(centre) > 1 else np.array([1.0, -1.0])
+        for p in piece_prims(pc, n["pattern"]):
+            if p.kind != "line" or p.style not in SIZE_LINES:
+                continue
+            p.color, p.layer = n["color"], n["layer"]
+            if p.style == "cut":
+                p.dash = n["dash"]
+            prims.append(p)
+        tag = NE.size_tag_points(ring, centre, direction)
+        prims.append(Prim("text", "label", text=str(n["label"]), size=7, bold=True, pts=tag,
+                          color=n["color"], layer=n["layer"]))
+    return prims
+
+
 def layout_prims(pattern, lay: L.Layout):
     prims = []
+    if NE.is_nested(pattern):
+        for pl in lay.placements:
+            pp = transform_prims(nested_piece_prims(pattern, pl.index), pl)
+            for p in pp:
+                p.sheet = pl.sheet
+            prims += pp
+        return prims
     for pl in lay.placements:
         pc = pattern.pieces[pl.index]
         pp = transform_prims(piece_prims(pc, pattern), pl)
@@ -237,24 +274,26 @@ class PdfPage:
     """Map canvas (mm, y down) → PDF page (pt, y up) through a window."""
 
     def __init__(self, c, page_w, page_h, window=None, offset=(0.0, 0.0), styles=None,
-                 text_color=(0, 0, 0)):
+                 text_color=(0, 0, 0), size_colors=True):
         self.c, self.pw, self.ph = c, page_w, page_h
         self.window = window          # (x0, y0, x1, y1) canvas
         self.offset = offset          # position of the window on the page (mm, left/top)
         self.styles = styles or STYLES
         self.text_color = text_color
+        self.size_colors = size_colors    # nested sizes: draw each size in its colour
 
     def to_pdf(self, x, y):
         wx, wy = (self.window[0], self.window[1]) if self.window else (0.0, 0.0)
         ox, oy = self.offset
         return (ox + x - wx) * MM, (self.ph - (oy + y - wy)) * MM
 
-    def line(self, pts, style, closed=False):
+    def line(self, pts, style, closed=False, color=None, dash=None):
         st = self.styles[style]
         c = self.c
         c.setLineWidth(max(st["w"], MIN_LW))
-        c.setStrokeColorRGB(*st["color"])
-        c.setDash(list(st["dash"]) if st["dash"] else [])
+        c.setStrokeColorRGB(*(color or st["color"]))
+        dd = dash if dash is not None else st["dash"]
+        c.setDash(list(dd) if dd else [])
         c.setLineJoin(1)
         c.setLineCap(0)
         path = c.beginPath()
@@ -281,11 +320,17 @@ class PdfPage:
         c.restoreState()
 
     def prim(self, p):
+        if p.layer is not None:
+            self.c._code.append(f"/OC /oc{p.layer} BDC")
         if p.kind == "line":
-            self.line(p.pts, p.style, p.closed)
+            col = p.color if self.size_colors else None
+            self.line(p.pts, p.style, p.closed, color=col, dash=p.dash)
         elif p.kind == "text":
             x, y = text_pos(p)
-            self.text(x, y, p.text, p.size, p.bold, p.angle, color=self.text_color)
+            col = p.color if (p.color and self.size_colors) else self.text_color
+            self.text(x, y, p.text, p.size, p.bold, p.angle, color=col)
+        if p.layer is not None:
+            self.c._code.append("EMC")
 
 
 def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
@@ -332,6 +377,19 @@ def legend_pdf(c, x_mm, y_top_mm, page_h_mm, with_allowance=True):
     page.text(x_mm + 21, y_top_mm + 35.2, "Notches (single = front, double = back)", 7.5, center=False)
 
 
+def size_legend_pdf(c, pattern, x_mm, y_top_mm, page_h_mm):
+    """Nested sizes: line sample + size per layer (each in its own layer)."""
+    page = PdfPage(c, 0, page_h_mm)
+    page.text(x_mm, y_top_mm + 4, "Sizes (PDF layers: switch sizes on/off before printing)", 7.5, True,
+              center=False)
+    for k, n in enumerate(pattern.nest):
+        y = y_top_mm + 10 + k * 5.5
+        c._code.append(f"/OC /oc{n['layer']} BDC")
+        page.line(np.array([[x_mm, y], [x_mm + 18, y]]), "cut", color=n["color"], dash=n["dash"])
+        page.text(x_mm + 21, y + 1.2, f"Size {n['label']}", 7.5, center=False, color=n["color"])
+        c._code.append("EMC")
+
+
 def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, compact=False):
     page = PdfPage(c, page_w_mm, page_h_mm)
     page.text(left, top + 7, f"{pattern.title} · {pattern.size_label}", 16, True, center=False)
@@ -346,6 +404,8 @@ def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, co
     else:
         legend_pdf(c, left, top + 31, page_h_mm, A.has_allowance(pattern))
         control_squares_pdf(c, page_w_mm - 80.4 - 8, top + 4, page_h_mm)
+    if NE.is_nested(pattern):
+        size_legend_pdf(c, pattern, left + (90 if compact else 100), top + (33 if compact else 31), page_h_mm)
 
 
 def _setup_canvas(path, w_mm, h_mm, title):
@@ -367,6 +427,7 @@ def render_roll_pdf(pattern, lay: L.Layout, path):
         page.prim(p)
     c.showPage()
     c.save()
+    NE.add_pdf_layers(path, pattern)
     return path
 
 
@@ -386,6 +447,7 @@ def render_sheets_pdf(pattern, lay: L.Layout, path, tiled: L.Layout | None = Non
     if tiled:
         _render_tiles(c, pattern, tiled, start_no=lay.sheets + 1, total=total, overview=False)
     c.save()
+    NE.add_pdf_layers(path, pattern)
     return path
 
 
@@ -430,7 +492,7 @@ def render_projector_pdf(pattern, lay: L.Layout, path, dark: bool = False):
     for i in range(nx):
         for j in range(ny):
             c.rect(i * g * MM, (H - (j + 1) * g) * MM, g * MM, g * MM, stroke=1, fill=0)
-    page = PdfPage(c, W, H, styles=projector_styles(dark), text_color=fg)
+    page = PdfPage(c, W, H, styles=projector_styles(dark), text_color=fg, size_colors=not dark)
     gc = (0.55, 0.55, 0.55) if dark else (0.45, 0.5, 0.65)
     for i in range(1, nx + 1):
         page.text(i * g - 2, 4, f"{i * 10} cm", 7, color=gc, center=False, angle=0)
@@ -458,8 +520,11 @@ def render_projector_pdf(pattern, lay: L.Layout, path, dark: bool = False):
     c.drawCentredString((sx + 55 + 12.7) * MM, (H - 10 - 12.7) * MM - 2, "1 inch")
     for p in layout_prims(pattern, lay):
         page.prim(p)
+    if NE.is_nested(pattern):
+        size_legend_pdf(c, pattern, 8, 32, H)
     c.showPage()
     c.save()
+    NE.add_pdf_layers(path, pattern)
     return path
 
 
@@ -692,6 +757,7 @@ def render_tiles_pdf(pattern, lay: L.Layout, path):
     c = _setup_canvas(path, lay.page_w, lay.page_h, f"{pattern.title} {pattern.size_label}")
     warnings = _render_tiles(c, pattern, lay, overview=True)
     c.save()
+    NE.add_pdf_layers(path, pattern)
     return path, warnings
 
 
@@ -714,7 +780,9 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
         W, H, oy, sheets = lay.canvas_w, lay.canvas_h + 85.0, 85.0, [0]
     prims = layout_prims(pattern, lay)
     total_h = H * len(sheets) + 20 * (len(sheets) - 1)
-    out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W:.2f}mm" height="{total_h:.2f}mm" '
+    out = ['<svg xmlns="http://www.w3.org/2000/svg" '
+           'xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" '
+           f'width="{W:.2f}mm" height="{total_h:.2f}mm" '
            f'viewBox="0 0 {W:.2f} {total_h:.2f}">',
            f"<title>{escape(pattern.title)} {escape(pattern.size_label)} · scale 1:1 (unit mm)</title>",
            '<style>text{font-family:"DejaVu Sans",Arial,sans-serif}</style>']
@@ -731,22 +799,35 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
         out.append(f'<rect x="{sx + 55:.2f}" y="10" width="25.4" height="25.4" fill="none" stroke="black" stroke-width="0.26"/>')
         out.append(f'<text x="{sx + 67.7:.2f}" y="23.5" font-size="2.5" text-anchor="middle">1 inch</text>')
         out.append(f'<g transform="translate(0 {oy:.2f})">')
-        for p in prims:
-            if p.sheet != s:
-                continue
-            if p.kind == "line":
-                st = STYLES[p.style]
-                d = " ".join(f"{x:.2f},{y:.2f}" for x, y in p.pts)
-                col = "#" + "".join(f"{int(v * 255):02x}" for v in st["color"])
-                out.append(f'<polyline points="{d}" fill="none" stroke="{col}" '
-                           f'stroke-width="{st["w"] * PT:.3f}"{_svg_dash(p.style)} stroke-linejoin="round"/>')
-            elif p.kind == "text":
-                fs = p.size * PT
-                tx, ty = text_pos(p)
-                bold = ' font-weight="bold"' if p.bold else ""
-                out.append(f'<text x="{tx:.2f}" y="{ty:.2f}" font-size="{fs:.2f}" '
-                           f'text-anchor="middle"{bold} '
-                           f'transform="rotate({-p.angle:.2f} {tx:.2f} {ty:.2f})">{escape(p.text)}</text>')
+        groups: list = [None] + ([n["layer"] for n in pattern.nest] if NE.is_nested(pattern) else [])
+        for grp in groups:
+            if grp is not None:
+                n = pattern.nest[grp]
+                gid = "size_" + "".join(ch if ch.isalnum() else "_" for ch in str(n["label"]))
+                out.append(f'<g id="{gid}" class="size-layer" inkscape:groupmode="layer" '
+                           f'inkscape:label="Size {escape(str(n["label"]))}">')
+            for p in prims:
+                if p.sheet != s or p.layer != grp:
+                    continue
+                if p.kind == "line":
+                    st = STYLES[p.style]
+                    d = " ".join(f"{x:.2f},{y:.2f}" for x, y in p.pts)
+                    col = "#" + "".join(f"{int(v * 255):02x}" for v in (p.color or st["color"]))
+                    dash = (_svg_dash(p.style) if p.dash is None else
+                            f' stroke-dasharray="{" ".join(f"{v * PT:.2f}" for v in p.dash)}"')
+                    out.append(f'<polyline points="{d}" fill="none" stroke="{col}" '
+                               f'stroke-width="{st["w"] * PT:.3f}"{dash} stroke-linejoin="round"/>')
+                elif p.kind == "text":
+                    fs = p.size * PT
+                    tx, ty = text_pos(p)
+                    bold = ' font-weight="bold"' if p.bold else ""
+                    fill = ("" if not p.color else
+                            ' fill="#' + "".join(f"{int(v * 255):02x}" for v in p.color) + '"')
+                    out.append(f'<text x="{tx:.2f}" y="{ty:.2f}" font-size="{fs:.2f}" '
+                               f'text-anchor="middle"{bold}{fill} '
+                               f'transform="rotate({-p.angle:.2f} {tx:.2f} {ty:.2f})">{escape(p.text)}</text>')
+            if grp is not None:
+                out.append("</g>")
         out.append("</g></g>")
     out.append("</svg>")
     with open(path, "w", encoding="utf-8") as f:
@@ -787,8 +868,10 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
             if p.kind == "line":
                 st = STYLES[p.style]
                 ls = "-" if not st["dash"] else (0, tuple(v * 0.6 for v in st["dash"]))
-                ax.plot(p.pts[:, 0], p.pts[:, 1], color=st["color"], lw=st["w"] * 0.6, ls=ls)
-            elif p.kind == "text" and p.size >= 8:
+                if p.dash:
+                    ls = (0, tuple(v * 0.6 for v in p.dash))
+                ax.plot(p.pts[:, 0], p.pts[:, 1], color=p.color or st["color"], lw=st["w"] * 0.6, ls=ls)
+            elif p.kind == "text" and (p.size >= 8 or p.color):
                 tx, ty = text_pos(p)
                 ax.text(tx, ty, p.text, fontsize=max(3.5, p.size * 0.42), rotation=p.angle,
                         ha="center", va="bottom", rotation_mode="anchor",

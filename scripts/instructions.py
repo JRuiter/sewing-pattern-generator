@@ -203,6 +203,45 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
     return "\n".join(lines)
 
 
+COLOR_NAMES = ["red", "blue", "green", "purple", "orange", "teal", "brown", "grey"]
+DASH_NAMES = ["solid", "long dashes", "short dashes", "dash-dot", "long dashes", "dots", "dash-dot-dot",
+              "even dashes"]
+
+
+def nested_section(md: str, nested, widths=None, mode="auto"):
+    """Add the size table of a nested multi-size pattern to the instructions."""
+    from garments import get
+    labels = getattr(get(nested.garment), "FINISHED_LABELS", {})
+    u = U.of(nested.nest_big)
+    keys = [k for k in nested.nest_big.finished][:4]
+    head = "| Size | Line | Fabric needed | " + " | ".join(labels.get(k, (k,))[0] for k in keys) + " |"
+    rows = [head, "|" + "---|" * (3 + len(keys))]
+    data = []
+    for n in nested.nest:
+        p = n["pattern"]
+        plans = fabric_consumption(p, widths, mode)
+        fab = "; ".join(f"{k}: {U.fabric_length(v['need_mm'], u)}" for k, v in plans.items())
+        line = f"{COLOR_NAMES[n['layer']]}, {DASH_NAMES[n['layer']]}"
+        rows.append(f"| {p.size_label} | {line} | {fab} | "
+                    + " | ".join(U.length(p.finished[k], u) for k in keys) + " |")
+        data.append({"size": p.size_label, "layer": f"Size {n['label']}",
+                     "finished_mm": {k: round(v, 1) for k, v in p.finished.items()},
+                     "fabric_mm": {k: v["need_mm"] for k, v in plans.items()}})
+    sec = ["## Sizes in this pattern (nested)", "",
+           "All sizes are drawn on top of each other, aligned at the same construction point. Every "
+           "size has its own colour and line and its own **PDF layer**: in Acrobat/Reader open the "
+           "*Layers* panel and switch off the sizes you do not need before printing. Cut along the "
+           "line of your size. Sizes can be blended: e.g. width of one size, length of another, by "
+           "drawing a smooth line between the two outlines.", "", *rows, "",
+           "Fabric, finished measurements and sewing steps below refer to the largest size "
+           f"({nested.nest_big.size_label}); the validation report has one table per size.", ""]
+    lines = md.splitlines()
+    first = lines[0].split(" · ")[0] + " · " + nested.size_label
+    md = "\n".join([first] + lines[1:])
+    md = md.replace("## Pattern pieces", "\n".join(sec) + "\n## Pattern pieces", 1)
+    return md, data
+
+
 def markdown_to_pdf(md: str, path: str, images: list[str] | None = None, base_dir: str | None = None):
     """Simple Markdown→PDF typesetting (headings, lists, tables) with an embedded font."""
     import re
