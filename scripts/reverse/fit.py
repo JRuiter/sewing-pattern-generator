@@ -56,7 +56,7 @@ def fit_pants(targets: dict, base_options: dict, fits=("harem", "normal", "weit"
             opts["pockets"] = []
 
         def residuals(x):
-            o = dict(opts, **dict(zip(names, x)))
+            o = dict(opts, **dict(zip(names, x)))  # noqa: B023 - used within the same iteration
             try:
                 pat = mod.draft(body, o)
             except Exception:

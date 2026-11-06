@@ -121,7 +121,7 @@ class Piece:
                 parts.append(f"{', '.join(sorted(set(names)))}: {cm(k)} cm")
         return "; ".join(parts)
 
-    def transformed(self, fn) -> "Piece":
+    def transformed(self, fn) -> Piece:
         """Kopie mit allen Punkten durch fn transformiert."""
         import copy
         p = copy.deepcopy(self)

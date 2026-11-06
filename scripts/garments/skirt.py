@@ -5,7 +5,6 @@ import math
 
 import numpy as np
 
-import ease as E
 import geometry as G
 from pattern import Edge, Mark, Pattern, Piece, rect_piece
 

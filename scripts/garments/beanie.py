@@ -1,8 +1,6 @@
 """Beanie (Jersey/Bündchen): zwei gleiche Teile mit runder Kuppel, optional Umschlagbündchen."""
 from __future__ import annotations
 
-import numpy as np
-
 import ease as E
 import geometry as G
 from pattern import Edge, Mark, Pattern, Piece, rect_piece

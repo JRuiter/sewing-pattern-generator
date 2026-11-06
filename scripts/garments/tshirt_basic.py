@@ -156,9 +156,8 @@ def _sleeve(F, o, m, cap_target, adult):
 
 def _raglan(front, back, F, o, m, adult):
     """Raglan: Ärmelanteil vom Rumpf abtrennen, Raglanlinien starr auf den Ärmel übertragen."""
-    out = {}
     curves = {}
-    for pc, depth in ((front, F["fnd"]), (back, F["bnd"])):
+    for pc, _depth in ((front, F["fnd"]), (back, F["bnd"])):
         neck = pc.edge("ausschnitt").pts           # N → Mitte
         s_cut = G.length(neck) * 0.35
         Pn = G.point_at(neck, s_cut)

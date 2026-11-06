@@ -57,7 +57,7 @@ def _ref_text(pat, refs):
     for p, e, n in refs:
         pc = pat.piece(p)
         lab = pc.edge(e).label or e
-        out.append(f"{'%d× ' % n if n != 1 else ''}{pc.name}.{lab}")
+        out.append(f"{f'{n}× ' if n != 1 else ''}{pc.name}.{lab}")
     return " + ".join(out)
 
 
