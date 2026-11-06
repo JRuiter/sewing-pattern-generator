@@ -81,6 +81,14 @@ class Piece:
         return G.offset_outline([e.pts for e in self.edges], [e.sa for e in self.edges],
                                 [e.turned for e in self.edges])
 
+    def fabric_ring(self) -> np.ndarray:
+        """Outline to cut from the fabric: like cut_ring, but a pattern without seam
+        allowance gets the allowances to add (sa_hint), so fabric consumption stays right."""
+        if any(e.sa > 0 for e in self.edges) or not any(e.sa_hint > 0 for e in self.edges):
+            return self.cut_ring()
+        return G.offset_outline([e.pts for e in self.edges], [e.sa_hint for e in self.edges],
+                                [e.turned for e in self.edges])
+
     @property
     def on_fold(self) -> bool:
         return any(e.fold for e in self.edges)

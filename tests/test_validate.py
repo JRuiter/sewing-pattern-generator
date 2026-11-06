@@ -449,3 +449,9 @@ def test_cli_seam_allowance(tmp_path):
     assert rc == 0
     md = (tmp_path / "sewing_instructions.md").read_text(encoding="utf-8")
     assert "NO seam allowance" in md
+
+
+def test_no_allowance_fabric_consumption_includes_allowances():
+    with_sa = L.layout_fabric(_draft_sa("tshirt_basic"), mode="single")["Main fabric"]["length"]
+    none = L.layout_fabric(_draft_sa("tshirt_basic", seam_allowance="none"), mode="single")["Main fabric"]["length"]
+    assert none == pytest.approx(with_sa, abs=10)
