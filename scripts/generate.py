@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import adjust as ADJ  # noqa: E402
 import construction as K  # noqa: E402
+import diagrams as DG  # noqa: E402
 import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
@@ -211,7 +212,8 @@ def run(spec: dict, verbose: bool = True) -> dict:
     pdf_path = os.path.join(out, "sewing_instructions.pdf")
     files["Sewing instructions (PDF)"] = pdf_path
     files["Sewing instructions (Markdown)"] = md_path
-    md = I.build_markdown(pat, report_md, plans, files, sources)
+    step_images = DG.render_steps(pat, I.all_steps(pat), out)
+    md = I.build_markdown(pat, report_md, plans, files, sources, step_images)
     if warn:
         md = md.replace("## Body measurements", "## Body measurements\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
     with open(md_path, "w", encoding="utf-8") as f:

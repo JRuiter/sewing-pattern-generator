@@ -150,7 +150,12 @@ def sewing_steps(pattern):
     return ["Sew the pieces right sides together, matching the notches."]
 
 
-def build_markdown(pattern, report_md, plans, files: dict, sources=None):
+def all_steps(pattern) -> list[str]:
+    return (["**Prepare:** pre-wash the fabric, cut out the pieces, snip the notches 3–4 mm deep."]
+            + sewing_steps(pattern))
+
+
+def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_images=None):
     o = pattern.options
     fab_label, stretch, knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))
     lines = [f"# {pattern.title} · {pattern.size_label}", "",
@@ -190,14 +195,15 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
               ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
                "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")
               + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]
-    for i, s in enumerate(["**Prepare:** pre-wash the fabric, cut out the pieces, snip the notches "
-                           "3–4 mm deep."] + sewing_steps(pattern), 1):
+    for i, s in enumerate(all_steps(pattern), 1):
         lines.append(f"{i}. {s}")
+        if step_images and i in step_images:
+            lines.append(f"   ![Step {i}]({step_images[i]})")
     lines += ["", "## Validation report", "", report_md, ""]
     return "\n".join(lines)
 
 
-def markdown_to_pdf(md: str, path: str, images: list[str] | None = None):
+def markdown_to_pdf(md: str, path: str, images: list[str] | None = None, base_dir: str | None = None):
     """Simple Markdown→PDF typesetting (headings, lists, tables) with an embedded font."""
     import re
 
@@ -244,6 +250,15 @@ def markdown_to_pdf(md: str, path: str, images: list[str] | None = None):
             table.append(line)
             continue
         flush()
+        im = re.match(r"^\s*!\[[^\]]*\]\(([^)]+)\)\s*$", line)
+        if im:
+            ip = os.path.join(base_dir or os.path.dirname(path), im.group(1))
+            if os.path.exists(ip):
+                from PIL import Image as PImage
+                w, h = PImage.open(ip).size
+                tw = 150 * mm
+                story.append(Image(ip, width=tw, height=tw * h / w))
+            continue
         if line.startswith("# "):
             story.append(Paragraph(inline(line[2:]), h1))
         elif line.startswith("## "):

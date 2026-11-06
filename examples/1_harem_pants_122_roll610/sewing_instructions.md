@@ -78,13 +78,18 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 
 1. **Prepare:** pre-wash the fabric, cut out the pieces, snip the notches 3–4 mm deep.
 2. **Side seams:** place front and back legs right sides together (notches: single = front, double = back) and sew the side seams with an overlocker or a narrow zigzag/stretch stitch.
+   ![Step 2](steps/step_02.png)
 3. **Inseams:** sew each inseam; the notches on the inseam meet.
+   ![Step 3](steps/step_03.png)
 4. **Crotch seam:** turn one leg right side out and slip it into the other (wrong side out) so the legs lie right sides together. Sew the crotch seam in one go from the front to the back top edge; the inseams meet exactly.
+   ![Step 4](steps/step_04.png)
 5. **Waistband:** fold the waistband strip right sides together into a ring and sew the cross seam (centre back), leaving 3 cm open for the elastic. Fold lengthwise wrong sides together along the fold line.
 6. Divide waistband and pants top edge into quarters and mark them (centre front/back, sides). Pin the waistband right sides together to the top edge (opening at the back, inside) and sew.
+   ![Step 6](steps/step_06.png)
 7. Thread the elastic, overlap the ends by 2 cm and sew them together, close the opening. Spread the gathers evenly and secure the elastic in the side seams by stitching in the ditch.
 8. **Leg cuffs:** sew each cuff into a ring right sides together, then fold it lengthwise wrong sides together. Divide cuff and leg opening into quarters and mark them.
 9. Slip the cuff over the right-side-out leg, put its seam at the inseam and sew it on while stretching. Press the seam allowance towards the pants.
+   ![Step 9](steps/step_09.png)
 10. Done! Press all seams (with sweat: steam, do not press down hard).
 
 ## Validation report
