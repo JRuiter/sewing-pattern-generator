@@ -11,16 +11,21 @@ import measurements as M
 FABRIC_DEFAULT_WIDTH = {"Main fabric": 1500.0, "Rib knit": 700.0, "Lining": 1400.0}
 
 
-def fabric_consumption(pattern, widths: dict | None = None):
+def fabric_consumption(pattern, widths: dict | None = None, mode: str = "auto"):
     widths = {**FABRIC_DEFAULT_WIDTH, **(widths or {})}
-    plans = L.layout_fabric(pattern, widths)
+    plans = L.layout_fabric(pattern, widths, mode=mode)
     out = {}
     for fab, pl in plans.items():
-        knit_extra = 1.10      # 10 % for shrinkage/pre-washing and straightening
-        need = math.ceil(pl["length"] * knit_extra / 50.0) * 50.0   # round up to 5 cm
-        pl["need_mm"] = need
+        pl["need_mm"] = need_mm(pl["length"])
+        if pl.get("alternative"):
+            pl["alternative"]["need_mm"] = need_mm(pl["alternative"]["length"])
         out[fab] = pl
     return out
+
+
+def need_mm(length: float) -> float:
+    """Fabric to buy: +10 % for shrinkage/pre-washing and straightening, rounded up to 5 cm."""
+    return math.ceil(length * 1.10 / 50.0) * 50.0
 
 
 def render_fabric_png(pattern, plans, path):
@@ -33,13 +38,30 @@ def render_fabric_png(pattern, plans, path):
     palette = ["#cfe2f3", "#fce5cd", "#d9ead3", "#ead1dc", "#fff2cc", "#d0e0e3", "#f4cccc"]
     for ax, (fab, pl) in zip(axs[0], plans.items()):
         W, H = pl["width"], pl["length"]
-        ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
+        folded = pl.get("mode") == "folded"
+        fl = min(pl.get("fold_length", 0.0), H) if folded else 0.0
+        if folded:
+            # folded selvage to selvage: fold on the left, both selvages on the right
+            ax.add_patch(plt.Rectangle((0, 0), W / 2, fl, fc="#f0f0f0", ec="#555", lw=1))
+            ax.plot([0, 0], [0, fl], color="#c00", lw=1.4, ls=(0, (6, 2, 1, 2)))
+            ax.text(-12, fl / 2, "fold", rotation=90, fontsize=6, va="center", ha="right", color="#c00")
+            ax.text(W / 2 + 8, fl / 2, "selvages (both layers)", rotation=90, fontsize=6, va="center")
+            if pl.get("single_section"):
+                ax.add_patch(plt.Rectangle((0, fl), W, H - fl, fc="#fafafa", ec="#555", lw=1))
+                ax.text(W / 2, fl + 12, "unfolded: single layer", fontsize=6, ha="center", va="top",
+                        style="italic")
+        else:
+            ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
         for p in pl["placements"]:
             ring = L.placed_ring(pl["rings"][p.index], p)
             pi, k = pl["meta"][p.index]
             ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6)
             c = ring.mean(axis=0)
             nm = pattern.pieces[pi].name.split(" (")[0]
+            if p.layers == 2:
+                nm += " ×2"
+            elif p.pinned:
+                nm += " (on fold)"
             ax.text(c[0], c[1], nm + (" (flipped)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
@@ -48,13 +70,28 @@ def render_fabric_png(pattern, plans, path):
         ax.set_ylim(H + 30, -60)
         ax.set_aspect("equal")
         ax.axis("off")
-        ax.set_title(f"{fab}: {W / 10:.0f} cm wide, single layer\nneeded ≈ {pl['need_mm'] / 1000:.2f} m",
+        how = "folded (double layer)" if folded else "single layer"
+        ax.set_title(f"{fab}: {W / 10:.0f} cm wide, {how}\nneeded ≈ {pl['need_mm'] / 1000:.2f} m",
                      fontsize=8)
     fig.suptitle(f"Cutting layout · {pattern.title} {pattern.size_label}", fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
     return path
+
+
+def layout_text(pl) -> str:
+    if pl.get("mode") == "folded":
+        t = "folded selvage to selvage, cut on fold pieces at the fold"
+    else:
+        t = "single layer"
+    alt = pl.get("alternative")
+    if alt:
+        other = "folded" if alt["mode"] == "folded" else "single layer"
+        t += f", incl. 10 % for shrinkage; {other} would need {alt['need_mm'] / 1000:.2f} m"
+    else:
+        t += ", incl. 10 % for shrinkage"
+    return t
 
 
 def piece_table(pattern):
@@ -116,13 +153,14 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
               "## Fabric needed", ""]
     for fab, pl in plans.items():
         lines.append(f"- **{fab}:** about {pl['need_mm'] / 1000:.2f} m at {pl['width'] / 10:.0f} cm width "
-                     f"(single layer, incl. 10 % for shrinkage)")
+                     f"({layout_text(pl)})")
         if pl.get("note"):
             lines.append(f"  - ⚠️ {pl['note']}")
     for n in pattern.notes:
         lines.append(f"- {n}")
     lines += ["", "Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
-              "\"flipped\" = place the piece face down).", "",
+              "\"flipped\" = place the piece face down, \"×2\" = cut through both layers of the folded "
+              "fabric, which gives a mirrored pair).", "",
               "## Sewing instructions", "",
               "Seam allowance is included in the pattern (see table). "
               + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]

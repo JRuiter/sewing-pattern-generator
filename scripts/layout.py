@@ -39,6 +39,8 @@ class Placement:
     sheet: int = 0
     copy: int = 0       # for the cutting layout (which copy)
     mirrored: bool = False
+    layers: int = 1     # cutting layout: copies cut at once (2 = through both layers of folded fabric)
+    pinned: bool = False  # cutting layout: placed against the fabric fold
 
     def apply(self, pts):
         p = G.as_pts(pts)
@@ -95,17 +97,20 @@ def _oriented(ring, angle, mirrored=False):
 
 
 def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
-         order=None, mirrored=None, margin=0.0, prefer_angle=None, mode="bottom"):
+         order=None, mirrored=None, margin=0.0, prefer_angle=None, mode="bottom", pinned=None):
     """Pack pieces onto an area of width `width` (and optionally height).
 
     rings: list of cutting outlines (piece coordinates). angles: per piece a list of
-    allowed angles (or one shared list). Returns (placements, unplaced_indices, used_height)
+    allowed angles (or one shared list). pinned: per piece True if it has to touch the
+    left edge (x = 0, e.g. the fabric fold); its leftmost point is placed exactly at x = 0.
+    Returns (placements, unplaced_indices, used_height)
     """
     n = len(rings)
     if angles is None:
         angles = list(range(0, 360, 15))
     per_piece_angles = angles if (len(angles) == n and isinstance(angles[0], (list, tuple))) else [angles] * n
     mirrored = mirrored or [False] * n
+    pinned = pinned or [False] * n
     cols = int(math.floor((width - 2 * margin) / res))
     if height is None:
         est = sum(max(G.bbox(r)[2] - G.bbox(r)[0], G.bbox(r)[3] - G.bbox(r)[1]) for r in rings)
@@ -134,6 +139,8 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
                 continue
             ov = fftconvolve(occ, mask[::-1, ::-1], mode="valid")
             feas = ov < 0.5
+            if pinned[i]:
+                feas[:, 1:] = False
             if not feas.any():
                 continue
             rr = np.argmax(feas.any(axis=1))
@@ -160,6 +167,8 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
         # offset: bnd = buffered bounds in the rotated position
         dx = margin + cc * res - bnd[0] - 0.5 * res
         dy = margin + rr * res - bnd[1] - 0.5 * res
+        if pinned[i]:
+            dx = -float(_oriented(rings[i], ang, mirrored[i])[:, 0].min())
         placements.append(Placement(i, float(ang), float(dx), float(dy), mirrored=mirrored[i]))
     used = 0.0
     for pl in placements:
@@ -345,10 +354,10 @@ def grain_angle(piece) -> float:
     return 90.0 - math.degrees(math.atan2(v[1], v[0]))
 
 
-def unfolded_ring(piece):
-    """Outline for single-layer cutting: pieces cut on the fold are unfolded."""
+def unfolded_ring(piece, keep=None):
+    """Outline for cutting: fold edges are unfolded (mirrored), except the edge `keep`."""
     ring = piece.cut_ring()
-    folds = [e for e in piece.edges if e.fold]
+    folds = [e for e in piece.edges if e.fold and e.name != keep]
     if not folds:
         return ring
     from shapely.ops import unary_union
@@ -362,48 +371,215 @@ def unfolded_ring(piece):
     return np.asarray(poly.exterior.coords)
 
 
-def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0):
-    """Cutting layout per fabric: single layer, all copies, grainline lengthwise.
+FABRIC_LAYOUTS = ("auto", "folded", "single")
+FOLDED_MIN_WIDTH = 1300.0   # auto mode only tries the folded layout from this width on
+FABRIC_MARGIN = 10.0
 
-    Returns dict fabric → dict(width, length, placements, rings, pieces)
+
+def fabric_group(piece) -> str:
+    if piece.fabric.startswith("Rib knit"):
+        return "Rib knit"
+    return "Lining" if "Lining" in piece.fabric else "Main fabric"
+
+
+def _fold_edge(piece):
+    """The fold edge that is most parallel to the grainline (placed on the fabric fold)."""
+    folds = [e for e in piece.edges if e.fold]
+    if not folds:
+        return None
+    g = np.array(piece.grain[1]) - np.array(piece.grain[0])
+    g = g / (np.linalg.norm(g) or 1.0)
+
+    def par(e):
+        v = e.pts[-1] - e.pts[0]
+        return abs(float(np.dot(v, g))) / (np.linalg.norm(v) or 1.0)
+    return max(folds, key=par)
+
+
+def _fold_angle(piece, ring, edge) -> float | None:
+    """Rotation that makes the fold edge vertical and the leftmost line of the piece."""
+    v = edge.pts[-1] - edge.pts[0]
+    base = 90.0 - math.degrees(math.atan2(v[1], v[0]))
+    for a in (base % 360, (base + 180) % 360):
+        pts = _oriented(ring, a)
+        ep = _oriented(edge.pts, a)
+        if abs(float(ep[:, 0].max() - pts[:, 0].min())) < 1.0 and np.ptp(ep[:, 0]) < 1.0:
+            return a
+    return None
+
+
+def _single_items(pattern, ids):
+    """Single layer: fold pieces unfolded, every copy placed separately."""
+    items = []
+    for i in ids:
+        p = pattern.pieces[i]
+        ring = unfolded_ring(p)
+        ga = grain_angle(p)
+        for k in range(p.cut_count):
+            m = bool(p.mirror and p.cut_count % 2 == 0 and k % 2 == 1)
+            a = ga if not m else 180 - ga
+            items.append(dict(ring=ring, meta=(i, k), angles=[a % 360, (a + 180) % 360], mirrored=m,
+                              pinned=False, layers=1))
+    return items
+
+
+def _folded_items(pattern, ids, half):
+    """Double layer folded selvage to selvage (fold at x = 0).
+
+    Fold pieces lie with their fold edge on the fabric fold; every other placement cuts
+    a mirrored pair through both layers. Pieces wider than the folded width go to a
+    single-layer section. Returns (items, single_ids, notes).
     """
+    items, single, notes = [], [], []
+    avail = half - FABRIC_MARGIN
+    for i in ids:
+        p = pattern.pieces[i]
+        fe = _fold_edge(p)
+        if fe is not None:
+            ring = unfolded_ring(p, keep=fe.name)
+            a = _fold_angle(p, ring, fe)
+            if a is None or float(np.ptp(_oriented(ring, a)[:, 0])) > avail:
+                single.append(i)
+                continue
+            for k in range(p.cut_count):
+                items.append(dict(ring=ring, meta=(i, k), angles=[a], mirrored=False, pinned=True, layers=1))
+            continue
+        ring = p.cut_ring()
+        ga = grain_angle(p)
+        w = min(float(np.ptp(_oriented(ring, ga)[:, 0])), float(np.ptp(_oriented(ring, ga + 180)[:, 0])))
+        if w > avail - 5.0:
+            single.append(i)
+            continue
+        n = p.cut_count
+        for k in range(0, n, 2):
+            items.append(dict(ring=ring, meta=(i, k), angles=[ga % 360, (ga + 180) % 360], mirrored=False,
+                              pinned=False, layers=2 if k + 1 < n else 1))
+        if n % 2:
+            notes.append(f"{p.name}: the last copy is cut through the top layer only.")
+    return items, single, notes
+
+
+def _pack_items(items, width, gap, margin):
+    """Pack cutting-layout items; tries several orders/strategies, the shortest wins."""
+    rings = [it["ring"] for it in items]
+    n = len(rings)
+    area = sorted(range(n), key=lambda i: (not items[i]["pinned"], -Polygon(rings[i]).area))
+
+    def longest(i):
+        pts = _oriented(rings[i], items[i]["angles"][0])
+        return (not items[i]["pinned"], -float(np.ptp(pts[:, 1])))
+    best = None
+    for order in (area, sorted(range(n), key=longest)):
+        for mode in ("bottom", "total", "blf"):
+            res = pack(rings, width, angles=[it["angles"] for it in items], gap=gap, res=5.0,
+                       mirrored=[it["mirrored"] for it in items], pinned=[it["pinned"] for it in items],
+                       margin=margin, order=order, mode=mode)
+            score = (len(res[1]), res[2])
+            if best is None or score < best[0]:
+                best = (score, res)
+    return best[1]
+
+
+def _plan_single(pattern, ids, width, gap):
+    items = _single_items(pattern, ids)
+    pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN)
+    note = None
+    if unplaced:
+        # piece longer than the fabric width (e.g. a hem band from tubular rib):
+        # compute the plan with the width needed and add a note.
+        need = max(float(np.ptp(_oriented(it["ring"], it["angles"][0])[:, 0])) for it in items) \
+            + 2 * FABRIC_MARGIN + gap + 15.0
+        note = (f"At least one piece is wider than {width / 10:.0f} cm: an open width ≥ "
+                f"{need / 10:.0f} cm is needed, or cut the piece in two with a cross seam.")
+        width = math.ceil(need / 50.0) * 50.0
+        pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN)
+        if unplaced:
+            raise ValueError(f"piece does not fit on {width / 10:.0f} cm fabric width")
+    return items, pls, used, width, note
+
+
+def _finish(items, pls, mode, width, length, notes, fold_length=0.0, single_section=False):
+    for p in pls:
+        p.copy = items[p.index]["meta"][1]
+        p.layers = items[p.index]["layers"]
+        p.pinned = items[p.index]["pinned"]
+    return dict(mode=mode, width=width, length=length, placements=pls,
+                rings=[it["ring"] for it in items], meta=[it["meta"] for it in items],
+                note=" ".join(n for n in notes if n) or None, fold_length=fold_length,
+                single_section=single_section)
+
+
+def plan_single(pattern, ids, width, gap=5.0):
+    items, pls, used, width, note = _plan_single(pattern, ids, width, gap)
+    return _finish(items, pls, "single", width, used + FABRIC_MARGIN, [note])
+
+
+def plan_folded(pattern, ids, width, gap=5.0):
+    """Folded layout; returns None if no piece can be cut double-layered."""
+    half = width / 2.0
+    items, single, notes = _folded_items(pattern, ids, half)
+    if not items:
+        return None
+    pls, unplaced, used = _pack_items(items, half - FABRIC_MARGIN, gap, 0.0)
+    for k in unplaced:
+        single.append(items[k]["meta"][0])
+    if unplaced:
+        keep = [k for k in range(len(items)) if k not in unplaced]
+        items = [items[k] for k in keep]
+        pls, unplaced, used = _pack_items(items, half - FABRIC_MARGIN, gap, 0.0)
+    fold_len = used + gap
+    if single:
+        single = sorted(set(single))
+        names = ", ".join(pattern.pieces[i].name for i in single)
+        notes.append(f"Unfold the rest of the fabric for: {names} (single layer, wider than the folded fabric).")
+        s_items, s_pls, s_used, s_width, s_note = _plan_single(pattern, single, width, gap)
+        notes.append(s_note)
+        off = len(items)
+        for p in s_pls:
+            p.index += off
+            p.dy += fold_len
+        items += s_items
+        pls += s_pls
+        width = max(width, s_width)
+        length = fold_len + s_used + FABRIC_MARGIN
+    else:
+        length = fold_len + FABRIC_MARGIN
+    return _finish(items, pls, "folded", width, length, notes, fold_length=fold_len,
+                   single_section=bool(single))
+
+
+def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0, mode: str = "auto"):
+    """Cutting layout per fabric, grainline lengthwise (parallel to the selvage).
+
+    mode: "single" (single layer, all copies), "folded" (double layer folded selvage to
+    selvage, fold pieces on the fold) or "auto" (both from a width of 130 cm, the shorter
+    one wins; ties go to folded).
+    Returns dict fabric → dict(mode, width, length, placements, rings, meta, note, fold_length)
+    """
+    if mode not in FABRIC_LAYOUTS:
+        raise ValueError(f"fabric layout must be one of {', '.join(FABRIC_LAYOUTS)}")
     fabric_widths = fabric_widths or {}
-    groups = {}
+    groups: dict = {}
     for i, p in enumerate(pattern.pieces):
-        fab = "Rib knit" if p.fabric.startswith("Rib knit") else (
-            "Lining" if "Lining" in p.fabric else "Main fabric")
-        groups.setdefault(fab, []).append(i)
+        groups.setdefault(fabric_group(p), []).append(i)
     plans = {}
     for fab, ids in groups.items():
         width = fabric_widths.get(fab, 700.0 if fab == "Rib knit" else 1500.0)
-        rings, meta, angles, mir = [], [], [], []
-        for i in ids:
-            p = pattern.pieces[i]
-            ring = unfolded_ring(p)
-            ga = grain_angle(p)
-            for k in range(p.cut_count):
-                m = bool(p.mirror and p.cut_count % 2 == 0 and k % 2 == 1)
-                rings.append(ring)
-                meta.append((i, k))
-                a = ga if not m else 180 - ga
-                angles.append([a % 360, (a + 180) % 360])
-                mir.append(m)
-        pls, unplaced, used = pack(rings, width, angles=angles, gap=gap, res=5.0, mirrored=mir,
-                                   margin=10.0)
-        note = None
-        if unplaced:
-            # piece longer than the fabric width (e.g. a hem band from tubular rib):
-            # compute the plan with the width needed and add a note.
-            need = max(float(np.ptp(np.asarray(r)[:, 0])) for r in rings) + 2 * 10.0 + gap
-            note = (f"At least one piece is wider than {width / 10:.0f} cm: an open width ≥ "
-                    f"{need / 10:.0f} cm is needed, or cut the piece in two with a cross seam.")
-            width = math.ceil(need / 50.0) * 50.0
-            pls, unplaced, used = pack(rings, width, angles=angles, gap=gap, res=5.0, mirrored=mir,
-                                       margin=10.0)
-            if unplaced:
-                raise ValueError(f"{fab}: piece does not fit on {width / 10:.0f} cm fabric width")
-        for p in pls:
-            pi, k = meta[p.index]
-            p.copy = k
-        plans[fab] = dict(width=width, length=used + 10.0, placements=pls, rings=rings, meta=meta, note=note)
+        try:
+            single = plan_single(pattern, ids, width, gap) if mode != "folded" else None
+        except ValueError as ex:
+            raise ValueError(f"{fab}: {ex}") from None
+        folded = None
+        if mode == "folded" or (mode == "auto" and width >= FOLDED_MIN_WIDTH):
+            folded = plan_folded(pattern, ids, width, gap)
+        if folded is None:
+            plan = single if single is not None else plan_single(pattern, ids, width, gap)
+        elif single is None or folded["length"] <= single["length"]:
+            plan = folded
+        else:
+            plan = single
+        if mode == "auto" and single is not None and folded is not None:
+            plan["alternative"] = dict(mode="single" if plan is folded else "folded",
+                                       length=(single if plan is folded else folded)["length"])
+        plans[fab] = plan
     return plans

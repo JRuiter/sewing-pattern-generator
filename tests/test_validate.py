@@ -332,3 +332,60 @@ def test_svg_master_is_1to1(harem_mod, tmp_path):
     R.render_svg(harem_mod, lay, str(p))
     head = p.read_text(encoding="utf-8")[:500]
     assert re.search(r'width="[\d.]+mm"', head) and "viewBox" in head
+
+
+# ---------------------------------------------------------------------------
+# Cutting layout on folded fabric (#3)
+# ---------------------------------------------------------------------------
+
+def _placed(plan, pl):
+    return L.placed_ring(plan["rings"][pl.index], pl)
+
+
+def test_folded_layout_not_longer_than_single(harem):
+    single = L.layout_fabric(harem, mode="single")["Main fabric"]
+    folded = L.layout_fabric(harem, mode="folded")["Main fabric"]
+    assert folded["mode"] == "folded"
+    assert folded["length"] <= single["length"]
+    auto = L.layout_fabric(harem, mode="auto")["Main fabric"]
+    assert auto["length"] == min(single["length"], folded["length"])
+
+
+@pytest.mark.parametrize("garment,opts", [("pants_basic", {"style": "harem", "fabric": "sweat"}),
+                                          ("tshirt_basic", {}), ("skirt", {"style": "circle"}),
+                                          ("hoodie", {})])
+def test_folded_layout_geometry(garment, opts):
+    pat = draft(garment, 122, **opts)
+    plans = L.layout_fabric(pat, mode="folded")
+    for plan in plans.values():
+        assert plan["mode"] == "folded"
+        counts = {}
+        for pl in plan["placements"]:
+            pi, _ = plan["meta"][pl.index]
+            piece = pat.pieces[pi]
+            counts[pi] = counts.get(pi, 0) + pl.layers
+            ring = _placed(plan, pl)
+            # grainline parallel to the selvage (vertical in the plan)
+            g = pl.apply(np.array(piece.grain))
+            assert abs(g[1, 0] - g[0, 0]) < 0.5, piece.name
+            in_fold = ring[:, 1].max() <= plan["fold_length"] + 1e-6
+            if in_fold:
+                assert ring[:, 0].min() >= -1e-6, piece.name
+                assert ring[:, 0].max() <= plan["width"] / 2 + 1e-6, piece.name
+            if pl.pinned:
+                fe = L._fold_edge(piece)
+                assert fe is not None
+                ep = pl.apply(fe.pts)
+                assert np.abs(ep[:, 0]).max() < 0.5, piece.name   # fold edge on the fabric fold
+        for pi, n in counts.items():
+            assert n == pat.pieces[pi].cut_count, pat.pieces[pi].name   # every copy is cut exactly once
+
+
+def test_single_layout_unchanged_for_narrow_fabric(harem):
+    plans = L.layout_fabric(harem, mode="auto")
+    assert plans["Rib knit"]["mode"] == "single"      # 70 cm rib knit is never folded
+
+
+def test_fabric_layout_option_rejected():
+    with pytest.raises(ValueError):
+        L.layout_fabric(draft("loop", 122), mode="diagonal")

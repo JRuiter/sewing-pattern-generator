@@ -77,5 +77,14 @@ Apply to every output of `scripts/render.py`. Checked automatically by
 - `body_measurements.smis` (with `--export-measures`): the body measurements used, as an
   XML measurement file that pattern CAD programs can open; can be read back with
   `--measures-file`.
-- `cutting_layout.png`: position of the pieces on the fabric (single layer, grainline
-  parallel to the selvage, all copies, mirrored pieces flipped) with fabric consumption.
+- `cutting_layout.png`: position of the pieces on the fabric (grainline parallel to the
+  selvage) with fabric consumption. Layout modes (`--fabric-layout`, spec `fabric_layout`):
+  - `single`: single layer, every copy placed separately, cut-on-fold pieces unfolded,
+    mirrored copies flipped.
+  - `folded`: fabric folded selvage to selvage (half width, double layer). Cut-on-fold pieces
+    lie with their fold edge on the fabric fold; every other placement cuts a mirrored pair
+    through both layers ("×2"). Pieces wider than the folded fabric go to a single-layer
+    section after the folded part (noted in the instructions).
+  - `auto` (default): from a fabric width of 130 cm both are computed and the shorter one is
+    used (ties go to folded); narrower fabric (e.g. rib knit) is always single layer. The
+    instructions name the mode and the length the other one would need.

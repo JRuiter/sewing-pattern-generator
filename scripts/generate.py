@@ -12,7 +12,8 @@ Spec JSON (all fields optional except garment and size/measures):
    "options": {"style": "harem", "fabric": "sweat"},
    "formats": ["roll610", "a4"], "out": "out/harem122",
    "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700},
-   "measures_file": "lena.smis", "export_measures": true}
+   "measures_file": "lena.smis", "export_measures": true,
+   "fabric_layout": "auto"}   # auto | folded | single (cutting layout on the fabric)
 
 Formats: roll610 (any roll width), a4, letter, a1, a0, dxf (AAMA layers, seam line on
 layer 8), dxf14 (same, seam line on layer 14).
@@ -177,7 +178,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
         p = os.path.join(out, "body_measurements.smis")
         MF.write_file(p, pat.measures, notes=f"{pat.title}, {pat.size_label}")
         files["Body measurements (XML measurement file)"] = p
-    plans = I.fabric_consumption(pat, spec.get("fabric_widths_mm"))
+    plans = I.fabric_consumption(pat, spec.get("fabric_widths_mm"), spec.get("fabric_layout", "auto"))
     zp = os.path.join(out, "cutting_layout.png")
     I.render_fabric_png(pat, plans, zp)
     files["Cutting layout"] = zp
@@ -194,7 +195,8 @@ def run(spec: dict, verbose: bool = True) -> dict:
     js = os.path.join(out, "pattern.json")
     data = pat.summary()
     data["validation"] = V.to_rows(report)
-    data["fabric_mm"] = {k: {"width": v["width"], "need": v["need_mm"]} for k, v in plans.items()}
+    data["fabric_mm"] = {k: {"width": v["width"], "need": v["need_mm"], "layout": v["mode"]}
+                         for k, v in plans.items()}
     with open(js, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, default=str)
     files["Pattern data (JSON)"] = js
@@ -226,6 +228,8 @@ def main(argv=None):
     ap.add_argument("--construction", help='override construction values in mm as JSON, e.g. \'{"rise": 250}\'')
     ap.add_argument("--format", default="roll610,a4",
                     help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14 (comma-separated)")
+    ap.add_argument("--fabric-layout", choices=L.FABRIC_LAYOUTS,
+                    help="cutting layout: folded (double layer), single or auto (shorter one; default)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     if a.spec:
@@ -249,6 +253,8 @@ def main(argv=None):
                     measures_cm=json.loads(a.measures) if a.measures else None,
                     formats=[x.strip() for x in a.format.split(",")],
                     measures_file=a.measures_file, export_measures=a.export_measures)
+    if a.fabric_layout:
+        spec["fabric_layout"] = a.fabric_layout
     res = run(spec)
     return 0 if res["ok"] else 2
 
