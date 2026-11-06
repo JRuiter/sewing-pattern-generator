@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import os
 
+import allowance as A
 import ease as E
 import layout as L
 import measurements as M
@@ -162,7 +163,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
               "\"flipped\" = place the piece face down, \"×2\" = cut through both layers of the folded "
               "fabric, which gives a mirrored pair).", "",
               "## Sewing instructions", "",
-              "Seam allowance is included in the pattern (see table). "
+              ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
+               "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")
               + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]
     for i, s in enumerate(["**Prepare:** pre-wash the fabric, cut out the pieces, snip the notches "
                            "3–4 mm deep."] + sewing_steps(pattern), 1):

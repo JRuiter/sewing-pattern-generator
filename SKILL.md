@@ -37,6 +37,8 @@ Ask for the missing points together in one short message, each with a default
 - Fabric (woven / jersey / jersey with elastane / interlock / sweat / fleece) and stretch in %
 - Fit (slim / normal / wide / oversized; for pants also harem)
 - Output: roll (width in mm, default 610), A0, A1, A4 or US Letter to tape together
+- Seam allowance only if it matters to them (default 1 cm, hems 2–2.5 cm; e.g. 0.75 cm for
+  the overlocker, 1.5 cm for woven, or "none" to trace and add their own)
 
 Do not ask again afterwards; resolve anything unclear with a sensible default and say
 so in the result.
@@ -110,6 +112,12 @@ Modules and main options:
 
 Fabrics: woven, jersey, jersey_elastane, interlock, sweat, fleece, rib.
 Fits: slim, normal, wide, oversized, harem.
+
+Seam allowance (all modules): `--seam-allowance 7.5` (mm, all seams), `--hem-allowance 30`
+(turned-up hems), `--seam-allowance none` (pattern without allowances: only the seam line is
+drawn and every piece lists what to add). Spec options: `seam_allowance_mm`,
+`hem_allowance_mm`, `seam_allowance: "none"`. Fold edges stay at 0; casings, facings and the
+narrow circle-skirt hem keep their construction allowance.
 
 Formats: `rollNNN` (page width = roll − 10 mm, portrait; pieces wider than the roll are
 split automatically into strips with glue marks), `a0`, `a1` (pieces whole, oversized

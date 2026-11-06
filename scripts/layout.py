@@ -356,7 +356,7 @@ def grain_angle(piece) -> float:
 
 def unfolded_ring(piece, keep=None):
     """Outline for cutting: fold edges are unfolded (mirrored), except the edge `keep`."""
-    ring = piece.cut_ring()
+    ring = piece.fabric_ring()
     folds = [e for e in piece.edges if e.fold and e.name != keep]
     if not folds:
         return ring
@@ -444,7 +444,7 @@ def _folded_items(pattern, ids, half):
             for k in range(p.cut_count):
                 items.append(dict(ring=ring, meta=(i, k), angles=[a], mirrored=False, pinned=True, layers=1))
             continue
-        ring = p.cut_ring()
+        ring = p.fabric_ring()
         ga = grain_angle(p)
         w = min(float(np.ptp(_oriented(ring, ga)[:, 0])), float(np.ptp(_oriented(ring, ga + 180)[:, 0])))
         if w > avail - 5.0:

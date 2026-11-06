@@ -24,6 +24,7 @@ class Edge:
     fold: bool = False          # cut on the fold
     label: str = ""             # e.g. "Hem", "Side seam"
     turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
+    sa_hint: float = 0.0        # pattern without allowances: the allowance to add when cutting
 
     @property
     def length(self) -> float:
@@ -80,6 +81,14 @@ class Piece:
         return G.offset_outline([e.pts for e in self.edges], [e.sa for e in self.edges],
                                 [e.turned for e in self.edges])
 
+    def fabric_ring(self) -> np.ndarray:
+        """Outline to cut from the fabric: like cut_ring, but a pattern without seam
+        allowance gets the allowances to add (sa_hint), so fabric consumption stays right."""
+        if any(e.sa > 0 for e in self.edges) or not any(e.sa_hint > 0 for e in self.edges):
+            return self.cut_ring()
+        return G.offset_outline([e.pts for e in self.edges], [e.sa_hint for e in self.edges],
+                                [e.turned for e in self.edges])
+
     @property
     def on_fold(self) -> bool:
         return any(e.fold for e in self.edges)
@@ -107,21 +116,33 @@ class Piece:
         return f"cut {self.cut_count}"
 
     def sa_text(self) -> str:
-        vals = {}
-        for e in self.edges:
-            if e.fold:
-                continue
-            vals.setdefault(round(e.sa), []).append(e.label or e.name)
+        def cm(v):
+            t = f"{v / 10:.2f}"
+            return t[:-1] if t.endswith("0") else t
+
+        def grouped(attr):
+            vals: dict = {}
+            for e in self.edges:
+                if not e.fold:
+                    vals.setdefault(round(getattr(e, attr) * 2) / 2, []).append(e.label or e.name)
+            return vals
+
+        def describe(vals):
+            common = max(vals, key=lambda k: len(vals[k]))
+            rest = [f"{', '.join(sorted(set(names)))}: {cm(k)} cm" for k, names in vals.items() if k != common]
+            return common, rest
+
+        vals = grouped("sa")
         if not vals:
             return "no seam allowance"
-        common = max(vals, key=lambda k: len(vals[k]))
-        def cm(v):
-            return f"{v / 10:.1f}"
-        parts = [f"seam allowance {cm(common)} cm included"]
-        for k, names in vals.items():
-            if k != common:
-                parts.append(f"{', '.join(sorted(set(names)))}: {cm(k)} cm")
-        return "; ".join(parts)
+        if all(k == 0 for k in vals):
+            hints = {k: v for k, v in grouped("sa_hint").items() if k > 0}
+            if not hints:
+                return "NO seam allowance included"
+            common, rest = describe(hints)
+            return "; ".join([f"NO seam allowance included: add {cm(common)} cm"] + rest)
+        common, rest = describe(vals)
+        return "; ".join([f"seam allowance {cm(common)} cm included"] + rest)
 
     def transformed(self, fn) -> Piece:
         """Copy with all points transformed by fn."""
