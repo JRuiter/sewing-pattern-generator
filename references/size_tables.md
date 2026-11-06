@@ -156,3 +156,32 @@ Sources for the ranges (body measurements, not garment measurements):
   to 1/8 yd**, fabric width in inches.
 - Pattern files stay 1:1 (mm internally); every print has both the 5 × 5 cm and the 1 inch
   control square. The validation report stays metric.
+
+## Saved measurement profiles (`--profile lena`)
+
+For people you sew for again and again (children who grow, partner, yourself), measurements
+can be saved once as `profiles/<name>.json` (directory `--profiles-dir`, environment variable
+`SEWING_PROFILES`, default `./profiles`) with `scripts/profiles.py`:
+
+```json
+{"name": "lena", "kind": "child", "measured": "2026-11-06",
+ "measures_cm": {"height": 121, "chest": 61, "waist": 55, "hip": 64, "inseam": 53},
+ "fit": "normal", "default_format": "roll610",
+ "history": [{"measured": "2026-05-02", "measures_cm": {"height": 116, "hip": 62}}]}
+```
+
+| Field | Meaning |
+|---|---|
+| `name` | file name / display name |
+| `kind` | `child` or `adult` (without it: child if height < 160 cm) |
+| `measured` | date the measurements were taken (ISO) |
+| `measures_cm` | body measurements in cm, same names as `--measures` (German names accepted) |
+| `fit`, `default_format` | used when the request does not name a fit / output format |
+| `history` | earlier entries, written automatically by `profiles.py save` |
+
+Precedence: **size table < profile < measurement file (`--measures-file`) < measurements
+given in the request** (`--measures`, `measures_cm`, `measures_in`). The measurement table
+in the instructions marks profile values with the source `profile`. Children's profiles
+older than **6 months** produce a warning (please measure again). `profiles.py show <name>`
+prints the growth since the previous entry and the next kids' size; `profiles.py export
+<name> file.smis` writes the profile as an XML measurement file.

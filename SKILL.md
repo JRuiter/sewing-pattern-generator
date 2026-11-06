@@ -43,6 +43,12 @@ Ask for the missing points together in one short message, each with a default
 Do not ask again afterwards; resolve anything unclear with a sensible default and say
 so in the result.
 
+**Measurement profiles:** when the user gives body measurements for a person, offer once to
+save them (`python scripts/profiles.py save lena --measures '{…}' --kind child`). Later
+requests such as "trousers for Lena" then need no measurement questions:
+`generate.py --profile lena …` (warns if a child's measurements are older than 6 months;
+see `references/size_tables.md`).
+
 ### 3. Photos (optional)
 First decide which mode applies (details: `references/photo_guide.md`):
 
