@@ -67,8 +67,8 @@ VALUE_LABELS = {"side": "side pockets", "slant": "slanted side pockets",
 UNSUPPORTED = {
     "dress": "Dresses are not a module (yet). Alternative: the T-shirt module lengthened (length "
              "\"tunic\") or a top + skirt.",
-    "jacket": "Jackets with lining/zip are not covered. Alternative: hoodie (an open front with a zip "
-              "is not possible) or sweatshirt.",
+    "jacket": "Lined or woven jackets are not covered. Mapped to a zip-up sweat jacket (hoodie module, "
+              "front: zip) instead.",
     "blouse": "Blouses with button placket/collar are not covered. Alternative: T-shirt in woven fabric "
               "with more ease.",
     "shirt": "Shirts are not covered. Alternative: the T-shirt module.",
@@ -141,6 +141,9 @@ def confirmation_text(features: dict) -> str:
     return text
 
 
+ZIP_KINDS = ("hoodie", "sweatshirt", "sweater", "jacket")
+
+
 def map_to_module(features: dict) -> dict:
     """Features → (module, options, not covered + alternatives)."""
     f = normalize(features)
@@ -150,6 +153,8 @@ def map_to_module(features: dict) -> dict:
         if k in ("proportions", "notes"):
             continue
         for x in (v["value"] if isinstance(v["value"], list) else [v["value"]]):
+            if x == "zipper" and kind in ZIP_KINDS:
+                continue                      # zip-up hoodie / sweat jacket is covered
             if x in UNSUPPORTED:
                 issues.append(UNSUPPORTED[x])
     sil = _val(f, "silhouette", "straight")
@@ -216,6 +221,8 @@ def map_to_module(features: dict) -> dict:
         t = t if isinstance(t, list) else [t]
         opts["kangaroo"] = "kangaroo" in t
         opts["sleeve_style"] = "raglan" if _val(f, "sleeve") == "raglan" else "set_in"
+        if kind == "jacket" or _val(f, "closure") == "zipper":
+            opts["front"] = "zip"
     elif kind == "skirt":
         module = "skirt"
         opts["style"] = {"a-line": "a_line", "circle_skirt": "circle", "wide": "gathered",

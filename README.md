@@ -52,7 +52,7 @@ erstellen", "Lieblingshose kopieren" …).
 |---|---|
 | `pants_basic` | jogger, harem pants, leggings, woven pull-on trousers; lengths, waistbands (elastic casing, rib, yoga, tunnel), cuffs, slant/side/back/cargo pockets, tapered/bootcut/flared legs, shorts with turn-up |
 | `tshirt_basic` | set-in or raglan sleeve; short/¾/long; round or V neck; neck band, cuffs, hem band |
-| `hoodie` | hood (optionally lined), kangaroo pocket, set-in or raglan |
+| `hoodie` | hood (optionally lined), kangaroo pocket, set-in or raglan, zip-up jacket variant |
 | `skirt` | gathered, A-line, circle skirt with elastic waistband |
 | `beanie`, `loop` | beanie with brim/slouch, single or double loop scarf |
 
