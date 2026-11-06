@@ -611,3 +611,51 @@ def test_shorts_with_turn_up(size):
     assert pat.piece("front").edge("hem").sa == pytest.approx(plain.piece("front").edge("hem").sa + 60)
     assert any(mk.label == "Turn-up fold" for mk in pat.piece("back").marks)
     assert "turn-up" in " ".join(get("pants_basic").sewing_steps(pat)).lower()
+
+
+# ---------------------------------------------------------------------------
+# Zip-up hoodie (#6)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("opts", [{"front": "zip"}, {"front": "zip", "hood": False},
+                                  {"front": "zip", "sleeve_style": "raglan", "hood_lining": True}])
+@pytest.mark.parametrize("size", [98, 140, "w38", "m52"])
+def test_zip_hoodie(opts, size):
+    pat = draft("hoodie", size, **opts)
+    report = V.validate(pat)
+    assert not [(c.name, c.actual) for c in report if c.status == "ERROR"]
+    st = statuses(report)
+    assert st["Zip: left ↔ right front edge"] == "OK"
+    assert st["Zip length fits the front opening"] == "OK"
+    front = pat.piece("front")
+    assert not front.on_fold and front.cut_count == 2 and front.mirror
+    assert front.edge("center").sa > 0
+    zl = pat.options["_zip_len"]
+    assert zl / 10 in get("hoodie").ZIP_LENGTHS
+    assert zl <= pat.finished["zip_opening"]
+    assert any(f"zip, {zl / 10:.0f} cm" in n for n in pat.notes)          # bill of materials
+    if pat.has("kangaroo_pocket"):
+        assert not pat.piece("kangaroo_pocket").on_fold and pat.piece("kangaroo_pocket").cut_count == 2
+    if pat.has("hem_band"):
+        assert pat.piece("hem_band").edge("right").label == "Front end (zip)"
+    if pat.has("neckband"):
+        assert pat.piece("neckband").edge("right").label == "Front end (zip)"
+    assert pat.has("zip_guard")
+    steps = " ".join(get("hoodie").sewing_steps(pat))
+    assert "**Zip:**" in steps
+    for step in get("hoodie").sewing_steps(pat):
+        if step.startswith(("**Hem band", "**Neckband")):
+            assert "into a ring" not in step
+
+
+def test_closed_hoodie_unchanged():
+    pat = draft("hoodie", 122)
+    assert pat.piece("front").on_fold and not pat.has("zip_guard")
+
+
+def test_mode_a_zip_jacket():
+    import photo_analyze as A
+    m = A.map_to_module({"garment_type": {"value": "hoodie", "confidence": 0.9},
+                         "closure": {"value": "zipper", "confidence": 0.8}})
+    assert m["module"] == "hoodie" and m["options"]["front"] == "zip"
+    assert not m["not_covered"]

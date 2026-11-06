@@ -1,6 +1,10 @@
 """Hoodie / sweatshirt: T-shirt block (sweat, wide, long sleeves with cuffs, hem band)
 + hood (two mirrored pieces) and an optional kangaroo pocket.
-Without the hood you get a sweatshirt with a neckband."""
+Without the hood you get a sweatshirt with a neckband.
+
+`front="zip"` makes a zip-up jacket: the front is split at centre front (seam allowance for
+a separating zip, no overlap), the kangaroo pocket becomes two side pockets, hem band and
+neckband end at the zip, and an optional zip guard (facing strip) covers the zip inside."""
 from __future__ import annotations
 
 import numpy as np
@@ -11,9 +15,14 @@ from pattern import Edge, Mark, Pattern, Piece
 from . import tshirt_basic as T
 
 DEFAULTS = dict(fit="wide", fabric="sweat", hood=True, kangaroo=True, sleeve_style="set_in",
-                sleeve_length="long", sleeve_cuffs=True, hem_band=True, hood_lining=False)
+                sleeve_length="long", sleeve_cuffs=True, hem_band=True, hood_lining=False,
+                front="closed", zip_guard=True, zip_sa=None)
 
-FINISHED_LABELS = dict(T.FINISHED_LABELS, hood_height=("Hood height", "length"))
+# standard lengths of separating (jacket) zips in cm
+ZIP_LENGTHS = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
+
+FINISHED_LABELS = dict(T.FINISHED_LABELS, hood_height=("Hood height", "length"),
+                       zip_opening=("Front opening (zip)", "length"), zip_length=("Zip length", "length"))
 
 
 def draft(measures: dict, options: dict | None = None) -> Pattern:
@@ -22,13 +31,17 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     hood = bool(o.pop("hood"))
     kang = bool(o.pop("kangaroo"))
     lining = bool(o.pop("hood_lining"))
+    zip_front = o.pop("front") == "zip"
+    zip_guard = bool(o.pop("zip_guard"))
+    zip_sa = o.pop("zip_sa")
     if hood:
         o.setdefault("neck_extra", 8.0)
         o["neckline"] = "round"
     pat = T.draft(measures, o, _garment="hoodie")
     m = measures
     pat.title = "Hoodie" if hood else "Sweatshirt"
-    pat.options.update(hood=hood, kangaroo=kang, hood_lining=lining)
+    pat.options.update(hood=hood, kangaroo=kang, hood_lining=lining, front="zip" if zip_front else "closed",
+                       zip_guard=zip_guard and zip_front)
     sa = pat.options["sa"]
     front = pat.piece("front")
     if hood:
@@ -94,11 +107,64 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         ]
         kp = Piece("kangaroo_pocket", "Kangaroo pocket", edges, cut_count=1, mirror=False, fabric="Main fabric",
                    grain=(G.P(Wk * 0.35, Hk * 0.2), G.P(Wk * 0.35, Hk * 0.8)))
+        if zip_front:
+            # two side pockets: split at centre front
+            ce = kp.edge("center")
+            ce.fold, ce.sa, ce.label = False, sa, "Front edge (towards the zip)"
+            kp.cut_count, kp.mirror, kp.name = 2, True, "Front pocket"
         pat.pieces.append(kp)
         y0 = hem_y
         front.marks.append(Mark(np.array([[0, y0 + Hk], [Wk - op * 0.45, y0 + Hk], [Wk, y0 + Hk - op],
                                           [Wk, y0]]), "placement", "Kangaroo pocket"))
+    if zip_front:
+        _zip_front(pat, sa if zip_sa is None else float(zip_sa), zip_guard, hood, m)
     return pat
+
+
+def _zip_front(pat, zsa, guard, hood, m):
+    """Split the front at centre front for a separating zip."""
+    from pattern import rect_piece
+    front = pat.piece("front")
+    ce = front.edge("center")
+    ce.fold, ce.sa, ce.label = False, zsa, "Centre front (zip)"
+    front.cut_count, front.mirror = 2, True
+    front.name = "Front (left and right)"
+    hb_h = pat.options.get("_hem_band_h", 0.0) if pat.has("hem_band") else 0.0
+    nb_h = 0.0
+    if pat.has("hem_band"):
+        hb = pat.piece("hem_band")
+        hb.edge("right").label = "Front end (zip)"
+        hb.info.append("ends at the zip: not sewn into a ring")
+    if pat.has("neckband"):
+        nb = pat.piece("neckband")
+        nb.edge("right").label = nb.edge("left").label = "Front end (zip)"
+        nb.info.append("from zip to zip: not sewn into a ring")
+        nb_h = pat.options.get("_nb_h", 0.0)
+    cf_len = ce.length + hb_h + nb_h
+    fits = [z * 10.0 for z in ZIP_LENGTHS if z * 10.0 <= cf_len - 5.0]
+    zip_len = fits[-1] if fits else ZIP_LENGTHS[0] * 10.0
+    pat.options["_zip_len"] = zip_len
+    pat.finished["zip_opening"] = cf_len
+    pat.finished["zip_length"] = zip_len
+    if guard:
+        gw = 30.0 if m["height"] > 1650 else 25.0
+        zg = rect_piece("zip_guard", "Zip guard", 2 * gw, cf_len, sa=pat.options["sa"], cut_count=1,
+                        names=("bottom", "right", "top", "left"),
+                        labels=("Bottom end", "Raw edges (into the zip seam)", "Top end", "Raw edges"))
+        import geometry as G
+        from pattern import Mark
+        zg.marks.append(Mark(G.line(G.P(gw, 0), G.P(gw, cf_len)), "fold", "Fold line"))
+        zg.info.append("left front only (covers the zip inside)")
+        pat.pieces.append(zg)
+    pat.seams.append(dict(name="Zip: left ↔ right front edge", a=[("front", "center", 1)],
+                          b=[("front", "center", 1)], type="equal"))
+    pat.checks.append(dict(name="Zip length fits the front opening", kind="range", value=zip_len,
+                           lo=cf_len - 65.0, hi=cf_len,
+                           note=f"front opening {cf_len / 10:.1f} cm, standard zip rounded down"))
+    pat.notes.append(f"Separating (jacket) zip, {zip_len / 10:.0f} cm long (front opening "
+                     f"{cf_len / 10:.1f} cm" + (" incl. hem band" if hb_h else "") + ").")
+    if hood:
+        pat.notes.append("The hood front edges end exactly at the zip (no overlap at centre front).")
 
 
 def finished_measures(pat):
@@ -108,7 +174,13 @@ def finished_measures(pat):
 def sewing_steps(pat):
     o = pat.options
     steps = []
-    if o.get("kangaroo"):
+    zipped = o.get("front") == "zip"
+    if o.get("kangaroo") and zipped:
+        steps.append("**Front pockets:** press the openings under by 1.5 cm and topstitch, press the top edge "
+                     "under by 1 cm. Place each pocket on its front at the marking, front edge on the centre "
+                     "front edge, and stitch the top edge and side; bottom and front edge are caught in the "
+                     "hem band and zip seams.")
+    elif o.get("kangaroo"):
         steps.append("**Kangaroo pocket:** press the openings under by 1.5 cm and topstitch, press the top edge "
                      "under by 1 cm. Place the pocket on the front at the marking and stitch the top edge and sides; "
                      "the bottom edge is caught later with the hem band.")
@@ -123,4 +195,22 @@ def sewing_steps(pat):
                 "back, front edges meet at centre front, overlap by 1 cm if needed) and sew. Finish the seam "
                 "allowance with jersey binding."]
         base = base[:1] + hood + base[1:]
+    if zipped:
+        def open_band(x):
+            if x.startswith("**Hem band"):
+                return x.replace("sew into a ring, fold,", "leave the ends open, fold lengthwise,")
+            if x.startswith("**Neckband"):
+                return x.replace("sew it into a ring across the short ends and fold it", "fold it")
+            if x.startswith("**Attach the hood"):
+                return x.replace("front edges meet at centre front, overlap by 1 cm if needed",
+                                 "front edges end exactly at the centre front edges")
+            return x
+        base = [open_band(x) for x in base]
+        zip_step = (f"**Zip:** separate the {o['_zip_len'] / 10:.0f} cm zip. Pin each half right sides together "
+                    "to a centre front edge, teeth towards the body, top stop just below the neck seam and "
+                    "the bottom end flush with the hem band edge, and sew with a zipper foot. "
+                    + ("Fold the zip guard lengthwise, lay it on the inside of the left front over the zip "
+                       "tape and catch it in the same seam. " if o.get("zip_guard") else "")
+                    + "Press the seam allowances away from the zip and topstitch 7 mm from the edge.")
+        base = base[:-1] + [zip_step] + base[-1:]
     return steps + base

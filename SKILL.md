@@ -107,7 +107,7 @@ Modules and main options:
 |---|---|
 | `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side], [slant], [back_patch], [cargo]) · leg_shape (straight, tapered, bootcut, flare + flare_cm; long legs without cuffs) · turn_up (cm, shorts/knee length) |
 | `tshirt_basic` | fit · fabric · sleeve_style (set_in, raglan) · sleeve_length (short, 3/4, long) · neckline (round, v) · length (normal, tunic) · sleeve_cuffs · hem_band |
-| `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) |
+| `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) · front (closed, zip: zip-up jacket with split front, side pockets, zip guard, zip length in the notes) · zip_guard |
 | `skirt` | style: gathered, a_line, circle · length (mini, knee, midi, maxi) · gather · flare_deg |
 | `beanie` | brim, slouch |
 | `loop` | wraps (1 = single, 2 = worn doubled), height |
@@ -165,7 +165,7 @@ present. Fix anything odd or tell the user openly.
   proportions. Exact measurements only with mode B (scale in the picture) or a tape
   measure.
 - The back and hidden details are asked about, never invented.
-- Not covered (offer the alternative): dresses, jackets with zip/lining, shirts/blouses
+- Not covered (offer the alternative): dresses, lined/woven jackets, shirts/blouses
   with collar and button placket, jeans with a fly, cargo/welt pockets, style lines,
   flared legs.
 - Grading uses grading rules per size step (`reverse/store.py`), never linear scaling.
