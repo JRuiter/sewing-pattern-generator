@@ -28,6 +28,10 @@ CASES = [
     ("skirt", {"style": "gathered"}),
     ("skirt", {"style": "a_line"}),
     ("skirt", {"style": "circle"}),
+    ("dress", {}),
+    ("dress", {"skirt": "a_line", "pockets": True, "fabric": "woven"}),
+    ("dress", {"skirt": "circle", "sleeve_length": "long"}),
+    ("dress", {"style": "shirt_dress"}),
     ("beanie", {}),
     ("loop", {}),
 ]
@@ -658,4 +662,52 @@ def test_mode_a_zip_jacket():
     m = A.map_to_module({"garment_type": {"value": "hoodie", "confidence": 0.9},
                          "closure": {"value": "zipper", "confidence": 0.8}})
     assert m["module"] == "hoodie" and m["options"]["front"] == "zip"
+    assert not m["not_covered"]
+
+
+
+# ---------------------------------------------------------------------------
+# Dress (#5)
+# ---------------------------------------------------------------------------
+
+def test_dress_waist_seam_cli(tmp_path):
+    import generate as GN
+    rc = GN.main(["--garment", "dress", "--style", "waist_seam", "--size", "116", "--format", "a4",
+                  "--out", str(tmp_path)])
+    assert rc == 0
+    md = (tmp_path / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "**Waist seam:**" in md and "Gather the skirt" in md
+
+
+@pytest.mark.parametrize("skirt", ["a_line", "circle"])
+def test_dress_waist_seam_matches(skirt):
+    pat = draft("dress", 122, skirt=skirt)
+    a = pat.edge_len("front.hem") * 2 + pat.edge_len("back.hem") * 2
+    b = pat.edge_len("skirt_front.waistband") * 2 + pat.edge_len("skirt_back.waistband") * 2
+    assert abs(a - b) < 1.0
+
+
+@pytest.mark.parametrize("gather,ok", [(1.0, True), (1.6, True), (2.5, True), (0.8, False), (3.0, False)])
+def test_dress_gather_ratio_range(gather, ok):
+    pat = draft("dress", 122, gather=gather)
+    st = statuses(V.check_seams(pat))
+    assert (st["Waist seam bodice ↔ skirt (gathered)"] == "OK") == ok
+
+
+def test_shirt_dress_flare_and_hip():
+    pat = draft("dress", "w38", style="shirt_dress", flare_cm=40)
+    assert pat.finished["hem_circ"] == pytest.approx(pat.finished["chest_circ"] + 400, rel=0.03)
+    st = statuses(V.validate(pat))
+    assert st["Dress fits over the hip"] == "OK" and st["Hem ↔ side seam front"] == "OK"
+
+
+def test_dress_pockets_and_photo_mapping():
+    import photo_analyze as A
+    pat = draft("dress", 140, pockets=True)
+    assert pat.has("pocket_bag") and pat.piece("pocket_bag").cut_count == 4
+    assert len([n for n in pat.piece("skirt_front").notches if n.edge == "side"]) == 2
+    m = A.map_to_module({"garment_type": {"value": "dress", "confidence": 0.9},
+                         "silhouette": {"value": "a-line", "confidence": 0.7},
+                         "waist_seam": {"value": "no", "confidence": 0.7}})
+    assert m["module"] == "dress" and m["options"]["style"] == "shirt_dress"
     assert not m["not_covered"]

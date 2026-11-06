@@ -141,6 +141,22 @@ a right angle (casing/facing 25 mm). Kangaroo pocket: 0.62 × q wide, slanted op
   `r + skirt length`. Pieces wider than the roll are tiled into strips.
 - Lengths: mini, knee (side length − 0.285 × BH), midi, maxi.
 
+## 5a. Dress (`dress`)
+
+- **waist_seam:** the T-shirt bodice (all its rules) with body length = back length + 1 cm;
+  its hem becomes the waist seam (seam allowance, not turned). The skirt comes from the
+  skirt module with skirt length (waist → hem, as for skirts), without waistband; its top
+  edge is solved iteratively so that it equals the bodice waist (A-line, circle) or the
+  bodice waist × `gather` (gathered). Validation: waist seam bodice ↔ skirt equal, or as a
+  ratio with the gather ratio limited to **1.0–2.5** (error outside); the waist seam incl.
+  usable stretch must pass over the chest (pull-on dress). Optional elastic (0.95 × waist)
+  in the waist seam, optional in-seam pockets (bag cut 4, opening 14 cm × k starting
+  3 cm × k below the waist, marked with notches on the skirt side seams).
+- **shirt_dress:** T-shirt lengthened to back length + skirt length; side seam curved from
+  the underarm to the hem with an extra hem width of `flare_cm` (default ≥ 25 % of the
+  chest width and ≥ 1.25 × hip with ease); the hem is curved (lower at the centre) so it
+  meets the side seam at 90°. Check: width at hip level ≥ hip + 4 %.
+
 ## 6. Beanie (`beanie`) and loop scarf (`loop`)
 
 - **Beanie:** width = head × 0.86 (knit with ≥ 30 % stretch, otherwise × 0.98),

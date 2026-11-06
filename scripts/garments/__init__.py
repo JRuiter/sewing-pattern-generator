@@ -7,6 +7,7 @@ GARMENTS = {
     "tshirt_basic": "T-shirt / long sleeve (set-in or raglan sleeve)",
     "hoodie": "Hoodie / sweatshirt",
     "skirt": "Skirt (elastic waist: gathered, A-line, circle)",
+    "dress": "Dress (T-shirt bodice + skirt, or A-line T-shirt dress)",
     "beanie": "Beanie",
     "loop": "Loop scarf",
 }

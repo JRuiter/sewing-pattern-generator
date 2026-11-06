@@ -45,6 +45,7 @@ SCHEMA = {
     "hem": ["rib", "hemmed"],
     "closure": ["none", "button_placket", "zipper", "snaps"],
     "hood": ["yes", "no"],
+    "waist_seam": ["yes", "no"],
     "fabric": ["jersey", "jersey_elastane", "sweat", "fleece", "interlock", "woven", "knit"],
     "style_lines": ["none", "yoke", "vertical_seams", "horizontal_seams"],
 }
@@ -53,7 +54,7 @@ LABELS = {
     "garment_type": "Garment type", "silhouette": "Silhouette", "length": "Length", "pockets": "Pockets",
     "waistband": "Waistband", "leg_finish": "Leg finish", "neckline": "Neckline", "sleeve": "Sleeve type",
     "sleeve_length": "Sleeve length", "sleeve_finish": "Sleeve finish", "hem": "Hem",
-    "closure": "Closure", "hood": "Hood", "fabric": "Likely fabric",
+    "closure": "Closure", "hood": "Hood", "waist_seam": "Waist seam", "fabric": "Likely fabric",
     "style_lines": "Style lines",
 }
 
@@ -65,8 +66,6 @@ VALUE_LABELS = {"side": "side pockets", "slant": "slanted side pockets",
                 "button + zip", "dropped": "dropped shoulder"}
 
 UNSUPPORTED = {
-    "dress": "Dresses are not a module (yet). Alternative: the T-shirt module lengthened (length "
-             "\"tunic\") or a top + skirt.",
     "jacket": "Lined or woven jackets are not covered. Mapped to a zip-up sweat jacket (hoodie module, "
               "front: zip) instead.",
     "blouse": "Blouses with button placket/collar are not covered. Alternative: T-shirt in woven fabric "
@@ -199,14 +198,33 @@ def map_to_module(features: dict) -> dict:
             lg = lg or "short"
         if lg in ("long", "7/8", "knee", "short"):
             opts["length"] = lg
-    elif kind in ("tshirt", "longsleeve", "body", "dress", "blouse", "shirt"):
+    elif kind == "dress":
+        module = "dress"
+        has_waist = _val(f, "waist_seam", "yes") == "yes"
+        sil_d = sil
+        if sil_d in ("a-line", "flared") and not has_waist:
+            opts["style"] = "shirt_dress"
+        else:
+            opts["style"] = "waist_seam"
+            opts["skirt"] = {"a-line": "a_line", "circle_skirt": "circle"}.get(sil_d, "gathered")
+        opts["fit"] = fit if fit != "harem" else "normal"
+        opts["sleeve_style"] = "raglan" if _val(f, "sleeve") == "raglan" else "set_in"
+        al = _val(f, "sleeve_length", "short")
+        opts["sleeve_length"] = {"short": "short", "long": "long", "3/4": "3/4", "none": "short"}[al]
+        opts["neckline"] = "v" if _val(f, "neckline") == "v" else "round"
+        lg = _val(f, "length", "knee")
+        opts["length"] = {"mini": "mini", "knee": "knee", "midi": "midi", "maxi": "maxi", "short": "mini",
+                          "long": "maxi"}.get(lg, "knee")
+        t = _val(f, "pockets", [])
+        opts["pockets"] = "side" in (t if isinstance(t, list) else [t])
+    elif kind in ("tshirt", "longsleeve", "body", "blouse", "shirt"):
         module = "tshirt_basic"
         opts["fit"] = fit
         opts["sleeve_style"] = "raglan" if _val(f, "sleeve") == "raglan" else "set_in"
         al = _val(f, "sleeve_length", "long" if kind == "longsleeve" else "short")
         opts["sleeve_length"] = {"short": "short", "long": "long", "3/4": "3/4", "none": "short"}[al]
         opts["neckline"] = "v" if _val(f, "neckline") == "v" else "round"
-        if kind == "dress" or _val(f, "length") == "tunic":
+        if _val(f, "length") == "tunic":
             opts["length"] = "tunic"
         if _val(f, "sleeve_finish") == "rib":
             opts["sleeve_cuffs"] = True

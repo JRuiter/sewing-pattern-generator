@@ -54,6 +54,7 @@ erstellen", "Lieblingshose kopieren" …).
 | `tshirt_basic` | set-in or raglan sleeve; short/¾/long; round or V neck; neck band, cuffs, hem band |
 | `hoodie` | hood (optionally lined), kangaroo pocket, set-in or raglan, zip-up jacket variant |
 | `skirt` | gathered, A-line, circle skirt with elastic waistband |
+| `dress` | T-shirt bodice + gathered/A-line/circle skirt with waist seam, or A-line T-shirt dress; pockets in the side seam |
 | `beanie`, `loop` | beanie with brim/slouch, single or double loop scarf |
 
 Sizes: children 86–176 (`122`), women 34–56 (`w38`), men 44–60 (`m52`), or any custom measurements (measured values always
