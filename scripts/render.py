@@ -235,10 +235,13 @@ def layout_prims(pattern, lay: L.Layout):
 class PdfPage:
     """Map canvas (mm, y down) → PDF page (pt, y up) through a window."""
 
-    def __init__(self, c, page_w, page_h, window=None, offset=(0.0, 0.0)):
+    def __init__(self, c, page_w, page_h, window=None, offset=(0.0, 0.0), styles=None,
+                 text_color=(0, 0, 0)):
         self.c, self.pw, self.ph = c, page_w, page_h
         self.window = window          # (x0, y0, x1, y1) canvas
         self.offset = offset          # position of the window on the page (mm, left/top)
+        self.styles = styles or STYLES
+        self.text_color = text_color
 
     def to_pdf(self, x, y):
         wx, wy = (self.window[0], self.window[1]) if self.window else (0.0, 0.0)
@@ -246,7 +249,7 @@ class PdfPage:
         return (ox + x - wx) * MM, (self.ph - (oy + y - wy)) * MM
 
     def line(self, pts, style, closed=False):
-        st = STYLES[style]
+        st = self.styles[style]
         c = self.c
         c.setLineWidth(max(st["w"], MIN_LW))
         c.setStrokeColorRGB(*st["color"])
@@ -281,7 +284,7 @@ class PdfPage:
             self.line(p.pts, p.style, p.closed)
         elif p.kind == "text":
             x, y = text_pos(p)
-            self.text(x, y, p.text, p.size, p.bold, p.angle)
+            self.text(x, y, p.text, p.size, p.bold, p.angle, color=self.text_color)
 
 
 def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
@@ -381,6 +384,80 @@ def render_sheets_pdf(pattern, lay: L.Layout, path, tiled: L.Layout | None = Non
         c.showPage()
     if tiled:
         _render_tiles(c, pattern, tiled, start_no=lay.sheets + 1, total=total, overview=False)
+    c.save()
+    return path
+
+
+# ---------------------------------------------------------------------------
+# Projector (one page 1:1, thick high-contrast lines, calibration grid)
+# ---------------------------------------------------------------------------
+
+PROJECTOR_GRID = 100.0      # calibration grid in mm
+PROJECTOR_MIN_LW = 1.0      # pt
+
+
+def projector_styles(dark: bool) -> dict:
+    """Line styles for projecting: everything ≥ 1 pt, cutting line 2 pt; bright on dark."""
+    out = {}
+    for k, st in STYLES.items():
+        w = max(PROJECTOR_MIN_LW, st["w"] * 1.5)
+        if k == "cut":
+            w = 2.0
+        col = st["color"]
+        if dark:
+            col = {"cut": (1, 1, 1), "fold": (1, 1, 1), "seam": (1.0, 0.85, 0.2),
+                   "notch": (1, 1, 1), "grain": (0.4, 0.9, 1.0)}.get(k, (0.8, 0.8, 0.8))
+        out[k] = dict(w=w, dash=st["dash"], color=col)
+    return out
+
+
+def render_projector_pdf(pattern, lay: L.Layout, path, dark: bool = False):
+    """Single page at 1:1 for projector sewing: whole layout, 10 cm calibration grid across
+    the page, control squares, thick lines; `dark` = black background with bright lines."""
+    W, H = lay.page_w, lay.page_h
+    c = _setup_canvas(path, W, H, f"{pattern.title} {pattern.size_label} · projector")
+    fg = (1, 1, 1) if dark else (0, 0, 0)
+    if dark:
+        c.setFillColorRGB(0, 0, 0)
+        c.rect(0, 0, W * MM, H * MM, stroke=0, fill=1)
+    # calibration grid: one 10 × 10 cm square per cell (exactly 283.46 pt)
+    c.setDash([])
+    c.setLineWidth(PROJECTOR_MIN_LW)
+    c.setStrokeColorRGB(*((0.3, 0.3, 0.3) if dark else (0.78, 0.82, 0.9)))
+    g = PROJECTOR_GRID
+    nx, ny = int(W // g), int(H // g)
+    for i in range(nx):
+        for j in range(ny):
+            c.rect(i * g * MM, (H - (j + 1) * g) * MM, g * MM, g * MM, stroke=1, fill=0)
+    page = PdfPage(c, W, H, styles=projector_styles(dark), text_color=fg)
+    gc = (0.55, 0.55, 0.55) if dark else (0.45, 0.5, 0.65)
+    for i in range(1, nx + 1):
+        page.text(i * g - 2, 4, f"{i * 10} cm", 7, color=gc, center=False, angle=0)
+    for j in range(1, ny + 1):
+        page.text(2, j * g - 2, f"{j * 10} cm", 7, color=gc, center=False)
+    # header
+    page.text(8, 14, f"{pattern.title} · {pattern.size_label}", 18, True, center=False, color=fg)
+    page.text(8, 22, f"Projector file · 1:1 · {W:.0f} × {H:.0f} mm · grid {g / 10:.0f} cm · "
+              "calibrate until the grid squares and the control square measure exactly.", 9,
+              center=False, color=fg)
+    page.text(8, 28, "Grainline arrows are parallel to the long page edge (lay the selvage along it).",
+              9, center=False, color=fg)
+    if dark:
+        c.setStrokeColorRGB(1, 1, 1)
+        c.setFillColorRGB(1, 1, 1)
+    sx = W - 88.4
+    c.setLineWidth(PROJECTOR_MIN_LW)
+    c.setStrokeColorRGB(*fg)
+    c.setFillColorRGB(*fg)
+    c.rect(sx * MM, (H - 10 - 50) * MM, 50 * MM, 50 * MM, stroke=1, fill=0)
+    c.setFont(FONT_B, 10)
+    c.drawCentredString((sx + 25) * MM, (H - 36) * MM, "5 × 5 cm")
+    c.rect((sx + 55) * MM, (H - 10) * MM - 72.0, 72.0, 72.0, stroke=1, fill=0)
+    c.setFont(FONT, 7)
+    c.drawCentredString((sx + 55 + 12.7) * MM, (H - 10 - 12.7) * MM - 2, "1 inch")
+    for p in layout_prims(pattern, lay):
+        page.prim(p)
+    c.showPage()
     c.save()
     return path
 

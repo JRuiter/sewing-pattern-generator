@@ -54,6 +54,22 @@ Apply to every output of `scripts/render.py`. Checked automatically by
   printing note (the plan itself is scaled down, the control squares on it are 1:1).
 - Control square on every page in a free spot (no pattern lines).
 
+## Projector (`projector`, `projector_dark`)
+
+For projector sewing (projecting the pattern straight onto the fabric):
+
+- **One page at 1:1**, width `projector_width_mm` (default 1500 mm = a 150 cm fabric), height
+  as needed (rounded up to 1 cm). No tiling.
+- Pieces are packed with the **grainline parallel to the long page edge**, so the selvage
+  can be laid along it.
+- **Calibration grid** of 10 × 10 cm squares across the whole page (each square is exactly
+  283.46 pt), labelled every 10 cm along the top and left edge, plus the 5 × 5 cm and
+  1 inch control squares in the header. Adjust the projector until the squares measure
+  exactly.
+- **Thick lines:** cutting line 2 pt, all other lines ≥ 1 pt (dashes as on paper).
+- `projector_dark`: black background, white cutting line, yellow seam line, cyan grainline,
+  dark grey grid; easier to see on most fabrics in a darkened room.
+
 ## Additional files
 
 - `*_master_1to1.svg`: SVG with unit mm (`width="…mm"`), 1:1, for plotter/CAD software.

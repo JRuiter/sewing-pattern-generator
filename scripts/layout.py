@@ -234,6 +234,37 @@ def layout_roll(pattern, roll_width_mm: float = 610.0, angle_step: int = 15) -> 
 
 
 # ---------------------------------------------------------------------------
+# Projector: one page, grainline parallel to the long page edge
+# ---------------------------------------------------------------------------
+
+PROJECTOR_HEADER = 70.0
+
+
+def layout_projector(pattern, width_mm: float = 1500.0) -> Layout:
+    """All pieces on one page of `width_mm` (default: a 150 cm wide fabric), grainline
+    vertical so the page can be projected straight onto the fabric."""
+    rings = [_rings(p) for p in pattern.pieces]
+    angles = []
+    for p in pattern.pieces:
+        ga = grain_angle(p)
+        angles.append([ga % 360, (ga + 180) % 360])
+    reserved = [(0, 0, width_mm, PROJECTOR_HEADER)]
+    best = None
+    for mode in ("bottom", "total", "blf"):
+        pls, unplaced, used = pack(rings, width_mm, angles=angles, reserved=reserved,
+                                   margin=ROLL_MARGIN, mode=mode)
+        if best is None or (len(unplaced), used) < best[0]:
+            best = ((len(unplaced), used), pls, unplaced, used)
+    _, pls, unplaced, used = best
+    if unplaced:
+        names = ", ".join(pattern.pieces[i].name for i in unplaced)
+        raise ValueError(f"piece(s) wider than the projector page ({width_mm / 10:.0f} cm): {names}")
+    page_h = math.ceil((used + ROLL_MARGIN + 5.0) / 10.0) * 10.0
+    return Layout("roll", width_mm, page_h, pls, canvas_w=width_mm, canvas_h=page_h,
+                  reserved=reserved, meta=dict(projector=True, roll=width_mm))
+
+
+# ---------------------------------------------------------------------------
 # Tiles (A4 / Letter, also for oversized pieces on A0/A1)
 # ---------------------------------------------------------------------------
 
