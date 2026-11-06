@@ -14,6 +14,13 @@ limited to 0.75–1.45).
 - **Coordinates:** x to the right, y up, edges counter-clockwise, each edge with its own
   seam allowance. The cutting line is created by offsetting each edge by its seam
   allowance; corners are mitred (intersection point) and bevelled at sharp angles.
+- **User allowances** (`scripts/allowance.py`): `seam_allowance_mm` replaces the module
+  default `sa` (10 mm; beanie 7 mm), `hem_allowance_mm` the hem default `hem_sa`. Allowances
+  derived from `sa` (e.g. neckline = 0.7 × sa) scale with it. Construction allowances
+  (elastic casing, hood/pocket facing, narrow circle hem) stay fixed. Range 0–30 mm (hems
+  0–60 mm). With `seam_allowance: "none"` / `0` the pattern is drafted with the defaults,
+  then every allowance is moved to `Edge.sa_hint` and set to 0: cutting line = seam line,
+  labels say "NO seam allowance included: add …", validation accepts the missing allowance.
 - **Turned allowances** (hems, casings, `Edge.turned`): the allowance is folded back onto
   the piece, so its corners are **mirrored** at the fold line instead of mitred. On a leg
   or sleeve that narrows towards the hem the hem allowance therefore flares out again;

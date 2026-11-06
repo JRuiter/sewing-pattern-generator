@@ -19,6 +19,7 @@ from reportlab.pdfgen import canvas as rl_canvas
 from shapely.geometry import LineString, Polygon, box
 from shapely.ops import polylabel
 
+import allowance as A
 import geometry as G
 import layout as L
 import notches as N
@@ -135,7 +136,7 @@ def piece_prims(piece, pattern, extra_label=None):
     for kind, pts in _split_cut_ring(piece):
         prims.append(Prim("line", kind, pts))
     for e in piece.edges:
-        if not e.fold:
+        if not e.fold and e.sa > 0:     # without allowance the cutting line is the seam line
             prims.append(Prim("line", "seam", e.pts))
     # notches: projected onto the cutting line, also at corners (see notches.py)
     style = pattern.options.get("notch_style", "slit") if isinstance(pattern.options, dict) else "slit"
@@ -307,9 +308,13 @@ def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
     return 50.0 + 5.0 + 25.4, 50.0
 
 
-def legend_pdf(c, x_mm, y_top_mm, page_h_mm):
-    items = [("cut", "Cutting line (seam allowance included)"), ("seam", "Seam line"),
-             ("fold", "Fold"), ("mark_fold", "Fold-over / pressing line")]
+def legend_pdf(c, x_mm, y_top_mm, page_h_mm, with_allowance=True):
+    if with_allowance:
+        first = [("cut", "Cutting line (seam allowance included)"), ("seam", "Seam line")]
+    else:
+        first = [("cut", "Seam line = outline: NO seam allowance included"),
+                 ("cut", "Add the allowances listed on each piece when cutting")]
+    items = first + [("fold", "Fold"), ("mark_fold", "Fold-over / pressing line")]
     page = PdfPage(c, 0, page_h_mm)
     for k, (st, label) in enumerate(items):
         y = y_top_mm + 4 + k * 6
@@ -335,7 +340,7 @@ def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, co
     if compact:
         control_squares_pdf(c, left, top + 33, page_h_mm)
     else:
-        legend_pdf(c, left, top + 31, page_h_mm)
+        legend_pdf(c, left, top + 31, page_h_mm, A.has_allowance(pattern))
         control_squares_pdf(c, page_w_mm - 80.4 - 8, top + 4, page_h_mm)
 
 

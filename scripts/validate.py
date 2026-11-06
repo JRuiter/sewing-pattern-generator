@@ -156,7 +156,8 @@ def check_geometry(pat: Pattern):
                 if e.fold:
                     continue
                 if e.sa <= 0:
-                    errs.append(f"edge '{e.label or e.name}' has no seam allowance")
+                    if e.sa_hint <= 0:   # sa_hint > 0: pattern deliberately without allowances
+                        errs.append(f"edge '{e.label or e.name}' has no seam allowance")
                     continue
                 L = e.length
                 margin = max(e.sa, 5.0) + 2.0

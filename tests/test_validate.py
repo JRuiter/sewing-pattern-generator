@@ -389,3 +389,63 @@ def test_single_layout_unchanged_for_narrow_fabric(harem):
 def test_fabric_layout_option_rejected():
     with pytest.raises(ValueError):
         L.layout_fabric(draft("loop", 122), mode="diagonal")
+# Configurable seam allowance (#1)
+# ---------------------------------------------------------------------------
+
+ALLOWANCE_CASES = [("pants_basic", {"style": "harem", "fabric": "sweat"}), ("tshirt_basic", {}),
+                   ("hoodie", {}), ("skirt", {"style": "a_line"}), ("beanie", {}), ("loop", {})]
+
+
+def _draft_sa(garment, size=122, **opts):
+    import allowance as A
+    mm, _ = M.complete_measures({}, size)
+    return A.draft(get(garment), mm, opts)
+
+
+@pytest.mark.parametrize("garment,opts", ALLOWANCE_CASES, ids=[g for g, _ in ALLOWANCE_CASES])
+@pytest.mark.parametrize("sa", [7.5, 15.0])
+def test_seam_allowance_applies(garment, opts, sa):
+    base = _draft_sa(garment, **opts)
+    pat = _draft_sa(garment, seam_allowance_mm=sa, **opts)
+    assert not [c.name for c in V.validate(pat) if c.status == "ERROR"]
+    changed = 0
+    for p0, p1 in zip(base.pieces, pat.pieces):
+        for e0, e1 in zip(p0.edges, p1.edges):
+            if e0.fold:
+                assert e1.sa == 0
+            elif e0.sa == base.options.get("sa", 10.0) and not e0.turned:
+                assert e1.sa == pytest.approx(sa), (p1.name, e1.name)
+                changed += 1
+    assert changed
+    a0 = sum(abs(G.signed_area(p.cut_ring())) for p in base.pieces)
+    a1 = sum(abs(G.signed_area(p.cut_ring())) for p in pat.pieces)
+    assert (a1 > a0) == (sa > base.options.get("sa", 10.0))
+
+
+@pytest.mark.parametrize("garment,opts", ALLOWANCE_CASES, ids=[g for g, _ in ALLOWANCE_CASES])
+def test_no_seam_allowance(garment, opts):
+    pat = _draft_sa(garment, seam_allowance_mm=0, **opts)
+    assert not [c.name for c in V.validate(pat) if c.status == "ERROR"]
+    for p in pat.pieces:
+        assert all(e.sa == 0 for e in p.edges)
+        assert abs(G.signed_area(p.cut_ring()) - G.signed_area(p.seam_ring())) < 1.0
+        assert p.sa_text().startswith("NO seam allowance included")
+        prims = R.piece_prims(p, pat)
+        assert not [x for x in prims if x.kind == "line" and x.style == "seam"]   # only one outline
+
+
+def test_hem_allowance_option():
+    pat = _draft_sa("pants_basic", style="trousers", hem_allowance_mm=40)
+    assert pat.piece("front").edge("hem").sa == 40
+    assert pat.piece("front").edge("side").sa == 10
+    with pytest.raises(ValueError):
+        _draft_sa("pants_basic", seam_allowance_mm=80)
+
+
+def test_cli_seam_allowance(tmp_path):
+    import generate as GN
+    rc = GN.main(["--garment", "loop", "--size", "122", "--format", "a4", "--seam-allowance", "none",
+                  "--out", str(tmp_path)])
+    assert rc == 0
+    md = (tmp_path / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "NO seam allowance" in md

@@ -24,6 +24,7 @@ class Edge:
     fold: bool = False          # cut on the fold
     label: str = ""             # e.g. "Hem", "Side seam"
     turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
+    sa_hint: float = 0.0        # pattern without allowances: the allowance to add when cutting
 
     @property
     def length(self) -> float:
@@ -107,21 +108,33 @@ class Piece:
         return f"cut {self.cut_count}"
 
     def sa_text(self) -> str:
-        vals = {}
-        for e in self.edges:
-            if e.fold:
-                continue
-            vals.setdefault(round(e.sa), []).append(e.label or e.name)
+        def cm(v):
+            t = f"{v / 10:.2f}"
+            return t[:-1] if t.endswith("0") else t
+
+        def grouped(attr):
+            vals: dict = {}
+            for e in self.edges:
+                if not e.fold:
+                    vals.setdefault(round(getattr(e, attr) * 2) / 2, []).append(e.label or e.name)
+            return vals
+
+        def describe(vals):
+            common = max(vals, key=lambda k: len(vals[k]))
+            rest = [f"{', '.join(sorted(set(names)))}: {cm(k)} cm" for k, names in vals.items() if k != common]
+            return common, rest
+
+        vals = grouped("sa")
         if not vals:
             return "no seam allowance"
-        common = max(vals, key=lambda k: len(vals[k]))
-        def cm(v):
-            return f"{v / 10:.1f}"
-        parts = [f"seam allowance {cm(common)} cm included"]
-        for k, names in vals.items():
-            if k != common:
-                parts.append(f"{', '.join(sorted(set(names)))}: {cm(k)} cm")
-        return "; ".join(parts)
+        if all(k == 0 for k in vals):
+            hints = {k: v for k, v in grouped("sa_hint").items() if k > 0}
+            if not hints:
+                return "NO seam allowance included"
+            common, rest = describe(hints)
+            return "; ".join([f"NO seam allowance included: add {cm(common)} cm"] + rest)
+        common, rest = describe(vals)
+        return "; ".join([f"seam allowance {cm(common)} cm included"] + rest)
 
     def transformed(self, fn) -> Piece:
         """Copy with all points transformed by fn."""

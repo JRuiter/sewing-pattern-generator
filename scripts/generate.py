@@ -33,6 +33,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import allowance as A  # noqa: E402
 import construction as K  # noqa: E402
 import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
@@ -82,7 +83,7 @@ def draft_from_spec(spec: dict):
         given = {**from_file, **given}
     measures, sources = M.complete_measures(given or None, spec.get("size"))
     warn = file_warn + M.validate_measures(measures)
-    pat = mod.draft(measures, spec.get("options", {}))
+    pat = A.draft(mod, measures, spec.get("options", {}))
     pat.size_label = spec.get("size_label") or size_label(spec.get("size"), given or None)
     return pat, sources, warn
 
@@ -230,6 +231,8 @@ def main(argv=None):
                     help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14 (comma-separated)")
     ap.add_argument("--fabric-layout", choices=L.FABRIC_LAYOUTS,
                     help="cutting layout: folded (double layer), single or auto (shorter one; default)")
+    ap.add_argument("--seam-allowance", help="seam allowance in mm for all seams, or 'none' (pattern without allowances)")
+    ap.add_argument("--hem-allowance", type=float, help="allowance in mm for turned-up hems")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     if a.spec:
@@ -244,6 +247,13 @@ def main(argv=None):
                 opts[k] = getattr(a, k)
         if a.notch_style:
             opts["notch_style"] = a.notch_style
+        if a.seam_allowance is not None:
+            if a.seam_allowance.strip().lower() == "none":
+                opts["seam_allowance"] = "none"
+            else:
+                opts["seam_allowance_mm"] = float(a.seam_allowance)
+        if a.hem_allowance is not None:
+            opts["hem_allowance_mm"] = a.hem_allowance
         if a.construction:
             opts["construction"] = json.loads(a.construction)
         size = a.size
