@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import os
 
+import adjust as ADJ
 import allowance as A
 import ease as E
 import layout as L
@@ -109,10 +110,24 @@ def finished_table(pattern):
     from garments import get
     mod = get(pattern.garment)
     labels = getattr(mod, "FINISHED_LABELS", {})
-    rows = ["| Finished measurement | Value |", "|---|---|"]
+    before = pattern.options.get("_finished_before") if isinstance(pattern.options, dict) else None
+    u = U.of(pattern)
+    if before:
+        rows = ["| Finished measurement | Before | After | Change |", "|---|---|---|---|"]
+    else:
+        rows = ["| Finished measurement | Value |", "|---|---|"]
     for k, v in pattern.finished.items():
         lab = labels.get(k, (k,))[0]
-        rows.append(f"| {lab} | {U.length(v, U.of(pattern))} |")
+        if before:
+            b = before.get(k)
+            if b is None:
+                rows.append(f"| {lab} | – | {U.length(v, u)} | |")
+            else:
+                d = v - b
+                ch = "" if abs(d) < 0.5 else ("+" if d > 0 else "−") + U.length(abs(d), u)
+                rows.append(f"| {lab} | {U.length(b, u)} | {U.length(v, u)} | {ch} |")
+        else:
+            rows.append(f"| {lab} | {U.length(v, u)} |")
     return "\n".join(rows)
 
 
@@ -153,8 +168,13 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None):
               "- Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
               "a custom paper size with exactly this width and length, and turn rotation/scaling off.",
               "", "## Body measurements", "", measures_table(pattern, sources), "",
-              "## Finished measurements (virtually sewn)", "", finished_table(pattern), "",
-              "## Pattern pieces", "", piece_table(pattern), "",
+              "## Finished measurements (virtually sewn)", "", finished_table(pattern), ""]
+    adj = ADJ.markdown(pattern)
+    if adj:
+        lines += ["## Fit adjustments (from the test garment)", "", adj, "",
+                  "The adjustments are saved in `pattern.json` and are applied again when you "
+                  "generate this pattern from it (also in another size).", ""]
+    lines += ["## Pattern pieces", "", piece_table(pattern), "",
               "## Fabric needed", ""]
     for fab, pl in plans.items():
         lines.append(f"- **{fab}:** about {U.fabric_length(pl['need_mm'], U.of(pattern))} at "

@@ -36,6 +36,9 @@ erstellen", "Lieblingshose kopieren" …).
 - **Transparent and adjustable**: the report lists every construction value (hip width, crotch
   extensions, rise, armhole depth, …) with its formula; any of them can be overridden, e.g. after a
   toile.
+- **Fit adjustments from the test garment**: `--adjust '{"hip_tight": "2cm", "crotch_low": "1.5cm"}'`
+  changes the matching construction values; the instructions show finished measurements before
+  and after, and the adjustments are kept for the next size.
 - **Measurement files**: reads and writes `.smis` / `.vit` XML measurement files, so measurements
   taken once can be reused here and in open-source pattern CAD programs.
 - **Photo mode A** (inspiration photo): feature list with confidence → confirmed by the user → mapped
@@ -130,7 +133,7 @@ full round trip pattern → photo → reverse engineering → pattern.
 ```
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          geometry, measurements, ease, garments/, validate, layout, render, instructions,
-                  notches, construction, export_dxf, measure_files,
+                  notches, construction, adjust, export_dxf, measure_files,
                   photo_analyze, photo_measure, reverse/ (decompose, unfold, fit, verify, store)
 references/       drafting rules, size tables, print specs, photo guide
 assets/           printable reference card (ArUco), DejaVu fonts

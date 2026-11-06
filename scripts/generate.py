@@ -35,7 +35,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import allowance as A  # noqa: E402
+import adjust as ADJ  # noqa: E402
 import construction as K  # noqa: E402
 import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
@@ -95,7 +95,10 @@ def draft_from_spec(spec: dict):
         if k not in explicit and k not in from_file and sources.get(k) == "user":
             sources[k] = "profile"
     warn = file_warn + M.validate_measures(measures)
-    pat = A.draft(mod, measures, spec.get("options", {}))
+    opts = dict(spec.get("options") or {})
+    if spec.get("adjustments"):
+        opts["adjustments"] = {**(opts.get("adjustments") or {}), **spec["adjustments"]}
+    pat = ADJ.draft(mod, spec["garment"], measures, opts)
     pat.options["units"] = units
     pat.size_label = spec.get("size_label") or size_label(spec.get("size"), given or None)
     return pat, sources, warn
@@ -258,6 +261,8 @@ def main(argv=None):
     ap.add_argument("--hem-allowance", type=float, help="allowance in mm for turned-up hems")
     ap.add_argument("--units", choices=["metric", "imperial"],
                     help="units of --measures and of all reports (imperial: inches and yards)")
+    ap.add_argument("--adjust", help='fit adjustments after a toile as JSON, e.g. \'{"hip": "+2cm", '
+                    '"crotch_low": "1.5cm"}\' (see adjust.py)')
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     fmts = [x.strip() for x in a.format.split(",")] if a.format else None
@@ -296,6 +301,8 @@ def main(argv=None):
         spec["fabric_layout"] = a.fabric_layout
     if a.profile:
         spec["profile"] = a.profile
+    if a.adjust:
+        spec["adjustments"] = json.loads(a.adjust)
     if a.units:
         spec["units"] = a.units
     res = run(spec)

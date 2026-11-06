@@ -779,3 +779,88 @@ def test_profile_cli(tmp_path, capsys):
     assert list((tmp_path / "out").glob("*_a4_tiled.pdf"))      # profile's default format
     md = (tmp_path / "out" / "sewing_instructions.md").read_text(encoding="utf-8")
     assert "| profile |" in md
+
+
+ADJ_CASES = [
+    ("pants_basic", "122", {"style": "jogger"}, "hip", "+2cm", "hip_circ", 20),
+    ("pants_basic", "122", {"style": "jogger"}, "rise", "-15mm", "front_rise", -15),
+    ("pants_basic", "122", {"style": "jogger"}, "inseam", "-2", "inseam", -20),
+    ("pants_basic", "122", {"style": "trousers", "fabric": "woven", "cuffs": False}, "opening", "+3cm",
+     "opening", 30),
+    ("pants_basic", "122", {"style": "jogger"}, "waist", "+2cm", "waist_relaxed", 20),
+    ("tshirt_basic", "140", {}, "chest", "+4cm", "chest_circ", 40),
+    ("tshirt_basic", "140", {}, "length", "-2cm", "length", -20),
+    ("tshirt_basic", "140", {"sleeve_length": "long"}, "sleeve_length", "-3cm", "sleeve_len", -30),
+    ("tshirt_basic", "140", {}, "neckline", "+0.5cm", "neckline", 1),
+    ("hoodie", "140", {}, "chest", "-4cm", "chest_circ", -40),
+]
+
+
+@pytest.mark.parametrize("garment,size,opts,key,val,fin,expect", ADJ_CASES)
+def test_adjustment_changes_finished_measure(garment, size, opts, key, val, fin, expect):
+    import generate as GN
+    pat, _, _ = GN.draft_from_spec({"garment": garment, "size": size, "options": opts,
+                                    "adjustments": {key: val}})
+    before = pat.options["_finished_before"][fin]
+    d = pat.finished[fin] - before
+    if abs(expect) < 5:                       # only the direction is defined
+        assert d * expect > 0
+    else:
+        assert abs(d - expect) <= max(3.0, abs(expect) * 0.1), (fin, before, pat.finished[fin])
+    assert V.is_ok(V.validate(pat))
+
+
+def test_adjustment_shape_values():
+    import adjust as ADJ
+    import generate as GN
+    pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122", "adjustments": {"seat": "+2cm"}})
+    base, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
+    cv = {r["name"]: r["value"] for r in pat.construction}
+    cb = {r["name"]: r["value"] for r in base.construction}
+    assert cv["back_crotch_extension"] - cb["back_crotch_extension"] == pytest.approx(10, abs=0.5)
+    top, _, _ = GN.draft_from_spec({"garment": "tshirt_basic", "size": "140",
+                                    "adjustments": {"armhole": "+1cm", "shoulder": "-1cm"}})
+    tb, _, _ = GN.draft_from_spec({"garment": "tshirt_basic", "size": "140"})
+    cv = {r["name"]: r["value"] for r in top.construction}
+    cb = {r["name"]: r["value"] for r in tb.construction}
+    assert cv["armhole_depth"] - cb["armhole_depth"] == pytest.approx(10, abs=0.5)
+    assert cv["shoulder_length"] - cb["shoulder_length"] == pytest.approx(-10, abs=0.5)
+    assert len(ADJ.ADJUSTMENTS["pants_basic"]) >= 5 and len(ADJ.ADJUSTMENTS["tshirt_basic"]) >= 5
+
+
+def test_fit_issues_resolve():
+    import adjust as ADJ
+    assert ADJ.resolve("pants_basic", {"hip_tight": "2cm", "crotch_low": "1.5cm", "legs_long": "-1in"}) == \
+        {"hip": 20.0, "rise": -15.0, "inseam": pytest.approx(-25.4)}
+    assert ADJ.resolve("tshirt_basic", {"sleeves_long": "3cm", "chest": "+1", "chest_tight": "1cm"}) == \
+        {"sleeve_length": -30.0, "chest": 20.0}
+    with pytest.raises(ValueError):
+        ADJ.resolve("pants_basic", {"sleeves_long": "3cm"})
+    with pytest.raises(ValueError):
+        ADJ.parse_delta("a bit")
+
+
+def test_adjustments_persist_and_regrade(tmp_path):
+    import generate as GN
+    adj = {"hip_tight": "2cm"}
+    pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122", "adjustments": adj})
+    assert pat.options["adjustments"] == adj
+    assert "construction" not in pat.options          # not baked in: re-applied in other sizes
+    big, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "134", "options": dict(pat.options)})
+    ref, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "134"})
+    assert big.finished["hip_circ"] - ref.finished["hip_circ"] == pytest.approx(20, abs=3)
+    user, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122", "adjustments": adj,
+                                     "options": {"construction": {"hip_width": 760}}})
+    assert user.options["construction"] == {"hip_width": 760}       # explicit override wins
+
+
+def test_adjust_cli(tmp_path):
+    import generate as GN
+    out = tmp_path / "o"
+    rc = GN.main(["--garment", "pants_basic", "--size", "122", "--format", "a4", "--out", str(out),
+                  "--adjust", '{"hip_tight": "2cm", "crotch_low": "1cm"}'])
+    assert rc == 0
+    md = (out / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "## Fit adjustments" in md and "| Before | After | Change |" in md
+    js = __import__("json").loads((out / "pattern.json").read_text(encoding="utf-8"))
+    assert js["options"]["adjustments"] == {"hip_tight": "2cm", "crotch_low": "1cm"}
