@@ -711,3 +711,71 @@ def test_dress_pockets_and_photo_mapping():
                          "waist_seam": {"value": "no", "confidence": 0.7}})
     assert m["module"] == "dress" and m["options"]["style"] == "shirt_dress"
     assert not m["not_covered"]
+
+
+# ---------------------------------------------------------------------------
+# Measurement profiles (#12)
+# ---------------------------------------------------------------------------
+
+def test_profile_precedence(tmp_path):
+    import datetime as dt
+
+    import generate as GN
+    import profiles as PR
+    d = str(tmp_path / "profiles")
+    PR.save("Lena", {"height": 121, "hip": 64, "waist": 55}, d, kind="child", fit="wide",
+            default_format="a4", measured=dt.date.today().isoformat())
+    spec = dict(garment="pants_basic", size=122, profile="lena", profiles_dir=d,
+                measures_cm={"waist": 57})
+    pat, src, warn = GN.draft_from_spec(spec)
+    assert pat.measures["hip"] == pytest.approx(640)          # profile beats the size table
+    assert src["hip"] == "profile"
+    assert pat.measures["waist"] == pytest.approx(570)        # explicit beats the profile
+    assert src["waist"] == "user"
+    assert pat.measures["inseam"] != pytest.approx(M.size_measures(122)["inseam"])   # scaled by height 121
+    assert pat.options["fit"] == "wide"                       # profile default
+    assert not [w for w in warn if "months old" in w]
+    spec2, _ = PR.apply(dict(garment="pants_basic", profile="lena", profiles_dir=d))
+    assert spec2["formats"] == ["a4"]
+    spec3, _ = PR.apply(dict(garment="pants_basic", profile="lena", profiles_dir=d, formats=["roll610"]))
+    assert spec3["formats"] == ["roll610"]
+
+
+def test_profile_age_warning_and_history(tmp_path):
+    import datetime as dt
+
+    import profiles as PR
+    d = str(tmp_path)
+    old = (dt.date.today() - dt.timedelta(days=200)).isoformat()
+    PR.save("max", {"height": 110, "hip": 60}, d, measured=old)
+    prof = PR.load("max", d)
+    assert PR.is_child(prof)
+    assert any("months old" in w for w in PR.warnings(prof))
+    PR.save("max", {"height": 116}, d)
+    prof = PR.load("max", d)
+    assert len(prof["history"]) == 1 and prof["measures_cm"]["hip"] == 60
+    assert PR.growth(prof) == {"height": 6.0}
+    assert PR.suggested_size(prof) == 116
+    assert not PR.warnings(prof)
+    adult = PR.load(PR.save("anna", {"height": 168, "hip": 98}, d, measured=old), d)
+    assert not PR.warnings(adult)                            # adults: no growth warning
+
+
+def test_profile_cli(tmp_path, capsys):
+    import generate as GN
+    import profiles as PR
+    d = str(tmp_path / "p")
+    assert PR.main(["--profiles-dir", d, "save", "lena", "--measures", '{"height": 121, "hip": 64}',
+                    "--format", "a4"]) == 0
+    assert PR.main(["--profiles-dir", d, "show", "lena"]) == 0
+    assert "Suggested kids' size: 122" in capsys.readouterr().out
+    os_env = __import__("os").environ
+    os_env["SEWING_PROFILES"] = d
+    try:
+        rc = GN.main(["--garment", "beanie", "--profile", "lena", "--out", str(tmp_path / "out")])
+    finally:
+        del os_env["SEWING_PROFILES"]
+    assert rc == 0
+    assert list((tmp_path / "out").glob("*_a4_tiled.pdf"))      # profile's default format
+    md = (tmp_path / "out" / "sewing_instructions.md").read_text(encoding="utf-8")
+    assert "| profile |" in md

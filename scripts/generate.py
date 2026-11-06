@@ -42,6 +42,7 @@ import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
 import measure_files as MF  # noqa: E402
 import measurements as M  # noqa: E402
+import profiles as PR  # noqa: E402
 import render as R  # noqa: E402
 import units as U  # noqa: E402
 import validate as V  # noqa: E402
@@ -77,14 +78,22 @@ def spec_from_project(path: str, spec: dict | None = None) -> dict:
 def draft_from_spec(spec: dict):
     if spec.get("project"):
         spec = spec_from_project(spec["project"], spec)
+    spec, prof_warn = PR.apply(spec)
     mod = get(spec["garment"])
     units = U.check(spec.get("units"))
-    given = {**(U.to_cm(spec.get("measures_in"), "imperial") or {}), **(spec.get("measures_cm") or {})}
-    file_warn = []
+    # precedence: size table < profile < measurement file < explicit measurements
+    explicit = {**M.normalize_keys(U.to_cm(spec.get("measures_in"), "imperial") or {}),
+                **M.normalize_keys(spec.get("measures_cm") or {})}
+    file_warn = list(prof_warn)
+    from_file: dict = {}
     if spec.get("measures_file"):
-        from_file, file_warn = MF.read_file(spec["measures_file"])
-        given = {**from_file, **given}
+        from_file, fw = MF.read_file(spec["measures_file"])
+        file_warn += fw
+    given = {**(spec.get("_profile_measures_cm") or {}), **M.normalize_keys(from_file), **explicit}
     measures, sources = M.complete_measures(given or None, spec.get("size"))
+    for k in spec.get("_profile_measures_cm") or {}:
+        if k not in explicit and k not in from_file and sources.get(k) == "user":
+            sources[k] = "profile"
     warn = file_warn + M.validate_measures(measures)
     pat = A.draft(mod, measures, spec.get("options", {}))
     pat.options["units"] = units
@@ -95,6 +104,7 @@ def draft_from_spec(spec: dict):
 def run(spec: dict, verbose: bool = True) -> dict:
     out = spec.get("out", "out")
     os.makedirs(out, exist_ok=True)
+    spec, _ = PR.apply(spec)          # profile defaults (fit, output format) before drafting
     pat, sources, warn = draft_from_spec(spec)
     report = V.validate(pat)
     report_md = V.to_markdown(report)
@@ -110,7 +120,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
             print("\nVALIDATION FAILED: no print files were written.", file=sys.stderr)
         return result
     files = {}
-    formats = spec.get("formats", ["roll610", "a4"])
+    formats = spec.get("formats") or ["roll610", "a4"]
     master_lay = None
     for fmt in formats:
         f = fmt.lower()
@@ -238,7 +248,8 @@ def main(argv=None):
     ap.add_argument("--export-measures", action="store_true", help="also write body_measurements.smis")
     ap.add_argument("--notch-style", choices=["slit", "t", "v"], help="notch shape (default slit)")
     ap.add_argument("--construction", help='override construction values in mm as JSON, e.g. \'{"rise": 250}\'')
-    ap.add_argument("--format", default="roll610,a4",
+    ap.add_argument("--profile", help="saved measurement profile (profiles/<name>.json, see profiles.py)")
+    ap.add_argument("--format", default=None,
                     help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14, projector, projector_dark "
                          "(comma-separated)")
     ap.add_argument("--fabric-layout", choices=L.FABRIC_LAYOUTS,
@@ -249,11 +260,12 @@ def main(argv=None):
                     help="units of --measures and of all reports (imperial: inches and yards)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
+    fmts = [x.strip() for x in a.format.split(",")] if a.format else None
     if a.spec:
         with open(a.spec, encoding="utf-8") as f:
             spec = json.load(f)
     elif a.project:
-        spec = dict(project=a.project, out=a.out, formats=[x.strip() for x in a.format.split(",")])
+        spec = dict(project=a.project, out=a.out, formats=fmts)
     else:
         opts = json.loads(a.options) if a.options else {}
         for k in ("style", "fit", "fabric", "stretch"):
@@ -278,10 +290,12 @@ def main(argv=None):
         spec = dict(garment=a.garment, size=size, options=opts, out=a.out,
                     measures_cm=None if imperial else measures,
                     measures_in=measures if imperial else None,
-                    formats=[x.strip() for x in a.format.split(",")],
+                    formats=fmts,
                     measures_file=a.measures_file, export_measures=a.export_measures)
     if a.fabric_layout:
         spec["fabric_layout"] = a.fabric_layout
+    if a.profile:
+        spec["profile"] = a.profile
     if a.units:
         spec["units"] = a.units
     res = run(spec)
