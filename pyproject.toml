@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "pytest-cov>=6.0", "ruff>=0.6", "mypy>=1.10", "pre-commit>=3.5"]
 
 [project.urls]
 Repository = "https://github.com/JRuiter/sewing-pattern-generator"
@@ -32,3 +32,36 @@ py-modules = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = ["slow: renders full PDFs or runs the photo round trip (deselect with -m \"not slow\")"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",  # long German/English label strings; line length is left to the formatter
+    "E741",  # short geometry names like l/I are common in drafting code
+    "B905",  # zip() without strict= is intentional for paired point lists
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["geometry", "pattern", "measurements", "ease", "validate", "layout", "render",
+                     "instructions", "photo_analyze", "photo_measure", "photo_synth", "refcard",
+                     "garments", "reverse", "generate"]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "scripts"
+files = ["scripts"]
+explicit_package_bases = true
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_unused_ignores = true
+# Baseline: option dicts like DEFAULTS mix floats, strings and None, which mypy infers as
+# unions and reports everywhere. These codes are disabled until the option dicts get
+# TypedDicts; tighten step by step (see CONTRIBUTING.md).
+disable_error_code = ["arg-type", "dict-item", "operator", "assignment", "index", "var-annotated",
+                      "union-attr", "misc"]

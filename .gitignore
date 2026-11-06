@@ -12,3 +12,7 @@ dist/
 /out/
 /projekt/
 /messung/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
