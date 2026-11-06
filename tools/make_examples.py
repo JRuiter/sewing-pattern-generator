@@ -66,7 +66,8 @@ def make_results():
             keep = {"validation_report.md", f"{sub}_roll610_preview.png"}
             for f in os.listdir(d):
                 if f not in keep:
-                    os.remove(os.path.join(d, f))
+                    fp = os.path.join(d, f)
+                    shutil.rmtree(fp) if os.path.isdir(fp) else os.remove(fp)
             rep = res["report"]
             n = [len(rep), sum(c.status == "OK" for c in rep), sum(c.status == "WARNING" for c in rep),
                  sum(c.status == "ERROR" for c in rep)]

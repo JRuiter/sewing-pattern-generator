@@ -27,7 +27,8 @@ erstellen", "Lieblingshose kopieren" …).
   - **A4 / US Letter** tiles with 10 mm overlap, glue areas, row/column labels, registration diamonds
     and an overview page
   - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and sewing
-    instructions (Markdown + PDF)
+    instructions (Markdown + PDF) with a **diagram for every seam step**, drawn from the real pieces:
+    right side shaded, the two edges to sew highlighted, matching notches marked
   - **DXF** for cutting machines and pattern CAD (AAMA layer convention: cut line, seam line, fold,
     notches, grainline on separate layers; one block per piece; mm, 1:1)
 - **Sews cleanly**: hem and casing allowances get mirrored corners, so a folded-up hem on a tapered
@@ -133,7 +134,7 @@ full round trip pattern → photo → reverse engineering → pattern.
 ```
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          geometry, measurements, ease, garments/, validate, layout, render, instructions,
-                  notches, construction, adjust, export_dxf, measure_files,
+                  notches, construction, adjust, diagrams, export_dxf, measure_files,
                   photo_analyze, photo_measure, reverse/ (decompose, unfold, fit, verify, store)
 references/       drafting rules, size tables, print specs, photo guide
 assets/           printable reference card (ArUco), DejaVu fonts

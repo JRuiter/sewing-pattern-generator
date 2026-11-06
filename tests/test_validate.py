@@ -864,3 +864,61 @@ def test_adjust_cli(tmp_path):
     assert "## Fit adjustments" in md and "| Before | After | Change |" in md
     js = __import__("json").loads((out / "pattern.json").read_text(encoding="utf-8"))
     assert js["options"]["adjustments"] == {"hip_tight": "2cm", "crotch_low": "1cm"}
+
+
+DIAGRAM_CASES = [
+    ("pants_basic", "122", {"pockets": ["side", "back_patch"]}),
+    ("pants_basic", "122", {"style": "trousers", "fabric": "woven", "waistband": "rib"}),
+    ("tshirt_basic", "140", {"sleeve_style": "raglan", "sleeve_cuffs": True, "hem_band": True}),
+    ("hoodie", "140", {}),
+    ("hoodie", "140", {"front": "zip", "zip_guard": True}),
+    ("skirt", "128", {"style": "gathered"}),
+    ("dress", "140", {"style": "waist_seam"}),
+    ("beanie", "122", {}),
+    ("loop", "122", {}),
+]
+
+
+@pytest.mark.parametrize("garment,size,opts", DIAGRAM_CASES)
+def test_step_diagrams_cover_every_seam(garment, size, opts):
+    import diagrams as DG
+    import generate as GN
+    import instructions as I
+    pat, _, _ = GN.draft_from_spec({"garment": garment, "size": size, "options": opts})
+    steps = I.all_steps(pat)
+    mapped = DG.step_seams(pat, steps)
+    names = [s["name"] for ss in mapped for s in ss]
+    # every seam of the graph is shown in at least one step, and only real seams are mapped
+    assert set(names) == {s["name"] for s in pat.seams}, (set(s["name"] for s in pat.seams) - set(names))
+    for step, ss in zip(steps, mapped):
+        if any(w in step for w in ("Side seams:**", "Inseams:**", "Shoulders:**", "Set in the sleeves")):
+            assert ss, step
+
+
+def test_step_diagram_highlights_two_edges(tmp_path):
+    import diagrams as DG
+    import generate as GN
+    pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
+    seam = next(s for s in pat.seams if s["name"].startswith("Inseam"))
+    assert DG._instances(pat, [seam]) == [("front", False), ("back", False)]
+    crotch = [s for s in pat.seams if "crotch" in s["name"]]
+    assert ("front", True) in DG._instances(pat, crotch)            # left and right piece
+    p = DG.render_step(pat, [seam], str(tmp_path / "s.png"), "Step 5")
+    from PIL import Image
+    a = np.asarray(Image.open(p).convert("RGB")).astype(int)
+    red = int(((a[..., 0] > 180) & (a[..., 1] < 90) & (a[..., 2] < 90)).sum())
+    assert red > 200                                                  # the seam edges are drawn
+
+
+def test_illustrated_instructions(tmp_path):
+    import generate as GN
+    out = tmp_path / "o"
+    assert GN.main(["--garment", "hoodie", "--size", "140", "--format", "a4", "--out", str(out)]) == 0
+    md = (out / "sewing_instructions.md").read_text(encoding="utf-8")
+    imgs = re.findall(r"!\[Step (\d+)\]\((steps/step_\d+\.png)\)", md)
+    assert len(imgs) >= 5 and all((out / p).exists() for _, p in imgs)
+    pdf = out / "sewing_instructions.pdf"
+    assert pdf.stat().st_size < 2_000_000
+    from pypdf import PdfReader
+    n_img = sum(len(pg.images) for pg in PdfReader(str(pdf)).pages)
+    assert n_img >= len(imgs)

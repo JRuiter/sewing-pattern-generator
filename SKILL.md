@@ -135,7 +135,7 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 `projector` / `projector_dark` (one page 1:1 for projector sewing, 10 cm calibration grid,
 thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
-instructions (MD + PDF), `pattern.json`, `validation_report.md`.
+instructions (MD + PDF, with a diagram per seam step in `steps/`), `pattern.json`, `validation_report.md`.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of
 folded selvage to selvage and single layer; see `references/print_specs.md`).
 
@@ -189,7 +189,8 @@ present. Fix anything odd or tell the user openly.
 - `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`: foundations
 - `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
 - `scripts/validate.py`: sewability checks
-- `scripts/layout.py`, `render.py`, `instructions.py`: layout, PDF/SVG/PNG, instructions
+- `scripts/layout.py`, `render.py`, `instructions.py`, `diagrams.py`: layout, PDF/SVG/PNG, instructions
+  and step diagrams (step → seam mapping in `diagrams.STEP_SEAMS`)
 - `scripts/photo_analyze.py`, `photo_measure.py`, `reverse/`: photo modes A and B
 - `scripts/refcard.py`: writes `assets/reference-card.pdf`; `photo_synth.py`: test photos
 - `references/`: drafting rules, size tables, print specs, photo guide

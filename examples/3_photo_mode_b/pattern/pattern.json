@@ -20,6 +20,11 @@
     "blouse": 0.0,
     "sa": 10.0,
     "hem_sa": 25.0,
+    "leg_shape": "straight",
+    "flare_cm": null,
+    "turn_up": 0.0,
+    "cargo_pleat": true,
+    "cargo_flap": true,
     "hip_total": 691.987510043869,
     "fork_factor": 0.9847048937226653,
     "front_rise_total": 190.95016259153567,
@@ -40,7 +45,8 @@
     "_elastic": 494.0,
     "_cuff_len": 193.58617118672208,
     "_hem_c": 276.5516731238887,
-    "_blouse": 0.0
+    "_blouse": 0.0,
+    "units": "metric"
   },
   "measures_mm": {
     "chest": 600.0,
