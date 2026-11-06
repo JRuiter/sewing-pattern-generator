@@ -105,15 +105,53 @@ LABELS = {
 }
 
 
+# US / UK size systems → the base systems above (see references/size_tables.md).
+# US toddler 2T–5T and US children 4–16 → kids' size (body height in cm)
+US_TODDLER_HEIGHT = {2: 92.0, 3: 98.0, 4: 104.0, 5: 110.0}
+US_KIDS_HEIGHT = {4: 104.0, 5: 110.0, 6: 116.0, 7: 122.0, 8: 128.0, 10: 140.0, 12: 152.0,
+                  14: 158.0, 16: 164.0}
+US_WOMEN_OFFSET = 30     # US misses 8 ≈ German/EU women's 38
+UK_WOMEN_OFFSET = 26     # UK women's 12 ≈ German/EU women's 38
+US_WOMEN_RANGE = (0, 20)
+UK_WOMEN_RANGE = (4, 22)
+
+SIZE_LABELS = {"kids": "size %g", "women": "women's size %g", "men": "men's size %g",
+               "us_toddler": "US size %gT", "us_kids": "US kids' size %g",
+               "us_women": "US women's size %g", "uk_women": "UK women's size %g"}
+
+
 def parse_size(size) -> tuple[str, float]:
     """'122', 'size 122', 'w38', 'women 38', 'm50', 'men 50' → (system, number).
 
     German forms are accepted too: 'Gr. 122', 'Damen 38'/'d38', 'Herren 50'/'h50'.
+    US/UK: 'us8' (US women's/misses 0–20), 'uk12' (UK women's 4–22), 'us3t' (US toddler
+    2T–5T), 'usk8' / 'us kids 8' (US children 4–16).
     """
     if isinstance(size, (int, float)):
         n = float(size)
         return ("kids" if n >= 80 else "women"), n
     s = str(size).lower().replace("gr.", "").replace("größe", "").replace("size", "").strip()
+    m = re.search(r"(\d+(?:[.,]\d+)?)", s)
+    if not m:
+        raise ValueError(f"Size not recognised: {size}")
+    n = float(m.group(1).replace(",", "."))
+    if s.startswith(("us", "uk")):
+        rest = s[2:].replace("-", " ").replace("_", " ").strip()
+        if s.startswith("uk"):
+            lo, hi = UK_WOMEN_RANGE
+            system = "uk_women"
+        elif rest.endswith("t"):
+            lo, hi = min(US_TODDLER_HEIGHT), max(US_TODDLER_HEIGHT)
+            system = "us_toddler"
+        elif rest.startswith(("k", "girls", "boys", "child")):
+            lo, hi = min(US_KIDS_HEIGHT), max(US_KIDS_HEIGHT)
+            system = "us_kids"
+        else:
+            lo, hi = US_WOMEN_RANGE
+            system = "us_women"
+        if not lo <= n <= hi:
+            raise ValueError(f"{SIZE_LABELS[system] % n} is outside the supported range {lo:g}–{hi:g}")
+        return system, n
     system = None
     if s.startswith(("w", "d")):          # women / Damen
         system = "women"
@@ -121,13 +159,27 @@ def parse_size(size) -> tuple[str, float]:
         system = "men"
     elif s.startswith("k"):               # kids
         system = "kids"
-    m = re.search(r"(\d+(?:[.,]\d+)?)", s)
-    if not m:
-        raise ValueError(f"Size not recognised: {size}")
-    n = float(m.group(1).replace(",", "."))
     if system is None:
         system = "kids" if n >= 80 else "women"
     return system, n
+
+
+def base_size(system: str, n: float) -> tuple[str, float]:
+    """US/UK systems → (kids|women|men, number) of the base tables."""
+    if system == "us_toddler":
+        return "kids", float(np.interp(n, list(US_TODDLER_HEIGHT), list(US_TODDLER_HEIGHT.values())))
+    if system == "us_kids":
+        return "kids", float(np.interp(n, list(US_KIDS_HEIGHT), list(US_KIDS_HEIGHT.values())))
+    if system == "us_women":
+        return "women", n + US_WOMEN_OFFSET
+    if system == "uk_women":
+        return "women", n + UK_WOMEN_OFFSET
+    return system, n
+
+
+def size_label(size) -> str:
+    system, n = parse_size(size)
+    return SIZE_LABELS[system] % n
 
 
 def _derived_cm(m: dict, adult: bool) -> dict:
@@ -142,7 +194,7 @@ def _derived_cm(m: dict, adult: bool) -> dict:
 
 
 def size_measures_cm(size) -> dict:
-    system, n = parse_size(size)
+    system, n = base_size(*parse_size(size))
     if system == "kids":
         keys = sorted(KIDS_TABLE)
         n_c = min(max(n, keys[0]), keys[-1])

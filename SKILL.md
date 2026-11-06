@@ -97,7 +97,9 @@ python scripts/generate.py --garment hoodie --size w38 --fabric sweat --format r
 python scripts/generate.py --garment skirt --size 128 --style circle --format a1
 python scripts/generate.py --spec order.json          # everything as JSON (see the header of generate.py)
 ```
-Sizes: kids as a number (`122`), women as `w38`, men as `m52`.
+Sizes: kids as a number (`122`), women as `w38`, men as `m52`; US/UK: `us8` (US women's),
+`uk12` (UK women's), `us3t` (US toddler), `usk8` (US kids), see `references/size_tables.md`.
+Imperial users: `--units imperial` (measurements in inches, reports in inches/yards).
 
 Modules and main options:
 

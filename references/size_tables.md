@@ -124,3 +124,35 @@ checked by a test: every column grows with the size and no step is an outlier.
 - **Side length:** at the side from the waist to the floor.
 - **Arm length:** from the shoulder point over the slightly bent elbow to the wrist.
 - **Head:** around the forehead and the back of the head.
+
+## US and UK sizes (`us8`, `uk12`, `us3t`, `usk8`)
+
+US/UK sizes are mapped onto the tables above; the body measurements then come from there (and
+are overridden by any measurement the user gives). The mapping follows the conversions that
+are commonly published for ready-to-wear (EU/German size ↔ US/UK size, children's sizes ↔
+body height) and the body-measurement ranges of the standard size charts named below. They are
+rounded reference values, not a copy of any brand's chart; individual brands differ by a size.
+
+| Input | System | Mapped to | Range |
+|---|---|---|---|
+| `us0` … `us20` | US women's / misses | women's size = US + 30 (US 8 ≈ 38: chest 88, waist 72, hip 98 cm) | 0–20 |
+| `uk4` … `uk22` | UK women's | women's size = UK + 26 (UK 12 ≈ 38) | 4–22 |
+| `us2t` … `us5t` | US toddler | kids' size (height) 2T → 92, 3T → 98, 4T → 104, 5T → 110 | 2T–5T |
+| `usk4` … `usk16` (`us kids 8`) | US children | kids' size 4 → 104, 5 → 110, 6 → 116, 7 → 122, 8 → 128, 10 → 140, 12 → 152, 14 → 158, 16 → 164 (interpolated in between) | 4–16 |
+
+Sources for the ranges (body measurements, not garment measurements):
+- ASTM D5585 (US misses/women's body measurements, sizes 00–20)
+- ASTM D6192 (US girls, sizes 2–20) and ASTM D6458 (US boys, sizes 8–14/16)
+- BS EN 13402-3 / DIN EN 13402-3 (European body-dimension based size designation; UK
+  women's sizes = EU − 26 in common retail practice)
+
+## Units (`--units imperial`)
+
+`units: "metric"` (default) or `"imperial"` (spec field `units`, CLI `--units`).
+- Input: with `--units imperial`, `--measures` is read in **inches**; in a spec file use
+  `measures_in` (inches) or `measures_cm`.
+- Reports in inches (rounded to 1/8"): body measurements, finished measurements, seam
+  allowances on the pieces and in the instructions; fabric consumption in **yards rounded up
+  to 1/8 yd**, fabric width in inches.
+- Pattern files stay 1:1 (mm internally); every print has both the 5 × 5 cm and the 1 inch
+  control square. The validation report stays metric.
