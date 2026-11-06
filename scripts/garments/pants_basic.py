@@ -19,6 +19,7 @@ from scipy.interpolate import CubicSpline
 
 import ease as E
 import geometry as G
+from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
 STYLES = {
@@ -93,16 +94,19 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     k = max(0.75, min(1.45, k))
 
     # ---------------------------------------------------------------- widths
+    C = Construction(o.get("construction"))
     he = E.hip_ease(fit, fabric, stretch)
-    Hc = o["hip_total"] or m["hip"] * (1 + he)
-    diff = 10.0 if adult else 5.0
-    Wf, Wb = Hc / 4 - diff, Hc / 4 + diff
-    if fit == "slim":
-        fe, fbe = Hc * 0.040, Hc * 0.080
-    else:
-        fe, fbe = Hc * 0.050, Hc * 0.100
-    fe *= o["fork_factor"]
-    fbe *= o["fork_factor"]
+    Hc = C.val("hip_width", o["hip_total"] or m["hip"] * (1 + he),
+               "option hip_total" if o["hip_total"] else f"hip × (1 + {he * 100:.0f} % ease)")
+    diff = C.val("front_back_offset", 10.0 if adult else 5.0,
+                 "front quarter narrower, back quarter wider by this amount")
+    Wf = C.val("front_width", Hc / 4 - diff, "hip_width / 4 − front_back_offset")
+    Wb = C.val("back_width", Hc / 4 + diff, "hip_width / 4 + front_back_offset")
+    pct_f, pct_b = (4.0, 8.0) if fit == "slim" else (5.0, 10.0)
+    fe = C.val("front_crotch_extension", Hc * pct_f / 100 * o["fork_factor"],
+               f"{pct_f:g} % of hip_width" + (f" × fork_factor {o['fork_factor']:g}" if o["fork_factor"] != 1 else ""))
+    fbe = C.val("back_crotch_extension", Hc * pct_b / 100 * o["fork_factor"],
+                f"{pct_b:g} % of hip_width" + (f" × fork_factor {o['fork_factor']:g}" if o["fork_factor"] != 1 else ""))
 
     # ---------------------------------------------------------------- heights
     wb_type = o["waistband"]
@@ -116,9 +120,11 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         drop = 0.06 * m["height"] if fit == "harem" else 0.0
     rise_body = m["side_length"] - m["inseam"]
     if o["front_rise_total"]:
-        R = o["front_rise_total"] - wb_h
+        R = C.val("rise", o["front_rise_total"] - wb_h, "option front_rise_total − waistband height")
     else:
-        R = rise_body + E.rise_ease_mm(fit, adult) + drop - wb_h
+        R = C.val("rise", rise_body + E.rise_ease_mm(fit, adult) + drop - wb_h,
+                  "(side length − inseam) + seat ease" + (" + harem drop" if drop else "")
+                  + (" − waistband height" if wb_h else ""))
     cuffs = bool(o["cuffs"])
     cuff_h = (o["cuff_height"] or ((70 if fit == "harem" else 50) * k)) if cuffs else 0.0
     blouse = o["blouse"]
@@ -132,6 +138,9 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         inseam_fin = m["inseam"] - (25 if adult else 15) - drop + blouse
     else:
         inseam_fin = m["inseam"] * leg_frac - drop + (blouse if length == "7/8" else 0)
+    inseam_fin = C.val("inseam_finished", inseam_fin,
+                       "option inseam_total" if o["inseam_total"] else "inseam − allowance to the floor"
+                       + (" − harem drop" if drop else "") + (" + blousing" if blouse else ""))
     leg_len = inseam_fin - cuff_h          # vertical length crotch line → hem edge
 
     # ---------------------------------------------------------------- leg opening
@@ -150,6 +159,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
                 hem_c = max(hem_c, m["knee"] * (1.0 + max(he, 0.05)) * 1.05)
             if length == "short":
                 hem_c = max(hem_c, (Wf + Wb + fe + fbe) * 2 * 0.92)
+    hem_c = C.val("hem_width", hem_c, "cuff length / cuff stretch ratio" if cuffs else
+                  ("option opening_total" if o["opening_total"] else f"leg opening for fit '{fit}'"))
     hem_front, hem_back = hem_c / 2 - 2 * diff, hem_c / 2 + 2 * diff
 
     # ---------------------------------------------------------------- front leg
@@ -195,17 +206,20 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         f_edges = [
             Edge("crotch", schritt_f, sa, label="Crotch seam"),
             Edge("inseam", inseam_f, sa, label="Inseam"),
-            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem",
+                 turned=not cuffs),
             Edge("side", seite_f, sa, label="Side seam"),
             Edge("pocket_opening", eingriff, sa, label="Pocket opening"),
-            Edge("waistband", bund_f, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam"),
+            Edge("waistband", bund_f, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam",
+                 turned=wb_type == "tunnel"),
         ]
     else:
         seite_f = G.join(side_f_leg, G.line(side_f_leg[-1], G.P(Wf, 0)))
         f_edges = [
             Edge("crotch", schritt_f, sa, label="Crotch seam"),
             Edge("inseam", inseam_f, sa, label="Inseam"),
-            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+            Edge("hem", saum_f, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem",
+                 turned=not cuffs),
             Edge("side", seite_f, sa, label="Side seam"),
             Edge("waistband", G.line(G.P(Wf, 0), cf_top), sa if wb_type != "tunnel" else el_w + 15,
                  label="Waistband seam"),
@@ -258,9 +272,11 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     back = Piece("back", "Back leg", [
         Edge("crotch", schritt_b, sa, label="Crotch seam"),
         Edge("inseam", inseam_b, sa, label="Inseam"),
-        Edge("hem", saum_b, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem"),
+        Edge("hem", saum_b, sa if cuffs else hem_sa, label="Cuff seam" if cuffs else "Hem",
+                 turned=not cuffs),
         Edge("side", seite_b, sa, label="Side seam"),
-        Edge("waistband", bund_b, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam"),
+        Edge("waistband", bund_b, sa if wb_type != "tunnel" else el_w + 15, label="Waistband seam",
+             turned=wb_type == "tunnel"),
     ], cut_count=2, mirror=True, fabric="Main fabric",
         grain=(G.P(crease_b, y_cr - 40), G.P(crease_b, max(y_hem + 60, y_cr - leg_len * 0.6))))
     back.notches += [Notch("side", side_notch, 2), Notch("inseam", 80, 2),
@@ -447,6 +463,9 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         checks.append(dict(name="Fabric stretchy enough for leggings", kind="min", value=stretch,
                            target=30, note="leggings need ≥ 30 % crosswise stretch"))
     pat.size_label = ""
+    pat.construction = C.rows()
+    if C.unknown_overrides():
+        pat.notes.append("Unknown construction value(s) ignored: " + ", ".join(C.unknown_overrides()))
     return pat
 
 

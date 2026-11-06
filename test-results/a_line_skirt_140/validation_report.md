@@ -14,5 +14,7 @@
 | Labels | Back skirt: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Waistband (elastic): outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
+| Geometry | Front skirt: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Back skirt: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
 
-**Result:** 12 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 14 OK, 0 warning(s), 0 error(s): the pattern is sewable.

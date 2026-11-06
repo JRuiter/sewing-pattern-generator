@@ -80,6 +80,10 @@ armhole and neckline measurements with a tape measure in that case.
 `measurements.complete_measures(given_cm, size)` fills in missing measurements from the
 size table or body height and reports plausibility warnings. Given measurements take
 precedence over the table. Tables and sources: `references/size_tables.md`.
+If the user has an XML measurement file from pattern CAD software (`.smis` / `.vit`),
+pass it with `--measures-file`; explicit `--measures` values override it. With
+`--export-measures` the measurements used are saved as `body_measurements.smis`, a good
+way to keep a person's measurements for next time.
 
 ### 5. Draft, validate, lay out, render: one call
 ```bash
@@ -109,7 +113,8 @@ Fits: slim, normal, wide, oversized, harem.
 
 Formats: `rollNNN` (page width = roll − 10 mm, portrait; pieces wider than the roll are
 split automatically into strips with glue marks), `a0`, `a1` (pieces whole, oversized
-pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page).
+pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `dxf` /
+`dxf14` (DXF for cutting machines and CAD, AAMA layers, see `references/print_specs.md`).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
 instructions (MD + PDF), `pattern.json`, `validation_report.md`.
 
@@ -117,6 +122,13 @@ instructions (MD + PDF), `pattern.json`, `validation_report.md`.
 writes **no** print files. Fix the cause from `validation_report.md` (usually
 contradictory measurements/options) and generate again. Never deliver a pattern with
 errors. Rules: `references/drafting_rules.md`.
+
+Fine tuning: the report lists the **construction values** (hip width, crotch extensions,
+rise, armhole depth, …) with how they were derived. To change one, e.g. after a toile
+("seat too tight" → larger `back_crotch_extension`), pass
+`--construction '{"back_crotch_extension": 95}'` (mm) and generate again; validation
+still checks the result. Notch shape: `--notch-style slit|t|v` (v for cutting machines and
+projector use).
 
 ### 6. Check the preview yourself
 **Look at** the PNG preview(s) and the cutting layout before delivering: all pieces

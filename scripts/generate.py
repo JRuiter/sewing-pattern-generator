@@ -11,7 +11,14 @@ Spec JSON (all fields optional except garment and size/measures):
   {"garment": "pants_basic", "size": 122, "measures_cm": {"hip": 68},
    "options": {"style": "harem", "fabric": "sweat"},
    "formats": ["roll610", "a4"], "out": "out/harem122",
-   "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700}}
+   "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700},
+   "measures_file": "lena.smis", "export_measures": true}
+
+Formats: roll610 (any roll width), a4, letter, a1, a0, dxf (AAMA layers, seam line on
+layer 8), dxf14 (same, seam line on layer 14).
+Measurements can be read from an XML measurement file (.smis/.vit, `measures_file`);
+`measures_cm` values take precedence over the file. `export_measures` writes the
+measurements used as body_measurements.smis next to the pattern.
 
 Exit code 2 if the sewability validation reports errors (then NO print files are
 written, only the validation report).
@@ -25,8 +32,11 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import construction as K  # noqa: E402
+import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
+import measure_files as MF  # noqa: E402
 import measurements as M  # noqa: E402
 import render as R  # noqa: E402
 import validate as V  # noqa: E402
@@ -64,10 +74,15 @@ def draft_from_spec(spec: dict):
     if spec.get("project"):
         spec = spec_from_project(spec["project"], spec)
     mod = get(spec["garment"])
-    measures, sources = M.complete_measures(spec.get("measures_cm"), spec.get("size"))
-    warn = M.validate_measures(measures)
+    given = dict(spec.get("measures_cm") or {})
+    file_warn = []
+    if spec.get("measures_file"):
+        from_file, file_warn = MF.read_file(spec["measures_file"])
+        given = {**from_file, **given}
+    measures, sources = M.complete_measures(given or None, spec.get("size"))
+    warn = file_warn + M.validate_measures(measures)
     pat = mod.draft(measures, spec.get("options", {}))
-    pat.size_label = spec.get("size_label") or size_label(spec.get("size"), spec.get("measures_cm"))
+    pat.size_label = spec.get("size_label") or size_label(spec.get("size"), given or None)
     return pat, sources, warn
 
 
@@ -77,6 +92,8 @@ def run(spec: dict, verbose: bool = True) -> dict:
     pat, sources, warn = draft_from_spec(spec)
     report = V.validate(pat)
     report_md = V.to_markdown(report)
+    if pat.construction:
+        report_md += "\n\n" + K.to_markdown(pat.construction)
     base = spec.get("basename") or _basename(pat)
     with open(os.path.join(out, "validation_report.md"), "w", encoding="utf-8") as f:
         f.write(report_md)
@@ -141,6 +158,8 @@ def run(spec: dict, verbose: bool = True) -> dict:
             R.render_png(pat, lay, png)
             files[f"Preview {f.upper()}"] = png
             master_lay = master_lay or lay
+        elif f in ("dxf", "dxf14"):
+            continue                       # written after the loop, see below
         else:
             raise ValueError(f"Unknown format {fmt}")
     if master_lay is None:
@@ -148,6 +167,16 @@ def run(spec: dict, verbose: bool = True) -> dict:
     svg = os.path.join(out, f"{base}_master_1to1.svg")
     R.render_svg(pat, master_lay, svg)
     files["SVG master 1:1"] = svg
+    for f in (x.lower() for x in formats):
+        if f in ("dxf", "dxf14"):
+            dxf_lay = L.layout_roll(pat, 1600.0)         # pieces side by side, no page limits
+            p = os.path.join(out, f"{base}_aama{'_14' if f == 'dxf14' else ''}.dxf")
+            D.write_dxf(pat, p, dxf_lay, seam_layer="14" if f == "dxf14" else "8")
+            files["DXF for cutters/CAD (AAMA layers, mm, 1:1)"] = p
+    if spec.get("export_measures"):
+        p = os.path.join(out, "body_measurements.smis")
+        MF.write_file(p, pat.measures, notes=f"{pat.title}, {pat.size_label}")
+        files["Body measurements (XML measurement file)"] = p
     plans = I.fabric_consumption(pat, spec.get("fabric_widths_mm"))
     zp = os.path.join(out, "cutting_layout.png")
     I.render_fabric_png(pat, plans, zp)
@@ -191,7 +220,12 @@ def main(argv=None):
     ap.add_argument("--fabric")
     ap.add_argument("--stretch", type=float)
     ap.add_argument("--options", help="further options as JSON")
-    ap.add_argument("--format", default="roll610,a4", help="roll610, roll914, a4, letter, a1, a0 (comma-separated)")
+    ap.add_argument("--measures-file", help="XML measurement file (.smis/.vit) with body measurements")
+    ap.add_argument("--export-measures", action="store_true", help="also write body_measurements.smis")
+    ap.add_argument("--notch-style", choices=["slit", "t", "v"], help="notch shape (default slit)")
+    ap.add_argument("--construction", help='override construction values in mm as JSON, e.g. \'{"rise": 250}\'')
+    ap.add_argument("--format", default="roll610,a4",
+                    help="roll610, roll914, a4, letter, a1, a0, dxf, dxf14 (comma-separated)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     if a.spec:
@@ -204,12 +238,17 @@ def main(argv=None):
         for k in ("style", "fit", "fabric", "stretch"):
             if getattr(a, k) is not None:
                 opts[k] = getattr(a, k)
+        if a.notch_style:
+            opts["notch_style"] = a.notch_style
+        if a.construction:
+            opts["construction"] = json.loads(a.construction)
         size = a.size
         if size is not None and size.replace(".", "").isdigit():
             size = float(size)
         spec = dict(garment=a.garment, size=size, options=opts, out=a.out,
                     measures_cm=json.loads(a.measures) if a.measures else None,
-                    formats=[x.strip() for x in a.format.split(",")])
+                    formats=[x.strip() for x in a.format.split(",")],
+                    measures_file=a.measures_file, export_measures=a.export_measures)
     res = run(spec)
     return 0 if res["ok"] else 2
 

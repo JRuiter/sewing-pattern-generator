@@ -28,6 +28,16 @@ erstellen", "Lieblingshose kopieren" …).
     and an overview page
   - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and sewing
     instructions (Markdown + PDF)
+  - **DXF** for cutting machines and pattern CAD (AAMA layer convention: cut line, seam line, fold,
+    notches, grainline on separate layers; one block per piece; mm, 1:1)
+- **Sews cleanly**: hem and casing allowances get mirrored corners, so a folded-up hem on a tapered
+  leg or sleeve lies flat under the side seam; notches are projected onto the cutting line (also at
+  corners) as slit, T or V notches.
+- **Transparent and adjustable**: the report lists every construction value (hip width, crotch
+  extensions, rise, armhole depth, …) with its formula; any of them can be overridden, e.g. after a
+  toile.
+- **Measurement files**: reads and writes `.smis` / `.vit` XML measurement files, so measurements
+  taken once can be reused here and in open-source pattern CAD programs.
 - **Photo mode A** (inspiration photo): feature list with confidence → confirmed by the user → mapped
   onto a garment module; unsupported features are named honestly with the closest alternative.
 - **Photo mode B** (copy a favourite garment): lay it flat next to the printable ArUco
@@ -119,6 +129,7 @@ full round trip pattern → photo → reverse engineering → pattern.
 ```
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          geometry, measurements, ease, garments/, validate, layout, render, instructions,
+                  notches, construction, export_dxf, measure_files,
                   photo_analyze, photo_measure, reverse/ (decompose, unfold, fit, verify, store)
 references/       drafting rules, size tables, print specs, photo guide
 assets/           printable reference card (ArUco), DejaVu fonts

@@ -31,5 +31,25 @@
 | Labels | Side panel (outer pocket bag): grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Inner pocket bag: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Inner pocket bag: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric or cotton jersey |
+| Geometry | Front leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem, Waistband seam: corners mirrored at the fold line |
+| Geometry | Back leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem, Waistband seam: corners mirrored at the fold line |
+| Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
+| Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 29 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 33 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"hip_width": 855}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `hip_width` | 85.5 cm | hip × (1 + 14 % ease) |  |
+| `front_back_offset` | 0.5 cm | front quarter narrower, back quarter wider by this amount |  |
+| `front_width` | 20.9 cm | hip_width / 4 − front_back_offset |  |
+| `back_width` | 21.9 cm | hip_width / 4 + front_back_offset |  |
+| `front_crotch_extension` | 4.3 cm | 5 % of hip_width |  |
+| `back_crotch_extension` | 8.6 cm | 10 % of hip_width |  |
+| `rise` | 21.0 cm | (side length − inseam) + seat ease |  |
+| `inseam_finished` | 63.0 cm | inseam − allowance to the floor |  |
+| `hem_width` | 39.3 cm | leg opening for fit 'normal' |  |

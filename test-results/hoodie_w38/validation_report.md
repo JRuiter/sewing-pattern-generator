@@ -41,5 +41,23 @@
 | Labels | Hood: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Kangaroo pocket: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Opening (hem it): 1.5 cm |
 | Labels | Kangaroo pocket: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
+| Geometry | Hood: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Front edge (casing/facing): corners mirrored at the fold line |
+| Labels | Front: notches | on the cutting line | 1 notch mark(s) |  | ✅ OK |  |
+| Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
+| Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 
-**Result:** 39 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 43 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"chest_width": 1030}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `chest_width` | 103.0 cm | chest × (1 + 17 % ease) |  |
+| `neck_width_half` | 9.3 cm | neck / 5 + 1.5 cm |  |
+| `front_neck_depth` | 12.6 cm | neck_width_half + 2.5 cm |  |
+| `back_neck_depth` | 2.0 cm | fixed |  |
+| `shoulder_length` | 13.9 cm | shoulder + allowance for fit 'wide' |  |
+| `armhole_depth` | 24.1 cm | 18 % of chest_width + 2.5 cm + 3 % |  |
+| `body_length` | 63.0 cm | back length + 13 % of height |  |

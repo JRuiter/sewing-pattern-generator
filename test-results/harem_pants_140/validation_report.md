@@ -30,5 +30,23 @@
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Leg cuff: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Leg cuff: grainline & cutting | present | cut 2 |  | ✅ OK | Rib knit |
+| Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
+| Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 28 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"hip_width": 975}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `hip_width` | 97.5 cm | hip × (1 + 30 % ease) |  |
+| `front_back_offset` | 0.5 cm | front quarter narrower, back quarter wider by this amount |  |
+| `front_width` | 23.9 cm | hip_width / 4 − front_back_offset |  |
+| `back_width` | 24.9 cm | hip_width / 4 + front_back_offset |  |
+| `front_crotch_extension` | 4.9 cm | 5 % of hip_width |  |
+| `back_crotch_extension` | 9.8 cm | 10 % of hip_width |  |
+| `rise` | 26.9 cm | (side length − inseam) + seat ease + harem drop − waistband height |  |
+| `inseam_finished` | 58.0 cm | inseam − allowance to the floor − harem drop + blousing |  |
+| `hem_width` | 32.4 cm | cuff length / cuff stretch ratio |  |

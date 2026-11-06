@@ -20,23 +20,23 @@
     "blouse": 0.0,
     "sa": 10.0,
     "hem_sa": 25.0,
-    "hip_total": 691.9875100438697,
-    "fork_factor": 0.9847048937226544,
-    "front_rise_total": 190.9501625915358,
-    "inseam_total": 512.5996748169284,
+    "hip_total": 691.987510043869,
+    "fork_factor": 0.9847048937226653,
+    "front_rise_total": 190.95016259153567,
+    "inseam_total": 512.5996748169287,
     "opening_total": 193.58617118672208,
     "elastic_total": 494.0,
     "knee_total": null,
     "thigh_total": null,
-    "_y_hip": -87.69758942534469,
+    "_y_hip": -87.69758942534463,
     "_wb_h": 31.5,
     "_cuff_h": 50.5,
     "_waist_relaxed": 494.0,
     "_pk_b": 0.0,
-    "_R": 159.4501625915358,
-    "_hip_total": 691.9875100438697,
+    "_R": 159.45016259153567,
+    "_hip_total": 691.987510043869,
     "_drop": 0.0,
-    "_back_drop": 1.1592929011416064,
+    "_back_drop": 1.1592929011416597,
     "_elastic": 494.0,
     "_cuff_len": 193.58617118672208,
     "_hem_c": 276.5516731238887,
@@ -240,6 +240,80 @@
       ]
     }
   ],
+  "construction": [
+    {
+      "name": "hip_width",
+      "value": 691.987510043869,
+      "formula": "option hip_total",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_back_offset",
+      "value": 5.0,
+      "formula": "front quarter narrower, back quarter wider by this amount",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_width",
+      "value": 167.99687751096724,
+      "formula": "hip_width / 4 − front_back_offset",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_width",
+      "value": 177.99687751096724,
+      "formula": "hip_width / 4 + front_back_offset",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_crotch_extension",
+      "value": 34.07017437675799,
+      "formula": "5 % of hip_width × fork_factor 0.984705",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_crotch_extension",
+      "value": 68.14034875351598,
+      "formula": "10 % of hip_width × fork_factor 0.984705",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "rise",
+      "value": 159.45016259153567,
+      "formula": "option front_rise_total − waistband height",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "inseam_finished",
+      "value": 512.5996748169287,
+      "formula": "option inseam_total",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "hem_width",
+      "value": 276.5516731238887,
+      "formula": "cuff length / cuff stretch ratio",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    }
+  ],
   "validation": [
     {
       "group": "Seam pairs",
@@ -382,7 +456,7 @@
       "status": "OK",
       "target": "69.2 cm",
       "actual": "69.2 cm",
-      "delta": "-0.0 %",
+      "delta": "+0.0 %",
       "note": "target from measurement/override"
     },
     {
@@ -492,6 +566,24 @@
       "actual": "cut 2",
       "delta": "",
       "note": "Rib knit"
+    },
+    {
+      "group": "Labels",
+      "name": "Front leg: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "3 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Back leg: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "6 notch mark(s)",
+      "delta": "",
+      "note": ""
     }
   ],
   "fabric_mm": {

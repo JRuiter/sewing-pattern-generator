@@ -14,6 +14,23 @@ limited to 0.75–1.45).
 - **Coordinates:** x to the right, y up, edges counter-clockwise, each edge with its own
   seam allowance. The cutting line is created by offsetting each edge by its seam
   allowance; corners are mitred (intersection point) and bevelled at sharp angles.
+- **Turned allowances** (hems, casings, `Edge.turned`): the allowance is folded back onto
+  the piece, so its corners are **mirrored** at the fold line instead of mitred. On a leg
+  or sleeve that narrows towards the hem the hem allowance therefore flares out again;
+  folded up, it lies exactly under the side seam allowance instead of pulling or
+  sticking out. Where a mirror is not geometrically possible the corner falls back to
+  the mitre and validation warns.
+- **Notches** are defined on the seam line and projected onto the cutting line along the
+  edge normal; a notch at a corner (≤ 1.5 mm from an edge end, e.g. underarm, crotch
+  point) is projected along the **bisector** of the two edges so it meets the mitred
+  corner. Shapes: slit (default), T (slit with a cross bar at the seam line), V (cut into
+  the allowance, for cutting machines/projectors). Double notches (back) are 3 mm apart.
+- **Construction values:** every module records its derived values with name and formula
+  (`scripts/construction.py`); they appear in the validation report and can be overridden
+  with the option `construction` (mm). Pants: `hip_width`, `front_back_offset`,
+  `front_width`, `back_width`, `front_crotch_extension`, `back_crotch_extension`, `rise`,
+  `inseam_finished`, `hem_width`. Tops: `chest_width`, `neck_width_half`,
+  `front_neck_depth`, `back_neck_depth`, `shoulder_length`, `armhole_depth`, `body_length`.
 - **Seam allowances:** 1.0 cm standard (overlocker/sewing machine), pants hem 2.5 cm,
   shirt hem 2.0 cm, neckline 0.7 cm, fold edges 0.
 - **Curves** are cubic Bézier curves with given end tangents. At every corner where two
@@ -130,5 +147,7 @@ a right angle (casing/facing 25 mm). Kangaroo pocket: 0.62 × q wide, slanted op
 | Head | neckline/waistband incl. stretch ≥ head or hip circumference |
 | Geometry | outline closed, counter-clockwise, not self-intersecting; seam allowance on every non-fold edge measured with a normal ray |
 | Labels | every piece has a grainline (inside the piece) and cutting information |
+| Turned allowances | folded at the seam line, the allowance next to each corner lies on the neighbouring cutting line (≤ 0.5 mm, otherwise warning) |
+| Notches | every notch mark starts on the cutting line |
 
 An error (❌) blocks the print files.

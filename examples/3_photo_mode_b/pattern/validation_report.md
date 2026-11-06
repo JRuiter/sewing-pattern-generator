@@ -17,7 +17,7 @@
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband (front + back) | 180° | 180.1° | +0.1° | ✅ OK |  |
-| Measurements | Hip circumference pattern = body + ease | 69.2 cm | 69.2 cm | -0.0 % | ✅ OK | target from measurement/override |
+| Measurements | Hip circumference pattern = body + ease | 69.2 cm | 69.2 cm | +0.0 % | ✅ OK | target from measurement/override |
 | Measurements | Top edge fits over the hip | ≥ 64.3 cm | 76.4 cm | +120.9 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 13.9 cm – 23.2 cm | 19.1 cm | +0.0 mm | ✅ OK | body rise 17.5 cm |
 | Measurements | Inseam length plausible | 36.8 cm – 57.1 cm | 51.3 cm | +0.0 mm | ✅ OK | body inseam 51.0 cm |
@@ -30,5 +30,23 @@
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Leg cuff: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Leg cuff: grainline & cutting | present | cut 2 |  | ✅ OK | Rib knit |
+| Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
+| Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 28 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"hip_width": 692}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `hip_width` | 69.2 cm | option hip_total |  |
+| `front_back_offset` | 0.5 cm | front quarter narrower, back quarter wider by this amount |  |
+| `front_width` | 16.8 cm | hip_width / 4 − front_back_offset |  |
+| `back_width` | 17.8 cm | hip_width / 4 + front_back_offset |  |
+| `front_crotch_extension` | 3.4 cm | 5 % of hip_width × fork_factor 0.984705 |  |
+| `back_crotch_extension` | 6.8 cm | 10 % of hip_width × fork_factor 0.984705 |  |
+| `rise` | 15.9 cm | option front_rise_total − waistband height |  |
+| `inseam_finished` | 51.3 cm | option inseam_total |  |
+| `hem_width` | 27.7 cm | cuff length / cuff stretch ratio |  |

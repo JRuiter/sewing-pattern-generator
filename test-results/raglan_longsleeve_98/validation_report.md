@@ -26,5 +26,25 @@
 | Labels | Raglan sleeve: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Neckband: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 0.7 cm included |
 | Labels | Neckband: grainline & cutting | present | cut 1 |  | ✅ OK | Rib knit |
+| Geometry | Front: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Back: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Raglan sleeve: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Sleeve hem: corners mirrored at the fold line |
+| Labels | Front: notches | on the cutting line | 1 notch mark(s) |  | ✅ OK |  |
+| Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
+| Labels | Raglan sleeve: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 24 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+
+### Construction values
+
+Override any of these with the option `construction`, values in mm (e.g. `{"construction": {"chest_width": 594}}`).
+
+| Name | Value | Derived from | Note |
+|---|---|---|---|
+| `chest_width` | 59.4 cm | chest × (1 + 8 % ease) |  |
+| `neck_width_half` | 6.8 cm | neck / 5 + 1.5 cm |  |
+| `front_neck_depth` | 8.3 cm | neck_width_half + 1.5 cm |  |
+| `back_neck_depth` | 1.5 cm | fixed |  |
+| `shoulder_length` | 8.5 cm | shoulder + allowance for fit 'normal' |  |
+| `armhole_depth` | 13.2 cm | 18 % of chest_width + 2.5 cm |  |
+| `body_length` | 38.2 cm | back length + 13 % of height |  |
