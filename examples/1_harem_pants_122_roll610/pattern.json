@@ -589,11 +589,13 @@
   "fabric_mm": {
     "Main fabric": {
       "width": 1500.0,
-      "need": 900.0
+      "need": 900.0,
+      "layout": "folded"
     },
     "Rib knit": {
       "width": 700.0,
-      "need": 250.0
+      "need": 250.0,
+      "layout": "single"
     }
   }
 }
