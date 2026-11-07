@@ -160,7 +160,7 @@ Modules and main options:
 
 | Module | Styles/options |
 |---|---|
-| `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side] = slanted front pocket with pocket bag, [back_patch], [cargo]) · leg_shape (straight, tapered, bootcut, flare + flare_cm; long legs without cuffs) · turn_up (cm, shorts/knee length) |
+| `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side] = slanted front pocket with pocket bag, [back_patch], [cargo]) · leg_shape (straight, tapered, bootcut, flare + flare_cm; long legs without cuffs) · turn_up (cm, shorts/knee length) · fake_fly (true or {offset_mm, length_frac_R, radius_mm, side}) · back_pockets (1, 2) + back_pocket_side (right, left; as worn) · hem_finish (plain, elastic_casing + hem_elastic_mm, hem_elastic_len_cm) · pocket_bag_fabric (cotton, jersey, lining, main) |
 | `tshirt_basic` | fit · fabric · sleeve_style (set_in, raglan) · sleeve_length (short, 3/4, long) · neckline (round, v) · length (normal, tunic) · sleeve_cuffs · hem_band |
 | `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) · front (closed, zip: zip-up jacket with split front, side pockets, zip guard, zip length in the notes) · zip_guard |
 | `skirt` | style: gathered, a_line, circle · length (mini, knee, midi, maxi) · gather · flare_deg |
@@ -168,7 +168,11 @@ Modules and main options:
 | `beanie` | brim, slouch |
 | `loop` | wraps (1 = single, 2 = worn doubled), height |
 
-Fabrics: woven, jersey, jersey_elastane, interlock, sweat, fleece, rib.
+Fabrics: woven, corduroy, velvet, jersey, jersey_elastane, interlock, sweat, fleece, rib. Corduroy and
+velvet have a nap (option `nap`, also `nap: true` for any other fabric): every main-fabric piece is
+cut with the top towards the same fabric end, and the pressing note says to press from the wrong side.
+All modules: `title` (e.g. "Kordhose") replaces the garment name on the pieces, in the instructions and
+in the file names.
 Fits: slim, normal, wide, oversized, harem.
 
 Seam allowance (all modules): `--seam-allowance 7.5` (mm, all seams), `--hem-allowance 30`

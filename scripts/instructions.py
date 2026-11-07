@@ -70,6 +70,11 @@ def render_fabric_png(pattern, plans, path):
             elif pattern.pieces[pi].on_fold:
                 nm += " (unfolded)"
             ax.text(c[0], c[1], nm + (" (flipped)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
+        if pl.get("nap"):
+            ax.annotate("", xy=(W + 22, H * 0.45), xytext=(W + 22, H * 0.15),
+                        arrowprops=dict(arrowstyle="-|>", lw=1.4, color="#7a4a1e"))
+            ax.text(W / 2, -22, "Nap ↓, all pieces waist up", fontsize=7, ha="center", va="bottom",
+                    color="#7a4a1e", fontweight="bold")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
         ax.text(W + 55, H / 2, "grainline / selvage", rotation=90, fontsize=6, va="center")
@@ -93,6 +98,8 @@ def layout_text(pl, units: str = "metric") -> str:
         t = "folded selvage to selvage, cut on fold pieces at the fold"
     else:
         t = "single layer"
+    if pl.get("nap"):
+        t += "; nap: all pieces with the waist towards the same end, none turned round"
     alt = pl.get("alternative")
     if alt:
         other = "folded" if alt["mode"] == "folded" else "single layer"

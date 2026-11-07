@@ -100,6 +100,20 @@ limited to 0.75–1.45).
 12. **Shorts / knee length:** the leg opening is at least 92 % of the leg circumference at
     the crotch line. `turn_up` (cm) adds twice its height to the hem allowance and marks
     the hem edge and the turn-up fold.
+13. **Fake fly** (`fake_fly`): a J topstitch line (`Mark`) on the front leg, `offset_mm` (30)
+    from centre front, straight down, a quarter circle of `radius_mm` (25) towards centre
+    front, then straight to the crotch seam, which it meets `length_frac_R` (0.62) × rise
+    below the waist. Two rows `spacing_mm` (6) apart and a bar tack at the crotch seam. The
+    drafted front piece, right side up, is the wearer's **left** front leg; the step says
+    whether the stitching catches the crotch seam allowance (only if offset − spacing ≤ SA).
+14. **Back pockets** (`back_pockets: 1|2`, `back_pocket_side`): with one pocket the piece is
+    cut once (not mirrored) and the placement mark says which leg. The drafted back piece,
+    right side up, is the wearer's **right** back leg.
+15. **Hem casing** (`hem_finish: elastic_casing`, legs without cuffs/turn-up): hem allowance
+    = 5 mm + elastic (`hem_elastic_mm`, 20) + 10 mm, 3 cm left open at the inseam; elastic
+    per leg `hem_elastic_len_cm` (default: ankle, rounded) + 2 cm overlap.
+16. **Pocket bag fabric** (`pocket_bag_fabric`): the inner pocket bag gets its own fabric
+    group ("Lining") in the cutting layout and fabric consumption.
 
 **Parameters for reverse engineering:** `hip_total`, `fork_factor`, `front_rise_total`,
 `inseam_total`, `opening_total`, `knee_total` (all can be overridden as options).

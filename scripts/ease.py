@@ -14,6 +14,18 @@ FABRICS = {
     "sweat": ("Sweat / French Terry", 25, True),
     "fleece": ("Fleece", 20, True),
     "rib": ("Rib knit", 80, True),
+    "corduroy": ("Corduroy", 0, False),
+    "velvet": ("Velvet", 0, False),
+}
+
+# fabrics with a nap or pile: all pieces must point the same way on the fabric
+NAP_FABRICS = ("corduroy", "velvet")
+
+PRESS_NOTES = {
+    "sweat": " with steam; do not press down hard on sweat.",
+    "fleece": ": fleece only with a cool iron through a cloth, or not at all.",
+    "corduroy": " from the wrong side on a terry towel; do not press down hard (the pile goes flat).",
+    "velvet": " from the wrong side on a terry towel; do not press down hard (the pile goes flat).",
 }
 
 FIT_LABELS = {"slim": "slim / close-fitting", "normal": "normal", "wide": "wide",
@@ -45,6 +57,21 @@ def _interp(table, fit, stretch, knit):
         return woven
     # above 30 % stretch: 1 % less ease per additional 10 % stretch
     return knitv - max(stretch - 30, 0) * 0.001
+
+
+def has_nap(options: dict | None) -> bool:
+    """Does the main fabric have a nap (option `nap`, default from the fabric)?"""
+    o = options or {}
+    if o.get("nap") is not None:
+        return bool(o["nap"])
+    return o.get("fabric") in NAP_FABRICS
+
+
+def press_note(fabric: str | None) -> str:
+    """How to press the finished garment (appended to "Press all seams")."""
+    if fabric in PRESS_NOTES:
+        return PRESS_NOTES[fabric]
+    return " with steam." if fabric and fabric_info(fabric)[2] else "."
 
 
 def body_ease(fit: str, fabric: str, stretch: float | None = None) -> float:

@@ -330,4 +330,6 @@ def assembly(pattern) -> list[Step]:
     knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
     for s in body:
         s.data.setdefault("knit", knit)
+        if s.data.get("picture") == "done" and s.text == "Press all seams.":
+            s.text = "Press all seams" + E.press_note(pattern.options.get("fabric"))
     return prepare(pattern) + body

@@ -4,8 +4,14 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Pants options** (#39): `fake_fly` (J topstitch line on the left front leg with its own step; the step only says the stitching catches the crotch seam allowance when it really does), `back_pockets: 1|2` with `back_pocket_side` (a single pocket is cut once and its mark names the leg), `hem_finish: "elastic_casing"` (hem allowance 5 mm + elastic + 10 mm, 3 cm opening at the inseam, elastic length per leg in the notes and steps), `pocket_bag_fabric` (the inner pocket bag becomes its own "Lining" group in the cutting layout and fabric consumption).
+- Option `title` for every garment: the name on the pieces, in the instructions and in the file names. (#39)
+- Fabrics **corduroy** and **velvet**, with a nap: the cutting layout keeps every main-fabric piece waist up ("Nap ↓, all pieces waist up") and the fabric consumption follows; option `nap` for any other fabric. Pressing note per fabric (corduroy/velvet from the wrong side on a terry towel). (#39)
+
 ### Changed
 - Privacy: `project.json` from photo mode B stores only the photo's file name, not its full local path; `profiles/` and `*.smis` measurement exports are git-ignored so personal measurements don't get committed by accident.
+- The back-pocket step uses the pattern's real seam allowance instead of a fixed 1 cm. (#39)
 
 ## [1.2.0] - 2026-11-07
 
