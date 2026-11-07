@@ -44,14 +44,20 @@ def length(mm: float, units: str = "metric", digits: int = 1) -> str:
     """Body/finished measurement or allowance."""
     if check(units) == "imperial":
         return inch_text(mm)
-    return f"{mm / 10:.{digits}f} cm"
+    return _dc(f"{mm / 10:.{digits}f} cm")
+
+
+def _dc(text: str) -> str:
+    """Decimal comma in German output."""
+    import i18n
+    return text.replace(".", ",") if i18n.is_de() else text
 
 
 def allowance(mm: float, units: str = "metric") -> str:
     if check(units) == "imperial":
         return inch_text(mm)
     t = f"{mm / 10:.2f}"
-    return (t[:-1] if t.endswith("0") else t) + " cm"
+    return _dc((t[:-1] if t.endswith("0") else t) + " cm")
 
 
 def yards(mm: float) -> float:
@@ -66,7 +72,7 @@ def fabric_length(mm: float, units: str = "metric") -> str:
         if frac == 0:
             return f"{whole} yd"
         return (f"{whole} " if whole else "") + f"{frac.numerator}/{frac.denominator} yd"
-    return f"{mm / 1000:.2f} m"
+    return _dc(f"{mm / 1000:.2f} m")
 
 
 def fabric_width(mm: float, units: str = "metric") -> str:

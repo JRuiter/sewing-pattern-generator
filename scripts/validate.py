@@ -329,18 +329,23 @@ def is_ok(report) -> bool:
 
 
 def to_markdown(report, title: str = "Sewability check") -> str:
-    icon = {"OK": "✅ OK", "WARNING": "⚠️ Warning", "ERROR": "❌ Error"}
-    lines = [f"### {title}", "", "| Area | Check | Target | Actual | Δ | Result | Note |",
+    from i18n import t
+    icon = {"OK": "✅ OK", "WARNING": "⚠️ " + t("Warning"), "ERROR": "❌ " + t("Error")}
+    head = ("Area", "Check", "Target", "Actual", "Δ", "Result", "Note")
+    lines = [f"### {t(title)}", "", "| " + " | ".join(t(h) for h in head) + " |",
              "|---|---|---|---|---|---|---|"]
     for c in report:
-        lines.append(f"| {c.group} | {c.name} | {c.target} | {c.actual} | {c.delta} | {icon[c.status]} | {c.note} |")
+        cells = [t(c.group), t(c.name), t(c.target), t(c.actual), t(c.delta), icon[c.status], t(c.note)]
+        lines.append("| " + " | ".join(cells) + " |")
     n_ok = sum(c.status == "OK" for c in report)
     n_w = sum(c.status == "WARNING" for c in report)
     n_f = sum(c.status == "ERROR" for c in report)
-    lines += ["", f"**Result:** {n_ok} OK, {n_w} warning(s), {n_f} error(s): "
-              + ("the pattern is sewable." if n_f == 0 else "do NOT deliver this pattern.")]
+    lines += ["", t(f"**Result:** {n_ok} OK, {n_w} warning(s), {n_f} error(s): ")
+              + t("the pattern is sewable." if n_f == 0 else "do NOT deliver this pattern.")]
     return "\n".join(lines)
 
 
 def to_rows(report):
-    return [c.__dict__ for c in report]
+    from i18n import t
+    return [{**c.__dict__, "group": t(c.group), "name": t(c.name), "target": t(c.target), "actual": t(c.actual),
+             "delta": t(c.delta), "note": t(c.note)} for c in report]

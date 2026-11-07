@@ -32,6 +32,7 @@ import numpy as np
 
 import geometry as G
 import steps as S
+from i18n import t as T
 
 RIGHT_SIDE = "#f1d39b"          # right side of the fabric
 RIGHT_EDGE = "#8a6d3b"
@@ -245,7 +246,7 @@ def _dim(ax, a, b, text, size, z=9, side=1.0):
     m = (a + b) / 2
     d = G.unit(b - a)
     nv = np.array([-d[1], d[0]]) * side
-    ax.text(*(m + nv * size * 0.04), text, fontsize=7.5, ha="center", va="center", zorder=z,
+    ax.text(*(m + nv * size * 0.04), T(text), fontsize=7.5, ha="center", va="center", zorder=z,
             bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none"))
 
 
@@ -423,7 +424,7 @@ def draw_ring(ax, pattern, step):
     _stitch(ax, [[half - sa, -H * 0.06], [half - sa, H]])
     _pins(ax, np.array([[half, 0.0], [half, H]]), max(half, H) * 0.9, count=2, inward=True)
     ax.plot([0, 0], [0, H], color=INK, lw=2.2, zorder=5)
-    ax.text(-half * 0.03, H / 2, "fold", rotation=90, ha="right", va="center", fontsize=7, color="#555")
+    ax.text(-half * 0.03, H / 2, T("fold"), rotation=90, ha="right", va="center", fontsize=7, color="#555")
     _arrow(ax, [half * 0.8, H * 1.45], [half * 0.2, H * 1.45], rad=0.35)
     pc_lab = (np.eye(2), np.zeros(2), False)
     _piece_label(ax, pattern, pc, top, pc_lab, size=8)
@@ -437,14 +438,14 @@ def draw_fold(ax, pattern, step):
     flat = np.array([[0, 0], [w, 0], [w, H], [0, H]], float)
     _fill(ax, flat, wrong=True, z=1)
     ax.plot([0, w], [H / 2, H / 2], color=INK, lw=1.0, ls=(0, (6, 2, 1, 2)), zorder=3)
-    ax.text(w * 1.02, H / 2, "fold line", fontsize=7, va="center", color="#555")
+    ax.text(w * 1.02, H / 2, T("fold line"), fontsize=7, va="center", color="#555")
     _arrow(ax, [w * 0.5, H * 0.95], [w * 0.5, H * 0.05], rad=-0.5)
     # result: folded band, right side outside
     res = np.array([[0, 0], [w, 0], [w, H / 2], [0, H / 2]], float) + [0, -H * 1.1]
     _fill(ax, res, wrong=False, z=1)
     ax.plot([0, w], [res[2, 1], res[2, 1]], color=INK, lw=2.0, zorder=3)
-    ax.text(w * 1.02, res[2, 1], "fold", fontsize=7, va="center", color="#555")
-    ax.text(w * 1.02, res[0, 1], "raw edges", fontsize=7, va="center", color="#555")
+    ax.text(w * 1.02, res[2, 1], T("fold"), fontsize=7, va="center", color="#555")
+    ax.text(w * 1.02, res[0, 1], T("raw edges"), fontsize=7, va="center", color="#555")
     _piece_label(ax, pattern, pc, flat, ID, size=8)
     _finish_axes(ax, [flat, res, [[w * 1.35, 0]]], pad=0.06)
 
@@ -478,7 +479,7 @@ def _quarter_pins(ax, cy, rx, ry, z, labels=("", "", "", ""), label_dy=0.0):
         if labels[k]:
             dx = {0: 0.0, 1: 0.2, 2: 0.0, 3: -0.2}[k]
             dy = {0: -0.2, 1: 0.0, 2: 0.2, 3: 0.0}[k]
-            ax.text(x + dx, y + dy + label_dy, labels[k], fontsize=6.5, ha="center", va="center",
+            ax.text(x + dx, y + dy + label_dy, T(labels[k]), fontsize=6.5, ha="center", va="center",
                     color="#444", zorder=z + 2)
 
 
@@ -498,9 +499,9 @@ def draw_quarter(ax, pattern, step):
     _quarter_pins(ax, 0.0, 1.0, 0.3, 2, labs)
     ax.text(0.85, 1.35, letters(pattern)[band.key], fontsize=8, fontweight="bold", ha="center",
             va="center", zorder=9, bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=INK, lw=0.9))
-    ax.text(0.0, -0.75, target, fontsize=7, ha="center", va="center", zorder=9,
+    ax.text(0.0, -0.75, T(target), fontsize=7, ha="center", va="center", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
-    ax.text(1.05, 1.35, band.name, fontsize=7, ha="left", va="center")
+    ax.text(1.05, 1.35, T(band.name), fontsize=7, ha="left", va="center")
     ax.set_xlim(-1.5, 2.2)
     ax.set_ylim(-1.3, 1.8)
     ax.set_aspect("equal")
@@ -518,13 +519,13 @@ def draw_attach(ax, pattern, step):
     _arrow(ax, [0.55, -0.58], [-0.25, -0.58], color=STITCH, lw=1.6, rad=-0.12)
     ax.text(0.0, 0.12, letters(pattern)[band.key], fontsize=8, fontweight="bold", ha="center",
             va="center", zorder=9, bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=INK, lw=0.9))
-    ax.text(0.0, -0.85, target, fontsize=7, ha="center", va="bottom", zorder=9,
+    ax.text(0.0, -0.85, T(target), fontsize=7, ha="center", va="bottom", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
-    ax.text(1.12, 0.3, "band folded,\nraw edges down", fontsize=6.5, ha="left", va="center", color="#444")
+    ax.text(1.12, 0.3, T("band folded,\nraw edges down"), fontsize=6.5, ha="left", va="center", color="#444")
     if step.stretch:
         _arrow(ax, [-1.1, -0.15], [-1.55, -0.15], lw=1.6)
         _arrow(ax, [1.1, -0.15], [1.55, -0.15], lw=1.6)
-        ax.text(1.35, -0.32, "stretch", fontsize=7, ha="center", va="top")
+        ax.text(1.35, -0.32, T("stretch"), fontsize=7, ha="center", va="top")
     ax.set_xlim(-1.8, 2.3)
     ax.set_ylim(-1.3, 0.9)
     ax.set_aspect("equal")
@@ -551,7 +552,7 @@ def _xsection(ax, origin, scale, kind, amount_txt=""):
         if kind != "press":
             ax.plot([ox + 2.15 * s] * 2, [oy - 0.15 * s, oy + 0.55 * s], color=STITCH, lw=1.6, zorder=11)
         if amount_txt:
-            ax.text(ox + 2.45 * s, oy - 0.35 * s, amount_txt, fontsize=6.5, ha="center", va="top", zorder=11)
+            ax.text(ox + 2.45 * s, oy - 0.35 * s, T(amount_txt), fontsize=6.5, ha="center", va="top", zorder=11)
     elif kind == "edge":
         ax.plot([ox, ox + 3 * s], [oy, oy], color=RIGHT_EDGE, lw=2.4, zorder=10)
         xs = np.linspace(ox + 2.3 * s, ox + 3 * s, 7)
@@ -643,7 +644,7 @@ def draw_gather(ax, pattern, step):
     t = G.unit(b - a)
     for p, sgn in ((a, -1), (b, 1)):
         _arrow(ax, p + t * sgn * size * 0.02, p + t * sgn * size * 0.16, color=STITCH, lw=1.4)
-    ax.text(*(b + t * size * 0.1 + np.array([0, size * 0.04])), "pull", fontsize=7, ha="center")
+    ax.text(*(b + t * size * 0.1 + np.array([0, size * 0.04])), T("pull"), fontsize=7, ha="center")
     _piece_label(ax, pattern, pc, full, size=8)
     _finish_axes(ax, [full, a - t * size * 0.2, b + t * size * 0.2])
 
@@ -653,7 +654,7 @@ def draw_place(ax, pattern, step):
     base = pattern.piece(step.pieces[1])
     full = _unfolded(base, _outline(base))
     _fill(ax, full, z=1)
-    mark = next((m for m in base.marks if step.data.get("mark", "") in m.label), None)
+    mark = next((m for m in base.marks if step.data.get("mark", "") in (getattr(m, "key", None) or m.label)), None)
     _piece_label(ax, pattern, base, full, size=8)
     if mark is not None and len(mark.pts) >= 3:
         mp = np.asarray(mark.pts, float)
@@ -716,13 +717,13 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((2.0, 1.1), 0.38, fc=RIGHT_SIDE, ec=INK, lw=0.8))
         ax.plot([1.3, 2.7], [1.85, 1.85], color=INK, lw=1)
         ax.add_patch(Circle((2.5, 2.0), 0.06, fc=INK))
-        ax.text(3.1, 1.1, "30–40°", fontsize=8, va="center")
+        ax.text(3.1, 1.1, T("30–40°"), fontsize=8, va="center")
     elif pic == "cut":
         _pic_fabric(ax, 0.4, 0.4, 3.2, 1.8)
         outline = np.array([[0.9, 0.7], [2.2, 0.7], [2.5, 1.9], [1.0, 1.9]])
         ax.plot(*np.vstack([outline, outline[:1]]).T, color=INK, lw=1.2, ls=(0, (4, 2)), zorder=4)
         _arrow(ax, [0.6, 1.6], [0.6, 0.6], lw=1.0)
-        ax.text(0.5, 1.1, "grain", rotation=90, fontsize=6.5, ha="right", va="center")
+        ax.text(0.5, 1.1, T("grain"), rotation=90, fontsize=6.5, ha="right", va="center")
         _pic_scissors(ax, 2.95, 1.3, 0.45, rot=-75)
     elif pic == "notch":
         _pic_fabric(ax, 0.6, 0.5, 2.8, 1.2)
@@ -742,15 +743,15 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Rectangle((2.4, 0.6), 1.2, 1.4, fc=RIGHT_SIDE, ec=INK, lw=1.3))
         _arrow(ax, [1.9, 1.3], [2.3, 1.3], lw=1.6)
         _arrow(ax, [1.2, 2.2], [1.2, 2.5], lw=1.2, rad=0.0)
-        ax.text(1.2, 0.35, "inside out", fontsize=7, ha="center")
-        ax.text(3.0, 0.35, "right side out", fontsize=7, ha="center")
+        ax.text(1.2, 0.35, T("inside out"), fontsize=7, ha="center")
+        ax.text(3.0, 0.35, T("right side out"), fontsize=7, ha="center")
     elif pic == "elastic":
         ax.add_patch(Rectangle((0.3, 1.0), 3.4, 0.6, fc=RIGHT_SIDE, ec=INK, lw=1.3))
         ax.plot([0.3, 3.7], [1.3, 1.3], color="#eeeeee", lw=6, zorder=3, alpha=0.0)
         ax.plot([0.9, 2.6], [1.3, 1.3], color=INK, lw=3.5, zorder=4, alpha=0.35)
         _pic_safety_pin(ax, 2.95, 1.3, 0.4)
         _arrow(ax, [2.9, 1.9], [3.6, 1.9], lw=1.4)
-        ax.text(1.75, 0.65, "elastic, with a safety pin", fontsize=7, ha="center")
+        ax.text(1.75, 0.65, T("elastic, with a safety pin"), fontsize=7, ha="center")
     elif pic == "velcro":
         _pic_fabric(ax, 0.6, 0.4, 1.4, 1.8)
         _pic_fabric(ax, 2.0, 0.4, 1.4, 1.8, wrong=True)
@@ -764,7 +765,7 @@ def draw_icon(ax, pattern, step):
         for i, x in enumerate(xs[:-1]):
             y0, y1 = (1.35, 1.15) if i % 2 == 0 else (1.15, 1.35)
             ax.plot([x, xs[i + 1]], [y0, y1], color=STITCH, lw=1.1)
-        ax.text(2.0, 0.25, "ladder stitch: the stitches disappear", fontsize=7, ha="center")
+        ax.text(2.0, 0.25, T("ladder stitch: the stitches disappear"), fontsize=7, ha="center")
     elif pic == "level":
         ax.plot([1.0, 3.0], [2.3, 2.3], color=INK, lw=2.0)
         skirt = np.array([[1.6, 2.25], [2.4, 2.25], [3.0, 0.5], [1.0, 0.5]])
@@ -904,14 +905,16 @@ def _shrink_png(path):
         pass
 
 
-def render_steps(pattern, steps: list, out_dir: str, sub: str = "steps") -> dict[int, str]:
+def render_steps(pattern, steps: list, out_dir: str, sub: str | None = None) -> dict[int, str]:
     """One PNG per step with a diagram; returns {step number (1-based): relative path}."""
+    import i18n
+    sub = sub or i18n.fname("steps")
     os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
     res = {}
     for i, st in enumerate(steps, 1):
         if not isinstance(st, S.Step) or st.diagram == "icon":
             continue
-        rel = f"{sub}/step_{i:02d}.png"
+        rel = f"{sub}/{i18n.fname('step_')}{i:02d}.png"
         render_step(pattern, st, os.path.join(out_dir, rel), number=i)
         res[i] = rel
     return res

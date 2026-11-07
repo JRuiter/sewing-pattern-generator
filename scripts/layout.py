@@ -409,9 +409,11 @@ FABRIC_MARGIN = 10.0
 
 
 def fabric_group(piece) -> str:
-    if piece.fabric.startswith("Rib knit"):
+    """Fabric group of the cutting layout (by the English fabric name, see i18n.localize_pattern)."""
+    fab = getattr(piece, "fabric_key", None) or piece.fabric
+    if fab.startswith("Rib knit"):
         return "Rib knit"
-    return "Lining" if "Lining" in piece.fabric else "Main fabric"
+    return "Lining" if "Lining" in fab else "Main fabric"
 
 
 def _fold_edge(piece):

@@ -48,16 +48,18 @@ class Step:
 
     def as_text(self, options: dict | None = None) -> str:
         """One line of the Markdown instructions."""
-        parts = [f"**{self.title}**" + ("." if not self.title.endswith(("!", ".", "?")) else "")]
+        from i18n import t
+        title = t(self.title)
+        parts = [f"**{title}**" + ("." if not title.endswith(("!", ".", "?")) else "")]
         if self.text:
-            parts.append(self.text)
+            parts.append(t(self.text))
         tool = tool_for(options or {}, self.stitch, self.data.get("knit")) if self.stitch else None
         if tool and tool.get("phrase"):
-            parts.append(f"({tool['phrase']})")
+            parts.append(f"({t(tool['phrase'])})")
         if self.repeat > 1:
-            parts.append(f"Do this {_times(self.repeat)}.")
+            parts.append(t(f"Do this {_times(self.repeat)}."))
         if self.tip:
-            parts.append(f"Tip: {self.tip}")
+            parts.append(t("Tip:") + " " + t(self.tip))
         return " ".join(parts)
 
 
@@ -223,7 +225,7 @@ def machines_needed(steps: list[Step], options: dict, knit: bool | None = None) 
 # Small helpers so the garment modules read like a list of actions.
 
 def cm(mm: float) -> str:
-    return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
+    return f"{mm / 10:g} cm" if mm >= 15 else f"{round(mm, 1):g} mm"
 
 
 def seam(title: str, seams: list[str], text: str = "", **kw) -> Step:

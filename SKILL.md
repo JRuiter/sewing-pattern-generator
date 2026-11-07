@@ -161,6 +161,12 @@ its own colour/line, PDF layer (switch sizes on/off in Acrobat's *Layers* panel)
 Use it for siblings or to blend between sizes; all sizes share the same options.
 Imperial users: `--units imperial` (measurements in inches, reports in inches/yards).
 
+**German output:** `--lang de` (spec `"language": "de"`) writes every output in German: piece labels, sewing
+steps, booklet, cutting layout, reports and diagrams, with German file names (`naehanleitung.pdf`,
+`pruefbericht.md`, `zuschnittplan.png`, `schnitt.json`, `…_master_1zu1.svg`, `…_a4_kleben.pdf`), decimal
+commas and "Gr. 122". All texts go through one string table (`scripts/i18n.py`, German entries in
+`scripts/i18n_de.py`); a new output text needs a German entry there. Option names and construction value keys stay English.
+
 Modules and main options:
 
 | Module | Styles/options |
@@ -247,6 +253,7 @@ present. Fix anything odd or tell the user openly.
 
 ## Files
 - `scripts/generate.py`: complete flow (CLI)
+- `scripts/i18n.py`, `i18n_de.py`: output language (`--lang de`), one central string table
 - `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`, `units.py`, `allowance.py`:
   foundations (geometry, pieces, sizes, ease, imperial units, seam allowances)
 - `scripts/construction.py`, `adjust.py`, `notches.py`: construction values, toile adjustments, notches

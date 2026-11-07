@@ -737,7 +737,7 @@ FIT_PARAMS = ["hip_total", "fork_factor", "front_rise_total", "inseam_total", "o
 
 
 def _cm_text(mm: float) -> str:
-    return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
+    return f"{mm / 10:g} cm" if mm >= 15 else f"{round(mm, 1):g} mm"
 
 
 def assembly(pat: Pattern) -> list:

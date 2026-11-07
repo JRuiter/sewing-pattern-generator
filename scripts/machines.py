@@ -347,40 +347,42 @@ def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
 def markdown(pattern) -> str | None:
     """'Your machines' section for the sewing instructions (None if the machines are unknown)."""
     import ease as E
+    from i18n import num
+    from i18n import t as T
     o = pattern.options
     m = of(o)
     if m is None:
         return None
     knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))[2]
     have = [k for k in KEYS if k in m and not (k == "sewing" and "straight_only" in m)]
-    lines = ["You told me you sew with: " + ", ".join(LABELS[k] for k in have) + ".", ""]
+    lines = [T("You told me you sew with:") + " " + ", ".join(T(LABELS[k]) for k in have) + ".", ""]
     if not has_sewing_machine(m):
-        lines += ["There is no sewing machine, so every step that needs a straight stitch is done **by hand**: "
-                  "topstitching with a back stitch, hems and casings with a blind stitch, basting with a tacking "
-                  "stitch, bar tacks by hand, elastic ends with a box of hand stitches.", ""]
-    lines += [
-             "| Step | Machine | Stitch | Settings |", "|---|---|---|---|"]
+        lines += [T("There is no sewing machine, so every step that needs a straight stitch is done **by hand**: "
+                    "topstitching with a back stitch, hems and casings with a blind stitch, basting with a tacking "
+                    "stitch, bar tacks by hand, elastic ends with a box of hand stitches."), ""]
+    lines += ["| " + " | ".join(T(h) for h in ("Step", "Machine", "Stitch", "Settings")) + " |", "|---|---|---|---|"]
     for kind in KINDS:
         d = method(o, kind, knit)
         assert d is not None
         st = []
         if d["width_mm"]:
-            st.append(f"width {d['width_mm']:g} mm")
+            st.append(T("width") + f" {num(d['width_mm'])} mm")
         if d["length_mm"]:
-            st.append(f"length {d['length_mm']:g} mm")
+            st.append(T("length") + f" {num(d['length_mm'])} mm")
         if d["needle"]:
-            st.append(d["needle"])
-        lines.append(f"| {ROW_LABELS[kind]} | {MACHINE_NAMES[d['machine']]} | {d['stitch']} | {', '.join(st)} |")
+            st.append(T(d["needle"]))
+        lines.append(f"| {T(ROW_LABELS[kind])} | {T(MACHINE_NAMES[d['machine']])} | {T(d['stitch'])} | "
+                     f"{', '.join(st)} |")
     sa = o.get("_sa_from_machines")
     if sa == OVERLOCK_SA_MM:
-        lines += ["", "Seam allowance 7.5 mm because you sew the seams on the overlocker: guide the fabric so "
-                  "the knife just skims the edge."]
+        lines += ["", T("Seam allowance 7.5 mm because you sew the seams on the overlocker: guide the fabric so "
+                        "the knife just skims the edge.")]
     elif sa == FRENCH_SEAM_SA_MM:
-        lines += ["", "Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm)."]
-    tips = missing_tips(m, knit)
+        lines += ["", T("Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm).")]
+    tips = [T(x) for x in missing_tips(m, knit)]
     if "overlocker" in m:
-        tips += ["At the overlocker: " + h[0].lower() + h[1:] for h in OVERLOCKER_HINTS]
+        tips += [T("At the overlocker:") + " " + T(h) for h in OVERLOCKER_HINTS]
     if tips:
-        lines += [""] + [f"- {t}" for t in tips]
-    lines += ["", "Test the stitch on a scrap of your fabric first (two layers, same direction as the seam)."]
+        lines += [""] + [f"- {x}" for x in tips]
+    lines += ["", T("Test the stitch on a scrap of your fabric first (two layers, same direction as the seam).")]
     return "\n".join(lines)
