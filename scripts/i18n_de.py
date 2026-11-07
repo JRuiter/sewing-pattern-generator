@@ -523,7 +523,9 @@ TABLE: dict[str, str] = {
         "Overlock ({n}-Faden-Overlockstich, Differential etwa {n}, damit die Naht nicht wellt)",
 
     # ------------------------------------------------------------------ booklet
-    "Basics": "Grundlagen", "and": "und", "Colours in this booklet": "Farben in dieser Anleitung",
+    "right sides together": "rechts auf rechts", "leg 1: inside out": "Bein 1: links gewendet",
+    "leg 2: right side out": "Bein 2: rechts gewendet",
+    "leg 2 inside leg 1, waist edges even": "Bein 2 in Bein 1, Oberkanten bündig", "Basics": "Grundlagen", "and": "und", "Colours in this booklet": "Farben in dieser Anleitung",
     "Material": "Material", "For notches, labels and placement lines.": "Für Knipse, Beschriftung und Positionslinien.",
     "Press from the wrong side only, on the towel.": "Nur von links bügeln, auf dem Frottiertuch.",
     "To thread the elastic.": "Zum Gummi-Einziehen.", "Steam.": "Mit Dampf.",

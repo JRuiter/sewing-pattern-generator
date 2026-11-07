@@ -115,7 +115,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         pat.pieces.append(kp)
         y0 = hem_y
         front.marks.append(Mark(np.array([[0, y0 + Hk], [Wk - op * 0.45, y0 + Hk], [Wk, y0 + Hk - op],
-                                          [Wk, y0]]), "placement", "Kangaroo pocket"))
+                                          [Wk, y0], [0, y0]]), "placement", "Kangaroo pocket"))
     if zip_front:
         _zip_front(pat, sa if zip_sa is None else float(zip_sa), zip_guard, hood, m)
     return pat

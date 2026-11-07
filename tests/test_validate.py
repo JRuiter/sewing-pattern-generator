@@ -927,8 +927,10 @@ def test_seam_overlay_puts_the_pieces_on_top_of_each_other():
                 np.abs(DG._resample(moved)[::-1] - DG._resample(target)).max())
         assert d < 0.06 * A.edge(ea).length, (name, d)
     pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
+    inseam = next(s for s in pat.seams if s["name"].startswith("Inseam"))
+    assert DG.overlay_parts(pat, inseam)[4][2] is True             # back leg turned over (wrong side up)
     side = next(s for s in pat.seams if s["name"].startswith("Side seam"))
-    assert DG.overlay_parts(pat, side)[4][2] is True               # back leg turned over (wrong side up)
+    assert DG.overlay_parts(pat, side) is None                     # pocket: edges differ, side by side
     bag = next(s for s in pat.seams if s["name"].startswith("Pocket bag seam"))
     assert DG.overlay_parts(pat, bag)[4][2] is False               # pocket bags lie the same way up
     band = next(s for s in pat.seams if s["name"].startswith("Waistband"))

@@ -119,3 +119,13 @@ def test_garment_views_are_whole_garments():
         keys = [pc.key for _r, pc, _z in view["layers"]]
         assert keys.count("sleeve") == 2 and keys.count("sleeve_cuff") == 2 and "hem_band" in keys, (name, keys)
         assert "hood" in keys
+
+
+def test_seams_of_different_shape_are_shown_side_by_side(kord):
+    """Side seams and inseams of front and back differ: no skewed stacked picture."""
+    import diagrams as DG
+    _checks, _pages, steps, pat = kord
+    for title in ("Sew the side seams", "Sew the inseams"):
+        st = next(s for s in steps if s.title == title)
+        sms = S.resolve_seams(pat, st)
+        assert len(sms) == 1 and DG.overlay_parts(pat, sms[0]) is None, title
