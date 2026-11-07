@@ -12,7 +12,7 @@ Apply to every output of `scripts/render.py`. Checked automatically by
 | Line widths ≥ 0.5 pt | cutting line 1.0 pt, fold 1.0 pt, seam line 0.6 pt, markings 0.6–0.8 pt, tile frame 0.5 pt |
 | Line styles | cutting line **solid**, seam line **dashed**, fold **dash-dot** |
 | Control square | on every page/sheet: 5 × 5 cm (exactly 141.73 pt) + 1 inch (72 pt) |
-| Labels per piece | name, size, "cut n" (mirrored pair/on fold), grainline arrow, notches (single/double), seam allowance note, "◄ PLACE ON FOLD ►" |
+| Labels per piece | name, size, "cut n" (mirrored pair/on fold), grainline arrow, notches (single/double), seam allowance note, fold symbol on every fold edge (bracket with two arrows pointing at the fold, "PLACE ON FOLD"; on short edges "ON FOLD"/"FOLD" and a smaller font, kept clear of fold-over lines and the grainline) |
 | Printing note | "Print at 100 % / "Actual size". Do NOT use "Fit to page"." in the header of every file |
 
 ## Roll (plotter)

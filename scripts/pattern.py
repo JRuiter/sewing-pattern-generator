@@ -25,6 +25,7 @@ class Edge:
     label: str = ""             # e.g. "Hem", "Side seam"
     turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
     sa_hint: float = 0.0        # pattern without allowances: the allowance to add when cutting
+    pointed: bool = False       # meets a fold edge at an intended point (V-neck), not at 90°
 
     @property
     def length(self) -> float:

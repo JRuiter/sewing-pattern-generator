@@ -182,6 +182,7 @@ a right angle (casing/facing 25 mm). Kangaroo pocket: 0.62 × q wide, slanted op
 | Geometry | outline closed, counter-clockwise, not self-intersecting; seam allowance on every non-fold edge measured with a normal ray |
 | Labels | every piece has a grainline (inside the piece) and cutting information |
 | Turned allowances | folded at the seam line, the allowance next to each corner lies on the neighbouring cutting line (≤ 0.5 mm, otherwise warning) |
+| Cut-on-fold edges | straight (≤ 0.5 mm), no seam allowance, every neighbouring edge meets the fold at 90° (no peak or dip at the centre once unfolded; tolerances as for corners; an intended point such as a V-neck is marked `Edge.pointed` and checked as a corner instead), the fold edge on the fabric fold runs along the grain (≤ 1°, otherwise warning) |
 | Notches | every notch mark starts on the cutting line |
 
 An error (❌) blocks the print files.

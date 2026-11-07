@@ -39,6 +39,7 @@ STYLES = {
     "fold": dict(w=1.0, dash=(12, 3, 2, 3), color=(0, 0, 0)),
     "notch": dict(w=0.8, dash=None, color=(0, 0, 0)),
     "grain": dict(w=0.8, dash=None, color=(0, 0, 0)),
+    "fold_arrow": dict(w=0.8, dash=None, color=(0, 0, 0)),
     "mark_fold": dict(w=0.6, dash=(9, 3, 2, 3), color=(0.2, 0.2, 0.2)),
     "mark_placement": dict(w=0.6, dash=(3, 3), color=(0.2, 0.2, 0.2)),
     "tile": dict(w=0.5, dash=(3, 3), color=(0.45, 0.45, 0.45)),
@@ -136,6 +137,110 @@ def _fit_text_block(poly, lines, sizes, bolds):
     return (anchor.x, anchor.y), 0.0, 0.6
 
 
+FOLD_TEXTS = ("PLACE ON FOLD", "ON FOLD", "FOLD")
+FOLD_SIZES = (8.0, 7.0, 6.0, 5.0)
+FOLD_MAX_SPAN = 110.0     # mm, bracket length along the fold edge
+FOLD_TIP_GAP = 1.5        # mm between the arrow tips and the fold edge
+
+
+def _free_interval(lo, hi, blocked, centre):
+    """Longest part of [lo, hi] outside the `blocked` intervals; ties go to the one nearest `centre`."""
+    free, x = [], lo
+    for b0, b1 in sorted(blocked):
+        if b0 > x:
+            free.append((x, min(b0, hi)))
+        x = max(x, b1)
+        if x >= hi:
+            break
+    if x < hi:
+        free.append((x, hi))
+    free = [f for f in free if f[1] - f[0] > 0.5]
+    if not free:
+        return lo, hi
+    return max(free, key=lambda f: (round(f[1] - f[0], 1), -abs((f[0] + f[1]) / 2 - centre)))
+
+
+def fold_symbol(edge, obstacles=()):
+    """Standard "place on fold" symbol for a (straight) fold edge: a bracket parallel to the
+    edge whose two legs end in arrows pointing at the fold, labelled "PLACE ON FOLD".
+
+    The bracket is sized to the edge (short doll waistbands get a short bracket, a shorter
+    text and a smaller font) and keeps clear of inner lines and the grainline (`obstacles`),
+    e.g. the fold line that crosses a waistband at half its height.
+    Returns dict(prims, region, text, size, span): `region` is the area the symbol covers
+    (the label block avoids it)."""
+    a, b = np.asarray(edge.pts[0], float), np.asarray(edge.pts[-1], float)
+    L_ = float(np.linalg.norm(b - a))
+    t = G.unit(b - a)
+    n_in = np.array([-t[1], t[0]])
+    off = float(np.clip(0.25 * L_, 5.0, 10.0))      # bracket distance from the fold
+    depth = off + max(FOLD_SIZES) * PT * 1.6 + 2.0   # strip that the symbol may occupy
+
+    def at(s, d):
+        return a + t * s + n_in * d
+
+    strip = Polygon([at(0, 0), at(L_, 0), at(L_, depth), at(0, depth)])
+    blocked = []
+    for ob in obstacles:
+        hit = strip.intersection(LineString(np.asarray(ob, float)))
+        if hit.is_empty:
+            continue
+        ss = []
+        for g in getattr(hit, "geoms", [hit]):
+            ss += [float(np.dot(np.asarray(c) - a, t)) for c in g.coords]
+        blocked.append((min(ss) - 2.0, max(ss) + 2.0))
+    margin = min(3.0, 0.1 * L_)
+
+    def pick(room):
+        """First text/size that fits along `room` mm, or None."""
+        for tx in FOLD_TEXTS:
+            for sz in FOLD_SIZES:
+                if text_w_mm(tx, sz, True) <= room:
+                    return tx, sz
+        return None
+
+    lo, hi = _free_interval(margin, L_ - margin, blocked, L_ / 2)
+    choice = pick(hi - lo)
+    if choice is None:                     # too little room next to the obstacles: use the whole edge
+        lo, hi = margin, L_ - margin
+        choice = pick(hi - lo) or (FOLD_TEXTS[-1], FOLD_SIZES[-1])
+    text, size = choice
+    span = min(0.8 * (hi - lo), FOLD_MAX_SPAN)
+    w = max(span, text_w_mm(text, size, True))
+    c = float(np.clip(L_ / 2, lo + w / 2, hi - w / 2)) if w <= hi - lo else (lo + hi) / 2
+    s0, s1 = c - span / 2, c + span / 2
+    head = min(2.5, span / 6)
+    prims = [Prim("line", "fold_arrow", np.array([at(s0, FOLD_TIP_GAP), at(s0, off), at(s1, off),
+                                                  at(s1, FOLD_TIP_GAP)]))]
+    for s in (s0, s1):                                 # arrow heads pointing at the fold
+        tip = at(s, FOLD_TIP_GAP)
+        prims.append(Prim("line", "fold_arrow", np.array([tip + n_in * head * 1.6 + t * head * 0.6, tip,
+                                                          tip + n_in * head * 1.6 - t * head * 0.6])))
+    ang = math.degrees(math.atan2(t[1], t[0]))
+    if ang > 90 or ang < -90:
+        ang += 180
+    th = size * PT
+    prims.append(Prim("text", text=text, size=size, bold=True, pts=at(c, off + 1.0 + th * 0.5),
+                      angle=ang, ly=-th * 0.35))
+    half = w / 2 + 1.0
+    region = Polygon([at(c - half, 0), at(c + half, 0), at(c + half, off + 2.0 + th * 1.3),
+                      at(c - half, off + 2.0 + th * 1.3)])
+    return dict(prims=prims, region=region, text=text, size=size, span=span)
+
+
+def _without(poly, regions):
+    """`poly` minus the areas in `regions` (largest remaining part); `poly` if too little is left."""
+    if not regions:
+        return poly
+    from shapely.ops import unary_union
+    rest = poly.difference(unary_union(regions))
+    if rest.geom_type == "MultiPolygon":
+        rest = max(rest.geoms, key=lambda g: g.area)
+    if rest.is_empty or rest.geom_type != "Polygon" or rest.area < 0.4 * poly.area:
+        return poly
+    return rest
+
+
 def piece_prims(piece, pattern, extra_label=None):
     prims = []
     for kind, pts in _split_cut_ring(piece):
@@ -169,17 +274,14 @@ def piece_prims(piece, pattern, extra_label=None):
         if ang > 90 or ang < -90:
             ang += 180
         prims.append(Prim("text", text="Grainline", size=7, pts=(g0 + g1) / 2, angle=ang, ly=1.5))
-    # fold label
+    # "place on fold" bracket arrows (see fold_symbol)
+    avoid = []
+    obstacles = [mk.pts for mk in piece.marks] + ([np.array(piece.grain, float)] if piece.grain is not None else [])
     for e in piece.edges:
         if e.fold:
-            mid = G.point_at(e.pts, e.length / 2)
-            t = G.tangent_at(e.pts, e.length / 2)
-            n_in = np.array([-t[1], t[0]])
-            ang = math.degrees(math.atan2(t[1], t[0]))
-            if ang > 90 or ang < -90:
-                ang += 180
-            prims.append(Prim("text", text="◄ PLACE ON FOLD ►", size=8, bold=True,
-                              pts=mid + n_in * 6.0, angle=ang))
+            sym = fold_symbol(e, obstacles)
+            prims += sym["prims"]
+            avoid.append(sym["region"])
     # label block
     lines = [piece.name, f"{pattern.title} · {pattern.size_label}".strip(" ·"),
              piece.cut_text() + f" ({piece.fabric})"]
@@ -195,7 +297,7 @@ def piece_prims(piece, pattern, extra_label=None):
     sizes = [13.0] + [8.5] * (len(lines) - 1)
     bolds = [True] + [False] * (len(lines) - 1)
     poly = Polygon(piece.seam_ring())
-    (ax, ay), tang, scale = _fit_text_block(poly, lines, sizes, bolds)
+    (ax, ay), tang, scale = _fit_text_block(_without(poly, avoid), lines, sizes, bolds)
     total_h = sum(s * scale * PT * 1.35 for s in sizes)
     y = total_h / 2
     for t, s, b in zip(lines, sizes, bolds):
@@ -229,7 +331,7 @@ def nested_piece_prims(pattern, i):
     """Prims of piece i of a nested pattern: lines per size (own colour, dash, layer), label
     block and grainline once, inside the smallest size, and a size tag on each outline."""
     small = pattern.nest_label_pattern
-    prims = [p for p in piece_prims(small.pieces[i], pattern) if p.kind == "text" or p.style == "grain"]
+    prims = [p for p in piece_prims(small.pieces[i], pattern) if p.kind == "text" or p.style in ("grain", "fold_arrow")]
     for n in pattern.nest:
         pc = n["pattern"].pieces[i]
         ring = pc.cut_ring()
@@ -469,7 +571,8 @@ def projector_styles(dark: bool) -> dict:
         col = st["color"]
         if dark:
             col = {"cut": (1, 1, 1), "fold": (1, 1, 1), "seam": (1.0, 0.85, 0.2),
-                   "notch": (1, 1, 1), "grain": (0.4, 0.9, 1.0)}.get(k, (0.8, 0.8, 0.8))
+                   "notch": (1, 1, 1), "grain": (0.4, 0.9, 1.0),
+                   "fold_arrow": (1, 1, 1)}.get(k, (0.8, 0.8, 0.8))
         out[k] = dict(w=w, dash=st["dash"], color=col)
     return out
 

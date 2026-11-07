@@ -29,10 +29,11 @@
 | Labels | Wide yoga waistband: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Front leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
 | Geometry | Back leg: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Wide yoga waistband: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre front |
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 29 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

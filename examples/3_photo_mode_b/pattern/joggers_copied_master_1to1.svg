@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600.00mm" height="877.00mm" viewBox="0 0 600.00 877.00">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="600.00mm" height="877.00mm" viewBox="0 0 600.00 877.00">
 <title>Joggers copied from garment (≈ size 116) · scale 1:1 (unit mm)</title>
 <style>text{font-family:"DejaVu Sans",Arial,sans-serif}</style>
 <g transform="translate(0 0.00)">
@@ -59,7 +59,10 @@
 <polyline points="528.60,266.69 522.60,263.99 528.60,261.29" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
 <polyline points="554.40,266.69 560.40,263.99 554.40,261.29" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
 <text x="541.50" y="262.49" font-size="2.47" text-anchor="middle" transform="rotate(-0.00 541.50 262.49)">Grainline</text>
-<text x="541.50" y="423.98" font-size="2.82" text-anchor="middle" font-weight="bold" transform="rotate(-0.00 541.50 423.98)">◄ PLACE ON FOLD ►</text>
+<polyline points="516.28,428.48 516.28,419.98 537.48,419.98 537.48,428.48" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<polyline points="517.78,424.48 516.28,428.48 514.78,424.48" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<polyline points="538.98,424.48 537.48,428.48 535.98,424.48" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<text x="526.88" y="418.55" font-size="2.82" text-anchor="middle" font-weight="bold" transform="rotate(-0.00 526.88 418.55)">PLACE ON FOLD</text>
 <text x="532.93" y="263.99" font-size="4.59" text-anchor="middle" font-weight="bold" transform="rotate(-90.00 532.93 263.99)">Waistband (elastic)</text>
 <text x="537.51" y="263.99" font-size="3.00" text-anchor="middle" transform="rotate(-90.00 537.51 263.99)">Joggers · copied from garment (≈ size 116)</text>
 <text x="541.56" y="263.99" font-size="3.00" text-anchor="middle" transform="rotate(-90.00 541.56 263.99)">cut 1 on fold (Main fabric)</text>

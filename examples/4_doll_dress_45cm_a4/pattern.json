@@ -783,6 +783,24 @@
       "note": "Sleeve hem: corners mirrored at the fold line"
     },
     {
+      "group": "Geometry",
+      "name": "Front: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.4° off 90°",
+      "delta": "",
+      "note": "Centre (fold)"
+    },
+    {
+      "group": "Geometry",
+      "name": "Skirt front: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.0° off 90°",
+      "delta": "",
+      "note": "Centre (fold)"
+    },
+    {
       "group": "Labels",
       "name": "Front: notches",
       "status": "OK",

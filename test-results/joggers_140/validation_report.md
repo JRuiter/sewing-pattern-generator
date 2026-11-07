@@ -37,10 +37,11 @@
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Leg cuff: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Leg cuff: grainline & cutting | present | cut 2 |  | ✅ OK | Rib knit |
+| Geometry | Waistband (elastic): cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre front |
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 37 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 38 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

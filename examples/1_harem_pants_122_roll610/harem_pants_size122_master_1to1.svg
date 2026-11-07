@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600.00mm" height="1062.00mm" viewBox="0 0 600.00 1062.00">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="600.00mm" height="1062.00mm" viewBox="0 0 600.00 1062.00">
 <title>Harem pants size 122 · scale 1:1 (unit mm)</title>
 <style>text{font-family:"DejaVu Sans",Arial,sans-serif}</style>
 <g transform="translate(0 0.00)">
@@ -75,12 +75,15 @@
 <polyline points="131.78,994.00 134.48,988.00 137.18,994.00" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
 <polyline points="131.78,1006.00 134.48,1012.00 137.18,1006.00" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
 <text x="132.98" y="1000.00" font-size="2.47" text-anchor="middle" transform="rotate(-90.00 132.98 1000.00)">Grainline</text>
-<text x="16.00" y="1012.00" font-size="2.82" text-anchor="middle" font-weight="bold" transform="rotate(90.00 16.00 1012.00)">◄ PLACE ON FOLD ►</text>
-<text x="40.00" y="1003.43" font-size="4.59" text-anchor="middle" font-weight="bold" transform="rotate(-0.00 40.00 1003.43)">Waistband (elastic)</text>
-<text x="40.00" y="1008.01" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 40.00 1008.01)">Harem pants · size 122</text>
-<text x="40.00" y="1012.06" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 40.00 1012.06)">cut 1 on fold (Main fabric)</text>
-<text x="40.00" y="1016.11" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 40.00 1016.11)">place this edge on the fold</text>
-<text x="40.00" y="1020.16" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 40.00 1020.16)">seam allowance 1.0 cm included</text>
-<text x="40.00" y="1024.20" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 40.00 1024.20)">Stretch direction: along the length</text>
+<polyline points="11.50,988.96 20.00,988.96 20.00,1008.96 11.50,1008.96" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<polyline points="15.50,990.46 11.50,988.96 15.50,987.46" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<polyline points="15.50,1010.46 11.50,1008.96 15.50,1007.46" fill="none" stroke="#000000" stroke-width="0.282" stroke-linejoin="round"/>
+<text x="21.37" y="998.96" font-size="2.47" text-anchor="middle" font-weight="bold" transform="rotate(90.00 21.37 998.96)">PLACE ON FOLD</text>
+<text x="217.47" y="1003.43" font-size="4.59" text-anchor="middle" font-weight="bold" transform="rotate(-0.00 217.47 1003.43)">Waistband (elastic)</text>
+<text x="217.47" y="1008.01" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 217.47 1008.01)">Harem pants · size 122</text>
+<text x="217.47" y="1012.06" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 217.47 1012.06)">cut 1 on fold (Main fabric)</text>
+<text x="217.47" y="1016.11" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 217.47 1016.11)">place this edge on the fold</text>
+<text x="217.47" y="1020.16" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 217.47 1020.16)">seam allowance 1.0 cm included</text>
+<text x="217.47" y="1024.20" font-size="3.00" text-anchor="middle" transform="rotate(-0.00 217.47 1024.20)">Stretch direction: along the length</text>
 </g></g>
 </svg>
