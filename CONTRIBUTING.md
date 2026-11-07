@@ -34,7 +34,8 @@ CI runs ruff, mypy and the full test suite with coverage on every pull request.
 
 ### Releases
 
-Bump `version` in `pyproject.toml`, merge to `main`, then tag: `git tag v1.1.0 && git push --tags`. The
+Bump `version` in `pyproject.toml`, merge to `main`, then tag: `git tag v1.1.0 && git push --tags`
+(or run the *Release* workflow manually on `main`, which creates the tag itself). The
 *Release* workflow runs the tests, checks that the tag matches the version, and attaches
 `<skill-name>-<version>.zip` to a GitHub release.
 
