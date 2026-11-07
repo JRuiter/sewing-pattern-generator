@@ -56,7 +56,7 @@ def _pack(rings, aspect: float, gap: float, label_h: float = 0.0):
     best = None
     for f in np.linspace(0.6, 2.2, 17):
         max_w = max(max(w for w, _ in dims), np.sqrt(area * aspect) * f)
-        offs = [None] * len(rings)
+        offs: list = [None] * len(rings)
         x = y = row_h = 0.0
         width = 0.0
         for i in order:
