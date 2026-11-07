@@ -53,15 +53,17 @@ def kord(tmp_path_factory):
 def test_reference_booklet_structure(kord):
     checks, pages, steps, _pat = kord
     text = "\n".join(pages)
-    assert "KORDHOSE" in pages[0] and "Vorderansicht" in pages[0] and "Rückansicht" in pages[0]
-    assert "Genäht mit" in pages[0] and "Schwierigkeit" in pages[0] and "Nahtzugabe" in pages[0]
-    assert "Teile" in pages[1] and "Farben und Linien" in pages[1]
+    assert "Kordhose" in pages[0] and "Vorderansicht" in pages[0] and "Rückansicht" in pages[0]
+    assert "Genäht mit: Overlock + Handnadel" in pages[0] and "Schritte" in pages[0]
+    assert "Teile" in pages[1] and "Nahtzugabe" in pages[1] and "Material" in pages[1]
+    assert "0,85 m bei 150 cm Breite" in pages[1] and "Farben in dieser Anleitung" in pages[1]
     assert "Grundlagen: die Overlock" in text and "Grundlagen: Handstiche" in text
     assert "Schablone" in text and "5 × 5 cm" in text
     assert "Fertig!" in text
-    # two steps per page
+    # two steps per page; "Done!" before the templates
     step_pages = {rec["page"] for rec in checks}
     assert len(checks) == len(steps) and len(step_pages) == -(-len(steps) // 2)
+    assert text.index("Fertig!") < text.index("5 × 5 cm")
 
 
 def test_reference_steps_have_important_or_tip(kord):
@@ -98,3 +100,32 @@ def test_difficulty_estimate():
     pat, _, _ = GN.draft_from_spec(dict(garment="loop", size=122))
     level, hours = B.difficulty(pat, S.assembly(pat))
     assert level == "easy" and hours >= 1.0
+
+
+def test_garment_views_are_whole_garments():
+    from shapely.geometry import LineString, Polygon
+
+    import views as V
+    harem, _, _ = GN.draft_from_spec(dict(garment="pants_basic", size=122, options={"style": "harem"}))
+    for name, view in V.garment_views(harem).items():
+        keys = [pc.key for _r, pc, _z in view["layers"]]
+        assert keys.count("waistband") == 1 and keys.count("leg_cuff") == 2, (name, keys)
+        body = Polygon(view["layers"][0][0])
+        y0, y1 = body.bounds[1], body.bounds[3]
+        low = body.intersection(LineString([(-1e5, y0 + 0.05 * (y1 - y0)), (1e5, y0 + 0.05 * (y1 - y0))]))
+        assert low.geom_type == "MultiLineString", name          # two separate legs at the hem
+    hoodie, _, _ = GN.draft_from_spec(dict(garment="hoodie", size=140, options={"kangaroo": True}))
+    for name, view in V.garment_views(hoodie).items():
+        keys = [pc.key for _r, pc, _z in view["layers"]]
+        assert keys.count("sleeve") == 2 and keys.count("sleeve_cuff") == 2 and "hem_band" in keys, (name, keys)
+        assert "hood" in keys
+
+
+def test_seams_of_different_shape_are_shown_side_by_side(kord):
+    """Side seams and inseams of front and back differ: no skewed stacked picture."""
+    import diagrams as DG
+    _checks, _pages, steps, pat = kord
+    for title in ("Sew the side seams", "Sew the inseams"):
+        st = next(s for s in steps if s.title == title)
+        sms = S.resolve_seams(pat, st)
+        assert len(sms) == 1 and DG.overlay_parts(pat, sms[0]) is None, title

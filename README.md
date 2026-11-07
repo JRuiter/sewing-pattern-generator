@@ -78,9 +78,10 @@ together, plus an overview page.
 
 > *"A hoodie with kangaroo pocket, size 140."*
 
-A title page with the finished garment from the front and back and the key facts (fabric, seam
-allowance, difficulty, time), the parts with letters, fabric and notions, the machines and basics,
-then two steps per page with numbered actions, tips and warnings. Every picture is drawn from your
+A title page with the finished garment from the front and back (waistband, cuffs, sleeves and hood
+drawn on) and what it is sewn with; all parts large and at the same scale with their counts, the
+material with fabric amounts, notions and tools; the basics for your machines; then two steps per
+page with numbered actions, tips and warnings, and a "Done!" panel at the end. Every picture is drawn from your
 actual pattern pieces: right side shaded, wrong side hatched, pins, stitch line, sewing direction,
 and the stitch setting for your machine.
 

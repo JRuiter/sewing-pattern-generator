@@ -200,11 +200,12 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
 instructions (PDF: illustrated booklet: title page with the finished garment from the front and the back
-and all key data (size, fabric amounts, notions, machines, seam allowance, difficulty, time); parts and
-material with the colour/line legend; machines and the basics for them (overlocker, hand stitches, sewing
-machine); the steps two per page, each with its picture from the real pieces, 2–4 numbered actions and
+(`views.py`: legs, bands, cuffs, sleeves, hood from the real pieces), size/fabric, parts, steps, difficulty
+and what it is sewn with; parts at one scale with count badges, seam allowances, material in two columns
+(fabric amounts, notions, machines, tools) and the colour/line legend; the basics for the machines in use
+(overlocker, hand stitches, sewing machine), each in a box; the steps two per page, each with its picture from the real pieces, 2–4 numbered actions and
 the yellow "Important" / green "Tip" boxes (`Step.tip` / `Step.hint`); 1:1 templates for lines transferred
-after cutting (`Mark.template`); a "Done!" page; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
+after cutting (`Mark.template`) after the "Done!" panel; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
 `validation_report.md`. The steps follow the machines the user owns (spec option `machines`, e.g.
 `["sewing", "overlocker", "coverstitch"]`): overlocker seams, coverstitch hems, otherwise zigzag/twin needle.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of

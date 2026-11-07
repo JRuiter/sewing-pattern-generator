@@ -298,6 +298,9 @@ def _main_edges(sm):
     return longest
 
 
+OVERLAY_MAX_RMS = 0.008     # stacked picture only when the two edges really lie on each other
+
+
 def overlay_parts(pattern, sm):
     """Transforms that put piece b (wrong side up) onto piece a along the seam.
 
@@ -334,7 +337,9 @@ def overlay_parts(pattern, sm):
     flip = not same
     if not same and results[False][0] < 0.5 * results[True][0]:
         flip = False
-    _, R, t = results[flip]
+    score, R, t = results[flip]
+    if score > OVERLAY_MAX_RMS * G.length(EA):     # edges of different shape: they would lie skewed
+        return None
     return A, ea, B, eb, (R, t, flip)
 
 
@@ -346,8 +351,89 @@ def draw_seam(ax, pattern, step, sms=None):
     simple = [overlay_parts(pattern, sm) for sm in sms]
     if all(simple) and len(sms) <= 3:
         _draw_overlays(ax, pattern, step, sms, simple)
+    elif (len(sms) == 1 and len(sms[0]["a"]) <= 2 and len(sms[0]["b"]) <= 2
+          and not {p for p, _e, _n in sms[0]["a"]} & {p for p, _e, _n in sms[0]["b"]}):
+        draw_pair(ax, pattern, step, sms[0])
     else:
         draw_join(ax, pattern, step, sms)
+
+
+def _continuations(pattern, main_pc, main_edge, others):
+    """Pieces already sewn to the main piece whose edge continues the seam (a side panel above
+    the side seam): placed so that their edge carries on from one end of the main edge.
+    Returns [(piece, ring, edge)] in the main piece's coordinates."""
+    from shapely.geometry import Polygon
+    hull = Polygon(_outline(main_pc)).convex_hull
+    out = []
+    for p, e, _n in others:
+        pc = pattern.piece(p)
+        src = pc.edge(e).pts
+        L = G.length(src)
+        ring = _outline(pc)
+        best = None
+        for end, nxt in ((main_edge[-1], main_edge[-2]), (main_edge[0], main_edge[1])):
+            d = (end - nxt) / max(np.hypot(*(end - nxt)), 1e-9)
+            dst = np.array([end, end + d * L])
+            for flip in (False, True):
+                sp = src * (np.array([-1.0, 1.0]) if flip else 1.0)
+                rp = ring * (np.array([-1.0, 1.0]) if flip else 1.0)
+                for cand in (sp, sp[::-1]):
+                    R, t, _ = _fit(np.array([cand[0], cand[-1]]), dst)
+                    poly = Polygon(rp @ R.T + t).buffer(0)
+                    score = poly.intersection(hull).area / max(poly.area, 1e-9)
+                    if best is None or score > best[0]:
+                        best = (score, rp @ R.T + t, cand @ R.T + t)
+        out.append((pc, best[1], best[2]))
+    return out
+
+
+def draw_pair(ax, pattern, step, sm):
+    """Two pieces side by side, right side up, the seam edges facing each other and marked red,
+    with "right sides together" between them (edges of different shape: side seams, inseams,
+    sleeve into armhole), as in a printed booklet."""
+    pick = _main_edges(sm)
+    pa, ea, _n1 = pick(sm["a"], pattern)
+    pb, eb, _n2 = pick(sm["b"], pattern)
+    A, B = pattern.piece(pa), pattern.piece(pb)
+    ra, rb = _unfolded(A, _outline(A)), _unfolded(B, _outline(B))
+    EA, EB = A.edge(ea).pts, B.edge(eb).pts
+    extra_a = _continuations(pattern, A, EA, [x for x in sm["a"] if x[0] != pa])
+    extra_b = _continuations(pattern, B, EB, [x for x in sm["b"] if x[0] != pb])
+    size = max(np.ptp(ra, 0).max(), np.ptp(rb, 0).max())
+    gap = size * 0.16
+    a_right = EA[:, 0].mean() > ra[:, 0].mean()
+    b_left = EB[:, 0].mean() < rb[:, 0].mean()
+    flip = b_left != a_right
+    Tb0 = (np.eye(2), np.zeros(2), flip)
+    eb0, rb0 = _apply(Tb0, EB), _apply(Tb0, rb)
+    ea_all = np.vstack([EA] + [e for _p, _r, e in extra_a])
+    dy = ea_all[:, 1].max() - eb0[:, 1].max()
+    dx = (EA[:, 0].max() + gap - eb0[:, 0].min()) if a_right else (EA[:, 0].min() - gap - eb0[:, 0].max())
+    Tb = (np.eye(2), np.array([dx, dy]), flip)
+    rb2, eb2 = rb0 + [dx, dy], eb0 + [dx, dy]
+    for pc, ring, edge in extra_a:
+        _fill(ax, ring, z=0.9, pc=pc)
+        ax.plot(edge[:, 0], edge[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+    for pc, ring, edge in extra_b:
+        ring, edge = _apply(Tb, ring), _apply(Tb, edge)
+        _fill(ax, ring, z=0.9, pc=pc)
+        ax.plot(edge[:, 0], edge[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+    _fill(ax, ra, z=1, pc=A)
+    _fill(ax, rb2, z=1, pc=B)
+    for e in (EA, eb2):
+        ax.plot(e[:, 0], e[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+    _notches(ax, A, ea, ID, size)
+    _notches(ax, B, eb, Tb, size)
+    _piece_label(ax, pattern, A, ra, ID, size=8)
+    _piece_label(ax, pattern, B, rb, Tb, size=8)
+    ma = G.point_at(EA, G.length(EA) * 0.5)
+    mb = G.point_at(eb2, G.length(eb2) * 0.5)
+    _arrow(ax, mb, ma, color=INK, lw=1.3, rad=-0.5 if a_right else 0.5)
+    top = max(ra[:, 1].max(), rb2[:, 1].max(), *[r[:, 1].max() for _p, r, _e in extra_a])
+    ax.text((EA[:, 0].mean() + eb2[:, 0].mean()) / 2, top + size * 0.03, T("right sides together"),
+            ha="center", va="bottom", fontsize=7.5, fontweight="bold", color=INK, zorder=9)
+    _finish_axes(ax, [ra, rb2, np.array([[ma[0], top + size * 0.09]])] + [r for _p, r, _e in extra_a]
+                 + [_apply(Tb, r) for _p, r, _e in extra_b], pad=0.05)
 
 
 def _draw_overlays(ax, pattern, step, sms, parts):
@@ -703,12 +789,26 @@ def draw_place(ax, pattern, step):
     _piece_label(ax, pattern, base, full, size=8)
     if mark is not None and len(mark.pts) >= 3:
         mp = np.asarray(mark.pts, float)
+        folds = [e for e in base.edges if e.fold]
+        if folds:                                           # base cut on the fold: the whole pocket
+            from shapely.geometry import Polygon
+            fa, fb = folds[0].pts[0], folds[0].pts[-1]
+            u = Polygon(mp).buffer(0).union(Polygon(G.mirror_line(mp, fa, fb)).buffer(0.01)).buffer(-0.005)
+            if u.geom_type == "Polygon":
+                mp = np.asarray(u.exterior.coords, float)[:-1]
+                mp = mp[[i for i in range(len(mp)) if np.hypot(*(mp[i] - mp[i - 1])) > 1.0]]
         _fill(ax, mp, z=3, pc=pocket)
-        top_y = mp[:, 1].max()
+        top_y, bot_y = mp[:, 1].max(), mp[:, 1].min()
+        hem_y = full[:, 1].min()
+        slanted_open = any(e.name == "opening" for e in pocket.edges)
         sides = [(mp[i], mp[(i + 1) % len(mp)]) for i in range(len(mp))]
         for a, b in sides:
-            if abs(a[1] - top_y) < 1 and abs(b[1] - top_y) < 1:
-                continue                                    # the opening stays open
+            d0 = G.unit(b - a)
+            horiz_top = abs(a[1] - top_y) < 1 and abs(b[1] - top_y) < 1
+            at_hem = abs(a[1] - bot_y) < 1 and abs(b[1] - bot_y) < 1 and bot_y - hem_y < 20
+            slanted = 0.2 < abs(d0[0]) < 0.98
+            if at_hem or (slanted if slanted_open else horiz_top):
+                continue                                    # openings stay open; the hem band catches the bottom
             d = G.unit(b - a)
             n = np.array([-d[1], d[0]]) * 3.0
             _stitch(ax, [a + n, b + n], lw=1.3)
@@ -749,6 +849,35 @@ def plt_rect(x, y, w, h, fc=INK, ec=INK, lw=1.0, z=6):
     return Rectangle((x, y), w, h, fc=fc, ec=ec, lw=lw, zorder=z)
 
 
+def _legs_inside(ax, pattern):
+    """Leg 1 inside out, leg 2 right side out, then leg 2 pushed into leg 1 (right sides together)."""
+    pc = pattern.piece("front")
+    r = _outline(pc)
+    r = (r - r.min(0)) / np.ptp(r[:, 1]) * 2.0           # 2 units high
+    w = np.ptp(r[:, 0])
+    g = 0.35 * w
+    leg1 = r
+    leg2 = _mirror_x(r, w / 2) + [w + g, 0]
+    _fill(ax, leg1, wrong=True, z=1, pc=pc)
+    _fill(ax, leg2, z=1, pc=pc)
+    for x, txt in ((w / 2, "leg 1: inside out"), (1.5 * w + g, "leg 2: right side out")):
+        ax.text(x, -0.08, T(txt).replace(": ", ":\n"), fontsize=6.5, ha="center", va="top")
+    x3 = 2 * w + 3.2 * g
+    _arrow(ax, [2 * w + 1.4 * g, 1.0], [x3 - 0.6 * g, 1.0], lw=1.6)
+    c = np.array([w / 2, 2.0])
+    inner = (_mirror_x(r, w / 2) - c) * 0.9 + c + [x3, -0.02]
+    outer = r + [x3, 0]
+    _fill(ax, inner, z=1, pc=pc)
+    _fill(ax, outer, wrong=True, z=2, alpha=0.6, pc=pc)
+    ax.plot(outer[:, 0], outer[:, 1], color=INK, lw=1.0, zorder=3)
+    _arrow(ax, [x3 + w / 2, 2.6], [x3 + w / 2, 2.1], lw=1.4)
+    ax.text(x3 + w / 2, -0.08, T("leg 2 inside leg 1, waist edges even").replace(", ", ",\n"), fontsize=6.5,
+            ha="center", va="top")
+    ax.set_xlim(-0.3 * w, x3 + 1.3 * w)
+    ax.set_ylim(-0.45, 2.75)
+    ax.set_aspect("equal")
+
+
 def draw_icon(ax, pattern, step):
     pic = step.data.get("picture", "")
     ax.set_xlim(0, 4)
@@ -783,6 +912,8 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((2.0, 0.75), 0.05, fc="white", ec=INK, lw=0.8, zorder=5))
         ax.plot([2.0, 3.0, 3.3], [0.75, 1.2, 0.9], color=STITCH, lw=1.0)
         _pic_fabric(ax, 0.6, 0.0, 2.8, 0.25)
+    elif pic == "turn" and pattern.garment.startswith("pants") and pattern.has("front"):
+        _legs_inside(ax, pattern)
     elif pic == "turn":
         ax.add_patch(Rectangle((0.6, 0.6), 1.2, 1.4, fc=WRONG_SIDE, ec=INK, lw=1.3, hatch="////"))
         ax.add_patch(Rectangle((2.4, 0.6), 1.2, 1.4, fc=RIGHT_SIDE, ec=INK, lw=1.3))
@@ -971,71 +1102,6 @@ def draw_label(ax, pattern, step):
         allp.append([[c[0], r[:, 1].max() + size * 0.12]])
         x = r[:, 0].max() + size * 0.12
     _finish_axes(ax, allp, pad=0.04)
-
-
-def garment_views(pattern) -> dict:
-    """Finished garment from the front and from the back: [(ring, piece, marks)] per view."""
-    keys = {pc.key for pc in pattern.pieces}
-    views: dict = {}
-    for view in ("front", "back"):
-        if view not in keys:
-            continue
-        pc = pattern.piece(view)
-        if pattern.garment.startswith("pants") and not pc.on_fold:
-            ring = np.asarray(pc.seam_ring(), float)
-            cr = pc.edge("crotch").pts
-            top = cr[0] if cr[0][1] >= cr[-1][1] else cr[-1]
-            ax_x = float(top[0])
-            other = _mirror_x(ring, ax_x)
-            from shapely.geometry import Polygon
-            u = Polygon(ring).buffer(0).union(Polygon(other).buffer(0))
-            sil = np.asarray(u.exterior.coords, float) if u.geom_type == "Polygon" else ring
-            # drafted front = left front (seen from the front: on the right); drafted back = right back
-            marks = []
-            for m in pc.marks:
-                lab = getattr(m, "key", None) or m.label
-                only = _only_side(lab)
-                pts = np.asarray(m.pts, float)
-                if m.style == "fold":
-                    continue
-                drafted_side = "left" if view == "front" else "right"
-                if only and only != drafted_side:
-                    pts = _mirror_x(pts, ax_x)
-                marks.append((m.style, pts))
-                if not only:
-                    marks.append((m.style, _mirror_x(pts, ax_x)))
-            seams = [cr, _mirror_x(cr, ax_x)]
-            views[view] = dict(rings=[(sil, pc)], marks=marks, seams=seams)
-        else:
-            ring = _unfolded(pc, np.asarray(pc.seam_ring(), float))
-            views[view] = dict(rings=[(ring, pc)], marks=[(m.style, np.asarray(m.pts, float)) for m in pc.marks
-                                                         if m.style != "fold"], seams=[])
-        band = next((p for p in pattern.pieces if p.key in ("waistband",)), None)
-        if band is not None and views[view]["rings"]:
-            sil = views[view]["rings"][0][0]
-            _L, H = _band_dims(band)
-            y1 = sil[:, 1].max()
-            x0, x1 = sil[:, 0].min(), sil[:, 0].max()
-            top = sil[sil[:, 1] > y1 - 0.02 * np.ptp(sil[:, 1])]
-            if len(top) >= 2:
-                x0, x1 = top[:, 0].min(), top[:, 0].max()
-            views[view]["rings"].append((np.array([[x0, y1], [x1, y1], [x1, y1 + H / 2], [x0, y1 + H / 2]]), band))
-    return views
-
-
-def draw_view(ax, pattern, view: dict, back: bool = False):
-    """One garment view (see garment_views)."""
-    allp = []
-    for ring, pc in view["rings"]:
-        _fill(ax, ring, z=1, pc=pc)
-        allp.append(ring)
-    for sm in view["seams"]:
-        ax.plot(sm[:, 0], sm[:, 1], color=INK, lw=0.9, zorder=3)
-    for style, pts in view["marks"]:
-        if style == "placement" and len(pts) >= 3:
-            ax.fill(pts[:, 0], pts[:, 1], fc=palette(None, pattern)[0], ec=INK, lw=0.9, zorder=3)
-        ax.plot(pts[:, 0], pts[:, 1], color="#5d4037", lw=0.8, ls=(0, (2, 1.2)), zorder=4)
-    _finish_axes(ax, allp, pad=0.03)
 
 
 DIAGRAMS = {
