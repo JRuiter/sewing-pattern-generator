@@ -1,6 +1,6 @@
 [project]
 name = "sewing-pattern-generator"
-version = "1.1.0"
+version = "1.2.0"
 description = "Claude skill that drafts sewable, true-to-scale sewing patterns from measurements, a description, or photos of a garment."
 readme = "README.md"
 requires-python = ">=3.10"
