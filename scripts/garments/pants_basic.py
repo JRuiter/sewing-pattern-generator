@@ -19,6 +19,7 @@ from scipy.interpolate import CubicSpline
 
 import ease as E
 import geometry as G
+import machines as MC
 from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
@@ -635,7 +636,7 @@ def _cm_text(mm: float) -> str:
 def sewing_steps(pat: Pattern) -> list[str]:
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
-    st = "with an overlocker or a narrow zigzag/stretch stitch" if knit else "with a straight stitch, then finish the edges"
+    st = MC.seam_phrase(o, knit)
     steps = []
     if "side" in o["pockets"]:
         steps += [
@@ -708,6 +709,6 @@ def sewing_steps(pat: Pattern) -> list[str]:
                      "along the \"Turn-up fold\" and tack it at the side seam and inseam.")
     else:
         steps.append(f"**Hem:** press the hem allowance ({o['hem_sa'] / 10:.1f} cm) to the inside and sew it "
-                     "with a twin needle or a straight stitch.")
+                     + (MC.hem_phrase(o, knit) if MC.of(o) else "with a twin needle or a straight stitch") + ".")
     steps.append("Done! Press all seams (with sweat: steam, do not press down hard).")
     return steps

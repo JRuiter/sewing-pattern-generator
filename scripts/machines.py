@@ -1,0 +1,301 @@
+"""The sewist's machines: which ones there are, and how each kind of step is sewn with them.
+
+Options (spec `options.machines`, CLI `--machines`, a profile or the workshop file):
+a list (or comma-separated string) of
+
+| key | meaning |
+|---|---|
+| `sewing` | household sewing machine with straight **and zigzag** stitch (always assumed) |
+| `straight_only` | the sewing machine has **only** a straight stitch (old/industrial machine) |
+| `stretch_stitch` | the sewing machine has a stretch stitch (lightning bolt / triple stretch) |
+| `twin_needle` | a twin needle (stretch twin needle 4 mm) fits the sewing machine |
+| `overlocker` | overlocker / serger (3/4-thread) |
+| `coverstitch` | coverstitch machine (or a combi machine with cover stitch) |
+
+German and common aliases work too (`overlock`, `serger`, `coverlock`, `zickzack`,
+`zwillingsnadel`, …). Without the option (`None`) the instructions stay generic
+("overlocker or narrow zigzag"), as before.
+
+What changes with the machines:
+- **Seam allowances** (only when the user did not set them): knit seams sewn on the
+  overlocker get 7.5 mm (the knife trims, a wider allowance would be cut off anyway); woven
+  seams on a straight-stitch-only machine get 15 mm for French seams. Doll clothes keep
+  their own narrow allowances.
+- **Sewing steps:** every seam/hem phrase in the garment modules comes from
+  `seam_phrase` / `hem_phrase`, so the steps name the user's machine.
+- **Instructions:** a "Your machines" section with one row per kind of step (seam, edge
+  finish, hem, topstitching, bands) and the machine settings.
+
+For the step model (`method(options, kind, knit)`) every kind of step returns a dict
+`{"machine", "stitch", "width_mm", "length_mm", "needle", "text"}`; `tool_for` gives just the
+machine (for an icon).
+"""
+from __future__ import annotations
+
+KEYS = ("sewing", "straight_only", "stretch_stitch", "twin_needle", "overlocker", "coverstitch")
+
+LABELS = {
+    "sewing": "Sewing machine (straight stitch and zigzag)",
+    "straight_only": "Sewing machine with straight stitch only",
+    "stretch_stitch": "Stretch stitch on the sewing machine",
+    "twin_needle": "Twin needle",
+    "overlocker": "Overlocker / serger",
+    "coverstitch": "Coverstitch machine",
+}
+
+ALIASES = {
+    "sewing": "sewing", "sewing_machine": "sewing", "machine": "sewing", "naehmaschine": "sewing",
+    "nähmaschine": "sewing", "zigzag": "sewing", "zickzack": "sewing",
+    "straight_only": "straight_only", "straight": "straight_only", "geradstich": "straight_only",
+    "stretch_stitch": "stretch_stitch", "stretch": "stretch_stitch", "stretchstich": "stretch_stitch",
+    "lightning": "stretch_stitch", "triple_stretch": "stretch_stitch",
+    "twin_needle": "twin_needle", "twin": "twin_needle", "double_needle": "twin_needle",
+    "zwillingsnadel": "twin_needle",
+    "overlocker": "overlocker", "overlock": "overlocker", "serger": "overlocker", "overlockmaschine": "overlocker",
+    "coverstitch": "coverstitch", "cover": "coverstitch", "coverlock": "coverstitch",
+    "covermaschine": "coverstitch", "cover_stitch": "coverstitch",
+}
+
+KINDS = ("seam", "finish", "hem", "topstitch", "band")
+
+OVERLOCK_SA_MM = 7.5      # knit seams sewn on the overlocker
+FRENCH_SEAM_SA_MM = 15.0  # woven seams on a straight-stitch-only machine
+
+
+def parse(value) -> frozenset[str] | None:
+    """List/comma string → set of machine keys (None = not specified). A sewing machine is assumed."""
+    if value is None or value == "":
+        return None
+    items = value.split(",") if isinstance(value, str) else list(value)
+    out = set()
+    for it in items:
+        k = str(it).strip().lower().replace("-", "_").replace(" ", "_")
+        if not k:
+            continue
+        if k not in ALIASES:
+            raise ValueError(f"Unknown machine '{it}'. Allowed: {', '.join(KEYS)}")
+        out.add(ALIASES[k])
+    out.add("sewing")
+    return frozenset(out)
+
+
+def of(options: dict | None) -> frozenset[str] | None:
+    return parse((options or {}).get("machines"))
+
+
+def to_list(machines) -> list[str] | None:
+    """For options/pattern.json: sorted list in the order of KEYS."""
+    m = parse(machines) if not isinstance(machines, frozenset) else machines
+    return None if m is None else [k for k in KEYS if k in m]
+
+
+def _zigzag(m) -> bool:
+    return "straight_only" not in m
+
+
+def _d(machine, stitch, text, width=None, length=None, needle=None):
+    return {"machine": machine, "stitch": stitch, "width_mm": width, "length_mm": length,
+            "needle": needle, "text": text}
+
+
+def method(options: dict | None, kind: str, knit: bool) -> dict | None:
+    """How a kind of step (seam, finish, hem, topstitch, band) is sewn with the user's machines.
+
+    None if the machines are not known (generic wording)."""
+    if kind not in KINDS:
+        raise ValueError(f"kind must be one of {', '.join(KINDS)}")
+    m = of(options)
+    if m is None:
+        return None
+    needle = "jersey/stretch needle 80" if knit else "universal needle 80"
+    if kind == "seam":
+        if knit:
+            if "overlocker" in m:
+                return _d("overlocker", "4-thread overlock", "with the overlocker (4-thread overlock stitch, "
+                          "differential feed about 1.3 so the seam does not wave)", width=6.0, length=3.0,
+                          needle="overlocker needles (ELx705 or as the manual says)")
+            if "stretch_stitch" in m:
+                return _d("sewing", "stretch stitch", "with the stretch stitch (lightning bolt) of the sewing "
+                          "machine", length=2.5, needle=needle)
+            if _zigzag(m):
+                return _d("sewing", "narrow zigzag", "with a narrow zigzag (width 1 mm, length 2.5 mm)",
+                          width=1.0, length=2.5, needle=needle)
+            return _d("sewing", "long straight stitch", "with a long straight stitch (3.5 mm), stretching the "
+                      "fabric slightly as you sew, and a second row 2 mm beside it (a plain straight stitch "
+                      "would pop when the knit stretches)", length=3.5, needle=needle)
+        if _zigzag(m) or "overlocker" in m:
+            return _d("sewing", "straight stitch", "with a straight stitch (2.5 mm)", length=2.5, needle=needle)
+        return _d("sewing", "French seam", "as a French seam: sew wrong sides together 6 mm from the edge, "
+                  "trim to 3 mm, fold right sides together and sew again 9 mm from the fold",
+                  length=2.5, needle=needle)
+    if kind == "finish":
+        if knit:
+            if "overlocker" in m:
+                return _d("overlocker", "already finished", "nothing to do: the overlock seam is already "
+                          "finished", needle=None)
+            if _zigzag(m):
+                return _d("sewing", "wide zigzag", "press both allowances to one side and finish them together "
+                          "with a wide zigzag (width 4 mm, length 2 mm)", width=4.0, length=2.0, needle=needle)
+            return _d("sewing", "none", "knit fabric does not fray: the edges can stay raw", needle=needle)
+        if "overlocker" in m:
+            return _d("overlocker", "3-thread overlock", "finish each allowance with the overlocker (3-thread) "
+                      "and press the seam open", width=5.0, length=2.5,
+                      needle="overlocker needles")
+        if _zigzag(m):
+            return _d("sewing", "zigzag", "finish each allowance edge with a zigzag (width 4 mm, length 2 mm, "
+                      "or the three-step zigzag) and press the seam open", width=4.0, length=2.0, needle=needle)
+        return _d("sewing", "French seam", "French seams enclose the edges; where that is not possible, trim "
+                  "the edges with pinking shears", needle=needle)
+    if kind == "hem":
+        if knit:
+            if "coverstitch" in m:
+                return _d("coverstitch", "2-needle cover stitch", "with the coverstitch machine from the right "
+                          "side (2 needles, 4 mm apart), catching the raw edge underneath", width=4.0, length=3.0,
+                          needle="coverstitch needles")
+            if "twin_needle" in m:
+                return _d("sewing", "twin needle", "with the stretch twin needle (4 mm) from the right side, "
+                          "stitch length 3 mm", width=4.0, length=3.0, needle="stretch twin needle 4.0/75")
+            if "stretch_stitch" in m:
+                return _d("sewing", "stretch stitch", "with the stretch stitch from the right side", length=2.5,
+                          needle=needle)
+            if _zigzag(m):
+                return _d("sewing", "narrow zigzag", "with a narrow zigzag (width 1.5 mm, length 3 mm) from the "
+                          "right side", width=1.5, length=3.0, needle=needle)
+            return _d("sewing", "long straight stitch", "with a long straight stitch (4 mm) while stretching "
+                      "the hem gently; for a hem that stretches a lot, hand-sew it with a catch stitch",
+                      length=4.0, needle=needle)
+        return _d("sewing", "straight stitch", "with a straight stitch (2.5 mm) close to the inner fold",
+                  length=2.5, needle=needle)
+    if kind == "topstitch":
+        if knit and "coverstitch" in m:
+            return _d("coverstitch", "2-needle cover stitch", "with the coverstitch machine", width=4.0,
+                      length=3.0, needle="coverstitch needles")
+        if knit and "twin_needle" in m:
+            return _d("sewing", "twin needle", "with the twin needle", width=4.0, length=3.0,
+                      needle="stretch twin needle 4.0/75")
+        if knit and _zigzag(m):
+            return _d("sewing", "narrow zigzag", "with a narrow zigzag (width 1 mm, length 3 mm) or the "
+                      "stretch stitch", width=1.0, length=3.0, needle=needle)
+        return _d("sewing", "straight stitch", "with a straight stitch (3 mm)", length=3.0, needle=needle)
+    # band: cuffs, waistbands, neckbands sewn on while stretching
+    if not knit:
+        return _d("sewing", "straight stitch", "with a straight stitch (2.5 mm)", length=2.5, needle=needle)
+    if "overlocker" in m:
+        return _d("overlocker", "4-thread overlock", "with the overlocker, stretching only the band",
+                  width=6.0, length=3.0, needle="overlocker needles")
+    return method(options, "seam", knit)
+
+
+def tool_for(options: dict | None, kind: str, knit: bool) -> str | None:
+    """'sewing' | 'overlocker' | 'coverstitch' for a kind of step (None if unknown)."""
+    d = method(options, kind, knit)
+    return None if d is None else d["machine"]
+
+
+# --------------------------------------------------------------- phrases for the garment modules
+
+GENERIC_SEAM_KNIT = "with an overlocker or a narrow zigzag/stretch stitch"
+GENERIC_SEAM_WOVEN = "with a straight stitch, then finish the edges"
+GENERIC_HEM_KNIT = "with a twin needle/coverstitch"
+GENERIC_HEM_WOVEN = "with a straight stitch"
+
+
+def seam_phrase(options: dict | None, knit: bool) -> str:
+    """'with …' for a seam incl. its edge finish (generic wording if the machines are unknown)."""
+    d = method(options, "seam", knit)
+    if d is None:
+        return GENERIC_SEAM_KNIT if knit else GENERIC_SEAM_WOVEN
+    if knit:
+        f = method(options, "finish", knit)
+        if f and f["stitch"] == "wide zigzag":
+            return d["text"] + ", then finish both allowances together with a wide zigzag"
+        return d["text"]
+    if d["stitch"] == "French seam":
+        return d["text"]
+    f = method(options, "finish", knit)
+    tail = "the overlocker" if f and f["machine"] == "overlocker" else "a zigzag"
+    return d["text"] + f", then finish the edges with {tail}"
+
+
+def hem_phrase(options: dict | None, knit: bool) -> str:
+    d = method(options, "hem", knit)
+    if d is None:
+        return GENERIC_HEM_KNIT if knit else GENERIC_HEM_WOVEN
+    return d["text"]
+
+
+def topstitch_phrase(options: dict | None, knit: bool, default: str) -> str:
+    d = method(options, "topstitch", knit)
+    return default if d is None else d["text"]
+
+
+# --------------------------------------------------------------- seam allowances
+
+def allowance_defaults(options: dict | None, knit: bool) -> dict:
+    """Seam allowance options that follow from the machines (only where the user set none)."""
+    o = options or {}
+    m = of(o)
+    if (m is None or o.get("seam_allowance_mm") is not None or o.get("sa") is not None
+            or str(o.get("seam_allowance", "")).lower() == "none"):
+        return {}
+    if knit and "overlocker" in m:
+        return {"seam_allowance_mm": OVERLOCK_SA_MM}
+    if not knit and "straight_only" in m:
+        return {"seam_allowance_mm": FRENCH_SEAM_SA_MM}
+    return {}
+
+
+# --------------------------------------------------------------- instructions section
+
+ROW_LABELS = {"seam": "Seams", "finish": "Edge finish", "hem": "Hems", "topstitch": "Topstitching",
+              "band": "Cuffs, bands, waistband"}
+MACHINE_NAMES = {"sewing": "Sewing machine", "overlocker": "Overlocker", "coverstitch": "Coverstitch"}
+
+
+def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
+    tips = []
+    if knit and "overlocker" not in m and "straight_only" not in m:
+        tips.append("No overlocker: that is fine. Sew knit seams with the narrow zigzag or stretch stitch; "
+                    "the fabric does not fray, so the edges need no further finishing (optional wide zigzag).")
+    if knit and "coverstitch" not in m and "twin_needle" not in m:
+        tips.append("A stretch twin needle (4 mm, about 5 €) fits almost every household machine and gives hems "
+                    "that look like a coverstitch.")
+    if knit and "straight_only" in m:
+        tips.append("A straight-stitch-only machine is not ideal for knits: seams can pop when stretched. Prefer "
+                    "a woven fabric, or use the double row of long straight stitches described below.")
+    return tips
+
+
+def markdown(pattern) -> str | None:
+    """'Your machines' section for the sewing instructions (None if the machines are unknown)."""
+    import ease as E
+    o = pattern.options
+    m = of(o)
+    if m is None:
+        return None
+    knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))[2]
+    have = [k for k in KEYS if k in m and not (k == "sewing" and "straight_only" in m)]
+    lines = ["You told me you sew with: " + ", ".join(LABELS[k] for k in have) + ".", "",
+             "| Step | Machine | Stitch | Settings |", "|---|---|---|---|"]
+    for kind in KINDS:
+        d = method(o, kind, knit)
+        assert d is not None
+        st = []
+        if d["width_mm"]:
+            st.append(f"width {d['width_mm']:g} mm")
+        if d["length_mm"]:
+            st.append(f"length {d['length_mm']:g} mm")
+        if d["needle"]:
+            st.append(d["needle"])
+        lines.append(f"| {ROW_LABELS[kind]} | {MACHINE_NAMES[d['machine']]} | {d['stitch']} | {', '.join(st)} |")
+    sa = o.get("_sa_from_machines")
+    if sa == OVERLOCK_SA_MM:
+        lines += ["", "Seam allowance 7.5 mm because you sew the seams on the overlocker: guide the fabric so "
+                  "the knife just skims the edge."]
+    elif sa == FRENCH_SEAM_SA_MM:
+        lines += ["", "Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm)."]
+    tips = missing_tips(m, knit)
+    if tips:
+        lines += [""] + [f"- {t}" for t in tips]
+    lines += ["", "Test the stitch on a scrap of your fabric first (two layers, same direction as the seam)."]
+    return "\n".join(lines)

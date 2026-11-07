@@ -9,6 +9,13 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 - The sewing instructions explain how to cut the pieces marked "on fold" for the layout used (on the fabric fold, or opened out on a single layer), and the cutting layout marks opened-out fold pieces "(unfolded)".
 
 ### Added
+- **Your machines** (`--machines sewing,overlocker,coverstitch,…`, spec `machines`, workshop file via
+  `profiles.py machines set …`, or per profile): the skill asks which machines you sew with (sewing machine
+  with zigzag or straight stitch only, stretch stitch, twin needle, overlocker, coverstitch) and adapts the
+  pattern to them. Knit seams on the overlocker get 7.5 mm seam allowance, woven seams on a
+  straight-stitch-only machine 15 mm for French seams; every seam and hem step names your machine and
+  stitch, and the instructions get a "Your machines" table with stitch settings and needles per kind of
+  step. `machines.method()` / `tool_for()` give the machine and stitch per step as data.
 - Validation check for every cut-on-fold edge: straight, no seam allowance, neighbouring edges at 90° (no peak or dip at the centre once unfolded), on grain.
 
 ## [1.1.0] - 2026-11-07

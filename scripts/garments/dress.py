@@ -19,6 +19,7 @@ import numpy as np
 
 import ease as E
 import geometry as G
+import machines as MC
 from pattern import Edge, Notch, Pattern, Piece
 
 from . import skirt as S
@@ -251,9 +252,9 @@ def sewing_steps(pat):
             base.insert(0, "**Centre back seam:** sew the back pieces right sides together from the hem up to the "
                            "notch; above the notch the seam stays open (back opening).")
         return base + ["**Hem:** press the hem allowance under (curved hem: ease in the fullness with steam) "
-                       "and sew with a twin needle/coverstitch.", "Done! Press the seams."]
+                       "and sew " + MC.hem_phrase(o, E.fabric_info(o["fabric"])[2]) + ".", "Done! Press the seams."]
     knit = E.fabric_info(o["fabric"])[2]
-    st = "with an overlocker or a narrow zigzag/stretch stitch" if knit else "with a straight stitch, then finish the edges"
+    st = MC.seam_phrase(o, knit)
     steps = list(base)
     if o.get("back_opening"):
         steps.append("**Skirt centre back seam:** sew the skirt back pieces right sides together from the hem "

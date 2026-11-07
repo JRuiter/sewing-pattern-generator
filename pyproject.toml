@@ -51,7 +51,7 @@ ignore = [
 known-first-party = ["geometry", "pattern", "measurements", "ease", "validate", "layout", "render",
                      "instructions", "photo_analyze", "photo_measure", "photo_synth", "refcard",
                      "garments", "reverse", "generate", "construction", "export_dxf",
-                     "measure_files", "notches"]
+                     "measure_files", "notches", "machines", "allowance", "profiles"]
 
 [tool.mypy]
 python_version = "3.10"

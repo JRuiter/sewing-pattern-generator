@@ -14,7 +14,8 @@ Spec JSON (all fields optional except garment and size/measures):
    "fabric_widths_mm": {"Main fabric": 1500, "Rib knit": 700},
    "measures_file": "lena.smis", "export_measures": true,
    "fabric_layout": "auto",   # auto | folded | single (cutting layout on the fabric)
-   "units": "metric"}         # or "imperial": reports in inches/yards; "measures_in" = inches
+   "units": "metric",         # or "imperial": reports in inches/yards; "measures_in" = inches
+   "machines": ["sewing", "overlocker", "twin_needle"]}   # see machines.py
 
 Formats: roll610 (any roll width), a4, letter, a1, a0, dxf (AAMA layers, seam line on
 layer 8), dxf14 (same, seam line on layer 14), projector / projector_dark (one page 1:1
@@ -42,6 +43,7 @@ import doll as DOLL  # noqa: E402
 import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
+import machines as MC  # noqa: E402
 import measure_files as MF  # noqa: E402
 import measurements as M  # noqa: E402
 import nested as NE  # noqa: E402
@@ -76,7 +78,9 @@ def spec_from_project(path: str, spec: dict | None = None) -> dict:
     if p.get("doll"):
         # doll clothes: the options are at the virtual drafting scale (doll.py)
         out.update(_doll_scale=p["doll_scale"], size_label="doll clothes (copied from garment)")
+    proj_opts = out["options"]
     out.update(spec or {})
+    out["options"] = {**proj_opts, **((spec or {}).get("options") or {})}   # e.g. machines from a profile
     out.pop("project", None)
     return out
 
@@ -318,6 +322,9 @@ def main(argv=None):
                     help="units of --measures and of all reports (imperial: inches and yards)")
     ap.add_argument("--adjust", help='fit adjustments after a toile as JSON, e.g. \'{"hip": "+2cm", '
                     '"crotch_low": "1.5cm"}\' (see adjust.py)')
+    ap.add_argument("--machines", help="the sewist's machines, comma-separated: "
+                    "sewing, straight_only, stretch_stitch, twin_needle, overlocker, coverstitch "
+                    "(adapts seam allowances, seam/hem methods and the instructions; see machines.py)")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     fmts = [x.strip() for x in a.format.split(",")] if a.format else None
@@ -360,6 +367,8 @@ def main(argv=None):
         spec["adjustments"] = json.loads(a.adjust)
     if a.units:
         spec["units"] = a.units
+    if a.machines:
+        spec["machines"] = MC.to_list(a.machines)
     res = run(spec)
     return 0 if res["ok"] else 2
 

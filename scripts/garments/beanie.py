@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ease as E
 import geometry as G
+import machines as MC
 from pattern import Edge, Mark, Pattern, Piece, rect_piece
 
 DEFAULTS = dict(fabric="jersey", stretch=None, brim=True, slouch=False, sa=7.0, hem_sa=20.0, circ_total=None)
@@ -57,10 +58,11 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
 
 def sewing_steps(pat):
     s = ["**Beanie:** place both pieces right sides together and sew the side and crown seam in one go "
-         "(overlocker or zigzag)."]
+         "(" + ("overlocker or zigzag" if MC.of(pat.options) is None
+                                        else MC.seam_phrase(pat.options, True)) + ")."]
     if pat.options.get("brim"):
         s.append("**Brim:** sew the rib into a ring, fold it lengthwise and sew it to the beanie edge while stretching.")
     else:
-        s.append("**Hem:** press 2 cm under and sew with a twin needle.")
+        s.append("**Hem:** press 2 cm under and sew " + MC.hem_phrase(pat.options, True) + ".")
     s.append("Turn right side out. Done!")
     return s

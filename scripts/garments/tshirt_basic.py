@@ -16,6 +16,7 @@ import numpy as np
 
 import ease as E
 import geometry as G
+import machines as MC
 from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
@@ -517,7 +518,7 @@ def back_opening_step(o) -> str:
 def sewing_steps(pat):
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
-    st = "with an overlocker or a narrow zigzag/stretch stitch" if knit else "with a straight stitch, then finish the edges"
+    st = MC.seam_phrase(o, knit)
     steps = []
     if o["sleeve_style"] == "raglan":
         steps += [f"**Raglan seams:** sew the sleeves right sides together to front and back ({st}); "
@@ -541,7 +542,7 @@ def sewing_steps(pat):
             "**Neckband:** sew it into a ring across the short ends and fold it lengthwise wrong sides together. "
             "Divide neckband and neckline into quarters (cross seam at one shoulder or centre back) and sew the "
             "neckband on right sides together while stretching it. Press the seam allowance down and topstitch "
-            "with a twin needle if you like.")
+            + MC.topstitch_phrase(o, knit, "with a twin needle") + " if you like.")
     if o["sleeve_style"] != "raglan":
         steps.append("**Set in the sleeves:** pin the centre of the sleeve cap (top notch) to the shoulder seam, "
                      "match the front/back notches and sew the sleeve in flat (ease the cap in slightly if needed).")
@@ -553,11 +554,11 @@ def sewing_steps(pat):
         steps.append("**Sleeve cuffs:** sew into a ring, fold, and sew to the sleeve hem while stretching.")
     else:
         steps.append("**Sleeve hem:** press the hem allowance under and sew "
-                     + ("with a twin needle/coverstitch." if knit else "with a straight stitch."))
+                     + MC.hem_phrase(o, knit) + ".")
     if o["hem_band"]:
         steps.append("**Hem band:** sew into a ring, fold, divide into quarters and sew on while stretching.")
     else:
         steps.append(f"**Hem:** press the hem allowance ({o['hem_sa'] / 10:.1f} cm) under and sew "
-                     + ("with a twin needle/coverstitch." if knit else "with a straight stitch."))
+                     + MC.hem_phrase(o, knit) + ".")
     steps.append("Done! Press the seams.")
     return steps
