@@ -4,23 +4,24 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
-### Added
-- **IKEA-style sewing booklet**: `sewing_instructions.pdf` now starts with a vector booklet: cover with all parts, parts list with letters and counts, fabric and notions, machines and tools with the stitch settings, then numbered steps (six per page) with one action each. Every step has a picture drawn from the real pieces: the two pieces right sides together (right side shaded, wrong side hatched) with pins, stitch line, sewing direction and notches; bands closed into rings, folded, quartered and sewn on stretched; hems and topstitching with a cross-section detail; close-ups for short edges; ×2 for steps done on both legs/sleeves. Works for every garment, option and the doll mode. The reference pages (printing, measurements, pieces, validation) follow.
-- Structured steps (`scripts/steps.py`): garment modules describe their construction with `assembly()`; the stitch kind of each step is turned into a machine and stitch (overlocker, coverstitch, sewing machine with zigzag/stretch stitch/twin needle) from the spec option `machines`.
-
-### Changed
-- **Cut-on-fold edges**: every fold edge now carries the standard bracket symbol (two arrows pointing at the fold, "PLACE ON FOLD") instead of a text-only label. It is sized to the edge, so short fold edges such as a doll waistband get "ON FOLD"/"FOLD" in a smaller font instead of text running off the piece, and it keeps clear of fold-over lines and the grainline; the label block no longer covers it.
-- The sewing instructions explain how to cut the pieces marked "on fold" for the layout used (on the fabric fold, or opened out on a single layer), and the cutting layout marks opened-out fold pieces "(unfolded)".
+## [1.2.0] - 2026-11-07
 
 ### Added
+- **IKEA-style sewing booklet**: `sewing_instructions.pdf` now starts with a vector booklet: cover with all parts, parts list with letters and counts, fabric and notions, machines and tools with the stitch settings, then numbered steps (six per page) with one action each. Every step has a picture drawn from the real pieces: the two pieces right sides together (right side shaded, wrong side hatched) with pins, stitch line, sewing direction and notches; bands closed into rings, folded, quartered and sewn on stretched; hems and topstitching with a cross-section detail; close-ups for short edges; ×2 for steps done on both legs/sleeves. Works for every garment, option and the doll mode. The reference pages (printing, measurements, pieces, validation) follow. (#37)
+- Structured steps (`scripts/steps.py`): garment modules describe their construction with `assembly()`; the stitch kind of each step is turned into a machine and stitch (overlocker, coverstitch, sewing machine with zigzag/stretch stitch/twin needle) from the spec option `machines`. (#37)
 - **Your machines** (`--machines sewing,overlocker,coverstitch,…`, spec `machines`, workshop file via
   `profiles.py machines set …`, or per profile): the skill asks which machines you sew with (sewing machine
   with zigzag or straight stitch only, stretch stitch, twin needle, overlocker, coverstitch) and adapts the
   pattern to them. Knit seams on the overlocker get 7.5 mm seam allowance, woven seams on a
   straight-stitch-only machine 15 mm for French seams; every seam and hem step names your machine and
   stitch, and the instructions get a "Your machines" table with stitch settings and needles per kind of
-  step. `machines.method()` / `tool_for()` give the machine and stitch per step as data.
-- Validation check for every cut-on-fold edge: straight, no seam allowance, neighbouring edges at 90° (no peak or dip at the centre once unfolded), on grain.
+  step. `machines.method()` / `tool_for()` give the machine and stitch per step as data. (#36)
+- Validation check for every cut-on-fold edge: straight, no seam allowance, neighbouring edges at 90° (no peak or dip at the centre once unfolded), on grain. (#35)
+- The *Release* workflow can be started manually on `main` and creates the tag itself (#34)
+
+### Changed
+- **Cut-on-fold edges**: every fold edge now carries the standard bracket symbol (two arrows pointing at the fold, "PLACE ON FOLD") instead of a text-only label. It is sized to the edge, so short fold edges such as a doll waistband get "ON FOLD"/"FOLD" in a smaller font instead of text running off the piece, and it keeps clear of fold-over lines and the grainline; the label block no longer covers it. (#35)
+- The sewing instructions explain how to cut the pieces marked "on fold" for the layout used (on the fabric fold, or opened out on a single layer), and the cutting layout marks opened-out fold pieces "(unfolded)". (#35)
 
 ## [1.1.0] - 2026-11-07
 
