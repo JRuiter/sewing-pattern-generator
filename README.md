@@ -26,9 +26,11 @@ erstellen", "Lieblingshose kopieren" …).
   - **A0 / A1** sheets (oversized pieces tiled)
   - **A4 / US Letter** tiles with 10 mm overlap, glue areas, row/column labels, registration diamonds
     and an overview page
-  - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and sewing
-    instructions (Markdown + PDF) with a **diagram for every seam step**, drawn from the real pieces:
-    right side shaded, the two edges to sew highlighted, matching notches marked
+  - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and an
+    **IKEA-style sewing booklet** (PDF): cover, parts list with letters, fabric, notions, machines and
+    tools, then numbered steps with one action each and a picture drawn from the real pieces (right
+    side shaded, wrong side hatched, pins, stitch line, sewing direction, notches, cross-section
+    details), the machine and stitch setting for every step, ×2 for steps done on both sides
   - **DXF** for cutting machines and pattern CAD (AAMA layer convention: cut line, seam line, fold,
     notches, grainline on separate layers; one block per piece; mm, 1:1)
   - **Projector** page (`projector`, `projector_dark`): one 1:1 page with a 10 cm calibration grid and

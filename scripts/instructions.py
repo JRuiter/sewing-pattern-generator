@@ -174,8 +174,41 @@ def sewing_steps(pattern):
 
 
 def all_steps(pattern) -> list[str]:
-    return (["**Prepare:** pre-wash the fabric, cut out the pieces, snip the notches 3–4 mm deep."]
-            + sewing_steps(pattern))
+    """Every step as one line of text (preparation included), numbered like the booklet."""
+    import steps as ST
+    return ST.as_texts(ST.assembly(pattern), pattern.options)
+
+
+def instructions_pdf(pattern, md: str, path: str, plans, steps, images=None) -> str:
+    """sewing_instructions.pdf: the IKEA-style booklet, then the reference pages
+    (printing, measurements, pieces, fabric, validation report) typeset from the Markdown."""
+    import tempfile
+
+    from pypdf import PdfWriter
+
+    import booklet as B
+    ref_md = _without_section(md, "## Sewing instructions")
+    with tempfile.TemporaryDirectory() as tmp:
+        bk = B.build(pattern, os.path.join(tmp, "booklet.pdf"), plans, steps)
+        ref = markdown_to_pdf(ref_md, os.path.join(tmp, "reference.pdf"), images=images,
+                              base_dir=os.path.dirname(path))
+        w = PdfWriter()
+        for p in (bk, ref):
+            w.append(p)
+        w.add_metadata({"/Title": f"{pattern.title} – sewing instructions"})
+        with open(path, "wb") as f:
+            w.write(f)
+    return path
+
+
+def _without_section(md: str, heading: str) -> str:
+    out, skip = [], False
+    for line in md.splitlines():
+        if line.startswith("## "):
+            skip = line.startswith(heading)
+        if not skip:
+            out.append(line)
+    return "\n".join(out)
 
 
 def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_images=None):
@@ -221,6 +254,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
     if mach:
         lines += ["## Your machines", "", mach, ""]
     lines += ["## Sewing instructions", "",
+              "The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your "
+              "pieces, IKEA style: parts list, tools, then one action per step.", "",
               ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
                "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")
               + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]

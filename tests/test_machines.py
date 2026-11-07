@@ -101,14 +101,14 @@ def test_steps_and_instructions_name_the_machines():
     assert any("twin needle" in t for t in MC.missing_tips(MC.of(zig.options), True))
     # generic text without machines (unchanged behaviour)
     plain = " ".join(I.all_steps(_draft("tshirt_basic", None, size=140)))
-    assert MC.GENERIC_SEAM_KNIT in plain
+    assert MC.GENERIC_SEAM_KNIT.removeprefix("with ") in plain
 
 
 def test_hem_phrase_in_pants_and_beanie():
     pants = _draft("pants_basic", "twin_needle", options={"fabric": "jersey", "cuffs": False})
     assert "stretch twin needle" in " ".join(I.all_steps(pants))
     plain = _draft("pants_basic", None, options={"fabric": "jersey", "cuffs": False})
-    assert "with a twin needle or a straight stitch" in " ".join(I.all_steps(plain))
+    assert MC.GENERIC_HEM_KNIT.removeprefix("with ") in " ".join(I.all_steps(plain))
     beanie = _draft("beanie", "coverstitch", options={"brim": False})
     assert "coverstitch machine" in " ".join(I.all_steps(beanie))
 
