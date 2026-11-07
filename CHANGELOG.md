@@ -4,12 +4,7 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
-### Changed
-- **Booklet layout after the reference booklet**: centred title page with size, fit and fabric in one line, large front and back views and a "Sewn with …" box with the machine and tool icons; the parts page shows every part large and at the same scale (big parts in the first row, bands and pockets below) with a navy count badge on the part, the seam allowances, the material in two columns (fabric amounts, notions, machines with their stitch settings, thread, clips, chalk, iron, towel) and "Colours in this booklet"; the basics page has a box per machine; steps get navy number badges and bullets, one-paragraph "⚠ Important:" / "Tip:" boxes and the ×2 badge bottom right; the "Done!" panel fills the free half of the last step page, the 1:1 templates come after it; page numbers at the bottom.
-
-### Fixed
-- **Front and back views** (title page, "Done!") are whole garments now (`scripts/views.py`): pants with both legs apart below the crotch, the centre seam, the waistband across the whole waist (gathered when it is elastic) and leg cuffs with the leg gathered into them; tops and dresses with both sleeves set into the armholes, cuffs, hem band, neckband or hood and the kangaroo pocket; the dress skirt gathered onto the bodice; skirts with their waistband. Before, harem pants showed a floating, too narrow back waistband and hoodies had no sleeves.
-- **Seam pictures**: two pieces whose seam edges differ in shape (pants side seams and inseams, sleeve into armhole) are no longer stacked skewed across each other; they lie side by side, right side up, the seam edges facing each other and marked red, notches and "right sides together" between them. A side panel already sewn to the front is drawn on, so the side seam runs up to the waist. "Put one leg inside the other" shows the real legs; the kangaroo pocket is drawn whole on its placement (its mark was missing the corner at centre front).
+## [1.3.0] - 2026-11-07
 
 ### Added
 - **Automatic booklet check** (`scripts/booklet_qa.py`), run on every build: front/back views must show every band, cuff, sleeve and the hood and two separate legs for pants; stacked seam pieces must lie on each other; each picture must fill its area; no picture may fall back to the pictogram; no text may leave its panel or overlap another. Findings go into the "Booklet check" section of `validation_report.md`, into `run(...)["booklet_issues"]` and into the warnings; the tests require zero findings for the reference garments.
@@ -24,8 +19,13 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 - Fabrics **corduroy** and **velvet**, with a nap: the cutting layout keeps every main-fabric piece waist up ("Nap ↓, all pieces waist up") and the fabric consumption follows; option `nap` for any other fabric. Pressing note per fabric (corduroy/velvet from the wrong side on a terry towel). (#39)
 
 ### Changed
+- **Booklet layout after the reference booklet**: centred title page with size, fit and fabric in one line, large front and back views and a "Sewn with …" box with the machine and tool icons; the parts page shows every part large and at the same scale (big parts in the first row, bands and pockets below) with a navy count badge on the part, the seam allowances, the material in two columns (fabric amounts, notions, machines with their stitch settings, thread, clips, chalk, iron, towel) and "Colours in this booklet"; the basics page has a box per machine; steps get navy number badges and bullets, one-paragraph "⚠ Important:" / "Tip:" boxes and the ×2 badge bottom right; the "Done!" panel fills the free half of the last step page, the 1:1 templates come after it; page numbers at the bottom.
 - Privacy: `project.json` from photo mode B stores only the photo's file name, not its full local path; `profiles/` and `*.smis` measurement exports are git-ignored so personal measurements don't get committed by accident.
 - The back-pocket step uses the pattern's real seam allowance instead of a fixed 1 cm. (#39)
+
+### Fixed
+- **Front and back views** (title page, "Done!") are whole garments now (`scripts/views.py`): pants with both legs apart below the crotch, the centre seam, the waistband across the whole waist (gathered when it is elastic) and leg cuffs with the leg gathered into them; tops and dresses with both sleeves set into the armholes, cuffs, hem band, neckband or hood and the kangaroo pocket; the dress skirt gathered onto the bodice; skirts with their waistband. Before, harem pants showed a floating, too narrow back waistband and hoodies had no sleeves.
+- **Seam pictures**: two pieces whose seam edges differ in shape (pants side seams and inseams, sleeve into armhole) are no longer stacked skewed across each other; they lie side by side, right side up, the seam edges facing each other and marked red, notches and "right sides together" between them. A side panel already sewn to the front is drawn on, so the side seam runs up to the waist. "Put one leg inside the other" shows the real legs; the kangaroo pocket is drawn whole on its placement (its mark was missing the corner at centre front).
 
 ## [1.2.0] - 2026-11-07
 
