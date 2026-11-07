@@ -491,7 +491,9 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     pat.options.update(dict(_wb_h=wb_h, _cuff_h=cuff_h, _waist_relaxed=waist_relaxed,
                             _pk_b=pk_b if "side" in pockets else 0.0, _R=R, _hip_total=Hc,
                             _drop=drop, _back_drop=back_drop, _elastic=elastic_len,
-                            _cuff_len=cuff_len, _hem_c=hem_c, _blouse=blouse))
+                            _cuff_len=cuff_len, _hem_c=hem_c, _blouse=blouse,
+                            # casing: turn-under and the opening left for threading the elastic
+                            _casing_turn=7.0, _casing_gap=30.0))
 
     # ---------------------------------------------------------------- checks
     tol_hip = 0.01
@@ -626,6 +628,10 @@ FINISHED_LABELS = {
 FIT_PARAMS = ["hip_total", "fork_factor", "front_rise_total", "inseam_total", "opening_total"]
 
 
+def _cm_text(mm: float) -> str:
+    return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
+
+
 def sewing_steps(pat: Pattern) -> list[str]:
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
@@ -667,11 +673,12 @@ def sewing_steps(pat: Pattern) -> list[str]:
     if wb == "casing":
         steps += [
             "**Waistband:** fold the waistband strip right sides together into a ring and sew the cross seam "
-            "(centre back), leaving 3 cm open for the elastic. Fold lengthwise wrong sides together along the "
-            "fold line.",
+            f"(centre back), leaving {_cm_text(o.get('_casing_gap', 30.0))} open for the elastic. Fold lengthwise "
+            "wrong sides together along the fold line.",
             "Divide waistband and pants top edge into quarters and mark them (centre front/back, sides). "
             "Pin the waistband right sides together to the top edge (opening at the back, inside) and sew.",
-            "Thread the elastic, overlap the ends by 2 cm and sew them together, close the opening. Spread the "
+            f"Thread the elastic, overlap the ends by {_cm_text(o.get('_casing_gap', 30.0) * 2 / 3)} and sew them "
+            "together, close the opening. Spread the "
             "gathers evenly and secure the elastic in the side seams by stitching in the ditch.",
         ]
     elif wb in ("rib", "yoga"):
@@ -683,8 +690,9 @@ def sewing_steps(pat: Pattern) -> list[str]:
         ]
     else:
         steps += [
-            "**Elastic casing:** press the top edge under by 7 mm, then fold it to the inside along the "
-            "\"fold casing\" line and edgestitch, leaving a 3 cm opening. Thread the elastic, sew the ends "
+            f"**Elastic casing:** press the top edge under by {o.get('_casing_turn', 7.0):.0f} mm, then fold it "
+            "to the inside along the \"fold casing\" line and edgestitch, leaving a "
+            f"{_cm_text(o.get('_casing_gap', 30.0))} opening. Thread the elastic, sew the ends "
             "together with an overlap and close the opening.",
         ]
     if o["cuffs"]:

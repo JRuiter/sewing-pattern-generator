@@ -70,6 +70,15 @@ For cuffs: measure relaxed, not stretched.
 | Crotch detected wrongly | spread the legs a bit further, inner leg edges visible |
 | Measurements look too big/small | measure the control square on the card; was the garment stretched? |
 
+### Doll clothes
+Doll clothes can be copied the same way (`--doll`): lay them flat next to the card (the card
+may be bigger than the garment, that is fine) and photograph them from closer up. The result
+gets doll allowances (6 mm) and, for tops, a back opening. Doll pants are measured fully
+automatically, even with very short, wide legs. For doll tops lay the sleeves out straight;
+very short, wide sleeves are hard to read from the photo, so measure their width flat with a
+tape (`tape={"bicep_flat": 5.5, "opening_flat": 5.5}`, cm). Doll clothes have no sizes, so
+"two sizes bigger" does not apply: measure the new doll and use the doll mode instead.
+
 ### Limits
 - Mode B is fully automatic for **pants** (widths, rise, inseam, outseam, waistband,
   cuffs) and for **T-shirts with set-in or raglan sleeves** (chest, hem, length, underarm,

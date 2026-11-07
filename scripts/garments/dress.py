@@ -25,11 +25,15 @@ from . import skirt as S
 from . import tshirt_basic as T
 
 DEFAULTS = dict(style="waist_seam", skirt="gathered", length="knee", fabric="jersey", gather=1.6,
-                flare_cm=None, waist_elastic=True, pockets=False, sa=10.0, hem_sa=20.0)
+                flare_cm=None, waist_elastic=True, pockets=False, sa=10.0, hem_sa=20.0,
+                back_opening=False, opening_sa=None, neck_finish="band",
+                # back opening: share of the skirt length that stays open below the waist
+                skirt_opening=0.35)
 TOP_KEYS = ("fit", "fabric", "stretch", "sleeve_style", "sleeve_length", "neckline", "band_fabric",
             "band_stretch", "sleeve_cuffs", "sa", "hem_sa", "neck_band_h", "chest_total",
             "sleeve_len_total", "sleeve_opening", "cuff_h", "construction", "notch_style",
-            "seam_allowance", "units")
+            "seam_allowance", "units", "back_opening", "opening_sa", "neck_finish",
+            "armhole_depth_max", "sleeve_taper", "bicep_total")
 GATHER_RANGE = (1.0, 2.5)
 
 FINISHED_LABELS = dict(T.FINISHED_LABELS, length=("Dress length from neck point", "length"),
@@ -120,9 +124,21 @@ def _waist_seam(m, o, Ls):
                     dict(name="Skirt side seam ↔ waist", piece="skirt_front", a="side", b="waistband", target=90),
                     dict(name="Skirt waist ↔ centre", piece="skirt_front", a="waistband", b="center", target=90)]
     _, stretch, knit = E.fabric_info(o["fabric"], o.get("stretch"))
-    pat.checks.append(dict(name="Waist seam fits over the shoulders/chest", kind="min",
-                           value=waist * (1 + stretch / 100 * 0.6), target=m["chest"] * 1.02,
-                           note="pull-on dress without closure: waist seam incl. usable stretch ≥ chest"))
+    if o["back_opening"]:
+        sb = pat.piece("skirt_back")
+        open_len = float(o["skirt_opening"]) * sb.edge("center").length
+        T.open_back(sb, T.opening_sa(pat.options), length=open_len, sa=sa)
+        pat.seams.append(dict(name="Skirt centre back seam (left ↔ right)", a=[("skirt_back", "center", 1)],
+                              b=[("skirt_back", "center", 1)], type="equal",
+                              note=f"open for the top {open_len / 10:.1f} cm (notch)"))
+        pat.checks.append(dict(name="Dress goes on through the back opening", kind="min",
+                               value=waist * (1 + stretch / 100 * 0.6) + 2 * open_len, target=m["hip"] * 1.05,
+                               note="waist seam + both edges of the skirt opening ≥ hip + 5 %"))
+        pat.options["_skirt_opening"] = open_len
+    else:
+        pat.checks.append(dict(name="Waist seam fits over the shoulders/chest", kind="min",
+                               value=waist * (1 + stretch / 100 * 0.6), target=m["chest"] * 1.02,
+                               note="pull-on dress without closure: waist seam incl. usable stretch ≥ chest"))
     if o["pockets"]:
         _pockets(pat, sa, adult)
     if o["waist_elastic"]:
@@ -196,6 +212,18 @@ def _shirt_dress(m, o, Ls):
         pc.edge("side").pts = side
         pc.edge("hem").pts = hem
         pc.edge("center").pts = G.line(G.P(0, -depth), H0)
+    if o["back_opening"]:
+        # open from the neck to a little below the waist, centre back seam below
+        b = pat.piece("back")
+        open_len = (m["back_length"] - F["bnd"]) + float(o["skirt_opening"]) * Ls
+        T.open_back(b, T.opening_sa(pat.options), length=open_len, sa=pat.options["sa"])
+        pat.seams.append(dict(name="Centre back seam (left ↔ right)", a=[("back", "center", 1)],
+                              b=[("back", "center", 1)], type="equal",
+                              note=f"open for the top {open_len / 10:.1f} cm (notch)"))
+        for c in pat.corners:
+            if c.get("piece") == "back" and c.get("b") == "center":
+                c["b"] = "center_open"
+        pat.options["_back_opening_len"] = open_len
     y_hip = -(m["back_length"] + 0.11 * m["height"] * (1.0 if m["height"] > 1650 else 0.9))
     f, b = pat.piece("front"), pat.piece("back")
     hip_w = 2 * (G.width_at_y(f.seam_ring(), y_hip) + G.width_at_y(b.seam_ring(), y_hip))
@@ -219,11 +247,17 @@ def sewing_steps(pat):
     o = pat.options
     base = [s for s in T.sewing_steps(pat) if not s.startswith(("**Hem:", "**Hem band", "Done"))]
     if o.get("style") == "shirt_dress":
+        if o.get("back_opening"):
+            base.insert(0, "**Centre back seam:** sew the back pieces right sides together from the hem up to the "
+                           "notch; above the notch the seam stays open (back opening).")
         return base + ["**Hem:** press the hem allowance under (curved hem: ease in the fullness with steam) "
                        "and sew with a twin needle/coverstitch.", "Done! Press the seams."]
     knit = E.fabric_info(o["fabric"])[2]
     st = "with an overlocker or a narrow zigzag/stretch stitch" if knit else "with a straight stitch, then finish the edges"
     steps = list(base)
+    if o.get("back_opening"):
+        steps.append("**Skirt centre back seam:** sew the skirt back pieces right sides together from the hem "
+                     "up to the notch; above the notch the seam stays open (it continues the back opening).")
     if o.get("pockets"):
         steps.append("**In-seam pockets:** sew a pocket bag to each skirt side seam between the notches "
                      "(right sides together, 7 mm from the edge), press the bags outwards.")

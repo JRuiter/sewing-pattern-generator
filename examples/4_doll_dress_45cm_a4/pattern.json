@@ -1,0 +1,829 @@
+{
+  "garment": "dress",
+  "title": "Dress with gathered skirt",
+  "size": "doll 45 cm (made to measure)",
+  "options": {
+    "fit": "wide",
+    "fabric": "woven",
+    "stretch": null,
+    "sleeve_style": "set_in",
+    "sleeve_length": "short",
+    "neckline": "round",
+    "length": "knee",
+    "band_fabric": "rib",
+    "band_stretch": null,
+    "sleeve_cuffs": false,
+    "hem_band": false,
+    "sa": 6.0,
+    "hem_sa": 10.000000000000002,
+    "neck_band_h": null,
+    "chest_total": null,
+    "body_length": 93.3846153846154,
+    "sleeve_len_total": null,
+    "sleeve_opening": null,
+    "neck_extra": 0.0,
+    "cuff_h": null,
+    "hem_band_h": null,
+    "bicep_total": 124.98064516129033,
+    "hem_total": null,
+    "back_opening": true,
+    "opening_sa": null,
+    "neck_finish": "bias",
+    "armhole_depth_max": 63.0,
+    "sleeve_taper": 1.0,
+    "_F": {
+      "Ct": 366.0,
+      "q": 91.5,
+      "nw": 35.375261297841945,
+      "fnd": 40.452184374765025,
+      "bnd": 5.0769230769230775,
+      "sx": 70.3539467947976,
+      "sy": -11.182687617968694,
+      "AD": 63.0,
+      "L": 93.3846153846154,
+      "be": 0.22,
+      "stretch": 0,
+      "knit": false,
+      "sh": 36.57692307692308
+    },
+    "_sinfo": {
+      "SW": 124.98064516129033,
+      "SL": 41.92305297333961,
+      "cuff_h": 0.0,
+      "cuff_len": 0.0,
+      "op": 124.98064516129033
+    },
+    "_hem_band_h": 0.0,
+    "_nb_h": 3.5999999999999996,
+    "_skirt_opening": 39.86218923076923,
+    "style": "waist_seam",
+    "skirt": "gathered",
+    "gather": 1.6,
+    "waist_elastic": false,
+    "pockets": false,
+    "seam_allowance_mm": 6.0,
+    "hem_allowance_mm": 10.0,
+    "doll": true,
+    "_doll_scale": 2.9545454545454546,
+    "units": "metric"
+  },
+  "measures_mm": {
+    "chest": 300.0,
+    "waist": 280.0,
+    "hip": 310.0,
+    "head": 320.0,
+    "neck": 151.5,
+    "inseam": 140.0,
+    "side_length": 220.0,
+    "arm": 120.0,
+    "back_length": 90.0,
+    "shoulder": 31.5,
+    "upper_arm": 104.2,
+    "wrist": 75.7,
+    "thigh": 179.9,
+    "knee": 142.0,
+    "ankle": 113.6,
+    "height": 450.0,
+    "crotch_depth": 80.0
+  },
+  "finished_mm": {
+    "chest_circ": 368.9,
+    "hem_circ": 609.0,
+    "length": 207.3,
+    "sleeve_len": 41.9,
+    "sleeve_opening": 125.0,
+    "bicep_circ": 125.0,
+    "neckline": 204.4,
+    "waist_seam": 380.6,
+    "skirt_top": 609.0,
+    "skirt_length": 113.9
+  },
+  "pieces": [
+    {
+      "key": "front",
+      "name": "Front",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "center",
+          "label": "Centre (fold)",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 52.9
+        },
+        {
+          "name": "hem",
+          "label": "Waist seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 95.2
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 30.6
+        },
+        {
+          "name": "armhole",
+          "label": "Armhole",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 70.2
+        },
+        {
+          "name": "shoulder",
+          "label": "Shoulder",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 36.7
+        },
+        {
+          "name": "neckline",
+          "label": "Neckline",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 61.0
+        }
+      ]
+    },
+    {
+      "key": "back",
+      "name": "Back",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "center",
+          "label": "Back opening (turn under)",
+          "sa": 14.999999999999998,
+          "fold": false,
+          "length_mm": 88.3
+        },
+        {
+          "name": "hem",
+          "label": "Waist seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 95.2
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 30.6
+        },
+        {
+          "name": "armhole",
+          "label": "Armhole",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 67.4
+        },
+        {
+          "name": "shoulder",
+          "label": "Shoulder",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 36.7
+        },
+        {
+          "name": "neckline",
+          "label": "Neckline",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 41.2
+        }
+      ]
+    },
+    {
+      "key": "sleeve",
+      "name": "Sleeve",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "cap_back",
+          "label": "Sleeve cap back",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 71.5
+        },
+        {
+          "name": "seam_back",
+          "label": "Sleeve seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 12.0
+        },
+        {
+          "name": "hem",
+          "label": "Sleeve hem",
+          "sa": 10.000000000000002,
+          "fold": false,
+          "length_mm": 125.0
+        },
+        {
+          "name": "seam_front",
+          "label": "Sleeve seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 12.0
+        },
+        {
+          "name": "cap_front",
+          "label": "Sleeve cap front",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 71.5
+        }
+      ]
+    },
+    {
+      "key": "neckband",
+      "name": "Neck binding (bias)",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Seam edge",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 204.4
+        },
+        {
+          "name": "right",
+          "label": "End",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 7.2
+        },
+        {
+          "name": "top",
+          "label": "Seam edge",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 204.4
+        },
+        {
+          "name": "left",
+          "label": "End",
+          "sa": 4.2,
+          "fold": false,
+          "length_mm": 7.2
+        }
+      ]
+    },
+    {
+      "key": "skirt_front",
+      "name": "Skirt front",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "hem",
+          "label": "Hem",
+          "sa": 10.000000000000002,
+          "fold": false,
+          "length_mm": 152.3
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 113.9
+        },
+        {
+          "name": "waistband",
+          "label": "Waist seam (gather)",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 152.3
+        },
+        {
+          "name": "center",
+          "label": "Centre (fold)",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 113.9
+        }
+      ]
+    },
+    {
+      "key": "skirt_back",
+      "name": "Skirt back",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "hem",
+          "label": "Hem",
+          "sa": 10.000000000000002,
+          "fold": false,
+          "length_mm": 152.3
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 113.9
+        },
+        {
+          "name": "waistband",
+          "label": "Waist seam (gather)",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 152.3
+        },
+        {
+          "name": "center_open",
+          "label": "Back opening (turn under)",
+          "sa": 14.999999999999998,
+          "fold": false,
+          "length_mm": 39.9
+        },
+        {
+          "name": "center",
+          "label": "Centre back seam",
+          "sa": 6.0,
+          "fold": false,
+          "length_mm": 74.0
+        }
+      ]
+    }
+  ],
+  "construction": [
+    {
+      "name": "chest_width",
+      "value": 366.0,
+      "formula": "chest × (1 + 22 % ease)",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "neck_width_half",
+      "value": 35.375261297841945,
+      "formula": "neck / 5 + 1.5 cm",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_neck_depth",
+      "value": 40.452184374765025,
+      "formula": "neck_width_half + 1.5 cm",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_neck_depth",
+      "value": 5.0769230769230775,
+      "formula": "fixed",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "shoulder_length",
+      "value": 36.57692307692308,
+      "formula": "shoulder + allowance for fit 'wide'",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "shoulder_slope",
+      "value": 17.0,
+      "formula": "fixed",
+      "unit": "°",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "armhole_depth",
+      "value": 63.0,
+      "formula": "18 % of chest_width + 2.5 cm + 3 %, limited to option armhole_depth_max",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "body_length",
+      "value": 93.3846153846154,
+      "formula": "option body_length",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    }
+  ],
+  "validation": [
+    {
+      "group": "Seam pairs",
+      "name": "Side seam front ↔ back",
+      "status": "OK",
+      "target": "3.1 cm",
+      "actual": "3.1 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Armhole ↔ sleeve cap (ease)",
+      "status": "OK",
+      "target": "ease 3–8 mm",
+      "actual": "13.8 cm ↔ 14.3 cm",
+      "delta": "+5.4 mm",
+      "note": "Woven: 3–8 mm"
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Shoulder seam front ↔ back",
+      "status": "OK",
+      "target": "3.7 cm",
+      "actual": "3.7 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Sleeve seam (front ↔ back)",
+      "status": "OK",
+      "target": "1.2 cm",
+      "actual": "1.2 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Neck binding ↔ neckline",
+      "status": "OK",
+      "target": "20.4 cm",
+      "actual": "20.4 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Waist seam bodice ↔ skirt (gathered)",
+      "status": "OK",
+      "target": "40–100 % of 60.9 cm",
+      "actual": "38.1 cm = 63 %",
+      "delta": "-228.4 mm",
+      "note": "gather ratio 1.6 (allowed 1–2.5)"
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Skirt side seam front ↔ back",
+      "status": "OK",
+      "target": "11.4 cm",
+      "actual": "11.4 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Skirt centre back seam (left ↔ right)",
+      "status": "OK",
+      "target": "7.4 cm",
+      "actual": "7.4 cm",
+      "delta": "+0.0 mm",
+      "note": "open for the top 4.0 cm (notch)"
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Underarm: side seam ↔ armhole front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "91.9°",
+      "delta": "+1.9°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Underarm: side seam ↔ armhole back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "92.2°",
+      "delta": "+2.2°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Shoulder ↔ armhole (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "180.6°",
+      "delta": "+0.6°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Sleeve cap top (smooth)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "178.2°",
+      "delta": "-1.8°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Sleeve underarm ↔ cap front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.9°",
+      "delta": "+0.9°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Shoulder ↔ neckline (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "180.9°",
+      "delta": "+0.9°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Neckline at centre front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.4°",
+      "delta": "+0.4°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Neckline at centre back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "89.0°",
+      "delta": "-1.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem at centre front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem ↔ side seam front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "88.8°",
+      "delta": "-1.2°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Skirt hem ↔ side seam",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Skirt side seam ↔ waist",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Skirt waist ↔ centre",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Measurements",
+      "name": "Chest circumference pattern = body + ease",
+      "status": "OK",
+      "target": "36.6 cm",
+      "actual": "36.9 cm",
+      "delta": "+0.8 %",
+      "note": "body 30 cm + +22 % ease"
+    },
+    {
+      "group": "Measurements",
+      "name": "Head fits through the back opening",
+      "status": "OK",
+      "target": "≥ 33.6 cm",
+      "actual": "38.1 cm",
+      "delta": "+45.0 mm",
+      "note": "neckline + both edges of the back opening ≥ head circumference + 5 %"
+    },
+    {
+      "group": "Measurements",
+      "name": "Dress goes on through the back opening",
+      "status": "OK",
+      "target": "≥ 32.6 cm",
+      "actual": "46.0 cm",
+      "delta": "+134.9 mm",
+      "note": "waist seam + both edges of the skirt opening ≥ hip + 5 %"
+    },
+    {
+      "group": "Measurements",
+      "name": "Dress length plausible",
+      "status": "OK",
+      "target": "14.9 cm – 33.5 cm",
+      "actual": "20.7 cm",
+      "delta": "+0.0 mm",
+      "note": "from the neck point"
+    },
+    {
+      "group": "Geometry",
+      "name": "Front: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.6 cm included; Neckline: 0.4 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Front: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Back: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.6 cm included; Back opening (turn under): 1.5 cm; Neckline: 0.4 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Back: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Sleeve: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.6 cm included; Sleeve hem: 1.0 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Sleeve: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Neck binding (bias): outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.4 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Neck binding (bias): grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Skirt front: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.6 cm included; Hem: 1.0 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Skirt front: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Skirt back: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 0.6 cm included; Hem: 1.0 cm; Back opening (turn under): 1.5 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Skirt back: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Back: turned allowance lies flat",
+      "status": "OK",
+      "target": "≤ 0.5 mm",
+      "actual": "0.0 mm",
+      "delta": "",
+      "note": "Back opening (turn under): corners mirrored at the fold line"
+    },
+    {
+      "group": "Geometry",
+      "name": "Sleeve: turned allowance lies flat",
+      "status": "OK",
+      "target": "≤ 0.5 mm",
+      "actual": "0.0 mm",
+      "delta": "",
+      "note": "Sleeve hem: corners mirrored at the fold line"
+    },
+    {
+      "group": "Labels",
+      "name": "Front: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "1 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Back: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "2 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Sleeve: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "4 notch mark(s)",
+      "delta": "",
+      "note": "1 at corners"
+    },
+    {
+      "group": "Labels",
+      "name": "Skirt back: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "2 notch mark(s)",
+      "delta": "",
+      "note": ""
+    }
+  ],
+  "fabric_mm": {
+    "Main fabric": {
+      "width": 1500.0,
+      "need": 250.0,
+      "layout": "single"
+    }
+  }
+}

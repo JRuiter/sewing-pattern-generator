@@ -10,12 +10,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import doll as DOLL  # noqa: E402
 import photo_measure as PM  # noqa: E402
 import validate as V  # noqa: E402
 
 from . import decompose as D  # noqa: E402
 from . import fit as F  # noqa: E402
-from . import store as S  # noqa: E402
+from . import store as ST  # noqa: E402
 from . import unfold as U  # noqa: E402
 from . import verify as VF  # noqa: E402
 
@@ -25,13 +26,22 @@ LENGTH_FEATURES = ["length", "armhole_depth", "sleeve_reach", "neck_half", "fron
 
 
 def run(image, garment="pants", out="project", tape=None, base_options=None, fits=None,
-        grade_steps: int = 0, max_rounds: int = 2):
+        grade_steps: int = 0, max_rounds: int = 2, doll: bool = False, px_per_mm: float | None = None):
+    """doll=True: the garment is doll clothing. It is measured as usual, then fitted at a
+    virtual child scale (doll.py) with doll defaults and scaled back."""
     os.makedirs(out, exist_ok=True)
     steps = {}
-    # 2 measure (incl. reference/perspective)
-    meas = PM.measure(image, garment, overlay_path=os.path.join(out, "overlay_measurement.png"), tape=tape)
+    # 2 measure (incl. reference/perspective); small doll clothes get a finer raster
+    ppm = px_per_mm or (4.0 if doll else 2.0)
+    meas = PM.measure(image, garment, px_per_mm=ppm, overlay_path=os.path.join(out, "overlay_measurement.png"),
+                      tape=tape)
     steps["measurement"] = meas
-    flat = meas["measures_mm"]
+    flat_real = meas["measures_mm"]
+    S = 1.0
+    if doll:
+        S = DOLL.photo_scale(garment, flat_real)
+        base_options = DOLL.photo_options(garment, base_options, S)
+    flat = DOLL.scale_flat(flat_real, S) if doll else flat_real
     # 1 decompose
     top = garment not in ("pants", "pants_basic")
     feat = D.features_from_measurement(garment, flat)
@@ -46,6 +56,8 @@ def run(image, garment="pants", out="project", tape=None, base_options=None, fit
     steps["targets"] = targets
     # 4 reconstruct (+ 5 verify, repeat with all fits if needed)
     opts = D.options_from_features(feat)
+    if doll and not top:
+        opts = {**base_options, **opts}       # doll allowances and elastic width
     if top:
         # tops: the fit matches the virtual flat lay of the pattern to every photo feature
         res = F.fit(garment, flat, opts)
@@ -63,17 +75,29 @@ def run(image, garment="pants", out="project", tape=None, base_options=None, fit
             rows = VF.compare(res["pattern"], targets)
             rounds += 1
     pat = res["pattern"]
-    pat.size_label = f"copied from garment (≈ size {res['size']})"
+    if doll:
+        DOLL.finish_virtual(pat, S)
+        rows = DOLL.scale_rows(rows, 1.0 / S)
+        targets = {k: v / S for k, v in targets.items()}
+        pat.size_label = "doll clothes (copied from garment)"
+        size_text = "doll clothes (no size)"
+    else:
+        pat.size_label = f"copied from garment (≈ size {res['size']})"
+        size_text = f"estimated size ≈ {res['size']}"
     style = f", {res['sleeve_style'].replace('_', '-')} sleeves" if top else ""
     report = V.validate(pat)
     steps["deviation"] = rows
     project = dict(module=pat.garment, fit=res["fit"], options=res["options"], params=res["params"],
-                   size_estimate=res["size"], flat_mm={k: v for k, v in flat.items() if not k.startswith("_")},
+                   size_estimate=res["size"],
+                   flat_mm={k: v for k, v in flat_real.items() if not k.startswith("_")},
                    target_mm=targets,
                    actual_mm=pat.finished, piece_graph=graph, source=str(image))
-    S.save(os.path.join(out, "project.json"), project)
+    if doll:
+        # options/params are at the virtual scale; generate.py scales the pattern back
+        project.update(doll=True, doll_scale=S)
+    ST.save(os.path.join(out, "project.json"), project)
     md = ["## Reverse engineering: result", "",
-          f"Detected module: **{pat.title}**{style}, fit **{res['fit']}**, estimated size ≈ {res['size']}", "",
+          f"Detected module: **{pat.title}**{style}, fit **{res['fit']}**, {size_text}", "",
           D.describe(graph), "", VF.to_markdown(rows), "", V.to_markdown(report)]
     with open(os.path.join(out, "reverse_report.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(md))
@@ -83,14 +107,17 @@ def run(image, garment="pants", out="project", tape=None, base_options=None, fit
 
 def regrade(project_path, steps: int):
     """Shift a saved project by n sizes and reconstruct it again."""
-    p = S.load(project_path)
+    p = ST.load(project_path)
+    if p.get("doll"):
+        raise ValueError("Doll clothes have no sizes to grade: copy the garment again or measure the doll "
+                         "and use the doll mode (generate.py --doll).")
     src = p["size_estimate"]
-    dst = S.size_step(src, steps)
+    dst = ST.size_step(src, steps)
     if p["module"] != "pants_basic":
         res = F.regrade_top(p["options"], src, dst)
         res["pattern"].size_label = f"copied from garment, size {dst:g}"
         return res, res["pattern"].finished
-    t = S.grade_targets(p["target_mm"], src, dst)
+    t = ST.grade_targets(p["target_mm"], src, dst)
     opts = {k: v for k, v in p["options"].items() if not k.startswith("_") and k not in F.PANTS_PARAMS + ["knee_total"]}
     res = F.fit("pants_basic", t, opts, fits=(p["fit"],), size=dst)
     res["pattern"].size_label = f"copied from garment, size {dst:g}"
@@ -102,8 +129,9 @@ def main(argv=None):
     ap.add_argument("image")
     ap.add_argument("--type", default="pants", help="pants or top (T-shirt / raglan)")
     ap.add_argument("--out", default="project")
+    ap.add_argument("--doll", action="store_true", help="the garment is doll clothing (doll.py)")
     a = ap.parse_args(argv)
-    r = run(a.image, a.type, a.out)
+    r = run(a.image, a.type, a.out, doll=a.doll)
     print(r["markdown"])
 
 

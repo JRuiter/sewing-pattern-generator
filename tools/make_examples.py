@@ -4,6 +4,7 @@
   python tools/make_examples.py            # both
   python tools/make_examples.py examples   # only examples/
   python tools/make_examples.py results    # only test-results/
+  python tools/make_examples.py doll       # only examples/4_doll_dress_45cm_a4
 """
 from __future__ import annotations
 
@@ -117,11 +118,27 @@ def make_examples():
     with open(os.path.join(d, "round_trip_comparison.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(md))
     print("\n".join(md))
+    make_doll_example()
+
+
+# 4: doll clothes: a dress for a 45 cm fabric doll, A4 tiles (doll.py)
+DOLL_CM = {"height": 45, "chest": 30, "waist": 28, "hip": 31, "head": 32, "arm": 12, "inseam": 14,
+           "side_length": 22}
+
+
+def make_doll_example():
+    d = os.path.join(ROOT, "examples", "4_doll_dress_45cm_a4")
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    GN.run(dict(garment="dress", doll=True, measures_cm=DOLL_CM, formats=["a4"], out=d,
+                basename="doll_dress_45cm"), verbose=False)
 
 
 if __name__ == "__main__":
     what = sys.argv[1:] or ["examples", "results"]
     if "examples" in what:
         make_examples()
+    if "doll" in what:
+        make_doll_example()
     if "results" in what:
         make_results()
