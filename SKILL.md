@@ -230,10 +230,28 @@ projector use).
 before/after finished measurements; the adjustments stay in `pattern.json`/`project.json`
 and are re-applied in other sizes. Keys: `references/drafting_rules.md` §8.
 
-### 6. Check the preview yourself
+### 6. Check the preview and the booklet yourself (never skip)
 **Look at** the PNG preview(s) and the cutting layout before delivering: all pieces
 present, nothing overlapping, labels readable, grainline plausible, control square
-present. Fix anything odd or tell the user openly.
+present.
+
+**The booklet has two safety nets; both must pass before you deliver:**
+1. **Automatic check** (`booklet_qa.py`, runs on every build): `validation_report.md` ends with
+   "Booklet check" and `generate.run()` returns `booklet_issues`. It finds garment views without
+   their bands, cuffs, sleeves or hood or with joined legs, stacked seam pictures whose edges do
+   not lie on each other, almost empty pictures, the fallback pictogram, and text outside its
+   panel or overlapping. Any finding = fix the drawing code (or say so openly), never deliver silently.
+2. **Visual check:** `python scripts/booklet_pages.py <out>/sewing_instructions.pdf` writes contact
+   sheets (4 pages each) to `<out>/booklet_check/`. **Open and look at every sheet** and check:
+   - title page: the finished garment looks like the garment (two legs, waistband across the
+     waist, cuffs at the hems; sleeves, hood, pocket where they belong), front and back at one scale;
+   - every seam picture: the pieces are either exactly on top of each other along the seam or
+     side by side with the two seam edges facing each other (red), never skewed across each other;
+   - every picture shows what its text says (e.g. "one leg inside the other" shows legs, not boxes),
+     fills its area and has no labels on top of lines;
+   - nothing cut off, no empty half pages except the end.
+   If something looks odd, fix it in `views.py`/`diagrams.py`/`booklet.py`, rebuild and look again.
+   Delete `booklet_check/` before delivering (it is only for you).
 
 ### 7. Deliver to the user
 - PDFs (roll/sheets/A4), SVG master, preview PNG
@@ -271,6 +289,8 @@ present. Fix anything odd or tell the user openly.
 - `scripts/doll.py`: doll clothes mode (doll measurements, virtual drafting scale, doll defaults)
 - `scripts/validate.py`: sewability checks
 - `scripts/layout.py`, `render.py`, `instructions.py`: layout, PDF/SVG/PNG, instructions
+- `scripts/booklet_qa.py`, `booklet_pages.py`: automatic booklet checks (in `validation_report.md`) and
+  contact sheets for the visual check (step 6)
 - `scripts/steps.py`, `diagrams.py`, `booklet.py`: one-action sewing steps (garment `assembly()`), the
   machine/stitch choice per step, step diagrams from the real pieces, the illustrated booklet PDF
 - `scripts/photo_analyze.py`, `photo_measure.py`, `flatlay.py`, `reverse/`: photo modes A and B

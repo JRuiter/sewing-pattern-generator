@@ -304,6 +304,14 @@ def _run(spec: dict, verbose: bool = True) -> dict:
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
     I.instructions_pdf(big, md, pdf_path, plans, step_list, images=[zp])
+    import booklet_qa as QA
+    result["booklet_issues"] = list(QA.ISSUES)
+    with open(os.path.join(out, F("validation_report.md")), "a", encoding="utf-8") as f:
+        f.write("\n\n" + QA.to_markdown() + "\n")
+    if QA.ISSUES:
+        warn.append(i18n.t("Booklet check: {n} finding(s), see validation_report.md").replace("{n}", str(len(QA.ISSUES))))
+        if verbose:
+            print(QA.to_markdown(), file=sys.stderr)
     js = os.path.join(out, F("pattern.json"))
     data = big.summary()
     if drafts:
