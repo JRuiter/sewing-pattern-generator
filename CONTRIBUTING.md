@@ -14,8 +14,8 @@ pre-commit install            # optional: runs ruff on every commit
 
 | Command | What it does |
 |---|---|
-| `python -m pytest tests -m "not slow"` | quick run (291 of 306 tests, ~4 min), skips PDF rendering and the photo round trips |
-| `python -m pytest tests` | full suite, as in CI (306 tests, ~7 min; the A4 overlap test needs `pdftoppm` from poppler) |
+| `python -m pytest tests -n auto -m "not slow"` | quick run on all cores, skips PDF rendering and the photo round trips |
+| `python -m pytest tests -n auto` | full suite on all cores, as in CI (~3 min on 4 cores, ~10 min on one; the A4 overlap test needs `pdftoppm` from poppler) |
 | `ruff check scripts tests tools` | lint (config in `pyproject.toml`) |
 | `mypy` | type check (baseline config in `pyproject.toml`) |
 | `python tools/build_skill_zip.py` | build the installable skill ZIP into `dist/` |

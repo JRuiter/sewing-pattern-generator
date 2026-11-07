@@ -130,6 +130,8 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
     placements, unplaced = [], []
     pad = gap / 2 + res * 0.5
     cur_max = 0
+    filled = np.flatnonzero(occ.any(axis=1))
+    top = int(filled[-1]) + 1 if filled.size else 0       # first row below everything placed
     for i in order:
         best = None
         for ang in per_piece_angles[i]:
@@ -138,7 +140,11 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
             mh, mw = mask.shape
             if mw > cols or mh > rows:
                 continue
-            ov = fftconvolve(occ, mask[::-1, ::-1], mode="valid")
+            # Rows from `top` down are empty, so row `top` is always feasible and no better
+            # position lies below it: convolving only the filled band gives the same result
+            # as the whole (mostly empty) canvas, several times faster.
+            band = occ if top + mh >= rows else occ[:top + mh]
+            ov = fftconvolve(band, mask[::-1, ::-1], mode="valid")
             feas = ov < 0.5
             if pinned[i]:
                 feas[:, 1:] = False
@@ -165,6 +171,7 @@ def pack(rings, width, height=None, angles=None, gap=GAP, res=2.0, reserved=(),
         mh, mw = mask.shape
         occ[rr:rr + mh, cc:cc + mw] = np.maximum(occ[rr:rr + mh, cc:cc + mw], mask)
         cur_max = max(cur_max, rr + mh)
+        top = max(top, rr + mh)
         # offset: bnd = buffered bounds in the rotated position
         dx = margin + cc * res - bnd[0] - 0.5 * res
         dy = margin + rr * res - bnd[1] - 0.5 * res
@@ -220,11 +227,12 @@ def min_gap(rings, placements) -> float:
 # Roll
 # ---------------------------------------------------------------------------
 
-def layout_roll(pattern, roll_width_mm: float = 610.0, angle_step: int = 15) -> Layout:
+def layout_roll(pattern, roll_width_mm: float = 610.0, angle_step: int = 15, quick: bool = False) -> Layout:
+    """quick: fewer packing strategies, for layouts where paper length does not matter (DXF)."""
     page_w = roll_width_mm - 10.0
     rings = [_rings(p) for p in pattern.pieces]
     reserved = [(0, 0, page_w, ROLL_HEADER)]
-    pls, unplaced, used = pack_best(rings, page_w, angle_step=angle_step,
+    pls, unplaced, used = pack_best(rings, page_w, angle_step=angle_step, quick=quick,
                                     reserved=reserved, margin=ROLL_MARGIN)
     if unplaced:
         names = ", ".join(pattern.pieces[i].name for i in unplaced)

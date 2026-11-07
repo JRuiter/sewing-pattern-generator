@@ -5,6 +5,8 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 ## [Unreleased]
 
 ### Changed
+- **Faster layouts and photo fits, same results**: the layout packer only searches the filled band of the page instead of the whole, mostly empty canvas (roll, A4, A0/A1, cutting layout about 2× faster); the DXF sheet uses the quick packing strategies; the top contour in the flat-lay model is computed for all positions at once (photo mode B for tops about 2× faster). Layouts and fitted values are identical.
+- **CI in about 4 instead of 13 minutes**: tests run in parallel on all cores (`pytest-xdist`), the full suite with coverage runs once on Python 3.12, Python 3.10 runs the quick tests, and a new push to a PR cancels the older run.
 - **Booklet layout after the reference booklet**: centred title page with size, fit and fabric in one line, large front and back views and a "Sewn with …" box with the machine and tool icons; the parts page shows every part large and at the same scale (big parts in the first row, bands and pockets below) with a navy count badge on the part, the seam allowances, the material in two columns (fabric amounts, notions, machines with their stitch settings, thread, clips, chalk, iron, towel) and "Colours in this booklet"; the basics page has a box per machine; steps get navy number badges and bullets, one-paragraph "⚠ Important:" / "Tip:" boxes and the ×2 badge bottom right; the "Done!" panel fills the free half of the last step page, the 1:1 templates come after it; page numbers at the bottom.
 
 ### Fixed

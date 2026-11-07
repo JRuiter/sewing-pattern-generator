@@ -62,12 +62,25 @@ def neck_corner(xs, ys, x_peak, back_neck, P0):
 
 
 def _top_contour(poly, x0, x1, step=0.25):
+    """Highest outline point (smallest y) on vertical lines x0, x0 + step, … < x1.
+
+    Same values as intersecting the polygon with each vertical line, but computed for all
+    lines at once from the outline's edges (the fit calls this thousands of times)."""
     xs = np.arange(x0, x1, step)
-    ys = np.full(len(xs), np.nan)
-    for i, x in enumerate(xs):
-        seg = poly.intersection(LineString([(x, -1e4), (x, 1e4)]))
-        if not seg.is_empty:
-            ys[i] = seg.bounds[1]
+    rings = [np.asarray(r.coords) for g in getattr(poly, "geoms", [poly])
+             for r in (g.exterior, *g.interiors)]
+    a = np.concatenate([r[:-1] for r in rings])
+    b = np.concatenate([r[1:] for r in rings])
+    lo, hi = np.minimum(a[:, 0], b[:, 0]), np.maximum(a[:, 0], b[:, 0])
+    dx = b[:, 0] - a[:, 0]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t = (xs[:, None] - a[None, :, 0]) / dx[None, :]
+        y = a[None, :, 1] + t * (b[None, :, 1] - a[None, :, 1])
+    vertical = dx == 0
+    y[:, vertical] = np.minimum(a[vertical, 1], b[vertical, 1])[None, :]
+    hit = (xs[:, None] >= lo[None, :]) & (xs[:, None] <= hi[None, :])
+    y = np.where(hit, y, np.inf).min(axis=1)
+    ys = np.where(np.isfinite(y), y, np.nan)
     return xs, ys
 
 
