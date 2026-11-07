@@ -130,7 +130,7 @@ through.
 
 ## Examples
 
-Complete output folders (pattern PDF and SVG, cutting layout, sewing booklet, check report):
+Complete output folders, each with its own README (prompt, pictures, what every file is):
 
 1. [Harem pants, size 122, sweat, 610 mm roll](examples/1_harem_pants_122_roll610)
 2. [The same as A4 pages to tape together](examples/2_harem_pants_122_a4)

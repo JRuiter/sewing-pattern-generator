@@ -5,7 +5,7 @@
   python tools/make_examples.py examples   # only examples/
   python tools/make_examples.py results    # only test-results/
   python tools/make_examples.py doll       # only examples/4_doll_dress_45cm_a4
-  python tools/make_examples.py images     # only docs/images/ (README pictures, from examples/)
+  python tools/make_examples.py images     # only docs/images/ and the example READMEs (from examples/)
 """
 from __future__ import annotations
 
@@ -129,6 +129,120 @@ def make_examples():
                 formats=["roll610"], out=os.path.join(ex, "6_joggers_nested_98_110_122_roll610"),
                 basename="joggers_98_110_122"), verbose=False)
     make_images()
+    make_readmes()
+
+
+# One README.md per example folder: the prompt, pictures, key facts and what every file is.
+EXAMPLES = [
+    ("1_harem_pants_122_roll610", "Harem pants, size 122, on a 610 mm roll",
+     "Harem pants for my daughter, size 122, sweat fabric, print on the 24\" roll.",
+     "Wide harem pants with an elastic waistband and rib cuffs, printed on one long page of a "
+     "24\" (610 mm) plotter roll."),
+    ("2_harem_pants_122_a4", "Harem pants, size 122, as A4 pages",
+     "The same harem pants, but as A4 pages I can print at home.",
+     "The same pattern as example 1, tiled onto A4 pages with 10 mm overlap, glue areas, row and "
+     "column labels and an overview page."),
+    ("4_doll_dress_45cm_a4", "Doll dress for a 45 cm fabric doll",
+     "A dress for my daughter's 45 cm fabric doll. Chest 30 cm, waist 28 cm, hip 31 cm, head 32 cm.",
+     "A gathered dress drafted from the doll's own measurements: 6 mm seam allowances, a back "
+     "opening with Velcro instead of a neckline the head wouldn't fit through, bias-bound neckline."),
+    ("5_hoodie_140_a4", "Hoodie with kangaroo pocket, size 140",
+     "A hoodie with kangaroo pocket for my son, size 140, sweat fabric, A4 pages.",
+     "Hood, kangaroo pocket, set-in sleeves, rib cuffs and hem band. The sewing booklet has the "
+     "most steps of all examples."),
+    ("6_joggers_nested_98_110_122_roll610", "Joggers in sizes 98, 110 and 122 on one sheet",
+     "Joggers in sizes 98, 110 and 122 on one pattern, for the 24\" roll.",
+     "Three sizes nested on one roll page. Each size has its own colour, line style and PDF layer "
+     "(switch sizes off before printing), and every size is checked on its own."),
+]
+
+
+def _file_rows(d, rel=""):
+    desc = [("_roll610.pdf", "Print file for the 610 mm roll, 1:1"),
+            ("_tiled.pdf", "Print file as A4 pages to tape together (last page: overview)"),
+            ("_master_1to1.svg", "The whole pattern as one 1:1 SVG"),
+            ("_preview.png", "Preview picture of the print file"),
+            ("cutting_layout.png", "Cutting layout on the fabric, with fabric amounts"),
+            ("sewing_instructions.pdf", "Illustrated sewing booklet, then measurements, pieces and checks"),
+            ("sewing_instructions.md", "The same instructions as text, with a picture per step"),
+            ("validation_report.md", "Every sewability check with target and actual value"),
+            ("pattern.json", "All pieces, measurements and construction values as data"),
+            ("steps", "Step pictures used by sewing_instructions.md")]
+    rows = []
+    for f in sorted(os.listdir(d)):
+        for suffix, text in desc:
+            if f.endswith(suffix):
+                rows.append(f"| [`{rel}{f}`]({rel}{f}) | {text} |")
+                break
+    return ["| File | What it is |", "|---|---|"] + rows
+
+
+def _facts(d):
+    with open(os.path.join(d, "pattern.json"), encoding="utf-8") as f:
+        data = json.load(f)
+    checks = data.get("validation", [])
+    ok = sum(c["status"] == "OK" for c in checks)
+    fabric = ", ".join(f"{name.lower()} {v['need'] / 1000:.2f} m at {v['width'] / 10:.0f} cm width"
+                       for name, v in data.get("fabric_mm", {}).items())
+    with open(os.path.join(d, "sewing_instructions.md"), encoding="utf-8") as f:
+        md = f.read().split("## Sewing instructions", 1)[-1]
+    steps = sum(1 for line in md.splitlines() if line[:1].isdigit() and ". " in line[:5])
+    return [f"- **Pieces:** {len(data.get('pieces', []))}",
+            f"- **Fabric to buy:** {fabric}" if fabric else "",
+            f"- **Sewing steps:** {steps}",
+            f"- **Sewability checks:** {ok} of {len(checks)} OK"]
+
+
+def _preview(d):
+    files = sorted(os.listdir(d), key=lambda f: "roll" not in f)       # roll preview first
+    return next(f for f in files if f.endswith("_preview.png"))
+
+
+def make_readmes():
+    ex = os.path.join(ROOT, "examples")
+    for folder, title, prompt, blurb in EXAMPLES:
+        d = os.path.join(ex, folder)
+        lines = [f"# {title}", "", f"> *\"{prompt}\"*", "", blurb, "",
+                 f'<img src="{_preview(d)}" alt="Preview of the print file" width="500">', "",
+                 "## At a glance", "", *[x for x in _facts(d) if x], "",
+                 "## Cutting layout", "", '<img src="cutting_layout.png" alt="Cutting layout" width="700">', ""]
+        if folder.startswith("5_"):
+            lines += ["## Sewing booklet", "", "<table><tr>",
+                      *[f'<td><img src="../../docs/images/{n}.png" alt="{n}"></td>'
+                        for n in ("booklet_cover", "booklet_parts", "booklet_steps")],
+                      "</tr></table>", ""]
+        lines += ["## Files", "", *_file_rows(d), "",
+                  "Print the PDF at **100 % / actual size** and check the 5 × 5 cm square before cutting.", ""]
+        with open(os.path.join(d, "README.md"), "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
+    d = os.path.join(ex, "3_photo_mode_b")
+    with open(os.path.join(d, "round_trip_comparison.md"), encoding="utf-8") as f:
+        table = [x for x in f.read().splitlines() if x.startswith("|")]
+    lines = ["# Joggers copied from a photo", "",
+             "> *\"Here is a photo of my son's favourite joggers next to the reference card, make me a "
+             "pattern from it.\"*", "",
+             "The garment lies flat next to the printable [reference card](../../assets/reference-card.pdf). "
+             "Claude straightens the photo, finds the outline, measures it, fits the pattern model to "
+             "the measurements and drafts a new pattern. Here the photo is synthetic, made from a known "
+             "pattern (joggers size 116), so the result can be compared with the truth.", "",
+             "<table><tr>", '<td><img src="photo_flat_with_reference_card.jpg" alt="Photo"></td>',
+             '<td><img src="project/overlay_measurement.png" alt="Measured outline"></td>',
+             "</tr><tr><td>The photo</td><td>What Claude measured</td></tr></table>", "",
+             "## How close is the copy?", "", *table, "",
+             "## The rebuilt pattern", "",
+             f'<img src="pattern/{_preview(os.path.join(d, "pattern"))}" alt="Rebuilt pattern" width="500">', "",
+             *[x for x in _facts(os.path.join(d, "pattern")) if x], "",
+             "## Files", "", "| File | What it is |", "|---|---|",
+             "| [`photo_flat_with_reference_card.jpg`](photo_flat_with_reference_card.jpg) | The input photo |",
+             "| [`project/overlay_measurement.png`](project/overlay_measurement.png) | Outline and measurements drawn on the photo |",
+             "| [`project/reverse_report.md`](project/reverse_report.md) | Measurements, fitted values and deviations |",
+             "| [`project/project.json`](project/project.json) | Saved project; can be graded to other sizes |",
+             "| [`round_trip_comparison.md`](round_trip_comparison.md) | Original vs. reconstructed measurements |",
+             "| [`truth_finished_mm.json`](truth_finished_mm.json) | The true measurements of the original |",
+             *_file_rows(os.path.join(d, "pattern"), "pattern/")[2:], ""]
+    with open(os.path.join(d, "README.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
 
 
 # README pictures: copied or rendered from examples/, shrunk to a web-friendly width.
@@ -203,5 +317,6 @@ if __name__ == "__main__":
         make_doll_example()
     if "images" in what and "examples" not in what:
         make_images()
+        make_readmes()
     if "results" in what:
         make_results()
