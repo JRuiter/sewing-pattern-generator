@@ -123,7 +123,7 @@ Modules and main options:
 
 | Module | Styles/options |
 |---|---|
-| `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side], [slant], [back_patch], [cargo]) · leg_shape (straight, tapered, bootcut, flare + flare_cm; long legs without cuffs) · turn_up (cm, shorts/knee length) |
+| `pants_basic` | style: jogger, harem, leggings, trousers · fit · fabric · stretch · length (long, 7/8, knee, short) · waistband (casing, rib, yoga, tunnel) · cuffs · pockets ([side] = slanted front pocket with pocket bag, [back_patch], [cargo]) · leg_shape (straight, tapered, bootcut, flare + flare_cm; long legs without cuffs) · turn_up (cm, shorts/knee length) |
 | `tshirt_basic` | fit · fabric · sleeve_style (set_in, raglan) · sleeve_length (short, 3/4, long) · neckline (round, v) · length (normal, tunic) · sleeve_cuffs · hem_band |
 | `hoodie` | like the T-shirt + hood, hood_lining, kangaroo (default: sweat, wide, rib cuffs) · front (closed, zip: zip-up jacket with split front, side pockets, zip guard, zip length in the notes) · zip_guard |
 | `skirt` | style: gathered, a_line, circle · length (mini, knee, midi, maxi) · gather · flare_deg |
@@ -191,19 +191,23 @@ present. Fix anything odd or tell the user openly.
   proportions. Exact measurements only with mode B (scale in the picture) or a tape
   measure.
 - The back and hidden details are asked about, never invented.
-- Not covered (offer the alternative): dresses with closures/darts (woven fitted bodices), lined/woven jackets, shirts/blouses
-  with collar and button placket, jeans with a fly, cargo/welt pockets, style lines,
-  flared legs.
+- Not covered (offer the alternative): dresses with closures/darts (woven fitted bodices),
+  lined/woven jackets, shirts/blouses with collar and button placket, jeans with a fly,
+  welt/jetted pockets, style lines, overalls, bodysuits.
 - Grading uses grading rules per size step (`reverse/store.py`), never linear scaling.
 
 ## Files
 - `scripts/generate.py`: complete flow (CLI)
-- `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`: foundations
+- `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`, `units.py`, `allowance.py`:
+  foundations (geometry, pieces, sizes, ease, imperial units, seam allowances)
+- `scripts/construction.py`, `adjust.py`, `notches.py`: construction values, toile adjustments, notches
+- `scripts/profiles.py`, `measure_files.py`: measurement profiles and `.smis`/`.vit` files
+- `scripts/nested.py`, `export_dxf.py`: nested multi-size patterns, DXF export
 - `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
 - `scripts/validate.py`: sewability checks
 - `scripts/layout.py`, `render.py`, `instructions.py`, `diagrams.py`: layout, PDF/SVG/PNG, instructions
   and step diagrams (step → seam mapping in `diagrams.STEP_SEAMS`)
-- `scripts/photo_analyze.py`, `photo_measure.py`, `reverse/`: photo modes A and B
+- `scripts/photo_analyze.py`, `photo_measure.py`, `flatlay.py`, `reverse/`: photo modes A and B
 - `scripts/refcard.py`: writes `assets/reference-card.pdf`; `photo_synth.py`: test photos
 - `references/`: drafting rules, size tables, print specs, photo guide
 - `tests/`: `python -m pytest tests`
