@@ -199,8 +199,12 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 `projector` / `projector_dark` (one page 1:1 for projector sewing, 10 cm calibration grid,
 thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
-instructions (PDF: IKEA-style booklet with cover, parts list, machines and tools, then one action per
-step, each drawn from the real pieces; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
+instructions (PDF: IKEA-style booklet: title page with the finished garment from the front and the back
+and all key data (size, fabric amounts, notions, machines, seam allowance, difficulty, time); parts and
+material with the colour/line legend; machines and the basics for them (overlocker, hand stitches, sewing
+machine); the steps two per page, each with its picture from the real pieces, 2–4 numbered actions and
+the yellow "Important" / green "Tip" boxes (`Step.tip` / `Step.hint`); 1:1 templates for lines transferred
+after cutting (`Mark.template`); a "Done!" page; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
 `validation_report.md`. The steps follow the machines the user owns (spec option `machines`, e.g.
 `["sewing", "overlocker", "coverstitch"]`): overlocker seams, coverstitch hems, otherwise zigzag/twin needle.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of

@@ -46,6 +46,7 @@ class Mark:
     pts: np.ndarray
     style: str = "mark"         # mark | fold | placement
     label: str = ""
+    template: bool = False      # transferred after cutting: the booklet prints a 1:1 template
 
 
 @dataclass

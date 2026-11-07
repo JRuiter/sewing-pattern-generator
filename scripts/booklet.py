@@ -1,15 +1,26 @@
-"""IKEA-style sewing booklet (vector PDF): cover, parts and tools, numbered steps.
+"""IKEA-style sewing booklet (vector PDF).
 
-Page 1   cover: name, size, all parts drawn with their letters
-Page 2   what you need: parts list (letter, outline, how many, on fold), fabric and notions,
-         the machines and tools the steps use, with the stitch settings
-Page 3+  the steps, six per page: big number, one action, the diagram from the real pieces,
-         one line of detail, the machine and stitch, ×2 when it is done twice
+Page 1    cover: name, size/fit/fabric, the finished garment from the front and the back,
+          the machines it is sewn with, a note about the test garment
+Page 2    parts and material: every part with letter, count and fabric colour, fabric and
+          notions (bold name + one line of detail), the colour and line legend, what
+          "left/right" means
+Page 3+   machines and tools with the stitch settings, then the basics for the machines in
+          use (overlocker: allowance vs. knife and needle, test seam, curves, thread chain;
+          hand stitches with a picture each; sewing machine: straight, zigzag, topstitching)
+then      the steps, two per page: number badge, short title, tool icons with labels, ×2
+          badge; left the picture from the real pieces, right 2–4 numbered actions, the
+          yellow "Important" box and the green "Tip" box
+then      1:1 templates (with a 5 × 5 cm control square) for every line that is transferred
+          after cutting, and the "Done!" page with front and back view
 
-Everything is drawn with matplotlib (vector output via PdfPages, DejaVu Sans).
+Everything is drawn with matplotlib (vector output via PdfPages, DejaVu Sans). Every text is
+wrapped to the width it really has (measured), so nothing leaves its panel; the test hook
+:data:`CHECKS` collects the panel bounding boxes.
 """
 from __future__ import annotations
 
+import re
 import textwrap
 
 import numpy as np
@@ -21,15 +32,57 @@ import units as U
 from i18n import t as T
 
 PAGE = (8.27, 11.69)            # A4 portrait, inches
+MM_IN = 25.4
 INK = DG.INK
 GREY = "#777777"
 LIGHT = "#e6e6e6"
-STEPS_PER_PAGE = 6
-NOTION_WORDS = ("elastic", "zip", "velcro", "snap", "button", "drawstring", "cord", "binding")
+STEPS_PER_PAGE = 2
+NOTION_WORDS = {"elastic": "Elastic", "zip": "Zip", "velcro": "Velcro", "snap": "Snaps", "button": "Buttons",
+                "drawstring": "Drawstring", "cord": "Cord", "binding": "Binding"}
+IMPORTANT = ("#fff3c4", "#d4a600")      # yellow box
+TIP = ("#e3f4e1", "#2e7d32")            # green box
+OK_GREEN, BAD_RED = "#2e7d32", "#c62828"
+
+CHECKS: list | None = None              # tests: set to [] to collect (page, rect, bboxes) per panel
+
+
+# --------------------------------------------------------------------------- text helpers
+
+def _renderer(fig):
+    return fig.canvas.get_renderer()
 
 
 def _wrap(text: str, width: int) -> str:
     return "\n".join(textwrap.wrap(text, width)) if text else ""
+
+
+def _fit_wrap(fig, text: str, width: float, fontsize: float, **kw) -> str:
+    """Wrap text so that it is at most `width` (figure fraction) wide at this font size."""
+    if not text:
+        return ""
+    r = _renderer(fig)
+    probe = fig.text(0, 0, "abcdefghijklmnopqrstuvwxyz ABCDEFG 0123456789", fontsize=fontsize, **kw)
+    cw = probe.get_window_extent(r).width / len(probe.get_text())
+    probe.remove()
+    max_px = width * fig.bbox.width
+    chars = max(8, int(max_px / cw))
+    for _ in range(40):
+        wrapped = "\n".join(textwrap.wrap(text, chars, break_long_words=True)) or text
+        t = fig.text(0, 0, wrapped, fontsize=fontsize, **kw)
+        w = t.get_window_extent(r).width
+        t.remove()
+        if w <= max_px or chars <= 8:
+            return wrapped
+        chars -= 2
+    return wrapped
+
+
+def _text(fig, x, y, text, width, fontsize, **kw):
+    """Draw wrapped text at (x, y) (top left); returns (artist, height as figure fraction)."""
+    wrapped = _fit_wrap(fig, text, width, fontsize, **{k: v for k, v in kw.items() if k in ("fontweight",)})
+    t = fig.text(x, y, wrapped, fontsize=fontsize, va="top", **kw)
+    h = t.get_window_extent(_renderer(fig)).height / fig.bbox.height
+    return t, h
 
 
 def _header(fig, pattern, page_no: int, title: str = ""):
@@ -47,6 +100,20 @@ def _line(fig, x0, x1, y, color=LIGHT, lw=0.8):
     from matplotlib.lines import Line2D
     return Line2D([x0, x1], [y, y], transform=fig.transFigure, color=color, lw=lw)
 
+
+def _box(fig, x, y, w, h, fc, ec, lw=1.0, r=0.006):
+    from matplotlib.patches import FancyBboxPatch
+    p = FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={r}", transform=fig.transFigure,
+                       fc=fc, ec=ec, lw=lw, zorder=-1)
+    fig.add_artist(p)
+    return p
+
+
+def _title(fig, x, y, text, size=14):
+    fig.text(x, y, T(text), fontsize=size, fontweight="bold", va="top")
+
+
+# --------------------------------------------------------------------------- parts
 
 def _pack(rings, aspect: float, gap: float, label_h: float = 0.0):
     """Shelf packing of the outlines into a box of the given width/height ratio.
@@ -77,143 +144,247 @@ def _pack(rings, aspect: float, gap: float, label_h: float = 0.0):
     return best[1], best[2]
 
 
-def _parts_axes(fig, pattern, rect, label_size=9, names=True):
-    """All pieces (opened out if cut on the fold), packed, each with its letter (and name)."""
-    x0, y0, w, h = rect
-    ax = fig.add_axes(rect)
-    rings = [DG._unfolded(pc, DG._outline(pc)) for pc in pattern.pieces]
-    big = max(max(np.ptp(r, 0)) for r in rings)
-    label_h = big * 0.16 if names else 0.0
-    offs, (W, H) = _pack(rings, (w * PAGE[0]) / (h * PAGE[1]), big * 0.08, label_h)
-    let = DG.letters(pattern)
-    for pc, r, off in zip(pattern.pieces, rings, offs):
-        rr = r + off
-        DG._fill(ax, rr, wrong=False)
-        DG._piece_label(ax, pattern, pc, rr, size=label_size)
-        if names:
-            cx = (rr[:, 0].min() + rr[:, 0].max()) / 2
-            ax.text(cx, rr[:, 1].min() - big * 0.02, f"{let[pc.key]}  " + _wrap(T(pc.name), 24),
-                    ha="center", va="top", fontsize=7.2, fontweight="bold")
-            ax.text(cx, rr[:, 1].min() - big * 0.02 - big * 0.055 * (1 + pc.name.count(" ") // 4),
-                    _wrap(f"{pc.cut_text()} · {T(pc.fabric)}", 30), ha="center", va="top", fontsize=6.3,
-                    color=GREY)
-    ax.set_xlim(-big * 0.05, max(W, H * w * PAGE[0] / (h * PAGE[1])) + big * 0.05)
-    ax.set_ylim(-max(H, W * h * PAGE[1] / (w * PAGE[0])) - big * 0.05, big * 0.05)
-    ax.set_aspect("equal", anchor="NW")
-    ax.axis("off")
-
-
 def _parts_list(fig, pattern, x0, y_top, w, cols=5) -> float:
-    """IKEA parts list: one cell per part, each drawn to fit its cell; returns the height used."""
+    """Parts at the same scale, one cell each: outline in its fabric colour, letter, count badge, name."""
     pcs = pattern.pieces
     let = DG.letters(pattern)
     cw = w / cols
-    ch = 0.105
-    for i, pc in enumerate(pcs):
+    ch = 0.118
+    rings = [DG._unfolded(pc, DG._outline(pc)) for pc in pcs]
+    big = max(max(np.ptp(r, 0)) for r in rings)
+    cell_mm = big * 1.08
+    for i, (pc, r) in enumerate(zip(pcs, rings)):
         cx, cy = i % cols, i // cols
         x, y = x0 + cx * cw, y_top - (cy + 1) * ch
-        ax = fig.add_axes((x + cw * 0.12, y + ch * 0.36, cw * 0.76, ch * 0.6))
-        r = DG._unfolded(pc, DG._outline(pc))
-        DG._fill(ax, r)
-        DG._finish_axes(ax, [r], pad=0.04)
-        fig.text(x + cw * 0.47, y + ch * 0.32, f"{let[pc.key]}", fontsize=11, fontweight="bold", ha="right",
+        aw, ah = cw * 0.8, ch * 0.62
+        ax = fig.add_axes((x + cw * 0.1, y + ch * 0.36, aw, ah))
+        DG._fill(ax, r, pc=pc)
+        c = (r.min(0) + r.max(0)) / 2
+        # same scale for every part: the largest part fills its cell
+        sx = cell_mm / 2 * max(1.0, (aw * PAGE[0]) / (ah * PAGE[1]))
+        sy = cell_mm / 2 * max(1.0, (ah * PAGE[1]) / (aw * PAGE[0]))
+        ax.set_xlim(c[0] - sx, c[0] + sx)
+        ax.set_ylim(c[1] - sy, c[1] + sy)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        fig.text(x + cw * 0.47, y + ch * 0.33, f"{let[pc.key]}", fontsize=11, fontweight="bold", ha="right",
                  va="top")
-        fig.text(x + cw * 0.53, y + ch * 0.315, f"{pc.cut_count}×", fontsize=9.5, fontweight="bold",
-                 ha="left", va="top", color=DG.ACCENT[1])
-        fig.text(x + cw * 0.5, y + ch * 0.17, _wrap(T(pc.name), 26), fontsize=6.6, ha="center", va="top")
-        if pc.on_fold:
-            fig.text(x + cw * 0.5, y + ch * 0.04, T("cut on fold"), fontsize=6, ha="center", va="top",
-                     color=GREY)
+        fig.text(x + cw * 0.53, y + ch * 0.325, f"{pc.cut_count}×", fontsize=9.5, fontweight="bold",
+                 ha="left", va="top", color="white",
+                 bbox=dict(boxstyle="round,pad=0.2", fc=DG.ACCENT[1], ec="none"))
+        _text(fig, x + cw * 0.06, y + ch * 0.2, T(pc.name) + (" · " + T("cut on fold") if pc.on_fold else ""),
+              cw * 0.88, 6.4)
     return int(np.ceil(len(pcs) / cols)) * ch
 
 
-def cover(pdf, pattern, n_steps: int):
-    import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=PAGE)
-    title = T(pattern.title).upper()
-    fig.text(0.06, 0.92, title, fontsize=min(34.0, 34.0 * 20 / max(len(title), 1)), fontweight="bold",
-             va="top")
-    fig.text(0.06, 0.865, T(pattern.size_label), fontsize=16, va="top", color=GREY)
-    o = pattern.options
-    fit = E.describe(o.get("fit", "normal"), o.get("fabric", "jersey"), o.get("stretch"))
-    fig.text(0.06, 0.835, fit, fontsize=9, va="top", color=GREY)
-    _parts_axes(fig, pattern, (0.06, 0.16, 0.88, 0.62), label_size=11, names=False)
-    fig.text(0.06, 0.1, T(f"{len(pattern.pieces)} parts · {n_steps} steps"), fontsize=11, fontweight="bold")
-    fig.text(0.06, 0.075, T("Read the steps once before you start. Every picture is drawn from your "
-             "pattern pieces."), fontsize=8, color=GREY)
-    _legend(fig, 0.06, 0.04)
-    pdf.savefig(fig)
-    plt.close(fig)
+def _fabric_swatch(fig, x, y, s, pc_or_key, pattern, wrong=False):
+    ax = fig.add_axes((x, y, s, s * PAGE[0] / PAGE[1]))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    sq = np.array([[0.05, 0.1], [0.95, 0.1], [0.95, 0.9], [0.05, 0.9]])
+    if isinstance(pc_or_key, str):
+        right, back, tex = DG.PALETTES[pc_or_key]
+        if wrong:
+            ax.fill(sq[:, 0], sq[:, 1], fc=back, ec=INK, lw=0.9, hatch="////", **DG._hatch_kw())
+        else:
+            ax.fill(sq[:, 0], sq[:, 1], fc=right, ec=INK, lw=0.9)
+            if tex:
+                ax.fill(sq[:, 0], sq[:, 1], fc="none", ec="none", hatch={"wale": "||", "pile": "...",
+                                                                       "rib": "||"}[tex], **DG._hatch_kw())
+    else:
+        DG._fill(ax, sq, wrong=wrong, pc=pc_or_key)
+    return ax
 
 
-def _legend(fig, x, y):
-    """Symbol key: right side, wrong side, stitch line, pin, notch."""
-    import matplotlib.pyplot as plt  # noqa: F401
-    items = [("right side", "right"), ("wrong side", "wrong"), ("stitch", "stitch"), ("pin", "pin"),
-             ("notch: match", "notch")]
+def _materials(pattern, plans, steps) -> list[tuple[str, str, str]]:
+    """(icon key, bold name, one line of detail) for fabric, notions and thread."""
+    u = U.of(pattern)
+    out = []
+    for fab, pl in (plans or {}).items():
+        import layout as L
+        key = DG.palette_key(next((p for p in pattern.pieces if L.fabric_group(p) == fab), None), pattern)
+        out.append(("fabric:" + key, T(fab),
+                    T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")))
+    for en, n in zip(getattr(pattern, "notes_en", pattern.notes), pattern.notes):
+        low = en.lower()
+        word = next((w for w in NOTION_WORDS if w in low), None)
+        if word:
+            out.append(("safety_pin" if word in ("elastic", "drawstring", "cord") else "pins",
+                        T(NOTION_WORDS[word]), T(n)))
+    own = S.owned_machines(pattern.options) or set()
+    out.append(("clips", T("Pins or clips"),
+                T("Clips are safer at the overlocker: pins must come out before the knife.")
+                if "overlocker" in own else T("Pin across the seam line.")))
+    out.append(("hand" if not own or "hand" in own else "sewing", T("Polyester sewing thread"),
+                T("In the colour of the fabric; overlocker: 4 cones.") if "overlocker" in own else
+                T("In the colour of the fabric.")))
+    return out
+
+
+def _legend(fig, pattern, x, y, w) -> float:
+    """Colour and line legend: fabrics (right/wrong side) and the line types. Returns height used."""
+    keys = []
+    for pc in pattern.pieces:
+        k = DG.palette_key(pc, pattern)
+        if k not in keys:
+            keys.append(k)
+    names = {"main": "Main fabric", "corduroy": "Corduroy", "velvet": "Velvet", "lining": "Lining",
+             "rib": "Rib knit"}
+    col = w / 3
+    y0 = y
+    for i, k in enumerate(keys):
+        cx = x + (i % 3) * col
+        cy = y - (i // 3) * 0.04
+        _fabric_swatch(fig, cx, cy - 0.022, 0.03, k, pattern)
+        _fabric_swatch(fig, cx + 0.034, cy - 0.022, 0.03, k, pattern, wrong=True)
+        fig.text(cx + 0.072, cy - 0.006, T(names.get(k, k)), fontsize=7.5, fontweight="bold", va="center")
+        fig.text(cx + 0.072, cy - 0.019, T("right side · wrong side"), fontsize=6.3, va="center", color="#555")
+    y -= 0.04 * int(np.ceil(len(keys) / 3)) + 0.01
+    items = [("Sew now (machine)", dict(color=DG.STITCH, lw=1.8, ls="-")),
+             ("Sew by hand", dict(color=DG.STITCH, lw=2.0, ls=DG.HAND_STITCH)),
+             ("Fold / press line", dict(color=DG.ACCENT[1], lw=1.2, ls=DG.FOLD_LINE)),
+             ("Marking (chalk)", "chalk"),
+             ("Pin", "pin"),
+             ("Notch: match them", "notch")]
     for i, (lab, kind) in enumerate(items):
-        ax = fig.add_axes((x + i * 0.17, y - 0.008, 0.035, 0.02))
+        cx = x + (i % 3) * col
+        cy = y - (i // 3) * 0.03
+        ax = fig.add_axes((cx, cy - 0.01, 0.06, 0.02))
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis("off")
-        if kind in ("right", "wrong"):
-            DG._fill(ax, np.array([[0.05, 0.1], [0.95, 0.1], [0.95, 0.9], [0.05, 0.9]]), wrong=kind == "wrong")
-        elif kind == "stitch":
-            DG._stitch(ax, [[0.0, 0.5], [1.0, 0.5]])
+        if kind == "chalk":
+            DG._chalk(ax, [[0.0, 0.5], [1.0, 0.5]])
         elif kind == "pin":
             ax.plot([0.15, 0.75], [0.5, 0.5], color=DG.PIN, lw=1.2)
             ax.plot([0.8], [0.5], "o", ms=4, color=DG.PIN_HEAD)
-        else:
+        elif kind == "notch":
             ax.plot([0.5, 0.5], [0.0, 1.0], color=INK, lw=1.4)
-        fig.text(x + i * 0.17 + 0.04, y, T(lab), fontsize=7, va="center")
+        else:
+            ax.plot([0.0, 1.0], [0.5, 0.5], **kind)
+        fig.text(cx + 0.068, cy, T(lab), fontsize=7, va="center")
+    y -= 0.03 * 2
+    return y0 - y
 
 
-def needs_page(pdf, pattern, steps, plans, page_no: int):
+def difficulty(pattern, steps) -> tuple[str, float]:
+    """(level, hours): a rough estimate from the number of steps and the tricky parts."""
+    n = len(steps)
+    tricky = sum(1 for s in steps if s.stitch in ("zip",) or s.data.get("fly") or s.diagram == "gather")
+    score = n + 4 * tricky
+    level = "easy" if score <= 15 else "medium" if score <= 26 else "advanced"
+    hours = 0.5 + n * 0.12 + (0.3 if E.has_nap(pattern.options) else 0.0)
+    return level, max(1.0, round(hours * 2) / 2)
+
+
+def _key_data(pattern, steps, plans) -> list[tuple[str, str]]:
+    u = U.of(pattern)
+    rows = [("Size", T(pattern.size_label))]
+    for fab, pl in (plans or {}).items():
+        rows.append((T(fab), T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")))
+    notions = [name for icon, name, _d in _materials(pattern, plans, steps) if icon in ("safety_pin", "pins")]
+    if notions:
+        rows.append(("Notions", ", ".join(dict.fromkeys(notions))))
+    machines = [t for t in S.machines_needed(steps, pattern.options)
+                if t["machine"] in ("sewing", "overlocker", "coverstitch", "hand")]
+    rows.append(("Sewn with", " + ".join(T(t["name"]) for t in machines) or T("Sewing machine")))
+    sa = _common_sa(pattern)
+    hems = sorted({round(e.sa, 1) for pc in pattern.pieces for e in pc.edges if e.name == "hem" and e.sa > 0})
+    rows.append(("Seam allowance", T("included") + ": " + U.allowance(sa, u)
+                 + (" · " + T("hem") + " " + ", ".join(U.allowance(h, u) for h in hems) if hems else "")))
+    level, hours = difficulty(pattern, steps)
+    rows.append(("Parts and steps", T(f"{len(pattern.pieces)} parts · {len(steps)} steps")))
+    rows.append(("Difficulty", T(level) + " · " + T(f"about {hours:g} h")))
+    return rows
+
+
+def cover(pdf, pattern, steps, plans=None):
+    """Title page: name, the finished garment from the front and the back, and all key data."""
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=PAGE)
-    _header(fig, pattern, page_no, "What you need")
-    fig.text(0.06, 0.925, T("Parts"), fontsize=14, fontweight="bold", va="top")
-    hp = _parts_list(fig, pattern, 0.06, 0.9, 0.88)
-    y = 0.88 - hp
-    u = U.of(pattern)
-    fig.text(0.06, y, T("Fabric and notions"), fontsize=14, fontweight="bold", va="top")
-    y -= 0.035
-    lines = []
-    for fab, pl in (plans or {}).items():
-        lines.append(f"{T(fab)}: " + T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width"))
-    for en, n in zip(getattr(pattern, "notes_en", pattern.notes), pattern.notes):
-        if any(w in en.lower() for w in NOTION_WORDS):
-            lines.append(T(n))
-    lines.append(T("Polyester sewing thread to match"))
-    for ln in lines:
-        fig.text(0.08, y, "•  " + _wrap(ln, 105).replace("\n", "\n    "), fontsize=8, va="top")
-        y -= 0.02 * (1 + ln.count("\n") + len(ln) // 105)
-    y -= 0.015
-    fig.text(0.06, y, T("Machines and tools"), fontsize=14, fontweight="bold", va="top")
-    y -= 0.04
-    tools = S.machines_needed(steps, pattern.options)
-    extra = [("pins", "Pins or clips"), ("scissors", "Fabric scissors"), ("tape", "Tape measure"),
-             ("chalk", "Chalk or a fabric pen")]
-    if any(s.data.get("picture") == "elastic" for s in steps):
-        extra.append(("safety_pin", "Safety pin"))
-    entries = [(t["machine"], t["name"], _tool_detail(steps, pattern, t["machine"])) for t in tools] + \
-              [(k, n, "") for k, n in extra]
-    col_w = 0.30
-    for i, (key, name, detail) in enumerate(entries):
-        cx = 0.06 + (i % 3) * col_w
-        cy = y - (i // 3) * 0.08
-        ax = fig.add_axes((cx, cy - 0.06, 0.06, 0.06))
-        DG.draw_machine(ax, key)
-        fig.text(cx + 0.075, cy - 0.012, T(name), fontsize=9, fontweight="bold", va="top")
-        if detail:
-            fig.text(cx + 0.075, cy - 0.03, _wrap(detail, 34), fontsize=6.6, va="top", color="#444")
-    if S.owned_machines(pattern.options) is None:
-        fig.text(0.06, 0.06, _wrap(T("Steps are written for a sewing machine with zigzag. Have an overlocker "
-                 "or a coverstitch machine? Tell the generator which machines you own and the steps use "
-                 "them."), 120), fontsize=7, color=GREY)
+    title = T(pattern.title).upper()
+    fig.text(0.06, 0.94, title, fontsize=min(34.0, 34.0 * 20 / max(len(title), 1)), fontweight="bold",
+             va="top")
+    fig.text(0.06, 0.885, T(pattern.size_label), fontsize=16, va="top", color=GREY)
+    o = pattern.options
+    fit = E.describe(o.get("fit", "normal"), o.get("fabric", "jersey"), o.get("stretch"))
+    fig.text(0.06, 0.855, fit, fontsize=9, va="top", color=GREY)
+    _views(fig, pattern, (0.06, 0.43, 0.88, 0.41))
+    # key data
+    rows = _key_data(pattern, steps, plans)
+    top = 0.4
+    _box(fig, 0.06, 0.11, 0.88, top - 0.11 + 0.01, "#f7f7f7", LIGHT)
+    y = top - 0.008
+    machines = [t for t in S.machines_needed(steps, pattern.options)
+                if t["machine"] in ("sewing", "overlocker", "coverstitch", "hand")]
+    for label, value in rows:
+        fig.text(0.08, y, T(label), fontsize=8, color=GREY, va="top")
+        _, h = _text(fig, 0.28, y, value, 0.48 if label == "Sewn with" else 0.64, 9.5, fontweight="bold")
+        y -= max(h, 0.016) + 0.012
+    for i, t in enumerate(machines[:3]):
+        ax = fig.add_axes((0.78 + i * 0.055, 0.33, 0.05, 0.05 * PAGE[0] / PAGE[1] * 1.3))
+        DG.draw_machine(ax, t["machine"])
+    _text(fig, 0.06, 0.095, T("Read the steps once before you start. Every picture is drawn from your pattern "
+          "pieces. Sew a test garment from cheap fabric first and adjust before you cut the good fabric."),
+          0.88, 8, color=GREY)
     pdf.savefig(fig)
     plt.close(fig)
 
+
+def _views(fig, pattern, rect, captions=True):
+    """Finished garment from the front and the back, side by side."""
+    views = DG.garment_views(pattern)
+    if not views:
+        ax = fig.add_axes(rect)
+        rings = [DG._unfolded(pc, DG._outline(pc)) for pc in pattern.pieces]
+        offs, _ = _pack(rings, rect[2] * PAGE[0] / (rect[3] * PAGE[1]), max(max(np.ptp(r, 0)) for r in rings) * 0.1)
+        for pc, r, off in zip(pattern.pieces, rings, offs):
+            DG._fill(ax, r + off, pc=pc)
+        DG._finish_axes(ax, [r + off for r, off in zip(rings, offs)])
+        return
+    x, y, w, h = rect
+    n = len(views)
+    for i, (name, view) in enumerate(views.items()):
+        ax = fig.add_axes((x + i * w / n, y + (0.03 if captions else 0), w / n * 0.94, h - (0.04 if captions else 0)))
+        DG.draw_view(ax, pattern, view, back=name == "back")
+        ax.set_anchor("S")
+        if captions:
+            fig.text(x + (i + 0.47) * w / n, y + 0.005, T("Front view" if name == "front" else "Back view"),
+                     fontsize=9, ha="center", color=GREY)
+
+
+def parts_page(pdf, pattern, steps, plans, page_no: int):
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=PAGE)
+    _header(fig, pattern, page_no, "Parts and material")
+    _title(fig, 0.06, 0.935, "Parts")
+    hp = _parts_list(fig, pattern, 0.06, 0.905, 0.88)
+    y = 0.89 - hp
+    _title(fig, 0.06, y, "Fabric and notions")
+    y -= 0.035
+    for icon, name, detail in _materials(pattern, plans, steps):
+        if icon.startswith("fabric:"):
+            _fabric_swatch(fig, 0.065, y - 0.024, 0.032, icon.split(":", 1)[1], pattern)
+        else:
+            ax = fig.add_axes((0.06, y - 0.03, 0.04, 0.03))
+            DG.draw_machine(ax, icon)
+        _, h1 = _text(fig, 0.115, y, name, 0.8, 8.5, fontweight="bold")
+        _, h2 = _text(fig, 0.115, y - h1 - 0.003, detail, 0.82, 7.2, color="#444")
+        y -= max(0.036, h1 + h2 + 0.012)
+    y -= 0.01
+    _title(fig, 0.06, y, "Colours and lines")
+    y -= 0.04
+    y -= _legend(fig, pattern, 0.06, y, 0.88)
+    _box(fig, 0.06, y - 0.06, 0.88, 0.055, "#f7f7f7", LIGHT)
+    _text(fig, 0.075, y - 0.012, T("Right/wrong side of the fabric = the side of the fabric. Left/right (as worn) "
+          "= seen from the child wearing it: the left front leg is on the right when you look at the child."),
+          0.85, 7.2)
+    pdf.savefig(fig)
+    plt.close(fig)
+
+
+# --------------------------------------------------------------------------- tools and basics
 
 def _tool_detail(steps, pattern, machine) -> str:
     seen = []
@@ -226,58 +397,469 @@ def _tool_detail(steps, pattern, machine) -> str:
     return "; ".join(seen)
 
 
+def _common_sa(pattern) -> float:
+    vals = [round(e.sa, 1) for pc in pattern.pieces for e in pc.edges if e.sa > 0 and not e.fold]
+    return max(set(vals), key=vals.count) if vals else 10.0
+
+
+def _basic_overlocker(fig, pattern, x, y, w) -> float:
+    knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
+    sa = _common_sa(pattern)
+    _title(fig, x, y, "Basics: the overlocker", 12)
+    ax = fig.add_axes((x, y - 0.2, w * 0.45, 0.17))
+    ax.set_xlim(0, 60)
+    ax.set_ylim(-4, 40)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.fill([0, 46, 46, 0], [0, 0, 36, 36], fc=DG.palette(None, pattern)[0], ec=INK, lw=1)
+    ax.fill([2, 48, 48, 2], [2, 2, 34, 34], fc=DG.palette(None, pattern)[1], ec=INK, lw=1, hatch="////",
+            **DG._hatch_kw())
+    edge, needle = 48.0, 48.0 - sa
+    ax.plot([edge + 3, edge + 3], [0, 36], color="#888", lw=1, ls=(0, (2, 2)))
+    ax.text(edge + 3.5, 37, T("knife"), fontsize=6.5, ha="center", va="bottom")
+    ax.plot([needle, needle], [2, 34], color=DG.STITCH, lw=1.6)
+    ax.text(needle, 37, T("needle"), fontsize=6.5, ha="center", va="bottom", color=DG.STITCH)
+    ys = np.linspace(4, 32, 15)
+    ax.plot(np.where(np.arange(15) % 2, needle, edge), ys, color=DG.STITCH, lw=0.8)
+    DG._dim(ax, np.array([needle, -1.5]), np.array([edge, -1.5]), S.cm(sa), 40, side=-1.0)
+    ax.text(20, 18, T("seam allowance"), fontsize=6.5, ha="center", color="#555")
+    lines = [T(f"Seam allowance {S.cm(sa)}: the needle runs on the seam line, the knife trims only a sliver."),
+             T("Test seam on two layers of a scrap: differential 1.0" + (" (knit 1.3)" if knit else "")
+               + ", stitch length 3."),
+             T("Curves (crotch, pocket bag): sew slowly and steer the fabric, do not pull it."),
+             T("At the end sew a 5 cm thread chain off the fabric; thread it back under the stitches with a "
+               "darning needle.")]
+    yy = y - 0.035
+    for i, ln in enumerate(lines, 1):
+        fig.text(x + w * 0.48, yy, f"{i}", fontsize=8, fontweight="bold", va="top", color=DG.ACCENT[1])
+        _, h = _text(fig, x + w * 0.51, yy, ln, w * 0.48, 7.3)
+        yy -= h + 0.008
+    hb = _important(fig, x + w * 0.48, yy - 0.004, w * 0.51, T("Pull the pins or clips out before they reach "
+                    "the knife: a pin in the knife breaks it."), 7.2)
+    return max(0.215, y - (yy - hb - 0.01))
+
+
+def _stitch_pic(ax, kind):
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 4)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    fc, bc, _ = DG.palette(None, DG._CTX["pattern"])
+    if kind in ("tacking", "back", "straight", "zigzag", "bartack"):
+        ax.fill([0.3, 9.7, 9.7, 0.3], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
+    if kind == "tacking":
+        for xs in range(1, 9, 2):
+            ax.plot([xs, xs + 1.3], [2, 2], color=DG.STITCH, lw=1.8, solid_capstyle="round")
+    elif kind == "back":
+        for xs in np.arange(1.0, 8.6, 1.2):
+            ax.plot([xs, xs + 1.1], [2, 2], color=DG.STITCH, lw=1.8, solid_capstyle="round")
+        DG._arrow(ax, [8.6, 1.2], [6.2, 1.2], color=INK, lw=1, head=6, rad=-0.4)
+    elif kind == "blind":
+        ax.fill([0.3, 9.7, 9.7, 0.3], [0.4, 0.4, 3.6, 3.6], fc=bc, ec=INK, lw=0.9, hatch="////", **DG._hatch_kw())
+        ax.fill([0.3, 9.7, 9.7, 0.3], [0.4, 0.4, 1.9, 1.9], fc=bc, ec=INK, lw=0.9)
+        xs = np.linspace(1, 9, 9)
+        ax.plot(xs, np.where(np.arange(9) % 2, 2.15, 1.75), color=DG.STITCH, lw=1.1)
+    elif kind == "bartack":
+        for d in np.linspace(-0.15, 0.15, 4):
+            ax.plot([3, 7], [2 + d, 2 + d], color=DG.STITCH, lw=0.9)
+        for xs in np.linspace(3, 7, 16):
+            ax.plot([xs, xs + 0.1], [1.6, 2.4], color=DG.STITCH, lw=0.9)
+    elif kind == "ladder":
+        ax.fill([0.3, 4.6, 4.6, 0.3], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
+        ax.fill([5.4, 9.7, 9.7, 5.4], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
+        for yy in np.linspace(1, 3, 6):
+            ax.plot([4.6, 5.4], [yy, yy], color=DG.STITCH, lw=1.2)
+    elif kind == "straight":
+        ax.plot([0.8, 9.2], [2, 2], color=DG.STITCH, lw=1.8)
+    elif kind == "zigzag":
+        xs = np.linspace(0.8, 9.2, 19)
+        ax.plot(xs, np.where(np.arange(19) % 2, 2.5, 1.5), color=DG.STITCH, lw=1.2)
+    elif kind == "topstitch":
+        ax.fill([0.3, 9.7, 9.7, 0.3], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
+        ax.plot([0.3, 9.7], [3.4, 3.4], color=INK, lw=2.2)
+        ax.plot([0.8, 9.2], [2.7, 2.7], color=DG.STITCH, lw=1.6)
+
+
+HAND_BASICS = [("tacking", "Tacking stitch", "Long running stitches (1 cm), they come out again later."),
+               ("back", "Back stitch", "Each stitch goes back to the end of the last one: strong like a machine "
+                "seam; for topstitching and seams."),
+               ("blind", "Blind stitch", "For hems and casings: catch only 1–2 threads of the outer fabric, "
+                "then 5 mm in the fold."),
+               ("bartack", "Bar tack", "4–5 stitches on top of each other, then wrapped closely with "
+                "buttonhole stitches."),
+               ("ladder", "Ladder stitch", "Closes an opening invisibly: the stitches run inside the folds.")]
+MACHINE_BASICS = [("straight", "Straight stitch", "Seams in woven fabric, 2.5 mm; backstitch at the start and "
+                   "the end."),
+                  ("zigzag", "Zigzag", "Knit seams (narrow) and finishing the edges (wide)."),
+                  ("topstitch", "Topstitching", "Right side up, with the same distance to the edge all the way; "
+                   "use the edge of the presser foot as a guide.")]
+
+
+def _basic_grid(fig, title, items, x, y, w) -> float:
+    _title(fig, x, y, title, 12)
+    col = w / 3
+    rows = int(np.ceil(len(items) / 3))
+    for i, (kind, name, text) in enumerate(items):
+        cx = x + (i % 3) * col
+        cy = y - 0.035 - (i // 3) * 0.13
+        ax = fig.add_axes((cx, cy - 0.05, col * 0.85, 0.05))
+        _stitch_pic(ax, kind)
+        fig.text(cx, cy - 0.057, T(name), fontsize=8.5, fontweight="bold", va="top")
+        _text(fig, cx, cy - 0.073, T(text), col * 0.92, 6.6, color="#444")
+    return 0.04 + rows * 0.13
+
+
+def tools_pages(pdf, pattern, steps, page_no: int) -> int:
+    """Machines and tools, then the basics for the machines the steps use."""
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=PAGE)
+    _header(fig, pattern, page_no, "Machines and basics")
+    _title(fig, 0.06, 0.935, "Machines and tools")
+    y = 0.9
+    tools = S.machines_needed(steps, pattern.options)
+    own = S.owned_machines(pattern.options) or set()
+    extra = [("clips" if "overlocker" in own else "pins", "Pins or clips"), ("scissors", "Fabric scissors"),
+             ("tape", "Tape measure"), ("chalk", "Chalk or a fabric pen")]
+    if any(s.data.get("picture") == "elastic" for s in steps):
+        extra.append(("safety_pin", "Safety pin"))
+    if E.has_nap(pattern.options):
+        extra.append(("towel", "Terry towel"))
+    entries = [(t["machine"], t["name"], _tool_detail(steps, pattern, t["machine"])) for t in tools] + \
+              [(k, n, "") for k, n in extra]
+    col_w = 0.30
+    for i, (key, name, detail) in enumerate(entries):
+        cx = 0.06 + (i % 3) * col_w
+        cy = y - (i // 3) * 0.075
+        ax = fig.add_axes((cx, cy - 0.05, 0.055, 0.05))
+        DG.draw_machine(ax, key)
+        fig.text(cx + 0.065, cy - 0.008, T(name), fontsize=9, fontweight="bold", va="top")
+        if detail:
+            _text(fig, cx + 0.065, cy - 0.024, detail, col_w - 0.075, 6.3, color="#444")
+    y -= int(np.ceil(len(entries) / 3)) * 0.075 + 0.02
+    if S.owned_machines(pattern.options) is None:
+        _, h = _text(fig, 0.06, y, T("Steps are written for a sewing machine with zigzag. Have an overlocker or a "
+                     "coverstitch machine? Tell the generator which machines you own and the steps use them."),
+                     0.88, 7, color=GREY)
+        y -= h + 0.015
+    used = {t["machine"] for t in tools}
+    blocks = []
+    if "overlocker" in used:
+        blocks.append(("overlocker", 0.24))
+    if "hand" in used:
+        blocks.append(("hand", 0.04 + int(np.ceil(len(HAND_BASICS) / 3)) * 0.13))
+    if "sewing" in used or "coverstitch" in used:
+        blocks.append(("sewing", 0.04 + 0.13))
+    for kind, h in blocks:
+        if y - h < 0.05:
+            pdf.savefig(fig)
+            plt.close(fig)
+            page_no += 1
+            fig = plt.figure(figsize=PAGE)
+            _header(fig, pattern, page_no, "Machines and basics")
+            y = 0.935
+        if kind == "overlocker":
+            y -= _basic_overlocker(fig, pattern, 0.06, y, 0.88) + 0.02
+        elif kind == "hand":
+            y -= _basic_grid(fig, "Basics: hand stitches", HAND_BASICS, 0.06, y, 0.88) + 0.02
+        else:
+            y -= _basic_grid(fig, "Basics: the sewing machine", MACHINE_BASICS, 0.06, y, 0.88) + 0.02
+    pdf.savefig(fig)
+    plt.close(fig)
+    return page_no + 1
+
+
+# --------------------------------------------------------------------------- steps
+
+def _actions(text: str) -> list[str]:
+    """Split a step text into 1–4 short numbered actions."""
+    if not text:
+        return []
+    parts = [p.strip(" ;") for p in re.split(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9„\"])|;\s+", text) if p.strip(" ;")]
+    while len(parts) > 4:
+        i = min(range(len(parts) - 1), key=lambda k: len(parts[k]) + len(parts[k + 1]))
+        parts[i:i + 2] = [parts[i].rstrip(".") + "; " + parts[i + 1][:1].lower() + parts[i + 1][1:]]
+    return [p[:1].upper() + p[1:] for p in parts]
+
+
+def _important(fig, x, y, w, text, fs, label="Important", colors=IMPORTANT, icon="⚠") -> float:
+    """Yellow (or green) box with a bold label; returns its height."""
+    pad = 0.006
+    t1 = fig.text(x + pad, y - pad, f"{icon} {T(label)}".strip(), fontsize=fs, fontweight="bold", va="top",
+                  color=colors[1])
+    h1 = t1.get_window_extent(_renderer(fig)).height / fig.bbox.height
+    _, h2 = _text(fig, x + pad, y - pad - h1 - 0.002, text, w - 2 * pad, fs, color="#333")
+    h = h1 + h2 + 2 * pad + 0.002
+    p = _box(fig, x, y - h, w, h, colors[0], colors[1], lw=0.8)
+    p.set_zorder(-1)
+    return h
+
+
+def _step_tools(pattern, step) -> list[tuple[str, str]]:
+    """(icon key, label) of the tools a step uses."""
+    out = []
+    if step.stitch:
+        t = S.tool_for(pattern.options, step.stitch, step.data.get("knit"))
+        if t:
+            out.append((t["machine"], t["name"]))
+    if step.diagram == "seam" or step.stitch in ("seam", "band"):
+        own = S.owned_machines(pattern.options) or set()
+        out.append(("clips" if "overlocker" in own else "pins", "Clips" if "overlocker" in own else "Pins"))
+    if step.data.get("picture") == "elastic":
+        out.append(("safety_pin", "Safety pin"))
+    if step.data.get("picture") == "cut":
+        out.append(("scissors", "Scissors"))
+    if step.diagram == "label" or step.data.get("picture") == "notch":
+        out.append(("chalk", "Chalk"))
+    if step.data.get("press_check"):
+        out += [("iron", "Iron"), ("towel", "Terry towel")]
+    seen, res = set(), []
+    for k, lab in out:
+        if k not in seen:
+            seen.add(k)
+            res.append((k, lab))
+    return res[:3]
+
+
+def _repeat_text(pattern, step) -> str:
+    if step.repeat < 2:
+        return ""
+    low = " ".join([step.title] + step.seams + [p for p, _e in step.edges]).lower()
+    if "sleeve" in low:
+        return "both sleeves"
+    if pattern.garment.startswith("pants") or "leg" in low:
+        return "both legs"
+    return "both sides"
+
+
+def _check_pair(fig, pattern, step, rect):
+    """✓ / ✗ pictures where a mix-up is likely: the single back pocket, pressing a fabric with nap."""
+    x, y, w, h = rect
+    if step.data.get("only"):
+        side = step.data["only"]
+        back = pattern.piece("back")
+        ring = DG._outline(back)
+        mark = next((m for m in back.marks if (getattr(m, "key", None) or m.label).startswith("Back pocket")), None)
+        for i, good_side in enumerate((side, "left" if side == "right" else "right")):
+            ax = fig.add_axes((x + i * w / 2, y, w / 2 * 0.8, h))
+            mirrored = good_side == "left"
+            r = DG._mirror_x(ring, 0.0) if mirrored else ring
+            DG._fill(ax, r, pc=back)
+            if mark is not None:
+                mp = np.asarray(mark.pts, float)
+                mp = DG._mirror_x(mp, 0.0) if mirrored else mp
+                ax.fill(mp[:, 0], mp[:, 1], fc="white" if i == 0 else "#ffcdd2", ec=INK, lw=0.8, zorder=3)
+            c = (r.min(0) + r.max(0)) / 2
+            DG._tag(ax, (c[0], c[1] - np.ptp(r[:, 1]) * 0.15), T("BL" if mirrored else "BR"), size=7)
+            DG._finish_axes(ax, [r], pad=0.04)
+            fig.text(x + i * w / 2 + w / 2 * 0.82, y + h * 0.55, "✓" if i == 0 else "✗", fontsize=18,
+                     fontweight="bold", color=OK_GREEN if i == 0 else BAD_RED, ha="left", va="center")
+    elif step.data.get("press_check"):
+        for i in range(2):
+            ax = fig.add_axes((x + i * w / 2, y, w / 2 * 0.78, h))
+            ax.set_xlim(0, 10)
+            ax.set_ylim(0, 6)
+            ax.set_aspect("equal")
+            ax.axis("off")
+            ax.fill([0.5, 9.5, 9.5, 0.5], [0.4, 0.4, 2.2, 2.2], fc="#e1f5fe", ec=INK, lw=0.8)
+            sq = np.array([[1.5, 1.4], [8.5, 1.4], [8.5, 3.2], [1.5, 3.2]])
+            DG._fill(ax, sq, wrong=i == 0, z=2, pc=pattern.pieces[0])
+            iax = ax.inset_axes((0.3, 0.5, 0.4, 0.5))
+            DG.draw_machine(iax, "iron")
+            fig.text(x + i * w / 2 + w / 2 * 0.8, y + h * 0.55, "✓" if i == 0 else "✗", fontsize=18,
+                     fontweight="bold", color=OK_GREEN if i == 0 else BAD_RED, ha="left", va="center")
+            _text(fig, x + i * w / 2, y - 0.002, T("wrong side up on a towel" if i == 0 else
+                                                   "right side up: the pile goes flat"), w / 2 * 0.95, 6.3,
+                  color="#444")
+
+
 def _panel(fig, pattern, n: int, step: S.Step, rect, prev_section: str):
     x, y, w, h = rect
-    from matplotlib.patches import FancyBboxPatch
-    fig.add_artist(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=0.006",
-                                  transform=fig.transFigure, fc="none", ec=LIGHT, lw=0.8))
-    fig.text(x + 0.012, y + h - 0.008, str(n), fontsize=24, fontweight="bold", va="top", ha="left")
-    tx = x + 0.075 if n < 10 else x + 0.09
+    _box(fig, x, y, w, h, "none", LIGHT, lw=0.9)
+    first = len(fig.texts)
+    # header: number badge, section, title, ×2, tools
+    fig.text(x + 0.03, y + h - 0.032, str(n), fontsize=15 if n < 100 else 12, fontweight="bold", color="white",
+             ha="center", va="center", bbox=dict(boxstyle="circle,pad=0.35", fc=INK, ec="none"))
+    tools = _step_tools(pattern, step)
+    tools_w = 0.075 * len(tools)
+    rep_w = 0.085 if step.repeat > 1 else 0.0
+    title_w = w - 0.075 - tools_w - rep_w - 0.02
     if step.section and step.section != prev_section:
-        fig.text(tx, y + h - 0.01, T(step.section).upper(), fontsize=6.5, color=GREY, va="top")
-    fig.text(tx, y + h - 0.024, _wrap(T(step.title), 34), fontsize=10, fontweight="bold", va="top")
+        fig.text(x + 0.065, y + h - 0.012, T(step.section).upper(), fontsize=6.5, color=GREY, va="top")
+    _text(fig, x + 0.065, y + h - 0.024, T(step.title), title_w, 12.5, fontweight="bold")
+    tx = x + w - 0.012 - tools_w
+    for i, (key, lab) in enumerate(tools):
+        iax = fig.add_axes((tx + i * 0.075 + 0.017, y + h - 0.047, 0.04, 0.04 * PAGE[0] / PAGE[1] * 1.3))
+        DG.draw_machine(iax, key)
+        fig.text(tx + i * 0.075 + 0.037, y + h - 0.05, _fit_wrap(fig, T(lab), 0.072, 5.8), fontsize=5.8,
+                 ha="center", va="top", color="#444")
     if step.repeat > 1:
-        fig.text(x + w - 0.012, y + h - 0.012, f"×{step.repeat}", fontsize=15, fontweight="bold",
-                 va="top", ha="right", color=DG.ACCENT[1])
-    # diagram
-    bottom = 0.075 + (0.018 if step.tip else 0.0)
-    ax = fig.add_axes((x + 0.012, y + bottom, w - 0.024, h - 0.07 - bottom))
+        rx = tx - rep_w
+        fig.text(rx + rep_w / 2, y + h - 0.022, f"×{step.repeat}", fontsize=16, fontweight="bold", ha="center",
+                 va="center", color=DG.ACCENT[1])
+        fig.text(rx + rep_w / 2, y + h - 0.042, _fit_wrap(fig, T(_repeat_text(pattern, step)), rep_w - 0.004, 6),
+                 fontsize=6, ha="center", va="top", color=DG.ACCENT[1])
+    head_h = 0.075
+    # picture (left ≈ 60 %)
+    pic_w = w * 0.58
+    pic_top = y + h - head_h
+    check = bool(step.data.get("only") or step.data.get("press_check"))
+    pic_h = pic_top - y - 0.012
+    if check:
+        ch = pic_h * 0.32
+        _check_pair(fig, pattern, step, (x + 0.012, y + 0.022, pic_w - 0.024, ch - 0.02))
+        ax = fig.add_axes((x + 0.012, y + 0.012 + ch, pic_w - 0.024, pic_h - ch))
+    else:
+        ax = fig.add_axes((x + 0.012, y + 0.012, pic_w - 0.024, pic_h))
     DG.draw(ax, pattern, step)
-    # text + machine
-    fig.text(x + 0.012, y + 0.068, _wrap(T(step.text), 66), fontsize=7.2, va="top", color="#333",
-             linespacing=1.25)
+    # instructions (right ≈ 40 %)
+    cx, cw = x + pic_w + 0.01, w - pic_w - 0.022
     tool = S.tool_for(pattern.options, step.stitch, step.data.get("knit")) if step.stitch else {}
-    if tool:
-        iax = fig.add_axes((x + 0.012, y + 0.006, 0.03, 0.022))
-        DG.draw_machine(iax, tool["machine"])
-        fig.text(x + 0.046, y + 0.017, T(tool["name"]) + (f": {T(tool['stitch'])}" if tool.get("stitch") else ""),
-                 fontsize=6.8, va="center", color="#333")
-    if step.tip:
-        fig.text(x + 0.012, y + 0.08, "!  " + T(step.tip), fontsize=6.8, va="center", ha="left",
-                 color=DG.ACCENT[0], fontweight="bold")
+    for fs in (8.6, 8.0, 7.4, 6.8, 6.2, 5.6):
+        mark = len(fig.texts), len(fig.patches), len(fig.artists)
+        yy = pic_top - 0.004
+        for i, a in enumerate(_actions(T(step.text)), 1):
+            fig.text(cx, yy, f"{i}", fontsize=fs, fontweight="bold", color="white", va="top",
+                     bbox=dict(boxstyle="circle,pad=0.18", fc=DG.ACCENT[1], ec="none"))
+            _, hh = _text(fig, cx + 0.022, yy, a, cw - 0.022, fs, color="#222")
+            yy -= hh + 0.009
+        if tool and tool.get("stitch"):
+            _, hh = _text(fig, cx, yy, T(tool["name"]) + ": " + T(tool["stitch"]), cw, fs * 0.85, color=GREY)
+            yy -= hh + 0.01
+        if step.tip:
+            yy -= _important(fig, cx, yy, cw, T(step.tip), fs * 0.92) + 0.008
+        if step.hint:
+            yy -= _important(fig, cx, yy, cw, T(step.hint), fs * 0.92, label="Tip", colors=TIP, icon="✓") + 0.008
+        if yy >= y + 0.008:
+            break
+        # too long: remove what this pass drew and try a smaller size
+        for t in list(fig.texts[mark[0]:]):
+            t.remove()
+        for art in list(fig.artists[mark[2]:]):
+            art.remove()
+    if CHECKS is not None:
+        CHECKS.append(dict(step=n, rect=rect, fig=fig, texts=fig.texts[first:], axes=None))
 
 
 def step_pages(pdf, pattern, steps, first_page: int) -> int:
     import matplotlib.pyplot as plt
     page = first_page
     prev = ""
-    cols, rows = 2, STEPS_PER_PAGE // 2
-    mx, top, bottom, gap = 0.05, 0.935, 0.04, 0.012
-    pw = (1 - 2 * mx - gap) / cols
-    ph = (top - bottom - gap * (rows - 1)) / rows
+    mx, top, bottom, gap = 0.05, 0.94, 0.04, 0.014
+    ph = (top - bottom - gap) / STEPS_PER_PAGE
     for start in range(0, len(steps), STEPS_PER_PAGE):
         fig = plt.figure(figsize=PAGE)
         _header(fig, pattern, page, "Sewing")
+        n_axes = len(fig.axes)
         for k, st in enumerate(steps[start:start + STEPS_PER_PAGE]):
-            n = start + k + 1
-            cx, cy = k % cols, k // cols
-            rect = (mx + cx * (pw + gap), top - (cy + 1) * ph - cy * gap, pw, ph)
-            _panel(fig, pattern, n, st, rect, prev)
+            rect = (mx, top - (k + 1) * ph - k * gap, 1 - 2 * mx, ph)
+            before = len(fig.axes)
+            _panel(fig, pattern, start + k + 1, st, rect, prev)
+            if CHECKS is not None:
+                CHECKS[-1]["axes"] = fig.axes[before:]
+                CHECKS[-1]["page"] = page
+                _measure(CHECKS[-1])
             prev = st.section
+        del n_axes
         pdf.savefig(fig)
         plt.close(fig)
         page += 1
     return page
+
+
+def _measure(rec):
+    """Bounding boxes (figure fraction) of the panel's texts and axes, for the tests."""
+    fig = rec["fig"]
+    r = _renderer(fig)
+    W, H = fig.bbox.width, fig.bbox.height
+    boxes = []
+    for t in rec["texts"]:
+        if not t.get_text().strip():
+            continue
+        b = t.get_window_extent(r)
+        boxes.append(("text", t.get_text()[:40], (b.x0 / W, b.y0 / H, b.x1 / W, b.y1 / H)))
+    for a in rec["axes"]:
+        b = a.get_position()
+        boxes.append(("axes", "", (b.x0, b.y0, b.x1, b.y1)))
+    rec["boxes"] = boxes
+    rec.pop("fig")
+    rec.pop("texts")
+    rec.pop("axes")
+
+
+# --------------------------------------------------------------------------- templates and done
+
+def templates(pattern) -> list[tuple]:
+    """(piece, mark) for every line that is transferred after cutting."""
+    return [(pc, m) for pc in pattern.pieces for m in pc.marks if getattr(m, "template", False)]
+
+
+def template_pages(pdf, pattern, page_no: int) -> int:
+    """1:1 templates (true scale) with a 5 × 5 cm control square."""
+    import matplotlib.pyplot as plt
+    for pc, m in templates(pattern):
+        fig = plt.figure(figsize=PAGE)
+        _header(fig, pattern, page_no, "Templates 1:1")
+        lab = T(m.label)
+        _title(fig, 0.06, 0.935, T("Template") + ": " + lab)
+        _text(fig, 0.06, 0.9, T("Print at 100 % and measure the control square. Cut the template out along the "
+              "grey outline, lay it on the piece (right side up) with the edges on the edges, and trace the line "
+              "with chalk."), 0.88, 8)
+        pts = np.asarray(m.pts, float)
+        pad = 25.0
+        x0, y0 = pts.min(0) - pad
+        x1, y1 = pts.max(0) + pad
+        w_mm, h_mm = x1 - x0, y1 - y0
+        left_in, bottom_in = 0.9, 1.2
+        ax = fig.add_axes((left_in / PAGE[0], bottom_in / PAGE[1], w_mm / MM_IN / PAGE[0], h_mm / MM_IN / PAGE[1]))
+        ax.set_xlim(x0, x1)
+        ax.set_ylim(y0, y1)
+        ax.axis("off")
+        from shapely.geometry import Polygon, box
+        clip = Polygon(np.asarray(pc.seam_ring(), float)).buffer(0).intersection(box(x0, y0, x1, y1))
+        if not clip.is_empty and clip.geom_type == "Polygon":
+            c = np.asarray(clip.exterior.coords)
+            ax.fill(c[:, 0], c[:, 1], fc=DG.palette(pc, pattern)[0], ec="#888", lw=1.0, alpha=0.35)
+        ax.plot(pts[:, 0], pts[:, 1], color=DG.STITCH, lw=1.2)
+        fly = pattern.options.get("_fly") if isinstance(pattern.options, dict) else None
+        if fly and m.label.lower().startswith("fake fly") or (fly and "fly" in getattr(m, "key", "").lower()):
+            import geometry as G
+            inner = G.offset_polyline(pts, fly["spacing"]) if hasattr(G, "offset_polyline") else pts
+            ax.plot(inner[:, 0], inner[:, 1], color=DG.STITCH, lw=1.0, ls=(0, (3, 2)))
+            end = pts[-1]
+            ax.plot([end[0] - 4, end[0] + 4], [end[1], end[1]], color=DG.STITCH, lw=3.2)
+            fig.text(0.06, 0.86, T(f"Two rows {S.cm(fly['spacing'])} apart, {S.cm(fly['offset'])} from centre "
+                     f"front, {fly['length'] / 10:.1f} cm long, curve radius {S.cm(fly['radius'])}; bar tack at "
+                     "the crotch seam."), fontsize=8, va="top", color="#333")
+        # control square 5 × 5 cm
+        sq_left = min(PAGE[0] - 0.6 - 50 / MM_IN, (left_in + w_mm / MM_IN + 0.4))
+        sax = fig.add_axes((sq_left / PAGE[0], bottom_in / PAGE[1], 50 / MM_IN / PAGE[0], 50 / MM_IN / PAGE[1]))
+        sax.set_xlim(0, 50)
+        sax.set_ylim(0, 50)
+        sax.axis("off")
+        sax.fill([0, 50, 50, 0], [0, 0, 50, 50], fc="none", ec=INK, lw=1.2)
+        sax.text(25, 25, "5 × 5 cm", ha="center", va="center", fontsize=9)
+        pdf.savefig(fig)
+        plt.close(fig)
+        page_no += 1
+    return page_no
+
+
+def done_page(pdf, pattern, steps, page_no: int):
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=PAGE)
+    _header(fig, pattern, page_no, "Done!")
+    fig.text(0.5, 0.92, T("Done!"), fontsize=36, fontweight="bold", ha="center", va="top", color=OK_GREEN)
+    _views(fig, pattern, (0.08, 0.3, 0.84, 0.52))
+    last = steps[-1] if steps else None
+    y = 0.25
+    if last is not None and last.text:
+        _, h = _text(fig, 0.08, y, T(last.text), 0.84, 10)
+        y -= h + 0.02
+    _important(fig, 0.08, y, 0.84, T("Try the test garment on the child: length, width at the hip and the "
+               "waistband. Adjust the measurements or options and print the pattern again before you cut the "
+               "good fabric."), 9, label="After the test garment", colors=TIP, icon="✓")
+    pdf.savefig(fig)
+    plt.close(fig)
 
 
 def build(pattern, path: str, plans=None, steps: list[S.Step] | None = None) -> str:
@@ -287,10 +869,14 @@ def build(pattern, path: str, plans=None, steps: list[S.Step] | None = None) -> 
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     steps = steps if steps is not None else S.assembly(pattern)
+    DG._CTX["pattern"] = pattern
     with plt.rc_context({"font.family": "DejaVu Sans", "pdf.fonttype": 42}):
         with PdfPages(path, metadata={"Title": f"{T(pattern.title)} – " + T("sewing instructions"),
                                       "Creator": "sewing-pattern-generator"}) as pdf:
-            cover(pdf, pattern, len(steps))
-            needs_page(pdf, pattern, steps, plans, 2)
-            step_pages(pdf, pattern, steps, 3)
+            cover(pdf, pattern, steps, plans)
+            parts_page(pdf, pattern, steps, plans, 2)
+            page = tools_pages(pdf, pattern, steps, 3)
+            page = step_pages(pdf, pattern, steps, page)
+            page = template_pages(pdf, pattern, page)
+            done_page(pdf, pattern, steps, page)
     return path

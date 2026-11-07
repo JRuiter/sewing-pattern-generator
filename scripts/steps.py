@@ -40,7 +40,8 @@ class Step:
     pieces: list[str] = field(default_factory=list)
     stitch: str = ""                            # see STITCH_KINDS
     repeat: int = 1                             # ×2: do it on both legs / sleeves
-    tip: str = ""                               # warning or hint (the "!" box)
+    tip: str = ""                               # warning: the yellow "Important" box
+    hint: str = ""                              # helpful hint: the green "Tip" box
     section: str = ""                           # group heading (Pockets, Waistband, …)
     amount: float = 0.0                         # mm: hem depth, fold distance, opening …
     stretch: bool = False                       # stretch the band while sewing
@@ -60,6 +61,8 @@ class Step:
             parts.append(t(f"Do this {_times(self.repeat)}."))
         if self.tip:
             parts.append(t("Tip:") + " " + t(self.tip))
+        if self.hint:
+            parts.append(t(self.hint))
         return " ".join(parts)
 
 
@@ -305,9 +308,12 @@ def prepare(pattern) -> list[Step]:
              "Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.",
              section="Prepare"),
         icon("Cut out all pieces", "cut",
-             "Follow the cutting layout; grainline arrows parallel to the selvage.", section="Prepare"),
+             "Follow the cutting layout; grainline arrows parallel to the selvage.", section="Prepare",
+             tip=("Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction."
+                  if E.has_nap(pattern.options) else ""),
+             hint="Cut both layers at once with long strokes; keep the fabric flat on the table."),
         icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
-             section="Prepare"),
+             section="Prepare", tip="Never deeper than half the seam allowance."),
         _setup_step(pattern, knit),
     ]
 
@@ -320,11 +326,11 @@ def _setup_step(pattern, knit: bool) -> Step:
         return icon(f"Set up {what}", "needle",
                     "Test seam on two layers of a scrap: differential 1.0" + (" (knit 1.3)" if knit else "")
                     + ", stitch length 3. Hand needle and polyester thread for the hand stitches.",
-                    section="Prepare")
+                    section="Prepare", hint="See the basics page at the front of the booklet.")
     return icon("Set up the machine", "needle",
                 ("Jersey/stretch needle 75–80, polyester thread." if knit else
                  "Universal needle 80, polyester thread.") + " Sew a test seam on a scrap first.",
-                section="Prepare")
+                section="Prepare", hint="See the basics page at the front of the booklet.")
 
 
 def done(text: str = "Press all seams.", **kw) -> Step:
@@ -364,12 +370,16 @@ def assembly(pattern) -> list[Step]:
     own = owned_machines(pattern.options)
     for s in body:
         s.data.setdefault("knit", knit)
-        if own is not None and "overlocker" in own and s.stitch in ("seam", "band") and not s.tip:
+        if own is not None and "overlocker" in own and s.stitch in ("seam", "band"):
             t = tool_for(pattern.options, s.stitch, s.data["knit"])
             if t.get("machine") == "overlocker":
                 curved = any(w in " ".join(s.seams).lower() for w in ("crotch", "pocket bag", "armhole", "sleeve"))
-                s.tip = ("Sew the curve slowly; pull the clips before they reach the knife." if curved
-                         else "Pull the pins before they reach the knife.")
+                text = ("Sew the curve slowly; pull the clips before they reach the knife." if curved
+                        else "Pull the pins before they reach the knife.")
+                if not s.tip:
+                    s.tip = text
+                elif not s.hint and "knife" not in s.tip:
+                    s.hint = text
         if s.data.get("picture") == "done" and s.text == "Press all seams.":
             s.text = "Press all seams" + E.press_note(pattern.options.get("fabric"))
     return prepare(pattern) + body

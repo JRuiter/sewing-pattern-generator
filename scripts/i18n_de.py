@@ -1099,3 +1099,167 @@ TABLE.update({
     "with the overlocker ({n}-thread overlock stitch, differential feed about {n}), stretching only the band":
         "mit der Overlock ({n}-Faden-Overlockstich, Differentialtransport etwa {n}), nur das Bündchen dehnen",
 })
+
+# Booklet v2
+TABLE.update({
+    "{n}–{n} stitches on top of each other, then wrapped closely with buttonhole stitches.":
+        "{n}–{n} Stiche übereinander, dann eng mit Knopflochstichen umwickeln.",
+    "A piece of cardboard in the finished pocket size makes pressing the edges easy.":
+        "Ein Stück Karton in der fertigen Taschengröße macht das Bügeln der Kanten leicht.",
+    "A strip of stay tape ironed onto the opening keeps it in shape.":
+        "Ein Streifen Formband, auf den Eingriff gebügelt, hält ihn in Form.",
+    "After the test garment": "Nach dem Probeteil",
+    "Always the front and back of the SAME leg (FL + BL, FR + BR).":
+        "Immer Vorder- und Hinterteil DESSELBEN Beins (VL + HL, VR + HR).",
+    "At the end sew a {n} cm thread chain off the fabric; thread it back under the stitches with a darning needle.":
+        "Am Ende {n} cm Fadenkette über den Stoff hinaus nähen; mit einer Stopfnadel unter die Stiche zurückziehen.",
+    "Back stitch": "Rückstich",
+    "Back view": "Rückansicht",
+    "Front view": "Vorderansicht",
+    "Basics: hand stitches": "Grundlagen: Handstiche",
+    "Basics: the overlocker": "Grundlagen: die Overlock",
+    "Basics: the sewing machine": "Grundlagen: die Nähmaschine",
+    "Baste {n} mm from the edge, inside the seam allowance.": "{n} mm von der Kante heften, innerhalb der Nahtzugabe.",
+    "Blind stitch": "Blindstich",
+    "Chalk": "Kreide",
+    "Clips": "Clips",
+    "Pins": "Stecknadeln",
+    "Pin": "Stecknadel",
+    "Scissors": "Schere",
+    "Terry towel": "Frottiertuch",
+    "Clips are safer at the overlocker: pins must come out before the knife.":
+        "An der Overlock sind Clips sicherer: Stecknadeln müssen vor dem Messer heraus.",
+    "Closes an opening invisibly: the stitches run inside the folds.":
+        "Schließt eine Öffnung unsichtbar: die Stiche laufen in den Bruchkanten.",
+    "Colours and lines": "Farben und Linien",
+    "Cross-section of the edge": "Querschnitt der Kante",
+    "Cross-section of the hem": "Querschnitt des Saums",
+    "Cross-section: pressed edge": "Querschnitt: gebügelte Kante",
+    "Crotch curve on the left, waist up: that is FL and BR. Left/right always means as worn, seen from the child.":
+        "Schrittrundung links, Taille oben: das sind VL und HR. Links/rechts heißt immer getragen, vom Kind aus gesehen.",
+    "Curves (crotch, pocket bag): sew slowly and steer the fabric, do not pull it.":
+        "Rundungen (Schritt, Taschenbeutel): langsam nähen und den Stoff führen, nicht ziehen.",
+    "Cut both layers at once with long strokes; keep the fabric flat on the table.":
+        "Beide Lagen auf einmal mit langen Schnitten zuschneiden; der Stoff bleibt flach auf dem Tisch.",
+    "Each stitch goes back to the end of the last one: strong like a machine seam; for topstitching and seams.":
+        "Jeder Stich geht zurück zum Ende des letzten: fest wie eine Maschinennaht; zum Absteppen und für Nähte.",
+    "Elastic": "Gummiband", "Zip": "Reißverschluss", "Velcro": "Klettband", "Snaps": "Druckknöpfe",
+    "Buttons": "Knöpfe", "Drawstring": "Kordel", "Cord": "Kordel", "Binding": "Schrägband",
+    "Fold the front leg out of the way: sew only the two pocket bag layers.":
+        "Die Vorderhose wegklappen: nur die beiden Lagen Taschenbeutel nähen.",
+    "For hems and casings: catch only {n}–{n} threads of the outer fabric, then {n} mm in the fold.":
+        "Für Säume und Tunnel: nur {n}–{n} Fäden vom Oberstoff fassen, dann {n} mm in der Bruchkante.",
+    "Important": "Wichtig",
+    "Tip": "Tipp",
+    "In the colour of the fabric.": "In der Farbe des Stoffs.",
+    "In the colour of the fabric; overlocker: {n} cones.": "In der Farbe des Stoffs; Overlock: {n} Konen.",
+    "Knit seams (narrow) and finishing the edges (wide).": "Jerseynähte (schmal) und Kanten versäubern (breit).",
+    "Label the pieces": "Teile beschriften",
+    "Ladder stitch": "Matratzenstich",
+    "Lay the four leg pieces right side up, waist up. Stick a strip of tape on each: FL, FR (front left/right) and "
+    "BL, BR (back left/right), as worn.":
+        "Die vier Beinteile mit der rechten Seite nach oben legen, Taille oben. Auf jedes einen Streifen Klebeband: "
+        "VL, VR (vorne links/rechts) und HL, HR (hinten links/rechts), getragen.",
+    "FL": "VL", "FR": "VR", "BL": "HL", "BR": "HR",
+    "Machines and basics": "Maschinen und Grundlagen",
+    "Mark the {n} cm opening at the inseam with two pins before you start.":
+        "Die {n}-cm-Öffnung an der Innenbeinnaht vorher mit zwei Nadeln markieren.",
+    "Marking (chalk)": "Markierung (Kreide)",
+    "Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction.":
+        "Strich: kein Teil gedreht, alle mit der Taille nach oben. Mit der Hand über den Stoff streichen, um die "
+        "Richtung zu prüfen.",
+    "Never deeper than half the seam allowance.": "Nie tiefer als die halbe Nahtzugabe.",
+    "Only ONE pocket. The top edge stays open.": "Nur EINE Tasche. Die Oberkante bleibt offen.",
+    "The top edge stays open.": "Die Oberkante bleibt offen.",
+    "Parts and material": "Teile und Material",
+    "Pierce the pocket corners with a pin and mark them with chalk on the right side.":
+        "Die Taschenecken mit einer Nadel durchstechen und auf der rechten Seite mit Kreide markieren.",
+    "Pin across the seam line.": "Quer zur Nahtlinie stecken.",
+    "Pin the far end to the leg so it cannot slip into the casing.":
+        "Das hintere Ende am Bein feststecken, damit es nicht in den Tunnel rutscht.",
+    "Pin the notches first, then the ends.": "Erst die Knipse stecken, dann die Enden.",
+    "Print at {n} % and measure the control square. Cut the template out along the grey outline, lay it on the "
+    "piece (right side up) with the edges on the edges, and trace the line with chalk.":
+        "Mit {n} % drucken und das Kontrollquadrat messen. Die Schablone an der grauen Kontur ausschneiden, Kante "
+        "auf Kante auf das Teil legen (rechte Seite oben) und die Linie mit Kreide nachzeichnen.",
+    "Pull it over the child's hip to test it.": "Zur Probe über die Hüfte des Kindes ziehen.",
+    "Pull the pins or clips out before they reach the knife: a pin in the knife breaks it.":
+        "Nadeln oder Clips herausziehen, bevor sie das Messer erreichen: eine Nadel im Messer zerbricht es.",
+    "Read the steps once before you start. Every picture is drawn from your pattern pieces. Sew a test garment "
+    "from cheap fabric first and adjust before you cut the good fabric.":
+        "Lies die Schritte einmal durch, bevor du anfängst. Jedes Bild ist aus deinen Schnittteilen gezeichnet. "
+        "Nähe zuerst ein Probeteil aus günstigem Stoff und passe an, bevor du den guten Stoff zuschneidest.",
+    "Right side up, with the same distance to the edge all the way; use the edge of the presser foot as a guide.":
+        "Rechte Seite oben, überall im gleichen Abstand zur Kante; die Kante des Nähfußes dient als Führung.",
+    "Right/wrong side of the fabric = the side of the fabric. Left/right (as worn) = seen from the child wearing "
+    "it: the left front leg is on the right when you look at the child.":
+        "Rechte/linke Stoffseite = die Seite des Stoffs. Links/rechts (getragen) = vom Kind aus gesehen, das die "
+        "Hose trägt: das linke Vorderbein ist rechts, wenn du das Kind ansiehst.",
+    "Roll the edge {n}–{n} mm to the inside: no pocket bag may show from the outside.":
+        "Die Kante {n}–{n} mm nach innen rollen: von außen darf kein Taschenbeutel zu sehen sein.",
+    "Seam allowance {n} mm: the needle runs on the seam line, the knife trims only a sliver.":
+        "Nahtzugabe {n} mm: die Nadel läuft auf der Nahtlinie, das Messer schneidet nur einen schmalen Streifen ab.",
+    "Seam allowance {n} cm: the needle runs on the seam line, the knife trims only a sliver.":
+        "Nahtzugabe {n} cm: die Nadel läuft auf der Nahtlinie, das Messer schneidet nur einen schmalen Streifen ab.",
+    "Seams in woven fabric, {n} mm; backstitch at the start and the end.":
+        "Nähte in Webware, {n} mm; am Anfang und Ende verriegeln.",
+    "See the basics page at the front of the booklet.": "Siehe die Grundlagen-Seite vorne im Heft.",
+    "Sew by hand": "Von Hand nähen",
+    "Sew now (machine)": "Jetzt nähen (Maschine)",
+    "Fold / press line": "Bruch-/Bügellinie",
+    "Notch: match them": "Knips: aufeinanderlegen",
+    "Sewn with": "Genäht mit",
+    "Start exactly at the crotch point and sew towards the hem.": "Genau am Schrittpunkt beginnen und zum Saum nähen.",
+    "Straight stitch": "Geradstich",
+    "Zigzag": "Zickzack",
+    "Topstitching": "Absteppen",
+    "Tacking stitch": "Heftstich",
+    "Bar tack": "Riegel",
+    "Template": "Schablone",
+    "Templates 1:1": "Schablonen 1:1",
+    "Test seam on two layers of a scrap: differential {n} (knit {n}), stitch length {n}.":
+        "Probenaht an zwei Lagen eines Rests: Differential {n} (Jersey {n}), Stichlänge {n}.",
+    "Test seam on two layers of a scrap: differential {n}, stitch length {n}.":
+        "Probenaht an zwei Lagen eines Rests: Differential {n}, Stichlänge {n}.",
+    "The inseams lie exactly on top of each other; press their allowances in opposite directions. Pull the inner "
+    "leg out afterwards.":
+        "Die Innenbeinnähte liegen genau aufeinander; ihre Zugaben in entgegengesetzte Richtungen legen. Danach das "
+        "innere Bein herausziehen.",
+    "The legs now lie right sides together, the hems point the same way.":
+        "Die Beine liegen jetzt rechts auf rechts, die Säume zeigen in dieselbe Richtung.",
+    "The opening is on the bias: do not stretch it.": "Der Eingriff liegt schräg zum Fadenlauf: nicht dehnen.",
+    "The pocket opening lies flat, not pulled.": "Der Tascheneingriff liegt flach, nicht gezogen.",
+    "Trace the J line with the 1:1 template at the end of the booklet.":
+        "Die J-Linie mit der 1:1-Schablone hinten im Heft übertragen.",
+    "Trace the J line with chalk now, using the 1:1 template at the end.":
+        "Die J-Linie jetzt mit Kreide übertragen, mit der 1:1-Schablone hinten im Heft.",
+    "Try the test garment on the child: length, width at the hip and the waistband. Adjust the measurements or "
+    "options and print the pattern again before you cut the good fabric.":
+        "Probiere das Probeteil am Kind an: Länge, Weite an der Hüfte und Bund. Passe Maße oder Optionen an und "
+        "drucke den Schnitt neu, bevor du den guten Stoff zuschneidest.",
+    "Turn it over afterwards and check from the outside that the opening lies flat.":
+        "Danach umdrehen und von außen prüfen, dass der Eingriff flach liegt.",
+    "Two rows {n} mm apart, {n} cm from centre front, {n} cm long, curve radius {n} cm; bar tack at the crotch seam.":
+        "Zwei Reihen im Abstand von {n} mm, {n} cm neben der vorderen Mitte, {n} cm lang, Rundung {n} cm; Riegel "
+        "an der Schrittnaht.",
+    "both legs": "beide Beine", "both sides": "beide Seiten", "both sleeves": "beide Ärmel",
+    "knife": "Messer", "needle": "Nadel", "seam allowance": "Nahtzugabe", "waist ↑": "Taille ↑",
+    "right side up: the pile goes flat": "rechte Seite oben: der Flor wird platt",
+    "wrong side up on a towel": "linke Seite oben auf einem Tuch",
+    "right side · wrong side": "rechte · linke Seite",
+    "Main fabric": "Oberstoff", "Corduroy": "Cord", "Velvet": "Samt", "Rib knit": "Bündchen",
+    "Polyester sewing thread": "Polyester-Nähgarn",
+    "Pins or clips": "Stecknadeln oder Clips",
+    "Done!": "Fertig!",
+
+    "Notions": "Zubehör", "Seam allowance": "Nahtzugabe", "included": "enthalten", "hem": "Saum",
+    "Parts and steps": "Teile und Schritte", "Difficulty": "Schwierigkeit", "easy": "leicht", "medium": "mittel",
+    "advanced": "anspruchsvoll", "about {n} h": "etwa {n} Std.", "Size": "Größe",
+    "Long running stitches ({n} cm), they come out again later.": "Lange Vorstiche ({n} cm), sie kommen später wieder heraus.",
+    "Fold the corners in first, then the sides: the corners stay flat.":
+        "Erst die Ecken einschlagen, dann die Seiten: so bleiben die Ecken flach.",
+    "Press the cross seam allowance open first: the fold lies flatter.":
+        "Die Zugabe der Quernaht vorher auseinanderbügeln: der Bruch liegt flacher.",
+    "The waistband is shorter than the top edge: the quarter marks meet, the lengths do not.":
+        "Der Bund ist kürzer als die Oberkante: die Viertelmarken treffen sich, die Längen nicht.",
+})
