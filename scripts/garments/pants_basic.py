@@ -46,7 +46,21 @@ DEFAULTS = dict(style="jogger", fit=None, fabric=None, stretch=None, length=None
                 cargo_pleat=True, cargo_flap=True,
                 # overrides (reverse engineering / fine tuning), all finished measurements in mm
                 hip_total=None, fork_factor=1.0, front_rise_total=None, inseam_total=None,
-                opening_total=None, elastic_total=None, knee_total=None, thigh_total=None)
+                opening_total=None, elastic_total=None, knee_total=None, thigh_total=None,
+                # fake fly: J topstitching on the front leg (True or a dict, see FAKE_FLY)
+                fake_fly=None,
+                # back patch pockets: 1 or 2, and the side of a single pocket (as worn)
+                back_pockets=None, back_pocket_side="right",
+                # hem finish without cuffs: "plain" (turned hem) or "elastic_casing"
+                hem_finish="plain", hem_elastic_mm=None, hem_elastic_len_cm=None,
+                # pocket bag (inner pocket) fabric, e.g. "cotton"; None = main fabric
+                pocket_bag_fabric=None)
+
+FAKE_FLY = dict(offset_mm=30.0, length_frac_R=0.62, radius_mm=25.0, side="left", spacing_mm=6.0,
+                underlay=False)
+HEM_FINISHES = ("plain", "elastic_casing")
+POCKET_BAG_FABRICS = {"cotton": "Lining: thin cotton", "lining": "Lining", "main": "Main fabric",
+                      "jersey": "Lining: cotton jersey"}
 
 TITLES = {"jogger": "Joggers", "harem": "Harem pants", "leggings": "Leggings",
           "trousers": "Pull-on trousers"}
@@ -73,7 +87,41 @@ def resolve_options(options: dict | None) -> dict:
         o["turn_up"] = 0.0
     if o["turn_up"] and (o["cuffs"] or o["length"] not in ("short", "knee")):
         o["turn_up"] = 0.0               # turn-ups only for shorts / knee length without cuffs
+    # back patch pockets: number and side
+    if o["back_pockets"] is not None:
+        n = int(o["back_pockets"])
+        if n not in (0, 1, 2):
+            raise ValueError("back_pockets must be 0, 1 or 2")
+        o["back_pockets"] = n
+        o["pockets"] = [p for p in o["pockets"] if p != "back_patch"] + (["back_patch"] if n else [])
+    elif "back_patch" in o["pockets"]:
+        o["back_pockets"] = 2
+    if o["back_pocket_side"] not in ("right", "left"):
+        raise ValueError("back_pocket_side must be 'right' or 'left' (as worn)")
+    # fake fly
+    ff = o["fake_fly"]
+    if ff:
+        o["fake_fly"] = {**FAKE_FLY, **(ff if isinstance(ff, dict) else {})}
+        if o["fake_fly"]["side"] not in ("left", "right"):
+            raise ValueError("fake_fly.side must be 'left' or 'right' (as worn)")
+    else:
+        o["fake_fly"] = None
+    # hem finish
+    if o["hem_finish"] is None:
+        o["hem_finish"] = "plain"
+    if o["hem_finish"] not in HEM_FINISHES:
+        raise ValueError(f"hem_finish must be one of {', '.join(HEM_FINISHES)}")
+    if o["hem_finish"] == "elastic_casing" and (o["cuffs"] or o["turn_up"]):
+        o["hem_finish"] = "plain"        # a casing needs a plain turned hem
+    pbf = o["pocket_bag_fabric"]
+    if pbf is not None and pbf not in POCKET_BAG_FABRICS:
+        raise ValueError(f"pocket_bag_fabric must be one of {', '.join(POCKET_BAG_FABRICS)}")
     return o
+
+
+def hem_casing_mm(o: dict) -> float:
+    """Height of the elastic casing in the hem (elastic + 10 mm room)."""
+    return float(o.get("hem_elastic_mm") or 20.0) + 10.0
 
 
 LEG_SHAPES = ("straight", "tapered", "bootcut", "flare")
@@ -111,6 +159,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     turn_up = float(o["turn_up"] or 0.0) * 10        # cm → mm
     if turn_up:
         hem_sa = hem_sa + 2 * turn_up                # the turn-up is folded out twice its height
+    if o["hem_finish"] == "elastic_casing":
+        hem_sa = 5.0 + hem_casing_mm(o)              # 5 mm turned under + the casing
     k = m["height"] / 1220.0  # scale factor for small parts (child size 122 = 1)
     k = max(0.75, min(1.45, k))
 
@@ -333,6 +383,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         back.edges[4].pts = G.tangent_curve(G.P(Wb, -dl), (-1, 0), cb_top, waist_arrive, 0.35, 0.35)
 
     pieces += [front, back]
+    if o["fake_fly"]:
+        _fake_fly(o, front, schritt_f, R, sa, notes)
 
     # ---------------------------------------------------------------- pockets
     if "side" in pockets:
@@ -358,7 +410,9 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             Edge("side", G.line(S1, E_), sa, label="Side seam"),
             Edge("pocket_opening", G.line(E_, G.P(Wf - pk_a, 0)), sa, label="Pocket opening"),
             Edge("waistband", G.line(G.P(Wf - pk_a, 0), T0), sa, label="Waistband seam"),
-        ], cut_count=2, mirror=True, fabric="Main fabric or cotton jersey",
+        ], cut_count=2, mirror=True,
+            fabric=POCKET_BAG_FABRICS[o["pocket_bag_fabric"]] if o["pocket_bag_fabric"]
+            else "Main fabric or cotton jersey",
             grain=(G.P(x0 + 25, -bag_depth + 30), G.P(x0 + 25, -25)))
         pieces += [side_panel, lining]
         seams += [
@@ -371,15 +425,23 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         ]
     if "back_patch" in pockets:
         pw, ph = 110 * k, 120 * k
+        n_bp = o["back_pockets"] or 2
         pocket = rect_piece("back_pocket", "Back patch pocket", pw, ph, sa=sa,
-                            cut_count=2, names=("bottom", "right", "top", "left"),
+                            cut_count=n_bp, names=("bottom", "right", "top", "left"),
                             labels=("", "", "Pocket facing", ""), sas=(sa, sa, 25.0, sa))
         pieces.append(pocket)
         px = Wb * 0.55
         py = -0.15 * R
         rect = np.array([[px - pw / 2, py], [px + pw / 2, py], [px + pw / 2, py - ph],
                          [px - pw / 2, py - ph], [px - pw / 2, py]])
-        back.marks.append(Mark(rect, "placement", "Back pocket"))
+        if n_bp == 1:
+            side = o["back_pocket_side"]
+            back.marks.append(Mark(rect, "placement", f"Back pocket ({side} back leg only)"))
+            notes.append(f"One back pocket, on the {side} back leg (as worn). The back leg piece, right side "
+                         f"up as printed, is the right back leg.")
+        else:
+            back.marks.append(Mark(rect, "placement", "Back pocket"))
+        o["_back_pocket_mm"] = (pw, ph)
 
     if "cargo" in pockets:
         _cargo(o, front, pieces, notes, side_f_leg, y_cr, leg_len, k, sa, adult)
@@ -393,6 +455,15 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             pc.marks.append(Mark(np.array([h[0], h[-1]]) + (0, 0.01), "fold", "Hem edge"))
         notes.append(f"Turn-up {turn_up / 10:.1f} cm: the hem allowance includes twice its height "
                      f"plus {o['hem_sa'] / 10:.1f} cm to turn under.")
+
+    if o["hem_finish"] == "elastic_casing":
+        el_len = o["hem_elastic_len_cm"] * 10 if o["hem_elastic_len_cm"] else round(m["ankle"] / 10) * 10
+        o["_hem_elastic_len"] = float(el_len)
+        for pc in (front, back):
+            h = pc.edge("hem").pts
+            pc.marks.append(Mark(np.array([h[0], h[-1]]) + (0, 0.01), "fold", "Hem edge (casing)"))
+        notes.append(f"Hem casing for {o['hem_elastic_mm'] or 20:.0f} mm elastic: per leg {el_len / 10:.0f} cm "
+                     f"elastic + 2 cm overlap (try it on the child first); leave 3 cm open at the inseam.")
 
     # ---------------------------------------------------------------- waistband
     top_parts = [("front", "waistband", 2), ("back", "waistband", 2)]
@@ -523,6 +594,43 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     if C.unknown_overrides():
         pat.notes.append("Unknown construction value(s) ignored: " + ", ".join(C.unknown_overrides()))
     return pat
+
+
+def fly_line(front_crotch: np.ndarray, R: float, ff: dict) -> np.ndarray:
+    """J topstitch line of the fake fly on the front leg (piece coordinates, waist at y = 0).
+
+    Straight down `offset_mm` from centre front, a quarter circle of `radius_mm` towards
+    centre front, then straight to the crotch seam, which it meets at `length_frac_R` × rise
+    below the waist."""
+    off, r = float(ff["offset_mm"]), float(ff["radius_mm"])
+    L = float(ff["length_frac_R"]) * R
+    r = min(r, off - 1.0, L - 1.0)
+    cr = np.asarray(front_crotch)
+    order = np.argsort(cr[:, 1])
+    x_cr = float(np.interp(-L, cr[order, 1], cr[order, 0]))
+    straight = G.line(G.P(off, 0.0), G.P(off, -L + r))
+    t = np.linspace(0.0, -np.pi / 2, 16)
+    arc = np.stack([off - r + r * np.cos(t), -L + r + r * np.sin(t)], axis=1)
+    tail = G.line(G.P(off - r, -L), G.P(x_cr, -L))
+    return G.join(straight, arc, tail)
+
+
+def _fake_fly(o, front, crotch, R, sa, notes):
+    ff = o["fake_fly"]
+    j = fly_line(crotch, R, ff)
+    side = ff["side"]
+    front.marks.append(Mark(j, "mark", f"Fake fly ({side} front leg only)"))
+    L = float(ff["length_frac_R"]) * R
+    inner = float(ff["offset_mm"]) - float(ff["spacing_mm"])
+    catches = inner <= sa
+    o["_fly"] = dict(length=L, offset=float(ff["offset_mm"]), radius=float(ff["radius_mm"]),
+                     spacing=float(ff["spacing_mm"]), side=side, catches_sa=catches,
+                     line=[[round(float(x), 2), round(float(y), 2)] for x, y in j])
+    notes.append(f"Fake fly on the {side} front leg (as worn): J line {ff['offset_mm'] / 10:g} cm from centre "
+                 f"front, {L / 10:.1f} cm long, curve radius {ff['radius_mm'] / 10:g} cm; two rows "
+                 f"{ff['spacing_mm']:g} mm apart, bar tack at the crotch seam."
+                 + ("" if catches else " The stitching does not catch the crotch seam allowance; a strip of "
+                    "fabric (about 5 × 14 cm) underneath makes it sturdier."))
 
 
 def _cargo(o, front, pieces, notes, side_leg, y_cr, leg_len, k, sa, adult):
@@ -684,14 +792,19 @@ def assembly(pat: Pattern) -> list:
                            stitch="topstitch", data={"mark": "Flap"}, repeat=2, section=sec)]
     if "back_patch" in o["pockets"]:
         sec = "Back pockets"
+        n_bp = o.get("back_pockets") or 2
+        sa = pat.piece("back_pocket").edge("left").sa
+        where = f" ({o.get('back_pocket_side', 'right')} back leg only)" if n_bp == 1 else ""
         out += [S.hem("Hem the pocket top edge", [("back_pocket", "top")], 25.0,
-                      "Press 2.5 cm to the inside and topstitch.", stitch="topstitch", repeat=2, section=sec),
+                      "Press 2.5 cm to the inside and topstitch.", stitch="topstitch", repeat=n_bp, section=sec),
                 S.press("Press the edges under", [("back_pocket", "left"), ("back_pocket", "bottom"),
-                                                   ("back_pocket", "right")], "1 cm on the other three sides.",
-                        amount=10.0, repeat=2, section=sec),
-                S.place("Stitch the pocket on", "back_pocket", "back", "Back pocket",
-                        "Edgestitch on the marking of the back leg; reinforce the top corners.", repeat=2,
-                        section=sec)]
+                                                   ("back_pocket", "right")],
+                        f"{_cm_text(sa)} on the other three sides.", amount=sa, repeat=n_bp, section=sec),
+                S.place("Stitch the pocket on" + where, "back_pocket", "back",
+                        "Back pocket",
+                        ("Only ONE pocket: on the " + o.get("back_pocket_side", "right") + " back leg (as worn), "
+                         "on the marking; " if n_bp == 1 else "Edgestitch on the marking of the back leg; ")
+                        + "reinforce the top corners and leave the top open.", repeat=n_bp, section=sec)]
     sec = "Legs"
     out.append(S.seam("Sew the side seams", ["Side seam"],
                       "Front and back leg right sides together; single notches = front, double = back.",
@@ -706,6 +819,16 @@ def assembly(pat: Pattern) -> list:
                       "In one go from the front to the back top edge; the inseams meet exactly.",
                       tip="Sew the crotch curve a second time for strength.", section="Crotch"))
     finished("Finish the crotch seam", [("front", "crotch"), ("back", "crotch")])
+    fly = o.get("_fly")
+    if fly:
+        tip = ("The stitching catches the crotch seam allowance." if fly["catches_sa"] else
+               "The stitching does not catch the crotch seam allowance: pin a strip of fabric "
+               "(about 5 × 14 cm) underneath for strength.")
+        out.append(S.topstitch("Topstitch the fake fly", [("front", "crotch")], fly["offset"],
+                               f"Only on the {fly['side']} front leg (as worn), before the waistband: two rows "
+                               f"{_cm_text(fly['spacing'])} apart along the J line ({_cm_text(fly['offset'])} from "
+                               f"centre front, {fly['length'] / 10:.1f} cm long), bar tack at the crotch seam.",
+                               tip=tip, section="Crotch", data={"fly": True}))
     wb = o["waistband"]
     gap = o.get("_casing_gap", 30.0)
     sec = "Waistband"
@@ -777,11 +900,26 @@ def assembly(pat: Pattern) -> list:
                     "the \"Turn-up fold\"; tack it at the side seam and inseam.", amount=o["turn_up"] * 10,
                     repeat=2, section=sec),
         ]
+    elif o.get("hem_finish") == "elastic_casing":
+        hs = pat.piece("front").edge("hem").sa
+        casing = hem_casing_mm(o)
+        el = o.get("_hem_elastic_len", 200.0)
+        out += [
+            S.hem("Sew the hem casing", [("front", "hem"), ("back", "hem")], casing,
+                  f"Press 5 mm under, then {_cm_text(casing)} to the inside; sew close to the inner fold and leave "
+                  "3 cm open at the inseam.", tip="Keep the casing free: do not catch the elastic channel.",
+                  repeat=2, section=sec, data={"casing": True, "hem_sa": hs}),
+            S.icon("Thread the elastic", "elastic",
+                   f"{el / 10:.0f} cm per leg + 2 cm overlap (fit it on the child): thread it with a safety pin, "
+                   "overlap the ends 2 cm and sew them together, then close the opening.",
+                   stitch="elastic", repeat=2, section=sec,
+                   tip="Do not twist the elastic.", data={"length_mm": el}),
+        ]
     else:
         hs = pat.piece("front").edge("hem").sa
         out.append(S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
                          f"Press {hs / 10:.1f} cm to the inside.", repeat=2, section=sec))
-    out.append(S.done("Press all seams" + (" with steam; do not press down hard on sweat." if knit else ".")))
+    out.append(S.done("Press all seams" + E.press_note(o.get("fabric", "woven"))))
     return out
 
 

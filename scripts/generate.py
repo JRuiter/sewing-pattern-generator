@@ -64,9 +64,14 @@ def size_label(size, measures_cm) -> str:
     return lab
 
 
+def _slug(text: str) -> str:
+    import re
+    return re.sub(r"[^\w-]+", "_", text.lower(), flags=re.UNICODE).strip("_")
+
+
 def _basename(pat) -> str:
     lab = pat.size_label.split(" (")[0].replace("size ", "size").replace("'s", "")
-    return f"{pat.title.lower().replace(' ', '_')}_{lab.replace(' ', '_').lower()}"
+    return f"{_slug(pat.title)}_{lab.replace(' ', '_').lower()}"
 
 
 def spec_from_project(path: str, spec: dict | None = None) -> dict:
@@ -96,6 +101,7 @@ def draft_from_spec(spec: dict):
                                  spec["_doll_scale"], spec.get("adjustments"))
         pat.options["units"] = U.check(spec.get("units"))
         pat.size_label = spec["size_label"]
+        _custom_title(pat, spec)
         return pat, {k: "estimated from the garment" for k in pat.measures}, list(prof_warn)
     units = U.check(spec.get("units"))
     # precedence: size table < profile < measurement file < explicit measurements
@@ -126,7 +132,16 @@ def draft_from_spec(spec: dict):
     pat.options["units"] = units
     pat.size_label = spec.get("size_label") or (DOLL.size_label(measures) if doll
                                                 else size_label(spec.get("size"), given or None))
+    _custom_title(pat, spec)
     return pat, sources, warn
+
+
+def _custom_title(pat, spec: dict) -> None:
+    """Option `title` (e.g. "Kordhose"): the name on every piece, the instructions and the file names."""
+    t = str((spec.get("options") or {}).get("title") or pat.options.get("title") or "").strip()
+    if t:
+        pat.title = t
+        pat.options["title"] = t
 
 
 def run(spec: dict, verbose: bool = True) -> dict:
@@ -159,7 +174,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
         if pat.construction:
             report_md += "\n\n" + K.to_markdown(pat.construction)
     base = spec.get("basename") or (
-        f"{pat.title.lower().replace(' ', '_')}_sizes_{'_'.join(d[0] for d in drafts)}" if drafts
+        f"{_slug(pat.title)}_sizes_{'_'.join(d[0] for d in drafts)}" if drafts
         else _basename(pat))
     with open(os.path.join(out, "validation_report.md"), "w", encoding="utf-8") as f:
         f.write(report_md)

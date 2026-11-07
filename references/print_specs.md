@@ -119,3 +119,7 @@ For projector sewing (projecting the pattern straight onto the fabric):
   - `auto` (default): from a fabric width of 130 cm both are computed and the shorter one is
     used (ties go to folded); narrower fabric (e.g. rib knit) is always single layer. The
     instructions name the mode and the length the other one would need.
+  - Fabric with a nap (corduroy, velvet, option `nap`): main-fabric pieces are never turned
+    by 180°, so all tops point to the same end ("Nap ↓, all pieces waist up"); in the folded
+    layout a cut-on-fold piece that would lie upside down is mirrored instead. The fabric
+    consumption is computed with that restriction.
