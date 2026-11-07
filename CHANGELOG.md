@@ -4,6 +4,12 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Changed
+- **Booklet layout after the reference booklet**: centred title page with size, fit and fabric in one line, large front and back views and a "Sewn with …" box with the machine and tool icons; the parts page shows every part large and at the same scale (big parts in the first row, bands and pockets below) with a navy count badge on the part, the seam allowances, the material in two columns (fabric amounts, notions, machines with their stitch settings, thread, clips, chalk, iron, towel) and "Colours in this booklet"; the basics page has a box per machine; steps get navy number badges and bullets, one-paragraph "⚠ Important:" / "Tip:" boxes and the ×2 badge bottom right; the "Done!" panel fills the free half of the last step page, the 1:1 templates come after it; page numbers at the bottom.
+
+### Fixed
+- **Front and back views** (title page, "Done!") are whole garments now (`scripts/views.py`): pants with both legs apart below the crotch, the centre seam, the waistband across the whole waist (gathered when it is elastic) and leg cuffs with the leg gathered into them; tops and dresses with both sleeves set into the armholes, cuffs, hem band, neckband or hood and the kangaroo pocket; the dress skirt gathered onto the bodice; skirts with their waistband. Before, harem pants showed a floating, too narrow back waistband and hoodies had no sleeves.
+
 ### Added
 - README rewritten for prompting: example prompts, claude.ai zip install and update steps, and pictures for each feature (pattern, booklet, cutting layout, nested sizes, photo copy, doll clothes) in `docs/images/`; command line, options and tests moved to `docs/DEEP_DIVE.md`. New examples 5 (hoodie 140 with kangaroo pocket) and 6 (nested joggers 98/110/122); every example folder has its own README; `tools/make_examples.py images` rebuilds the README pictures and example READMEs.
 - **Pants options** (#39): `fake_fly` (J topstitch line on the left front leg with its own step; the step only says the stitching catches the crotch seam allowance when it really does), `back_pockets: 1|2` with `back_pocket_side` (a single pocket is cut once and its mark names the leg), `hem_finish: "elastic_casing"` (hem allowance 5 mm + elastic + 10 mm, 3 cm opening at the inseam, elastic length per leg in the notes and steps), `pocket_bag_fabric` (the inner pocket bag becomes its own "Lining" group in the cutting layout and fabric consumption).

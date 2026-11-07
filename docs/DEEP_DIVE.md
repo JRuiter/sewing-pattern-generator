@@ -19,8 +19,8 @@ want to run the generator directly from Python, see every option, or work on the
   - **A4 / US Letter** tiles with 10 mm overlap, glue areas, row/column labels, registration diamonds
     and an overview page
   - plus a 1:1 **SVG master**, PNG preview, cutting layout with fabric consumption, and an
-    **illustrated sewing booklet** (PDF): cover, parts list with letters, fabric, notions, machines and
-    tools, then numbered steps with one action each and a picture drawn from the real pieces (right
+    **illustrated sewing booklet** (PDF): cover with the finished garment from the front and the back, parts
+    at one scale with counts, material (fabric amounts, notions, machines and tools), basics, then numbered steps with one action each and a picture drawn from the real pieces (right
     side shaded, wrong side hatched, pins, stitch line, sewing direction, notches, cross-section
     details), the machine and stitch setting for every step, ×2 for steps done on both sides
   - **DXF** for cutting machines and pattern CAD (AAMA layer convention: cut line, seam line, fold,

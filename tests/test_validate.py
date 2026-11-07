@@ -981,7 +981,7 @@ def test_illustrated_instructions(tmp_path):
     pages = PdfReader(str(pdf)).pages
     text = " ".join(pg.extract_text() for pg in pages[:6])
     # booklet: cover, parts and tools, numbered one-action steps; then the reference pages
-    assert "HOODIE" in text and "Parts" in text and "Machines and tools" in text
+    assert "Hoodie" in text and "Parts" in text and "Material" in text and "Basics" in text
     text = " ".join(pg.extract_text() for pg in pages[:16])
     assert "Sew the shoulder seams" in text and "Set in the sleeves" in text
     n_steps = len(re.findall(r"^\d+\. ", md.split("## Sewing instructions")[1].split("## ")[0], re.M))
