@@ -9,6 +9,31 @@ All generated files (pattern labels, sewing instructions, reports) are in Englis
 in the language you write in, and the skill also triggers on German requests ("Schnittmuster
 erstellen", "Lieblingshose kopieren" …).
 
+## Example prompts
+
+Just describe what you want, in any language:
+
+- *"Harem pants for my daughter, size 122, sweat fabric, print on the 24" roll."*
+- *"A raglan T-shirt in size 140 as A4 pages to tape together."*
+- *"Hoodie with kangaroo pocket for me, chest 96 cm, hip 102 cm, height 168 cm."*
+- *"Here is a photo of my son's favourite joggers next to the reference card, make me a pattern from it."*
+- *"A dress for my daughter's 45 cm fabric doll."*
+- *"Schnittmuster für einen Tellerrock, Größe 128, auf A1."*
+
+## Install in claude.ai (2 minutes)
+
+1. Download the newest `sewing-pattern-generator-x.y.z.zip` from
+   [**Releases → Latest**](https://github.com/JRuiter/sewing-pattern-generator/releases/latest).
+   Don't unzip it.
+2. Open [claude.ai](https://claude.ai) in a **browser** (the mobile app can't upload skills; on a
+   phone, switch the browser to desktop view).
+3. Go to **Settings → Capabilities**, make sure *Code execution and file creation* is on, then
+   under **Skills** click **Upload skill** and pick the zip.
+4. Start a new chat and use one of the prompts above.
+
+**Updating:** in *Settings → Capabilities → Skills*, delete the old `sewing-pattern-generator` first,
+then upload the new zip as in step 3.
+
 ![Preview: harem pants size 122 on a 610 mm roll](examples/1_harem_pants_122_roll610/harem_pants_size122_roll610_preview.png)
 
 ## What it does
@@ -88,7 +113,7 @@ Sizes: children 86–176 (`122`), women 34–56 (`w38`), men 44–60 (`m52`), US
 
 ## Installation
 
-### As a Claude skill
+### As a Claude Code skill
 Clone (or download) this repository into your skills folder, e.g. for Claude Code:
 
 ```bash
@@ -96,8 +121,7 @@ git clone https://github.com/JRuiter/sewing-pattern-generator ~/.claude/skills/s
 pip install -r ~/.claude/skills/sewing-pattern-generator/requirements.txt
 ```
 
-For claude.ai / the Claude app, zip the repository folder and upload it under *Settings → Capabilities →
-Skills*. Then just ask, e.g. *"Harem pants for my daughter, size 122, sweat fabric, print on the 24" roll"*.
+For claude.ai, use the release zip as described in [Install in claude.ai](#install-in-claudeai-2-minutes).
 
 ### As a command-line tool
 Python ≥ 3.10:
