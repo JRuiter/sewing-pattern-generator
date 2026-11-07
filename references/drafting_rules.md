@@ -86,8 +86,8 @@ limited to 0.75–1.45).
 9. **Waistband:** elastic casing as a folded fabric strip, length = top edge of the pants
    (ungathered), cut on the fold (half length); elastic ≈ 0.9 × waist.
    Alternatives: rib (ratio see above), yoga waistband (60 mm × k), tunnel (turned down).
-10. **Pockets:** side pocket (side panel + pocket bag), slanted side pocket, back patch
-    pocket. Pocket opening at the front: 0.28 × front width, depth at the side seam
+10. **Pockets:** side pocket (`side`: slanted opening from the top edge to the side seam,
+    side panel + pocket bag; dropped for slim fit), back patch pocket (`back_patch`). Pocket opening at the front: 0.28 × front width, depth at the side seam
     0.62 × R (95–170 mm). **Cargo pocket** (`pockets: [cargo]`): patch pocket on the front
     thigh next to the side seam, top 12 % of the leg length + 4.5 cm × k below the crotch
     line, about 15 × 17.5 cm × k (shrunk until it fits inside the leg), box pleat 2 cm × k
