@@ -16,3 +16,6 @@ dist/
 .ruff_cache/
 .coverage
 coverage.xml
+# personal measurement profiles and exports (keep children's measurements out of the repo)
+/profiles/
+*.smis

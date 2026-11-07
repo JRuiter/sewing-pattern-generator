@@ -4,6 +4,9 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Changed
+- Privacy: `project.json` from photo mode B stores only the photo's file name, not its full local path; `profiles/` and `*.smis` measurement exports are git-ignored so personal measurements don't get committed by accident.
+
 ## [1.2.0] - 2026-11-07
 
 ### Added

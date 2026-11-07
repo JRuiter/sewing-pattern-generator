@@ -91,7 +91,7 @@ def run(image, garment="pants", out="project", tape=None, base_options=None, fit
                    size_estimate=res["size"],
                    flat_mm={k: v for k, v in flat_real.items() if not k.startswith("_")},
                    target_mm=targets,
-                   actual_mm=pat.finished, piece_graph=graph, source=str(image))
+                   actual_mm=pat.finished, piece_graph=graph, source=os.path.basename(str(image)))
     if doll:
         # options/params are at the virtual scale; generate.py scales the pattern back
         project.update(doll=True, doll_scale=S)
