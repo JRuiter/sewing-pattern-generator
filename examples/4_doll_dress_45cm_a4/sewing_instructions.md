@@ -76,14 +76,14 @@ Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvag
 
 ## Sewing instructions
 
-The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces, IKEA style: parts list, tools, then one action per step.
+The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces: parts list, tools, then one action per step.
 
 Seam allowance is included in the pattern (see table). 
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage.
-3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch.
-4. **Set up the machine**. Universal needle 80, polyester thread. Sew a test seam on a scrap first.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
+4. **Set up the machine**. Universal needle 80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
 5. **Sew the shoulder seams**. Front and back right sides together. (a straight stitch, then finish the edges) Do this twice.
    ![Step 5](steps/step_05.png)
 6. **Finish the shoulder seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.

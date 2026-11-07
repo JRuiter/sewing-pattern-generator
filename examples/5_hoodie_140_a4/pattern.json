@@ -1,0 +1,893 @@
+{
+  "garment": "hoodie",
+  "title": "Hoodie",
+  "size": "size 140",
+  "options": {
+    "fit": "wide",
+    "fabric": "sweat",
+    "stretch": null,
+    "sleeve_style": "set_in",
+    "sleeve_length": "long",
+    "neckline": "round",
+    "length": "normal",
+    "band_fabric": "rib",
+    "band_stretch": null,
+    "sleeve_cuffs": true,
+    "hem_band": true,
+    "sa": 10.0,
+    "hem_sa": 20.0,
+    "neck_band_h": null,
+    "chest_total": null,
+    "body_length": null,
+    "sleeve_len_total": null,
+    "sleeve_opening": null,
+    "neck_extra": 8.0,
+    "cuff_h": null,
+    "hem_band_h": null,
+    "bicep_total": null,
+    "hem_total": null,
+    "back_opening": false,
+    "opening_sa": null,
+    "neck_finish": "band",
+    "armhole_depth_max": null,
+    "sleeve_taper": 0.9,
+    "_F": {
+      "Ct": 807.3,
+      "q": 201.825,
+      "nw": 85.0,
+      "fnd": 108.0,
+      "bnd": 15.0,
+      "sx": 206.4507040073055,
+      "sy": -38.82779654524987,
+      "AD": 194.533,
+      "L": 522.0,
+      "be": 0.17,
+      "stretch": 25,
+      "knit": true,
+      "sh": 127.0
+    },
+    "_sinfo": {
+      "SW": 269.1,
+      "SL": 560.5492959926945,
+      "cuff_h": 30.0,
+      "cuff_len": 200.1,
+      "op": 285.8571428571429
+    },
+    "_hem_band_h": 45,
+    "_nb_h": 20,
+    "hood": true,
+    "kangaroo": true,
+    "hood_lining": false,
+    "front": "closed",
+    "zip_guard": false,
+    "units": "metric"
+  },
+  "measures_mm": {
+    "chest": 690.0,
+    "waist": 600.0,
+    "hip": 750.0,
+    "head": 535.0,
+    "neck": 310.0,
+    "inseam": 645.0,
+    "side_length": 840.0,
+    "arm": 560.0,
+    "back_length": 340.0,
+    "shoulder": 112.0,
+    "height": 1400.0,
+    "crotch_depth": 195.0,
+    "thigh": 420.0,
+    "knee": 300.0,
+    "ankle": 202.5,
+    "upper_arm": 207.0,
+    "wrist": 138.0
+  },
+  "finished_mm": {
+    "chest_circ": 807.3,
+    "hem_circ": 565.1,
+    "length": 522.0,
+    "sleeve_len": 560.5,
+    "sleeve_opening": 200.1,
+    "bicep_circ": 269.1,
+    "neckline": 511.2,
+    "hood_height": 335.3
+  },
+  "pieces": [
+    {
+      "key": "front",
+      "name": "Front",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "center",
+          "label": "Centre (fold)",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 369.0
+        },
+        {
+          "name": "hem",
+          "label": "Hem",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 201.8
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 282.5
+        },
+        {
+          "name": "armhole",
+          "label": "Armhole",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 199.6
+        },
+        {
+          "name": "shoulder",
+          "label": "Shoulder",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 127.5
+        },
+        {
+          "name": "neckline",
+          "label": "Neckline",
+          "sa": 7.0,
+          "fold": false,
+          "length_mm": 156.3
+        }
+      ]
+    },
+    {
+      "key": "back",
+      "name": "Back",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "center",
+          "label": "Centre (fold)",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 462.0
+        },
+        {
+          "name": "hem",
+          "label": "Hem",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 201.8
+        },
+        {
+          "name": "side",
+          "label": "Side seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 282.5
+        },
+        {
+          "name": "armhole",
+          "label": "Armhole",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 189.2
+        },
+        {
+          "name": "shoulder",
+          "label": "Shoulder",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 127.5
+        },
+        {
+          "name": "neckline",
+          "label": "Neckline",
+          "sa": 7.0,
+          "fold": false,
+          "length_mm": 99.3
+        }
+      ]
+    },
+    {
+      "key": "sleeve",
+      "name": "Sleeve",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "cap_back",
+          "label": "Sleeve cap back",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 196.0
+        },
+        {
+          "name": "seam_back",
+          "label": "Sleeve seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 402.9
+        },
+        {
+          "name": "hem",
+          "label": "Sleeve hem",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 285.9
+        },
+        {
+          "name": "seam_front",
+          "label": "Sleeve seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 402.9
+        },
+        {
+          "name": "cap_front",
+          "label": "Sleeve cap front",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 196.0
+        }
+      ]
+    },
+    {
+      "key": "sleeve_cuff",
+      "name": "Sleeve cuff",
+      "cut_count": 2,
+      "mirror": false,
+      "fabric": "Rib knit",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 200.1
+        },
+        {
+          "name": "right",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 60.0
+        },
+        {
+          "name": "top",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 200.1
+        },
+        {
+          "name": "left",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 60.0
+        }
+      ]
+    },
+    {
+      "key": "hem_band",
+      "name": "Hem band",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Rib knit",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 282.6
+        },
+        {
+          "name": "right",
+          "label": "Cross seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 90.0
+        },
+        {
+          "name": "top",
+          "label": "Seam edge",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 282.6
+        },
+        {
+          "name": "left",
+          "label": "Centre",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 90.0
+        }
+      ]
+    },
+    {
+      "key": "hood",
+      "name": "Hood",
+      "cut_count": 2,
+      "mirror": true,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "neck",
+          "label": "Neck seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 255.6
+        },
+        {
+          "name": "center",
+          "label": "Hood centre seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 473.9
+        },
+        {
+          "name": "front_edge",
+          "label": "Front edge (casing/facing)",
+          "sa": 25.0,
+          "fold": false,
+          "length_mm": 335.3
+        }
+      ]
+    },
+    {
+      "key": "kangaroo_pocket",
+      "name": "Kangaroo pocket",
+      "cut_count": 1,
+      "mirror": false,
+      "fabric": "Main fabric",
+      "edges": [
+        {
+          "name": "bottom",
+          "label": "Hem seam",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 125.1
+        },
+        {
+          "name": "side",
+          "label": "Side",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 57.2
+        },
+        {
+          "name": "opening",
+          "label": "Opening (hem it)",
+          "sa": 15.0,
+          "fold": false,
+          "length_mm": 76.7
+        },
+        {
+          "name": "top",
+          "label": "Top edge (press under)",
+          "sa": 10.0,
+          "fold": false,
+          "length_mm": 93.7
+        },
+        {
+          "name": "center",
+          "label": "Centre (fold)",
+          "sa": 0.0,
+          "fold": true,
+          "length_mm": 127.1
+        }
+      ]
+    }
+  ],
+  "construction": [
+    {
+      "name": "chest_width",
+      "value": 807.3,
+      "formula": "chest × (1 + 17 % ease)",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "neck_width_half",
+      "value": 85.0,
+      "formula": "neck / 5 + 1.5 cm",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "front_neck_depth",
+      "value": 108.0,
+      "formula": "neck_width_half + 1.5 cm",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "back_neck_depth",
+      "value": 15.0,
+      "formula": "fixed",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "shoulder_length",
+      "value": 127.0,
+      "formula": "shoulder + allowance for fit 'wide'",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "shoulder_slope",
+      "value": 17.0,
+      "formula": "fixed",
+      "unit": "°",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "armhole_depth",
+      "value": 194.533,
+      "formula": "18 % of chest_width + 2.5 cm + 3 %",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    },
+    {
+      "name": "body_length",
+      "value": 522.0,
+      "formula": "back length + 13 % of height",
+      "unit": "mm",
+      "overridden": false,
+      "computed": null
+    }
+  ],
+  "validation": [
+    {
+      "group": "Seam pairs",
+      "name": "Side seam front ↔ back",
+      "status": "OK",
+      "target": "28.2 cm",
+      "actual": "28.2 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Armhole ↔ sleeve cap (ease)",
+      "status": "OK",
+      "target": "ease 0–8 mm",
+      "actual": "38.9 cm ↔ 39.2 cm",
+      "delta": "+3.2 mm",
+      "note": "Sweat / French Terry: 0–8 mm"
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Shoulder seam front ↔ back",
+      "status": "OK",
+      "target": "12.8 cm",
+      "actual": "12.8 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Sleeve seam (front ↔ back)",
+      "status": "OK",
+      "target": "40.3 cm",
+      "actual": "40.3 cm",
+      "delta": "-0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Sleeve cuff ↔ sleeve hem (stretched)",
+      "status": "OK",
+      "target": "70–85 % of 28.6 cm",
+      "actual": "20.0 cm = 70 %",
+      "delta": "-85.8 mm",
+      "note": "rib band is stretched while sewing"
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Hem band ↔ hem (stretched)",
+      "status": "OK",
+      "target": "70–92 % of 80.7 cm",
+      "actual": "56.5 cm = 70 %",
+      "delta": "-242.2 mm",
+      "note": "rib band is stretched while sewing"
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Hood ↔ neckline (each side)",
+      "status": "OK",
+      "target": "25.6 cm",
+      "actual": "25.6 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Seam pairs",
+      "name": "Hood centre seam (left ↔ right)",
+      "status": "OK",
+      "target": "47.4 cm",
+      "actual": "47.4 cm",
+      "delta": "+0.0 mm",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Underarm: side seam ↔ armhole front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.3°",
+      "delta": "+0.3°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Underarm: side seam ↔ armhole back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.5°",
+      "delta": "+0.5°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Shoulder ↔ armhole (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "179.5°",
+      "delta": "-0.5°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Sleeve cap top (smooth)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "178.4°",
+      "delta": "-1.6°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Sleeve underarm ↔ cap front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.8°",
+      "delta": "+0.8°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Shoulder ↔ neckline (front + back)",
+      "status": "OK",
+      "target": "180°",
+      "actual": "180.3°",
+      "delta": "+0.3°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Neckline at centre front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.2°",
+      "delta": "+0.2°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Neckline at centre back",
+      "status": "OK",
+      "target": "90°",
+      "actual": "89.6°",
+      "delta": "-0.4°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem at centre front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hem ↔ side seam front",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Angles/transitions",
+      "name": "Hood: front edge ↔ neck seam",
+      "status": "OK",
+      "target": "90°",
+      "actual": "90.0°",
+      "delta": "+0.0°",
+      "note": ""
+    },
+    {
+      "group": "Measurements",
+      "name": "Chest circumference pattern = body + ease",
+      "status": "OK",
+      "target": "80.7 cm",
+      "actual": "80.7 cm",
+      "delta": "+0.0 %",
+      "note": "body 69.0 cm + +17 % ease"
+    },
+    {
+      "group": "Measurements",
+      "name": "Neckline (fabric edge) fits over the head",
+      "status": "OK",
+      "target": "≥ 53.5 cm",
+      "actual": "63.9 cm",
+      "delta": "+104.0 mm",
+      "note": "neckline incl. stretch ≥ head circumference"
+    },
+    {
+      "group": "Measurements",
+      "name": "Hand fits through the sleeve cuff",
+      "status": "OK",
+      "target": "≥ 21.4 cm",
+      "actual": "36.0 cm",
+      "delta": "+146.3 mm",
+      "note": "hand circumference ≈ 1.55 × wrist"
+    },
+    {
+      "group": "Measurements",
+      "name": "Sleeve length plausible",
+      "status": "OK",
+      "target": "50.4 cm – 70.0 cm",
+      "actual": "56.1 cm",
+      "delta": "+0.0 mm",
+      "note": "arm length 56.0 cm"
+    },
+    {
+      "group": "Measurements",
+      "name": "Body length plausible",
+      "status": "OK",
+      "target": "42.0 cm – 86.8 cm",
+      "actual": "52.2 cm",
+      "delta": "+0.0 mm",
+      "note": "from the neck point"
+    },
+    {
+      "group": "Measurements",
+      "name": "Hood tall enough",
+      "status": "OK",
+      "target": "≥ 29.4 cm",
+      "actual": "33.5 cm",
+      "delta": "+41.0 mm",
+      "note": "hood height ≥ 0.55 × head circumference"
+    },
+    {
+      "group": "Geometry",
+      "name": "Front: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included; Neckline: 0.7 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Front: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Back: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included; Neckline: 0.7 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Back: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Sleeve: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Sleeve: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Sleeve cuff: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Sleeve cuff: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2",
+      "delta": "",
+      "note": "Rib knit"
+    },
+    {
+      "group": "Geometry",
+      "name": "Hem band: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included"
+    },
+    {
+      "group": "Labels",
+      "name": "Hem band: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Rib knit"
+    },
+    {
+      "group": "Geometry",
+      "name": "Hood: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included; Front edge (casing/facing): 2.5 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Hood: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 2 (mirrored pair)",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Kangaroo pocket: outline & seam allowance",
+      "status": "OK",
+      "target": "closed, SA present",
+      "actual": "ok",
+      "delta": "",
+      "note": "seam allowance 1.0 cm included; Opening (hem it): 1.5 cm"
+    },
+    {
+      "group": "Labels",
+      "name": "Kangaroo pocket: grainline & cutting",
+      "status": "OK",
+      "target": "present",
+      "actual": "cut 1 on fold",
+      "delta": "",
+      "note": "Main fabric"
+    },
+    {
+      "group": "Geometry",
+      "name": "Hood: turned allowance lies flat",
+      "status": "OK",
+      "target": "≤ 0.5 mm",
+      "actual": "0.0 mm",
+      "delta": "",
+      "note": "Front edge (casing/facing): corners mirrored at the fold line"
+    },
+    {
+      "group": "Geometry",
+      "name": "Front: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.2° off 90°",
+      "delta": "",
+      "note": "Centre (fold)"
+    },
+    {
+      "group": "Geometry",
+      "name": "Back: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.4° off 90°",
+      "delta": "",
+      "note": "Centre (fold)"
+    },
+    {
+      "group": "Geometry",
+      "name": "Hem band: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.0° off 90°",
+      "delta": "",
+      "note": "Centre"
+    },
+    {
+      "group": "Geometry",
+      "name": "Kangaroo pocket: cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.0° off 90°",
+      "delta": "",
+      "note": "Centre (fold)"
+    },
+    {
+      "group": "Labels",
+      "name": "Front: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "1 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Back: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "2 notch mark(s)",
+      "delta": "",
+      "note": ""
+    },
+    {
+      "group": "Labels",
+      "name": "Sleeve: notches",
+      "status": "OK",
+      "target": "on the cutting line",
+      "actual": "4 notch mark(s)",
+      "delta": "",
+      "note": "1 at corners"
+    }
+  ],
+  "fabric_mm": {
+    "Main fabric": {
+      "width": 1500.0,
+      "need": 1150.0,
+      "layout": "single"
+    },
+    "Rib knit": {
+      "width": 700.0,
+      "need": 300.0,
+      "layout": "single"
+    }
+  }
+}

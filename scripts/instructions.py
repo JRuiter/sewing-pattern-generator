@@ -190,7 +190,7 @@ def all_steps(pattern) -> list[str]:
 
 
 def instructions_pdf(pattern, md: str, path: str, plans, steps, images=None) -> str:
-    """sewing_instructions.pdf: the IKEA-style booklet, then the reference pages
+    """sewing_instructions.pdf: the illustrated booklet, then the reference pages
     (printing, measurements, pieces, fabric, validation report) typeset from the Markdown."""
     import tempfile
 
@@ -266,7 +266,7 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
         lines += ["## " + T("Your machines"), "", mach, ""]
     lines += ["## " + T("Sewing instructions"), "",
               T("The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your "
-                "pieces, IKEA style: parts list, tools, then one action per step."), "",
+                "pieces: parts list, tools, then one action per step."), "",
               (T("Seam allowance is included in the pattern (see table).") + " " if A.has_allowance(pattern) else
                T("**The pattern has NO seam allowance.** Add the allowances from the table when you cut.") + " ")
               + (T("Use a jersey/stretch needle for jersey and sweat.") if knit else ""), ""]

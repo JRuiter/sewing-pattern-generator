@@ -178,9 +178,9 @@ TABLE: dict[str, str] = {
         "daraus erzeugst (auch in einer anderen Größe).",
     "Pattern pieces": "Schnittteile", "Fabric needed": "Stoffverbrauch", "Your machines": "Deine Maschinen",
     "Validation report": "Prüfbericht",
-    "The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces, IKEA "
-    "style: parts list, tools, then one action per step.":
-        "Die gedruckte Anleitung (`naehanleitung.pdf`) zeigt jeden Schritt als Bild deiner Teile, im IKEA-Stil: "
+    "The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces: "
+    "parts list, tools, then one action per step.":
+        "Die gedruckte Anleitung (`naehanleitung.pdf`) zeigt jeden Schritt als Bild deiner Teile: "
         "Teileliste, Werkzeug, dann eine Handlung pro Schritt.",
     "Seam allowance is included in the pattern (see table).": "Die Nahtzugabe ist im Schnitt enthalten (siehe Tabelle).",
     "**The pattern has NO seam allowance.** Add the allowances from the table when you cut.":

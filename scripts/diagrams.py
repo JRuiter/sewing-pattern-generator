@@ -1,4 +1,4 @@
-"""Step diagrams for the IKEA-style sewing instructions.
+"""Step diagrams for the illustrated sewing instructions.
 
 Every :class:`steps.Step` is drawn from the real pattern geometry, so the pictures are
 right for every size and option:
