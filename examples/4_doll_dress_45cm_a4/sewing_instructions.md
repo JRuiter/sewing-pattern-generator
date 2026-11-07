@@ -76,26 +76,52 @@ Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvag
 
 ## Sewing instructions
 
+The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces, IKEA style: parts list, tools, then one action per step.
+
 Seam allowance is included in the pattern (see table). 
 
-1. **Prepare:** pre-wash the fabric, cut out the pieces, snip the notches 3–4 mm deep.
-2. **Shoulders:** place front and back right sides together and sew the shoulder seams with a straight stitch, then finish the edges.
-   ![Step 2](steps/step_02.png)
-3. **Back opening:** finish both centre back edges, press the opening allowance (1.5 cm) to the inside and stitch it down. The two edges overlap at the centre back: sew a strip of narrow Velcro (or two or three snaps) onto the overlap, the soft side on the left back, the hook side on the right back. The garment opens completely, which makes dressing easy (dolls, small children).
-4. **Neck binding:** fold the bias strip lengthwise wrong sides together and press. Pin it right sides together to the neckline (raw edges together), letting each end stick out past the opening edge by the allowance, and sew. Fold the ends in, turn the binding to the inside so it covers the seam allowance, and stitch it down close to the fold.
-5. **Set in the sleeves:** pin the centre of the sleeve cap (top notch) to the shoulder seam, match the front/back notches and sew the sleeve in flat (ease the cap in slightly if needed).
+1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage.
+3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch.
+4. **Set up the machine**. Universal needle 80, polyester thread. Sew a test seam on a scrap first.
+5. **Sew the shoulder seams**. Front and back right sides together. (a straight stitch, then finish the edges) Do this twice.
    ![Step 5](steps/step_05.png)
-6. **Side and sleeve seams:** sew in one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly.
+6. **Finish the shoulder seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
    ![Step 6](steps/step_06.png)
-7. **Sleeve hem:** press the hem allowance under and sew with a straight stitch.
-8. **Skirt centre back seam:** sew the skirt back pieces right sides together from the hem up to the notch; above the notch the seam stays open (it continues the back opening).
-9. **Skirt side seams:** sew skirt front and back right sides together with a straight stitch, then finish the edges.
-   ![Step 9](steps/step_09.png)
-10. **Gather the skirt:** run two gathering threads along the top edge and pull them up to the bodice waist (gather ratio 1.6); spread the gathers evenly.
-11. **Waist seam:** pin the skirt right sides together to the bodice (side seams meet, centre front/back meet) and sew with a straight stitch, then finish the edges.
+7. **Finish the opening edges**. Both centre back edges. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
+   ![Step 7](steps/step_07.png)
+8. **Turn in the opening edges**. Press 1.5 cm to the inside and stitch it down. (sewing machine: straight stitch 3 mm) Do this twice.
+   ![Step 8](steps/step_08.png)
+9. **Sew on the Velcro**. The edges overlap at the centre back: soft side on the left back, hook side on the right back (or 2–3 snaps). (sewing machine: straight stitch 3 mm) Tip: The garment opens completely: easy dressing.
+10. **Fold the binding in half**. Lengthwise, wrong sides together; press.
+   ![Step 10](steps/step_10.png)
+11. **Sew the neck binding on**. Raw edges to the neckline, right sides together; let each end stick out past the opening edge by the allowance. (a straight stitch, then finish the edges)
    ![Step 11](steps/step_11.png)
-12. **Hem:** press the hem allowance under twice and stitch.
-13. Done! Press the seams.
+12. **Stitch the binding down**. Fold the ends in, turn the binding to the inside over the allowance and stitch close to the fold. (sewing machine: straight stitch 3 mm)
+   ![Step 12](steps/step_12.png)
+13. **Set in the sleeves**. Top notch of the sleeve cap on the shoulder seam, front/back notches meet; sew the sleeve in flat. (a straight stitch, then finish the edges) Do this twice. Tip: Sleeve on the bottom: the machine eases the cap in.
+   ![Step 13](steps/step_13.png)
+14. **Finish the armhole seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
+   ![Step 14](steps/step_14.png)
+15. **Sew side and sleeve seams**. In one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly. (a straight stitch, then finish the edges) Do this twice.
+   ![Step 15](steps/step_15.png)
+16. **Finish the side seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
+   ![Step 16](steps/step_16.png)
+17. **Hem the sleeves**. Press 10 mm to the inside. (a straight stitch) Do this twice.
+   ![Step 17](steps/step_17.png)
+18. **Sew the skirt centre back seam**. From the hem up to the notch; above the notch it stays open (continues the back opening). (a straight stitch, then finish the edges)
+   ![Step 18](steps/step_18.png)
+19. **Sew the skirt side seams**. Skirt front and back right sides together. (a straight stitch, then finish the edges) Do this twice.
+   ![Step 19](steps/step_19.png)
+20. **Finish the skirt side seams**. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
+   ![Step 20](steps/step_20.png)
+21. **Gather the skirt top edge**. Two rows of long stitches; pull them up to the bodice waist (gather ratio 1.6), spread the gathers evenly. (sewing machine: 2 rows of the longest straight stitch, loose ends)
+   ![Step 21](steps/step_21.png)
+22. **Sew skirt and bodice together**. Skirt right sides together to the bodice: side seams meet, centre front/back meet. (a straight stitch, then finish the edges)
+   ![Step 22](steps/step_22.png)
+23. **Sew the hem**. Press the allowance under twice and stitch. (a straight stitch)
+   ![Step 23](steps/step_23.png)
+24. **Done!** Press all seams.
 
 ## Validation report
 

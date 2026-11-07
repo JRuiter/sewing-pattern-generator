@@ -52,7 +52,8 @@ consumption and sewing instructions – works on that `Pattern` and needs no cha
 | `DEFAULTS: dict` | yes | default options; user options override them |
 | `draft(measures: dict, options: dict \| None) -> Pattern` | yes | builds the pattern; `measures` are body measurements in mm (see `measurements.py` for the keys: `height`, `chest`, `waist`, `hip`, `head`, `inseam`, …) |
 | `FINISHED_LABELS: dict` | recommended | `key → (label, kind)`: display names for the keys of `pattern.finished` in the finished-measure table and the photo-mode-B deviation report. `kind` (`"length"` or `"width"`) documents the key; the tolerances themselves (±1 cm lengths, ±2 % widths) come from `WIDTH_KEYS` in `scripts/reverse/fit.py` |
-| `sewing_steps(pattern) -> list[str]` | recommended | numbered sewing steps (Markdown) appended to the generic cutting instructions |
+| `assembly(pattern) -> list[steps.Step]` | recommended | the construction as one-action steps (builders in `scripts/steps.py`: `seam`, `ring`, `fold_band`, `quarter`, `attach_band`, `hem`, `press`, `topstitch`, `finish`, `gather`, `place`, `icon`, `done`); they drive the booklet pictures and the machine choice. Every seam of `pattern.seams` must be sewn in some step (tested) |
+| `sewing_steps(pattern) -> list[str]` | recommended | the text view: `steps.as_texts(assembly(pat), pat.options)` |
 | `finished_measures(pattern) -> dict` | optional | needed only if the module supports reverse engineering in photo mode B |
 
 Finally register the module in `scripts/garments/__init__.py` (`GARMENTS` maps the module name to a
@@ -148,9 +149,17 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     return pat
 
 
+def assembly(pat):
+    import steps as ST
+    return [ST.seam("Close the band into a ring", ["Ring seam"], "Right sides together, short edges."),
+            ST.fold_band("Fold the band in half", "band", "Lengthwise, wrong sides together."),
+            ST.finish("Finish the raw edges", [("band", "bottom")], "Both layers together."),
+            ST.done()]
+
+
 def sewing_steps(pat):
-    return ["**Ring:** fold right sides together crosswise and sew the short edges.",
-            "**Fold:** fold lengthwise, wrong sides together, and finish the raw edges together."]
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)
 ```
 
 Then: `python scripts/generate.py --garment headband --size 122 --format a4 --out out/headband`.

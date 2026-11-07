@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import ease as E
 import geometry as G
-import machines as MC
 from pattern import Edge, Mark, Pattern, Piece, rect_piece
 
 DEFAULTS = dict(fabric="jersey", stretch=None, brim=True, slouch=False, sa=7.0, hem_sa=20.0, circ_total=None)
@@ -56,13 +55,25 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     return pat
 
 
-def sewing_steps(pat):
-    s = ["**Beanie:** place both pieces right sides together and sew the side and crown seam in one go "
-         "(" + ("overlocker or zigzag" if MC.of(pat.options) is None
-                                        else MC.seam_phrase(pat.options, True)) + ")."]
-    if pat.options.get("brim"):
-        s.append("**Brim:** sew the rib into a ring, fold it lengthwise and sew it to the beanie edge while stretching.")
+def assembly(pat):
+    """The construction as one-action steps (see steps.py)."""
+    import steps as ST
+    out = [ST.seam("Sew side and crown seams", ["Side seams", "Crown seam"],
+                   "Both pieces right sides together; in one go.", section="Beanie")]
+    if pat.options.get("brim") and pat.has("brim"):
+        out += [ST.ring("Close the brim into a ring", "brim", "Right sides together across the short ends.",
+                        section="Brim"),
+                ST.fold_band("Fold the brim in half", "brim", "Lengthwise, wrong sides together.", section="Brim"),
+                ST.attach_band("Sew the brim on", "brim", ["Brim"], "beanie edge",
+                               "Brim seam at the back seam; quarter both with pins.", section="Brim")]
     else:
-        s.append("**Hem:** press 2 cm under and sew " + MC.hem_phrase(pat.options, True) + ".")
-    s.append("Turn right side out. Done!")
-    return s
+        hs = pat.piece("beanie").edge("bottom").sa or 20.0
+        out.append(ST.hem("Sew the hem", [("beanie", "bottom")], hs, f"Press {ST.cm(hs)} under.", repeat=2,
+                          section="Hem"))
+    out += [ST.icon("Turn right side out", "turn", section="Finish"), ST.done("")]
+    return out
+
+
+def sewing_steps(pat):
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)

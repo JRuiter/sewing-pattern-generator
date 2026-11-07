@@ -171,46 +171,72 @@ def finished_measures(pat):
     return T.finished_measures(pat)
 
 
-def sewing_steps(pat):
+def assembly(pat):
+    """The construction as one-action steps (see steps.py)."""
+    import steps as ST
     o = pat.options
-    steps = []
     zipped = o.get("front") == "zip"
-    if o.get("kangaroo") and zipped:
-        steps.append("**Front pockets:** press the openings under by 1.5 cm and topstitch, press the top edge "
-                     "under by 1 cm. Place each pocket on its front at the marking, front edge on the centre "
-                     "front edge, and stitch the top edge and side; bottom and front edge are caught in the "
-                     "hem band and zip seams.")
-    elif o.get("kangaroo"):
-        steps.append("**Kangaroo pocket:** press the openings under by 1.5 cm and topstitch, press the top edge "
-                     "under by 1 cm. Place the pocket on the front at the marking and stitch the top edge and sides; "
-                     "the bottom edge is caught later with the hem band.")
-    base = T.sewing_steps(pat)
-    if o.get("hood"):
-        base = [s for s in base if not s.startswith("**Neckband")]
-        hood = ["**Hood:** place the hood pieces right sides together and sew the centre seam. Press the front "
-                "edge to the inside along the fold line and topstitch (it can take a drawstring)" +
-                ("; for a lined hood, sew the lining the same way and join it to the hood right sides together "
-                 "along the front edge, then turn" if o.get("hood_lining") else "") + ".",
-                "**Attach the hood:** pin the hood right sides together to the neckline (centre seam at centre "
-                "back, front edges meet at centre front, overlap by 1 cm if needed) and sew. Finish the seam "
-                "allowance with jersey binding."]
-        base = base[:1] + hood + base[1:]
+    hood = bool(o.get("hood")) and pat.has("hood")
+    out: list = []
+    if o.get("kangaroo") and pat.has("kangaroo_pocket"):
+        sec = "Pocket"
+        rep = 2 if zipped else 1
+        out += [
+            ST.hem("Hem the pocket openings", [("kangaroo_pocket", "opening")], 15.0,
+                   "Press 1.5 cm under and topstitch.", stitch="topstitch", repeat=rep, section=sec),
+            ST.press("Press the top edge under", [("kangaroo_pocket", "top")], "1 cm to the wrong side.",
+                     amount=10.0, repeat=rep, section=sec),
+            ST.place("Stitch the pocket on", "kangaroo_pocket", "front", "Kangaroo pocket",
+                     ("Front edge on the centre front edge; stitch top edge and side. Bottom and front edge are "
+                      "caught in the hem band and zip seams.") if zipped else
+                     "On the marking; stitch top edge and sides. The bottom edge is caught by the hem band.",
+                     repeat=rep, section=sec),
+        ]
+    base = T.assembly(pat, neck=not hood, open_bands=zipped, done=False)
+    if hood:
+        sec = "Hood"
+        lined = bool(o.get("hood_lining"))
+        hood_steps = [ST.seam("Sew the hood centre seam", ["Hood centre seam"],
+                              "Hood pieces right sides together.", repeat=2 if lined else 1, section=sec)]
+        if lined:
+            hood_steps += [
+                ST.Step("Join hood and lining", "Right sides together along the front edge; sew, then turn "
+                        "the lining inside.", "edge", edges=[("hood", "front_edge")], stitch="seam", section=sec),
+                ST.icon("Turn the hood", "turn", "Lining inside, press the front edge.", section=sec),
+            ]
+        else:
+            fe = pat.piece("hood").edge("front_edge").sa
+            hood_steps.append(ST.hem("Hem the hood front edge", [("hood", "front_edge")], fe,
+                                     "Press to the inside along the fold line and topstitch (room for a "
+                                     "drawstring).", stitch="topstitch", section=sec))
+        hood_steps += [
+            ST.seam("Sew the hood on", ["Hood ↔"],
+                    "Hood right sides together to the neckline: centre seam at centre back, " +
+                    ("front edges end exactly at the centre front edges." if zipped else
+                     "front edges meet at centre front (overlap 1 cm if needed)."), section=sec),
+            ST.finish("Finish the neck seam", [("front", "neckline"), ("back", "neckline")],
+                      "Cover the seam allowance with jersey binding or finish it.", section=sec),
+        ]
+        i = next((k for k, s in enumerate(base) if s.section == "Sleeves"), 1)
+        base = base[:i] + hood_steps + base[i:]
+    out += base
     if zipped:
-        def open_band(x):
-            if x.startswith("**Hem band"):
-                return x.replace("sew into a ring, fold,", "leave the ends open, fold lengthwise,")
-            if x.startswith("**Neckband"):
-                return x.replace("sew it into a ring across the short ends and fold it", "fold it")
-            if x.startswith("**Attach the hood"):
-                return x.replace("front edges meet at centre front, overlap by 1 cm if needed",
-                                 "front edges end exactly at the centre front edges")
-            return x
-        base = [open_band(x) for x in base]
-        zip_step = (f"**Zip:** separate the {o['_zip_len'] / 10:.0f} cm zip. Pin each half right sides together "
-                    "to a centre front edge, teeth towards the body, top stop just below the neck seam and "
-                    "the bottom end flush with the hem band edge, and sew with a zipper foot. "
-                    + ("Fold the zip guard lengthwise, lay it on the inside of the left front over the zip "
-                       "tape and catch it in the same seam. " if o.get("zip_guard") else "")
-                    + "Press the seam allowances away from the zip and topstitch 7 mm from the edge.")
-        base = base[:-1] + [zip_step] + base[-1:]
-    return steps + base
+        zl = o.get("_zip_len", 0) / 10
+        out += [
+            ST.Step("Pin the zip", f"Separate the {zl:.0f} cm zip; each half right sides together on a centre "
+                    "front edge, teeth towards the body, top stop just below the neck seam, bottom flush with "
+                    "the hem band.", "edge", edges=[("front", "center")], section="Zip", repeat=2),
+            ST.Step("Sew the zip in", "With the zipper foot." + (
+                " Lay the folded zip guard on the inside of the left front over the zip tape and catch it in "
+                "the same seam." if o.get("zip_guard") and pat.has("zip_guard") else ""),
+                "seam", seams=["Zip"], stitch="zip", section="Zip"),
+            ST.topstitch("Topstitch beside the zip", [("front", "center")], 7.0,
+                         "Press the allowances away from the zip.", repeat=2, section="Zip"),
+        ]
+    out.append(ST.done())
+    return out
+
+
+def sewing_steps(pat):
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)

@@ -184,7 +184,10 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 `projector` / `projector_dark` (one page 1:1 for projector sewing, 10 cm calibration grid,
 thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
-instructions (MD + PDF, with a diagram per seam step in `steps/`), `pattern.json`, `validation_report.md`.
+instructions (PDF: IKEA-style booklet with cover, parts list, machines and tools, then one action per
+step, each drawn from the real pieces; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
+`validation_report.md`. The steps follow the machines the user owns (spec option `machines`, e.g.
+`["sewing", "overlocker", "coverstitch"]`): overlocker seams, coverstitch hems, otherwise zigzag/twin needle.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of
 folded selvage to selvage and single layer; see `references/print_specs.md`).
 
@@ -246,8 +249,9 @@ present. Fix anything odd or tell the user openly.
 - `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
 - `scripts/doll.py`: doll clothes mode (doll measurements, virtual drafting scale, doll defaults)
 - `scripts/validate.py`: sewability checks
-- `scripts/layout.py`, `render.py`, `instructions.py`, `diagrams.py`: layout, PDF/SVG/PNG, instructions
-  and step diagrams (step → seam mapping in `diagrams.STEP_SEAMS`)
+- `scripts/layout.py`, `render.py`, `instructions.py`: layout, PDF/SVG/PNG, instructions
+- `scripts/steps.py`, `diagrams.py`, `booklet.py`: one-action sewing steps (garment `assembly()`), the
+  machine/stitch choice per step, step diagrams from the real pieces, the IKEA-style booklet PDF
 - `scripts/photo_analyze.py`, `photo_measure.py`, `flatlay.py`, `reverse/`: photo modes A and B
 - `scripts/refcard.py`: writes `assets/reference-card.pdf`; `photo_synth.py`: test photos
 - `references/`: drafting rules, size tables, print specs, photo guide

@@ -19,7 +19,6 @@ import numpy as np
 
 import ease as E
 import geometry as G
-import machines as MC
 from pattern import Edge, Notch, Pattern, Piece
 
 from . import skirt as S
@@ -244,35 +243,65 @@ def finished_measures(pat):
     return pat.finished
 
 
-def sewing_steps(pat):
+def assembly(pat):
+    """The construction as one-action steps (see steps.py)."""
+    import steps as ST
     o = pat.options
-    base = [s for s in T.sewing_steps(pat) if not s.startswith(("**Hem:", "**Hem band", "Done"))]
-    if o.get("style") == "shirt_dress":
-        if o.get("back_opening"):
-            base.insert(0, "**Centre back seam:** sew the back pieces right sides together from the hem up to the "
-                           "notch; above the notch the seam stays open (back opening).")
-        return base + ["**Hem:** press the hem allowance under (curved hem: ease in the fullness with steam) "
-                       "and sew " + MC.hem_phrase(o, E.fabric_info(o["fabric"])[2]) + ".", "Done! Press the seams."]
     knit = E.fabric_info(o["fabric"])[2]
-    st = MC.seam_phrase(o, knit)
-    steps = list(base)
+    if o.get("style") == "shirt_dress":
+        out = []
+        if o.get("back_opening"):
+            out.append(ST.seam("Sew the centre back seam", ["Centre back seam"],
+                              "Back pieces right sides together from the hem up to the notch; above the notch "
+                              "the seam stays open (back opening).", section="Back"))
+        out += T.assembly(pat, hem=False, done=False)
+        hs = pat.piece("front").edge("hem").sa
+        out += [ST.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
+                      f"Press {ST.cm(hs)} to the inside; ease a curved hem in with steam.", section="Hem"),
+                ST.done()]
+        return out
+    out = T.assembly(pat, hem=False, done=False)
+    sec = "Skirt"
     if o.get("back_opening"):
-        steps.append("**Skirt centre back seam:** sew the skirt back pieces right sides together from the hem "
-                     "up to the notch; above the notch the seam stays open (it continues the back opening).")
-    if o.get("pockets"):
-        steps.append("**In-seam pockets:** sew a pocket bag to each skirt side seam between the notches "
-                     "(right sides together, 7 mm from the edge), press the bags outwards.")
-    steps.append(f"**Skirt side seams:** sew skirt front and back right sides together {st}"
-                 + (", pivoting around the pocket bags" if o.get("pockets") else "") + ".")
+        out.append(ST.seam("Sew the skirt centre back seam", ["Skirt centre back seam"],
+                          "From the hem up to the notch; above the notch it stays open (continues the back "
+                          "opening).", section=sec))
+    if o.get("pockets") and pat.has("pocket_bag"):
+        out += [
+            ST.Step("Sew on the pocket bags", "One bag right sides together on each skirt side seam between the "
+                   "notches, 7 mm from the edge; press the bags outwards.", "edge",
+                   edges=[("pocket_bag", "side")], stitch="seam", repeat=4, section=sec),
+        ]
+    out.append(ST.seam("Sew the skirt side seams", ["Skirt side seam"],
+                      "Skirt front and back right sides together" +
+                      (", pivoting around the pocket bags." if o.get("pockets") else "."), repeat=2, section=sec))
+    if ST.needs_finish(o, knit):
+        out.append(ST.finish("Finish the skirt side seams", [("skirt_front", "side"), ("skirt_back", "side")],
+                            repeat=2, section=sec))
     if o.get("skirt") == "gathered":
-        steps.append(f"**Gather the skirt:** run two gathering threads along the top edge and pull them up to "
-                     f"the bodice waist (gather ratio {o.get('gather', 1.6):g}); spread the gathers evenly.")
-    steps.append("**Waist seam:** pin the skirt right sides together to the bodice (side seams meet, centre "
-                 f"front/back meet) and sew {st}.")
+        out.append(ST.gather("Gather the skirt top edge", [("skirt_front", "waistband")],
+                            f"Two rows of long stitches; pull them up to the bodice waist (gather ratio "
+                            f"{o.get('gather', 1.6):g}), spread the gathers evenly.", section=sec))
+    out.append(ST.seam("Sew skirt and bodice together", ["Waist seam"],
+                      "Skirt right sides together to the bodice: side seams meet, centre front/back meet.",
+                      section="Waist"))
     if o.get("waist_elastic"):
-        steps.append(f"**Elastic:** sew the elastic ({o['_elastic'] / 10:.0f} cm, joined into a ring) to the "
-                     "waist seam allowance while stretching it evenly, then press the seam up.")
-    steps += ["**Hem:** press the hem allowance under twice and stitch." if o.get("skirt") != "circle" else
-              "**Hem:** let the dress hang for 24 h, level the hem, then sew a narrow hem.",
-              "Done! Press the seams."]
-    return steps
+        out.append(ST.icon("Sew in the elastic", "elastic",
+                          f"Elastic {o.get('_elastic', 0) / 10:.0f} cm, joined into a ring, onto the waist seam "
+                          "allowance, stretching it evenly; press the seam up.", stitch="elastic", section="Waist"))
+    hs = pat.piece("skirt_front").edge("hem").sa
+    if o.get("skirt") == "circle":
+        out += [ST.icon("Let the dress hang for 24 h", "level", "Then level the hem: the bias stretches.",
+                       section="Hem"),
+                ST.hem("Sew a narrow hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs / 2,
+                      f"Press under twice by {ST.cm(hs / 2)}.", section="Hem")]
+    else:
+        out.append(ST.hem("Sew the hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs,
+                         "Press the allowance under twice and stitch.", section="Hem"))
+    out.append(ST.done())
+    return out
+
+
+def sewing_steps(pat):
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)

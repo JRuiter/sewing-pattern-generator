@@ -78,23 +78,42 @@ Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvag
 
 ## Sewing instructions
 
+The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces, IKEA style: parts list, tools, then one action per step.
+
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
-1. **Prepare:** pre-wash the fabric, cut out the pieces, snip the notches 3–4 mm deep.
-2. **Side seams:** place front and back legs right sides together (notches: single = front, double = back) and sew the side seams with an overlocker or a narrow zigzag/stretch stitch.
-   ![Step 2](steps/step_02.png)
-3. **Inseams:** sew each inseam; the notches on the inseam meet.
-   ![Step 3](steps/step_03.png)
-4. **Crotch seam:** turn one leg right side out and slip it into the other (wrong side out) so the legs lie right sides together. Sew the crotch seam in one go from the front to the back top edge; the inseams meet exactly.
-   ![Step 4](steps/step_04.png)
-5. **Waistband:** fold the waistband strip right sides together into a ring and sew the cross seam (centre back), leaving 3 cm open for the elastic. Fold lengthwise wrong sides together along the fold line.
-6. Divide waistband and pants top edge into quarters and mark them (centre front/back, sides). Pin the waistband right sides together to the top edge (opening at the back, inside) and sew.
+1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage.
+3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch.
+4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first.
+5. **Sew the side seams**. Front and back leg right sides together; single notches = front, double = back. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+   ![Step 5](steps/step_05.png)
+6. **Sew the inseams**. The notches on the inseam meet. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
    ![Step 6](steps/step_06.png)
-7. Thread the elastic, overlap the ends by 2 cm and sew them together, close the opening. Spread the gathers evenly and secure the elastic in the side seams by stitching in the ditch.
-8. **Leg cuffs:** sew each cuff into a ring right sides together, then fold it lengthwise wrong sides together. Divide cuff and leg opening into quarters and mark them.
-9. Slip the cuff over the right-side-out leg, put its seam at the inseam and sew it on while stretching. Press the seam allowance towards the pants.
+7. **Put one leg inside the other**. Turn one leg right side out and slip it into the other (wrong side out): the legs lie right sides together.
+8. **Sew the crotch seam**. In one go from the front to the back top edge; the inseams meet exactly. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength.
+   ![Step 8](steps/step_08.png)
+9. **Close the waistband into a ring**. Right sides together across the short ends (centre back); leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 9](steps/step_09.png)
-10. Done! Press all seams (with sweat: steam, do not press down hard).
+10. **Fold the waistband in half**. Lengthwise, wrong sides together, along the fold line.
+   ![Step 10](steps/step_10.png)
+11. **Mark quarters**. On waistband and pants top edge: centre front, centre back, sides.
+   ![Step 11](steps/step_11.png)
+12. **Sew the waistband on**. Raw edges together, opening at the back on the inside; quarter marks meet. (an overlocker or a narrow zigzag/stretch stitch)
+   ![Step 12](steps/step_12.png)
+13. **Thread the elastic**. With a safety pin through the opening; overlap the ends by 2 cm and sew them together. (sewing machine: wide zigzag 4 × 2.5 mm)
+14. **Close the opening**. Spread the gathers evenly, close the opening and stitch in the ditch at the side seams so the elastic cannot twist. (sewing machine: twin needle 4 mm, stitch 3 mm)
+15. **Close the cuffs into rings**. Right sides together across the short ends. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+   ![Step 15](steps/step_15.png)
+16. **Fold the cuffs in half**. Lengthwise, wrong sides together. Do this twice.
+   ![Step 16](steps/step_16.png)
+17. **Mark quarters**. On cuff and leg opening. Do this twice.
+   ![Step 17](steps/step_17.png)
+18. **Sew the cuffs on**. Slip the cuff over the right-side-out leg, cuff seam at the inseam. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+   ![Step 18](steps/step_18.png)
+19. **Press the allowance up**. Seam allowance towards the pants. Do this twice.
+   ![Step 19](steps/step_19.png)
+20. **Done!** Press all seams with steam; do not press down hard on sweat.
 
 ## Validation report
 

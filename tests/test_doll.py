@@ -91,7 +91,7 @@ def test_back_opening_instead_of_a_huge_neckline():
     # the neckline was not enlarged to the doll's big head
     assert pat.finished["neckline"] < 0.8 * pat.measures["head"]
     steps = " ".join(get("tshirt_basic").sewing_steps(pat))
-    assert "Velcro" in steps and "Neck binding" in steps
+    assert "Velcro" in steps and "neck binding" in steps
 
 
 def test_dress_skirt_back_seam_below_the_opening():

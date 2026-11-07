@@ -29,8 +29,21 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     return pat
 
 
+def assembly(pat):
+    """The construction as one-action steps (see steps.py)."""
+    import steps as ST
+    return [
+        ST.seam("Sew the long seam", ["Long edges"], "Fold lengthwise right sides together; sew into a tube.",
+                section="Loop"),
+        ST.icon("Turn the tube", "turn", "Right side out.", section="Loop"),
+        ST.seam("Sew the cross seam", ["Cross seam"], "Slip one end into the other (right sides together); "
+                "sew around, leaving 5 cm open.", section="Loop"),
+        ST.icon("Close the opening by hand", "hand", "Turn and close with a ladder stitch.", stitch="hand",
+                section="Loop"),
+        ST.done(""),
+    ]
+
+
 def sewing_steps(pat):
-    return ["**Long seam:** fold the rectangle lengthwise right sides together and sew the long edges into a tube.",
-            "**Turn:** turn the tube right side out. Slip one end into the other (right sides together) and "
-            "sew the cross seam, leaving 5 cm open.",
-            "**Close:** turn and close the opening by hand (ladder stitch). Done!"]
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)

@@ -16,7 +16,6 @@ import numpy as np
 
 import ease as E
 import geometry as G
-import machines as MC
 from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
@@ -506,59 +505,140 @@ FINISHED_LABELS = {
 }
 
 
-def back_opening_step(o) -> str:
+def back_opening_steps(pat, edge: str | None = None) -> list:
+    """Finish the centre back opening and close it with Velcro (doll clothes, small children)."""
+    import steps as S
+    o = pat.options
     osa = opening_sa(o)
-    return (f"**Back opening:** finish both centre back edges, press the opening allowance "
-            f"({osa / 10:.1f} cm) to the inside and stitch it down. The two edges overlap at the centre back: "
-            "sew a strip of narrow Velcro (or two or three snaps) onto the overlap, the soft side on the "
-            "left back, the hook side on the right back. The garment opens completely, which makes dressing "
-            "easy (dolls, small children).")
+    b = pat.piece("back")
+    edge = edge or ("center_open" if any(e.name == "center_open" for e in b.edges) else "center")
+    sec = "Back opening"
+    return [
+        S.finish("Finish the opening edges", [("back", edge)], "Both centre back edges.", repeat=2,
+                 section=sec),
+        S.hem("Turn in the opening edges", [("back", edge)], osa,
+              f"Press {S.cm(osa)} to the inside and stitch it down.", stitch="topstitch", repeat=2, section=sec),
+        S.icon("Sew on the Velcro", "velcro",
+               "The edges overlap at the centre back: soft side on the left back, hook side on the right back "
+               "(or 2–3 snaps).", stitch="topstitch", section=sec,
+               tip="The garment opens completely: easy dressing."),
+    ]
+
+
+def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False, done: bool = True) -> list:
+    """The construction as one-action steps (see steps.py).
+
+    hem/neck=False leave out the hem and the neckline (dress, hoodie with hood);
+    open_bands: neckband and hem band are not closed into rings (zip front)."""
+    import steps as S
+    o = pat.options
+    knit = E.fabric_info(o["fabric"])[2]
+    out: list = []
+
+    def finished(title, edges):
+        if S.needs_finish(o, knit):
+            out.append(S.finish(title, edges, "Both allowances together; press them towards the back.",
+                                repeat=2, section=out[-1].section))
+
+    if o["sleeve_style"] == "raglan":
+        out.append(S.seam("Sew the raglan seams", ["Raglan seam"],
+                          "Sleeve right sides together to front and back; single notches at the front, double at "
+                          "the back.", repeat=2, section="Sleeves"))
+        finished("Finish the raglan seams", [("sleeve", "raglan_front"), ("sleeve", "raglan_back")])
+    else:
+        out.append(S.seam("Sew the shoulder seams", ["Shoulder seam"],
+                          "Front and back right sides together.", repeat=2, section="Shoulders"))
+        finished("Finish the shoulder seams", [("front", "shoulder"), ("back", "shoulder")])
+    if o.get("back_opening"):
+        out += back_opening_steps(pat)
+    if neck and pat.has("neckband"):
+        sec = "Neckline"
+        nb = pat.piece("neckband")
+        if o.get("neck_finish") == "bias":
+            out += [
+                S.fold_band("Fold the binding in half", "neckband", "Lengthwise, wrong sides together; press.",
+                            section=sec),
+                S.seam("Sew the neck binding on", ["Neck binding"],
+                       "Raw edges to the neckline, right sides together; let each end stick out past the opening "
+                       "edge by the allowance.", section=sec),
+                S.topstitch("Stitch the binding down", [("front", "neckline"), ("back", "neckline")], 2.0,
+                            "Fold the ends in, turn the binding to the inside over the allowance and stitch close "
+                            "to the fold.", section=sec),
+            ]
+        elif o.get("back_opening") or open_bands:
+            out += [
+                S.fold_band("Fold the neckband in half", "neckband", "Lengthwise, wrong sides together.",
+                            section=sec),
+                S.attach_band("Sew the neckband on", "neckband", ["Neckband"], "neckline",
+                              "Right sides together, stretching it slightly, from one front/opening edge to the "
+                              "other; fold the ends in.", section=sec),
+            ]
+        else:
+            out += [
+                S.ring("Close the neckband into a ring", "neckband", "Right sides together across the short ends.",
+                       section=sec),
+                S.fold_band("Fold the neckband in half", "neckband", "Lengthwise, wrong sides together.",
+                            section=sec),
+                S.quarter("Mark quarters", "neckband", "neckline",
+                          "Band: cross seam = centre back. Neckline: centre front, centre back, shoulders.",
+                          section=sec, data={"quarters": "neck"}),
+                S.attach_band("Sew the neckband on", "neckband", ["Neckband"], "neckline",
+                              "Right sides together, raw edges meet; stretch the band, not the neckline.",
+                              section=sec),
+                S.topstitch("Press the allowance down and topstitch", [("front", "neckline"), ("back", "neckline")],
+                            6.0, "Optional, gives a flat, professional neckline.", section=sec),
+            ]
+        del nb
+    if o["sleeve_style"] != "raglan":
+        out.append(S.seam("Set in the sleeves", ["Armhole"],
+                          "Top notch of the sleeve cap on the shoulder seam, front/back notches meet; sew the "
+                          "sleeve in flat.", repeat=2, section="Sleeves",
+                          tip="Sleeve on the bottom: the machine eases the cap in."))
+        finished("Finish the armhole seams", [("sleeve", "cap_front"), ("sleeve", "cap_back")])
+    out.append(S.seam("Sew side and sleeve seams", ["Side seam", "Sleeve seam"],
+                      "In one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly.",
+                      repeat=2, section="Sides"))
+    finished("Finish the side seams", [("front", "side"), ("back", "side")])
+    if o["sleeve_cuffs"] and pat.has("sleeve_cuff"):
+        sec = "Cuffs"
+        out += [
+            S.ring("Close the cuffs into rings", "sleeve_cuff", "Right sides together across the short ends.",
+                   repeat=2, section=sec),
+            S.fold_band("Fold the cuffs in half", "sleeve_cuff", "Lengthwise, wrong sides together.", repeat=2,
+                        section=sec),
+            S.attach_band("Sew the cuffs on", "sleeve_cuff", ["Sleeve cuff"], "sleeve hem",
+                          "Cuff seam at the sleeve seam; quarter cuff and sleeve hem with pins.", repeat=2,
+                          section=sec),
+        ]
+    else:
+        hs = pat.piece("sleeve").edge("hem").sa
+        out.append(S.hem("Hem the sleeves", [("sleeve", "hem")], hs, f"Press {S.cm(hs)} to the inside.",
+                         repeat=2, section="Sleeve hems"))
+    if hem:
+        sec = "Hem"
+        if o["hem_band"] and pat.has("hem_band"):
+            if not open_bands:
+                out.append(S.ring("Close the hem band into a ring", "hem_band",
+                                  "Right sides together across the short ends.", section=sec))
+            out.append(S.fold_band("Fold the hem band in half", "hem_band", "Lengthwise, wrong sides together.",
+                                   section=sec))
+            if not open_bands:
+                out.append(S.quarter("Mark quarters", "hem_band", "hem", "Band: cross seam at a side seam.",
+                                     section=sec, data={"quarters": "hem"}))
+            out.append(S.attach_band("Sew the hem band on", "hem_band", ["Hem band"], "hem",
+                                     "Right sides together, raw edges meet" +
+                                     ("; band ends flush with the front edges." if open_bands else "."),
+                                     section=sec))
+        else:
+            hs = pat.piece("front").edge("hem").sa
+            out.append(S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
+                             f"Press {S.cm(hs)} to the inside.", section=sec))
+    if done:
+        out.append(S.done())
+    return out
 
 
 def sewing_steps(pat):
-    o = pat.options
-    knit = E.fabric_info(o["fabric"])[2]
-    st = MC.seam_phrase(o, knit)
-    steps = []
-    if o["sleeve_style"] == "raglan":
-        steps += [f"**Raglan seams:** sew the sleeves right sides together to front and back ({st}); "
-                  "single notches at the front, double at the back."]
-    else:
-        steps += [f"**Shoulders:** place front and back right sides together and sew the shoulder seams {st}."]
-    if o.get("back_opening"):
-        steps.append(back_opening_step(o))
-    if o.get("neck_finish") == "bias":
-        steps.append(
-            "**Neck binding:** fold the bias strip lengthwise wrong sides together and press. Pin it right "
-            "sides together to the neckline (raw edges together), letting each end stick out past the opening "
-            "edge by the allowance, and sew. Fold the ends in, turn the binding to the inside so it covers the "
-            "seam allowance, and stitch it down close to the fold.")
-    elif o.get("back_opening"):
-        steps.append(
-            "**Neckband:** fold it lengthwise wrong sides together. Sew it to the neckline right sides together "
-            "while stretching it slightly, from one opening edge to the other; fold the ends in at the opening.")
-    else:
-        steps.append(
-            "**Neckband:** sew it into a ring across the short ends and fold it lengthwise wrong sides together. "
-            "Divide neckband and neckline into quarters (cross seam at one shoulder or centre back) and sew the "
-            "neckband on right sides together while stretching it. Press the seam allowance down and topstitch "
-            + MC.topstitch_phrase(o, knit, "with a twin needle") + " if you like.")
-    if o["sleeve_style"] != "raglan":
-        steps.append("**Set in the sleeves:** pin the centre of the sleeve cap (top notch) to the shoulder seam, "
-                     "match the front/back notches and sew the sleeve in flat (ease the cap in slightly if needed).")
-    steps += [
-        "**Side and sleeve seams:** sew in one go from the hem over the underarm to the sleeve hem; "
-        "the underarm seams meet exactly.",
-    ]
-    if o["sleeve_cuffs"]:
-        steps.append("**Sleeve cuffs:** sew into a ring, fold, and sew to the sleeve hem while stretching.")
-    else:
-        steps.append("**Sleeve hem:** press the hem allowance under and sew "
-                     + MC.hem_phrase(o, knit) + ".")
-    if o["hem_band"]:
-        steps.append("**Hem band:** sew into a ring, fold, divide into quarters and sew on while stretching.")
-    else:
-        steps.append(f"**Hem:** press the hem allowance ({o['hem_sa'] / 10:.1f} cm) under and sew "
-                     + MC.hem_phrase(o, knit) + ".")
-    steps.append("Done! Press the seams.")
-    return steps
+    import steps as S
+    return S.as_texts(assembly(pat), pat.options)
+

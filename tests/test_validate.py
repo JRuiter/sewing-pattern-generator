@@ -603,7 +603,7 @@ def test_cargo_pocket(size):
     w_pocket = pk.edge("top").length
     assert w_pocket == pytest.approx(np.ptp(mark.pts[:, 0]) + 2 * 20.0 * max(0.75, min(1.45, pat.measures["height"] / 1220)), abs=0.5)
     steps = " ".join(get("pants_basic").sewing_steps(pat))
-    assert "Cargo pockets" in steps and "box pleat" in steps
+    assert "Cargo pocket" in steps and "box pleat" in steps
 
 
 @pytest.mark.parametrize("size", [122, "w38"])
@@ -646,10 +646,8 @@ def test_zip_hoodie(opts, size):
         assert pat.piece("neckband").edge("right").label == "Front end (zip)"
     assert pat.has("zip_guard")
     steps = " ".join(get("hoodie").sewing_steps(pat))
-    assert "**Zip:**" in steps
-    for step in get("hoodie").sewing_steps(pat):
-        if step.startswith(("**Hem band", "**Neckband")):
-            assert "into a ring" not in step
+    assert "Sew the zip in" in steps
+    assert "into a ring" not in steps.replace("cuffs into rings", "")    # bands stay open at the zip
 
 
 def test_closed_hoodie_unchanged():
@@ -676,7 +674,7 @@ def test_dress_waist_seam_cli(tmp_path):
                   "--out", str(tmp_path)])
     assert rc == 0
     md = (tmp_path / "sewing_instructions.md").read_text(encoding="utf-8")
-    assert "**Waist seam:**" in md and "Gather the skirt" in md
+    assert "Sew skirt and bodice together" in md and "Gather the skirt" in md
 
 
 @pytest.mark.parametrize("skirt", ["a_line", "circle"])
@@ -881,33 +879,93 @@ DIAGRAM_CASES = [
 
 @pytest.mark.parametrize("garment,size,opts", DIAGRAM_CASES)
 def test_step_diagrams_cover_every_seam(garment, size, opts):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
     import diagrams as DG
     import generate as GN
-    import instructions as I
+    import steps as ST
     pat, _, _ = GN.draft_from_spec({"garment": garment, "size": size, "options": opts})
-    steps = I.all_steps(pat)
-    mapped = DG.step_seams(pat, steps)
-    names = [s["name"] for ss in mapped for s in ss]
-    # every seam of the graph is shown in at least one step, and only real seams are mapped
-    assert set(names) == {s["name"] for s in pat.seams}, (set(s["name"] for s in pat.seams) - set(names))
-    for step, ss in zip(steps, mapped):
-        if any(w in step for w in ("Side seams:**", "Inseams:**", "Shoulders:**", "Set in the sleeves")):
-            assert ss, step
+    steps = ST.assembly(pat)
+    # every seam of the seam graph is sewn in some step, and steps only name real seams
+    assert ST.covered_seams(pat, steps) == {s["name"] for s in pat.seams}
+    for st in steps:
+        assert st.title and len(st.title) <= 45, st.title          # one short action
+        assert st.diagram in DG.DIAGRAMS
+        if st.seams:
+            assert ST.resolve_seams(pat, st), st.title
+        for p, e in st.edges:
+            pat.piece(p).edge(e)                                   # edges exist
+        for p in st.pieces:
+            assert pat.has(p), (st.title, p)
+    # every step draws from the real pieces without falling back to the placeholder
+    DG.STRICT = True
+    try:
+        for st in steps:
+            fig, ax = plt.subplots()
+            DG.draw(ax, pat, st)
+            plt.close(fig)
+    finally:
+        DG.STRICT = False
 
 
-def test_step_diagram_highlights_two_edges(tmp_path):
+def test_seam_overlay_puts_the_pieces_on_top_of_each_other():
     import diagrams as DG
     import generate as GN
     pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
-    seam = next(s for s in pat.seams if s["name"].startswith("Inseam"))
-    assert DG._instances(pat, [seam]) == [("front", False), ("back", False)]
-    crotch = [s for s in pat.seams if "crotch" in s["name"]]
-    assert ("front", True) in DG._instances(pat, crotch)            # left and right piece
-    p = DG.render_step(pat, [seam], str(tmp_path / "s.png"), "Step 5")
+    shirt, _, _ = GN.draft_from_spec({"garment": "tshirt_basic", "size": "140"})
+    for name in ("Inseam", "Pocket bag seam", "Shoulder seam"):
+        if name == "Shoulder seam":
+            pat = shirt
+        seam = next(s for s in pat.seams if s["name"].startswith(name))
+        A, ea, B, eb, T = DG.overlay_parts(pat, seam)
+        moved = DG._apply(T, B.edge(eb).pts)
+        target = A.edge(ea).pts
+        # the edges to sew lie on top of each other (either direction)
+        d = min(np.abs(DG._resample(moved) - DG._resample(target)).max(),
+                np.abs(DG._resample(moved)[::-1] - DG._resample(target)).max())
+        assert d < 0.06 * A.edge(ea).length, (name, d)
+    pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
+    side = next(s for s in pat.seams if s["name"].startswith("Side seam"))
+    assert DG.overlay_parts(pat, side)[4][2] is True               # back leg turned over (wrong side up)
+    bag = next(s for s in pat.seams if s["name"].startswith("Pocket bag seam"))
+    assert DG.overlay_parts(pat, bag)[4][2] is False               # pocket bags lie the same way up
+    band = next(s for s in pat.seams if s["name"].startswith("Waistband"))
+    assert DG.overlay_parts(pat, band) is None                     # several edges: join diagram
+
+
+def test_step_png_shows_stitch_line(tmp_path):
+    import diagrams as DG
+    import generate as GN
+    import steps as ST
+    pat, _, _ = GN.draft_from_spec({"garment": "pants_basic", "size": "122"})
+    st = next(s for s in ST.assembly(pat) if s.title == "Sew the inseams")
+    p = DG.render_step(pat, st, str(tmp_path / "s.png"), 5)
     from PIL import Image
     a = np.asarray(Image.open(p).convert("RGB")).astype(int)
-    red = int(((a[..., 0] > 180) & (a[..., 1] < 90) & (a[..., 2] < 90)).sum())
-    assert red > 200                                                  # the seam edges are drawn
+    red = int(((a[..., 0] > 150) & (a[..., 1] < 90) & (a[..., 2] < 90)).sum())
+    assert red > 200                                                  # stitch line and direction
+
+
+def test_machine_dependent_steps():
+    import generate as GN
+    import steps as ST
+    pat, _, _ = GN.draft_from_spec({"garment": "tshirt_basic", "size": "140"})
+    seam = next(s for s in ST.assembly(pat) if s.title == "Sew the shoulder seams")
+    hem = next(s for s in ST.assembly(pat) if s.title == "Sew the hem")
+    plain = dict(pat.options)
+    assert ST.tool_for(plain, seam.stitch)["machine"] == "sewing"
+    assert "zigzag" in ST.tool_for(plain, seam.stitch)["stitch"]
+    full = dict(pat.options, machines=["sewing", "overlocker", "coverstitch"])
+    assert ST.tool_for(full, seam.stitch)["machine"] == "overlocker"
+    assert ST.tool_for(full, hem.stitch)["machine"] == "coverstitch"
+    assert "overlocker" in seam.as_text(full)
+    woven = dict(pat.options, fabric="woven")
+    assert ST.tool_for(woven, "seam", knit=False)["stitch"].startswith("straight")
+    assert ST.tool_for(dict(woven, machines="sewing,overlocker"), "finish", knit=False)["machine"] == "overlocker"
+    names = [t["machine"] for t in ST.machines_needed(ST.assembly(pat), full)]
+    assert {"overlocker", "coverstitch", "iron"} <= set(names)
 
 
 def test_illustrated_instructions(tmp_path):
@@ -916,12 +974,18 @@ def test_illustrated_instructions(tmp_path):
     assert GN.main(["--garment", "hoodie", "--size", "140", "--format", "a4", "--out", str(out)]) == 0
     md = (out / "sewing_instructions.md").read_text(encoding="utf-8")
     imgs = re.findall(r"!\[Step (\d+)\]\((steps/step_\d+\.png)\)", md)
-    assert len(imgs) >= 5 and all((out / p).exists() for _, p in imgs)
+    assert len(imgs) >= 10 and all((out / p).exists() for _, p in imgs)
     pdf = out / "sewing_instructions.pdf"
-    assert pdf.stat().st_size < 2_000_000
+    assert pdf.stat().st_size < 3_000_000
     from pypdf import PdfReader
-    n_img = sum(len(pg.images) for pg in PdfReader(str(pdf)).pages)
-    assert n_img >= len(imgs)
+    pages = PdfReader(str(pdf)).pages
+    text = " ".join(pg.extract_text() for pg in pages[:6])
+    # booklet: cover, parts and tools, numbered one-action steps; then the reference pages
+    assert "HOODIE" in text and "Parts" in text and "Machines and tools" in text
+    assert "Sew the shoulder seams" in text and "Set in the sleeves" in text
+    n_steps = len(re.findall(r"^\d+\. ", md.split("## Sewing instructions")[1].split("## ")[0], re.M))
+    assert len(pages) >= 2 + -(-n_steps // 6) + 1
+    assert "Validation report" in " ".join(pg.extract_text() for pg in pages[-4:])
 
 
 def test_parse_sizes():

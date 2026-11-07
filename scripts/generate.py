@@ -49,6 +49,7 @@ import measurements as M  # noqa: E402
 import nested as NE  # noqa: E402
 import profiles as PR  # noqa: E402
 import render as R  # noqa: E402
+import steps as ST  # noqa: E402
 import units as U  # noqa: E402
 import validate as V  # noqa: E402
 from garments import get  # noqa: E402
@@ -259,7 +260,8 @@ def run(spec: dict, verbose: bool = True) -> dict:
     pdf_path = os.path.join(out, "sewing_instructions.pdf")
     files["Sewing instructions (PDF)"] = pdf_path
     files["Sewing instructions (Markdown)"] = md_path
-    step_images = DG.render_steps(big, I.all_steps(big), out)
+    step_list = ST.assembly(big)
+    step_images = DG.render_steps(big, step_list, out)
     md = I.build_markdown(big, report_md, plans, files, sources, step_images)
     nested_rows = []
     if drafts:
@@ -269,7 +271,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
         md = md.replace("## Body measurements", "## Body measurements\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
-    I.markdown_to_pdf(md, pdf_path, images=[zp])
+    I.instructions_pdf(big, md, pdf_path, plans, step_list, images=[zp])
     js = os.path.join(out, "pattern.json")
     data = big.summary()
     if drafts:

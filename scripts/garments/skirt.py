@@ -5,6 +5,7 @@ import math
 
 import numpy as np
 
+import ease as E
 import geometry as G
 from pattern import Edge, Mark, Pattern, Piece, rect_piece
 
@@ -115,17 +116,49 @@ def _cm_text(mm: float) -> str:
     return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
 
 
-def sewing_steps(pat):
-    st = pat.options["style"]
-    s = ["**Side seams:** place front and back skirt right sides together, sew and finish the side seams."]
+def assembly(pat):
+    """The construction as one-action steps (see steps.py)."""
+    import steps as ST
+    o = pat.options
+    st = o["style"]
+    knit = E.fabric_info(o["fabric"])[2]
+    gap = o.get("_gap", 30.0)
+    out = [ST.seam("Sew the side seams", ["Side seam"], "Front and back skirt right sides together.", repeat=2,
+                   section="Skirt")]
+    if ST.needs_finish(o, knit):
+        out.append(ST.finish("Finish the side seams", [("front", "side"), ("back", "side")], repeat=2,
+                             section="Skirt"))
     if st == "gathered":
-        s.append("**Gather:** run two gathering threads (longest stitch length) along the top edge and pull "
-                 "them up to the waistband length; spread the gathers evenly.")
-    narrow = pat.piece("front").edge("hem").sa / 2
-    s += [f"**Waistband:** sew into a ring (cross seam at the back, leave {_cm_text(pat.options.get('_gap', 30.0))} "
-          "open), fold lengthwise and sew to the skirt top edge right sides together. Thread the elastic, join "
-          "the ends, close the opening.",
-          "**Hem:** press the hem allowance under twice and stitch." if st != "circle" else
-          f"**Hem:** let the skirt hang for 24 h, level the hem, then sew a narrow hem (2 × {round(narrow / 10, 2):g} cm).",
-          "Done!"]
-    return s
+        out.append(ST.gather("Gather the top edge", [("front", "waistband")],
+                             "Two rows of the longest stitch; pull them up to the waistband length, spread the "
+                             "gathers evenly.", section="Skirt"))
+    sec = "Waistband"
+    out += [
+        ST.ring("Close the waistband into a ring", "waistband",
+                f"Right sides together across the short ends (centre back); leave {_cm_text(gap)} open.",
+                section=sec),
+        ST.fold_band("Fold the waistband in half", "waistband", "Lengthwise, wrong sides together.", section=sec),
+        ST.quarter("Mark quarters", "waistband", "skirt top edge", "Centre front, centre back, sides.",
+                   section=sec, data={"quarters": "waist"}),
+        ST.attach_band("Sew the waistband on", "waistband", ["Waistband"], "skirt top edge",
+                       "Right sides together, raw edges meet, opening on the inside.", stretch=False, section=sec),
+        ST.icon("Thread the elastic", "elastic", "With a safety pin; join the ends with an overlap.",
+                stitch="elastic", section=sec),
+        ST.icon("Close the opening", "hand", "Stitch the opening closed.", stitch="topstitch", section=sec),
+    ]
+    hs = pat.piece("front").edge("hem").sa
+    if st == "circle":
+        out += [ST.icon("Let the skirt hang for 24 h", "level", "Then level the hem: the bias stretches.",
+                        section="Hem"),
+                ST.hem("Sew a narrow hem", [("front", "hem"), ("back", "hem")], hs / 2,
+                       f"Press under twice by {round(hs / 20, 2):g} cm.", section="Hem")]
+    else:
+        out.append(ST.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
+                          "Press the allowance under twice and stitch.", section="Hem"))
+    out.append(ST.done())
+    return out
+
+
+def sewing_steps(pat):
+    import steps as ST
+    return ST.as_texts(assembly(pat), pat.options)
