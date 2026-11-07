@@ -37,8 +37,13 @@ Ask for the missing points together in one short message, each with a default
 - Fabric (woven / jersey / jersey with elastane / interlock / sweat / fleece) and stretch in %
 - Fit (slim / normal / wide / oversized; for pants also harem)
 - Output: roll (width in mm, default 610), A0, A1, A4 or US Letter to tape together
-- Seam allowance only if it matters to them (default 1 cm, hems 2–2.5 cm; e.g. 0.75 cm for
-  the overlocker, 1.5 cm for woven, or "none" to trace and add their own)
+- **Machines:** which machines they sew with: sewing machine (zigzag? stretch stitch? or straight
+  stitch only), twin needle, overlocker/serger, coverstitch. Skip the question when the workshop
+  file already has them (`python scripts/profiles.py machines show`) or they named them before.
+  Default if they don't say: a household sewing machine with zigzag.
+- Seam allowance only if it matters to them (default 1 cm, hems 2–2.5 cm; with an overlocker on
+  knits 7.5 mm automatically, 1.5 cm for woven on a straight-stitch-only machine, or "none" to
+  trace and add their own)
 
 Do not ask again afterwards; resolve anything unclear with a sensible default and say
 so in the result.
@@ -55,6 +60,22 @@ fits through a neckline) with a bias-bound neckline, pants with a narrow elastic
 pockets/cuffs. Recommend thin cotton, a short stitch and fray stop. A doll gets a profile with
 `profiles.py save rosa --measures '{…}' --kind doll`. Details: `scripts/doll.py`,
 `references/size_tables.md` ("Doll clothes").
+
+**Machines:** pass them with `--machines sewing,overlocker,coverstitch` (keys: `sewing` = straight
+stitch + zigzag, `straight_only`, `stretch_stitch`, `twin_needle`, `overlocker`, `coverstitch`;
+German names such as Overlock, Coverlock, Zwillingsnadel work too; spec field `machines`). The
+machines belong to the person who sews, so the first time they name them, save them once for all
+future patterns: `python scripts/profiles.py machines set sewing,overlocker` (workshop file
+`profiles/_machines.json`; a measurement profile may carry its own `--machines`, and `--machines`
+wins over both). Effects: knit seams on the overlocker get 7.5 mm allowance (the knife trims),
+woven seams on a straight-stitch-only machine 15 mm for French seams (an explicit
+`--seam-allowance` always wins; doll clothes keep their 6 mm); every seam and hem step names the
+machine and stitch; the instructions get a "Your machines" table (stitch, width/length, needle per
+kind of step) and tips for what is missing (e.g. a twin needle instead of a coverstitch). Without
+an overlocker nothing is missing: knit seams use a narrow zigzag/stretch stitch. A knit on a
+straight-stitch-only machine works but is fragile: suggest a woven fabric or the double row of
+long straight stitches the instructions describe. In the reply, mention in one line how the
+pattern was adapted to their machines.
 
 **Measurement profiles:** when the user gives body measurements for a person, offer once to
 save them (`python scripts/profiles.py save lena --measures '{…}' --kind child`). Later
@@ -217,7 +238,10 @@ present. Fix anything odd or tell the user openly.
 - `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`, `units.py`, `allowance.py`:
   foundations (geometry, pieces, sizes, ease, imperial units, seam allowances)
 - `scripts/construction.py`, `adjust.py`, `notches.py`: construction values, toile adjustments, notches
-- `scripts/profiles.py`, `measure_files.py`: measurement profiles and `.smis`/`.vit` files
+- `scripts/profiles.py`, `measure_files.py`: measurement profiles, the machines workshop file and
+  `.smis`/`.vit` files
+- `scripts/machines.py`: the sewist's machines → seam allowances, seam/hem methods, "Your machines"
+  table (`method(options, kind, knit)` / `tool_for` per step kind: seam, finish, hem, topstitch, band)
 - `scripts/nested.py`, `export_dxf.py`: nested multi-size patterns, DXF export
 - `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
 - `scripts/doll.py`: doll clothes mode (doll measurements, virtual drafting scale, doll defaults)

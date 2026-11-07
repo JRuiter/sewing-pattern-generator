@@ -62,9 +62,20 @@ def strip(pattern) -> None:
 
 
 def draft(mod, measures: dict, options: dict | None):
-    """Draft with the user's allowance options."""
+    """Draft with the user's allowance options (and the allowances that follow from their machines)."""
+    import ease as E
+    import machines as MC
     o = module_options(options)
     pat = mod.draft(measures, o)
+    if not no_allowance(o):
+        knit = E.fabric_info(pat.options.get("fabric") or "jersey", pat.options.get("stretch"))[2]
+        extra = MC.allowance_defaults(options, knit)
+        if extra:
+            o = module_options({**(options or {}), **extra, "_sa_from_machines": extra["seam_allowance_mm"]})
+            pat = mod.draft(measures, o)
+    for k in ("machines", "_sa_from_machines"):      # some modules pass only their own keys on
+        if o.get(k) is not None:
+            pat.options[k] = o[k]
     if no_allowance(o):
         strip(pat)
     return pat

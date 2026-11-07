@@ -6,12 +6,16 @@ default `./profiles`):
 
     {"name": "lena", "kind": "child", "measured": "2026-11-06",
      "measures_cm": {"height": 121, "hip": 64, "waist": 55},
-     "fit": "normal", "default_format": "roll610",
+     "fit": "normal", "default_format": "roll610", "machines": ["sewing", "overlocker"],
      "history": [{"measured": "2026-05-01", "measures_cm": {"height": 116, ...}}]}
 
 Precedence when drafting: size table < profile < measurement file < measurements given
 explicitly (CLI `--measures`, spec `measures_cm`/`measures_in`). A profile with
-`kind: doll` switches on the doll clothes mode (doll.py). Children's profiles
+`kind: doll` switches on the doll clothes mode (doll.py).
+
+Machines (machines.py) belong to the person who sews, not to the wearer: they are kept once in
+the workshop file `profiles/_machines.json` and used for every pattern. A profile may carry its
+own `machines` (e.g. sewing at grandma's), and `--machines` / spec `machines` win over both. Children's profiles
 (`kind: child`, or height < 160 cm) older than 6 months get a warning (growth).
 
 CLI:
@@ -20,6 +24,8 @@ CLI:
   python profiles.py show lena        # current values, growth since the last entry, size
   python profiles.py list
   python profiles.py export lena lena.smis
+  python profiles.py machines set sewing,overlocker,twin_needle   # the sewist's machines (workshop)
+  python profiles.py machines show
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import machines as MC  # noqa: E402
 import measurements as M  # noqa: E402
 
 CHILD_MAX_AGE_DAYS = 183      # ≈ 6 months
@@ -91,7 +98,8 @@ def warnings(prof: dict, today: dt.date | None = None) -> list[str]:
 
 
 def save(name: str, measures_cm: dict, directory: str | None = None, kind: str | None = None,
-         fit: str | None = None, default_format: str | None = None, measured: str | None = None) -> str:
+         fit: str | None = None, default_format: str | None = None, measured: str | None = None,
+         machines=None) -> str:
     """Create or update a profile. Earlier measurements move to `history`."""
     p = path_for(name, directory)
     os.makedirs(os.path.dirname(os.path.abspath(p)), exist_ok=True)
@@ -109,6 +117,8 @@ def save(name: str, measures_cm: dict, directory: str | None = None, kind: str |
     for k, v in (("kind", kind), ("fit", fit), ("default_format", default_format)):
         if v:
             prof[k] = v
+    if machines:
+        prof["machines"] = MC.to_list(machines)
     with open(p, "w", encoding="utf-8") as f:
         json.dump(prof, f, ensure_ascii=False, indent=2)
     return p
@@ -133,11 +143,48 @@ def suggested_size(prof: dict):
     return next((s for s in sizes if s >= h), sizes[-1])
 
 
+MACHINES_FILE = "_machines.json"
+
+
+def save_machines(machines, directory: str | None = None) -> str:
+    """Save the sewist's machines in the workshop file (used for every pattern)."""
+    d = profiles_dir(directory)
+    os.makedirs(d, exist_ok=True)
+    p = os.path.join(d, MACHINES_FILE)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump({"machines": MC.to_list(machines), "saved": dt.date.today().isoformat()}, f, indent=2)
+    return p
+
+
+def load_machines(directory: str | None = None) -> list[str] | None:
+    p = os.path.join(profiles_dir(directory), MACHINES_FILE)
+    if not os.path.exists(p):
+        return None
+    with open(p, encoding="utf-8") as f:
+        return MC.to_list(json.load(f).get("machines"))
+
+
+def apply_machines(spec: dict, prof: dict | None = None, directory: str | None = None) -> dict:
+    """options.machines: explicit (spec/CLI) > profile > workshop file."""
+    opts = dict(spec.get("options") or {})
+    m = opts.get("machines") or spec.get("machines")
+    if not m and prof:
+        m = prof.get("machines")
+    if not m:
+        m = load_machines(directory or spec.get("profiles_dir"))
+    if not m:
+        return spec
+    opts["machines"] = MC.to_list(m)
+    out = dict(spec)
+    out["options"] = opts
+    return out
+
+
 def apply(spec: dict, directory: str | None = None) -> tuple[dict, list[str]]:
     """Merge a profile (spec['profile']) into a spec. Returns (spec, warnings)."""
     name = spec.get("profile")
     if not name:
-        return spec, []
+        return apply_machines(spec, None, directory), []
     if "_profile_measures_cm" in spec:          # already applied
         return spec, list(spec.get("_profile_warnings", []))
     prof = load(name, directory or spec.get("profiles_dir"))
@@ -147,6 +194,7 @@ def apply(spec: dict, directory: str | None = None) -> tuple[dict, list[str]]:
     if prof.get("fit") and not opts.get("fit"):
         opts["fit"] = prof["fit"]
     out["options"] = opts
+    out = apply_machines(out, prof, directory)
     if prof.get("kind") == "doll":
         out.setdefault("doll", True)            # doll clothes mode (doll.py)
     if not out.get("formats") and prof.get("default_format"):
@@ -169,6 +217,10 @@ def main(argv=None):
     s.add_argument("--fit")
     s.add_argument("--format")
     s.add_argument("--date", help="measuring date YYYY-MM-DD (default today)")
+    s.add_argument("--machines", help="machines for this profile only, e.g. sewing,overlocker (see machines.py)")
+    mc = sub.add_parser("machines", help="the sewist's machines (workshop file, used for every pattern)")
+    mc.add_argument("action", choices=["set", "show"])
+    mc.add_argument("list", nargs="?", help="comma-separated: " + ", ".join(MC.KEYS))
     sh = sub.add_parser("show")
     sh.add_argument("name")
     sub.add_parser("list")
@@ -177,7 +229,7 @@ def main(argv=None):
     ex.add_argument("path")
     a = ap.parse_args(argv)
     if a.cmd == "save":
-        p = save(a.name, json.loads(a.measures), a.profiles_dir, a.kind, a.fit, a.format, a.date)
+        p = save(a.name, json.loads(a.measures), a.profiles_dir, a.kind, a.fit, a.format, a.date, a.machines)
         print(f"saved {p}")
     elif a.cmd == "show":
         prof = load(a.name, a.profiles_dir)
@@ -188,15 +240,24 @@ def main(argv=None):
         if g:
             print("Change since the previous measurement: " + ", ".join(f"{M.LABELS.get(k, k)} {v:+g} cm"
                                                                       for k, v in g.items()))
+        if prof.get("machines"):
+            print("Machines (this profile): " + ", ".join(MC.LABELS[k] for k in MC.to_list(prof["machines"]) or []))
         size = suggested_size(prof)
         if size:
             print(f"Suggested kids' size: {size}")
         for w in warnings(prof):
             print("⚠️ " + w)
+    elif a.cmd == "machines":
+        if a.action == "set":
+            if not a.list:
+                ap.error("machines set needs a list, e.g. sewing,overlocker")
+            print(f"saved {save_machines(a.list, a.profiles_dir)}")
+        m = load_machines(a.profiles_dir)
+        print("Machines: " + (", ".join(MC.LABELS[k] for k in m) if m else "not saved yet"))
     elif a.cmd == "list":
         d = profiles_dir(a.profiles_dir)
         for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
-            if f.endswith(".json"):
+            if f.endswith(".json") and f != MACHINES_FILE:
                 prof = load(os.path.join(d, f))
                 print(f"{prof['name']}: measured {prof.get('measured')}")
     elif a.cmd == "export":

@@ -8,6 +8,7 @@ import adjust as ADJ
 import allowance as A
 import ease as E
 import layout as L
+import machines as MC
 import measurements as M
 import units as U
 
@@ -216,6 +217,9 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
     ft = fold_text(pattern, plans)
     if ft:
         lines += [ft, ""]
+    mach = MC.markdown(pattern)
+    if mach:
+        lines += ["## Your machines", "", mach, ""]
     lines += ["## Sewing instructions", "",
               ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
                "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")

@@ -51,6 +51,9 @@ erstellen", "Lieblingshose kopieren" …).
   and after, and the adjustments are kept for the next size.
 - **Measurement files**: reads and writes `.smis` / `.vit` XML measurement files, so measurements
   taken once can be reused here and in open-source pattern CAD programs.
+- **Your machines**: tell it what you sew with (`--machines sewing,overlocker,coverstitch`, or once for
+  all patterns with `scripts/profiles.py machines set …`): seam allowances, seam/hem methods and the
+  instructions follow your sewing machine, overlocker, coverstitch or twin needle.
 - **Measurement profiles**: save a person's measurements once (`scripts/profiles.py save lena …`)
   and reuse them with `--profile lena`; children's profiles warn when they are older than 6 months.
 - **Doll clothes**: `--doll` drafts dresses, skirts, pants and T-shirts for fabric dolls and soft
@@ -158,7 +161,7 @@ CONTRIBUTING.md explains the development setup and how to add a garment module.
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          generate (CLI), geometry, pattern, measurements, ease, units, allowance,
                   garments/, validate, layout, render, instructions, notches, construction,
-                  adjust, diagrams, nested, export_dxf, measure_files, profiles, photo_analyze,
+                  adjust, diagrams, nested, export_dxf, measure_files, profiles, machines, photo_analyze,
                   photo_measure, flatlay, photo_synth, refcard,
                   reverse/ (decompose, unfold, fit, verify, store, pipeline)
 references/       drafting rules, size tables, print specs, photo guide
