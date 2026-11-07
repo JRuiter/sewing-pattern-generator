@@ -152,6 +152,11 @@ overlaps (needs `pdftoppm` from poppler, otherwise skipped), roll layouts for 61
 ≥ 10 mm gaps, nested sizes, DXF, projector pages, seam allowance options, US/UK sizes and imperial units,
 profiles, fit adjustments, photo-mode B accuracy on synthetic photos of pants and tops (< 1 cm / < 2 %),
 photo-mode A classification, and the full round trip pattern → photo → reverse engineering → pattern.
+The booklet checks itself on every build (`scripts/booklet_qa.py`: complete front/back views, seam
+pieces that lie on each other, pictures that fill their area, no text outside its panel); the findings
+end up in the "Booklet check" section of `validation_report.md`, and the tests require none for the
+reference garments. `python scripts/booklet_pages.py <out>/sewing_instructions.pdf` renders the booklet
+pages into contact sheets for the visual check.
 [CONTRIBUTING.md](../CONTRIBUTING.md) explains the development setup and how to add a garment module.
 
 ## Repository layout
@@ -160,7 +165,7 @@ photo-mode A classification, and the full round trip pattern → photo → rever
 SKILL.md          skill instructions: what Claude does step by step
 scripts/          generate (CLI), geometry, pattern, measurements, ease, units, allowance,
                   garments/, validate, layout, render, instructions, notches, construction,
-                  adjust, diagrams, nested, export_dxf, measure_files, profiles, machines, photo_analyze,
+                  adjust, booklet, booklet_qa, booklet_pages, views, diagrams, nested, export_dxf, measure_files, profiles, machines, photo_analyze,
                   photo_measure, flatlay, photo_synth, refcard,
                   reverse/ (decompose, unfold, fit, verify, store, pipeline)
 references/       drafting rules, size tables, print specs, photo guide

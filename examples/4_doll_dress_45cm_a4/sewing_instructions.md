@@ -121,7 +121,7 @@ Seam allowance is included in the pattern (see table).
    ![Step 22](steps/step_22.png)
 23. **Sew the hem**. Press the allowance under twice and stitch. (a straight stitch)
    ![Step 23](steps/step_23.png)
-24. **Done!** Press all seams.
+24. **Final pressing**. Press all seams.
 
 ## Validation report
 

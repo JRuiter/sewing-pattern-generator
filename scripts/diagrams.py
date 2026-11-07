@@ -458,6 +458,10 @@ def _draw_overlays(ax, pattern, step, sms, parts):
         _fill(ax, ra, wrong=False, z=1, pc=A)
         _fill(ax, rb, wrong=True, z=2, alpha=0.93, pc=B)
         edge = A.edge(ea).pts + sh
+        moved = _resample(_apply(Tb2, B.edge(eb).pts))
+        dev = min(np.abs(moved - _resample(edge)).max(), np.abs(moved[::-1] - _resample(edge)).max())
+        import booklet_qa as QA
+        QA.check_overlay(step.title, dev / max(A.edge(ea).length, 1e-9), 0.06)
         _stitch(ax, edge)
         _pins(ax, edge, size)
         _notches(ax, A, ea, Ta, size)
@@ -850,31 +854,49 @@ def plt_rect(x, y, w, h, fc=INK, ec=INK, lw=1.0, z=6):
 
 
 def _legs_inside(ax, pattern):
-    """Leg 1 inside out, leg 2 right side out, then leg 2 pushed into leg 1 (right sides together)."""
+    """Leg 1 stays inside out, leg 2 is turned right side out; then leg 2 is pushed into leg 1
+    from the top until the top edges are even (the part inside dotted)."""
     pc = pattern.piece("front")
     r = _outline(pc)
-    r = (r - r.min(0)) / np.ptp(r[:, 1]) * 2.0           # 2 units high
+    r = (r - r.min(0)) / np.ptp(r[:, 1]) * 1.6           # 1.6 units high
     w = np.ptp(r[:, 0])
-    g = 0.35 * w
+    g = 0.45 * w
     leg1 = r
-    leg2 = _mirror_x(r, w / 2) + [w + g, 0]
+    leg2 = r + [w + g, 0]
     _fill(ax, leg1, wrong=True, z=1, pc=pc)
     _fill(ax, leg2, z=1, pc=pc)
-    for x, txt in ((w / 2, "leg 1: inside out"), (1.5 * w + g, "leg 2: right side out")):
-        ax.text(x, -0.08, T(txt).replace(": ", ":\n"), fontsize=6.5, ha="center", va="top")
-    x3 = 2 * w + 3.2 * g
-    _arrow(ax, [2 * w + 1.4 * g, 1.0], [x3 - 0.6 * g, 1.0], lw=1.6)
-    c = np.array([w / 2, 2.0])
-    inner = (_mirror_x(r, w / 2) - c) * 0.9 + c + [x3, -0.02]
-    outer = r + [x3, 0]
-    _fill(ax, inner, z=1, pc=pc)
-    _fill(ax, outer, wrong=True, z=2, alpha=0.6, pc=pc)
-    ax.plot(outer[:, 0], outer[:, 1], color=INK, lw=1.0, zorder=3)
-    _arrow(ax, [x3 + w / 2, 2.6], [x3 + w / 2, 2.1], lw=1.4)
-    ax.text(x3 + w / 2, -0.08, T("leg 2 inside leg 1, waist edges even").replace(", ", ",\n"), fontsize=6.5,
+    _arrow(ax, [w + g + 0.1 * w, 1.85], [w + g + 0.9 * w, 1.85], lw=1.3, rad=-0.6)
+    ax.text(w + g + w / 2, 2.05, T("turn"), fontsize=6.5, ha="center", va="bottom")
+    ax.text(w / 2, -0.08, T("leg 1: stays inside out").replace(": ", ":\n"), fontsize=6.5, ha="center",
+            va="top")
+    ax.text(w + g + w / 2, -0.08, T("leg 2: turn right side out").replace(": ", ":\n"), fontsize=6.5,
             ha="center", va="top")
-    ax.set_xlim(-0.3 * w, x3 + 1.3 * w)
-    ax.set_ylim(-0.45, 2.75)
+    # result, larger: leg 2 half way in, coming down from above
+    k = 1.45
+    x3 = 2 * w + 2.4 * g
+    _arrow(ax, [2 * w + 1.25 * g, 0.8], [x3 - 0.35 * g, 0.8], lw=1.6)
+    big = r * k + [x3, -0.05]
+    up = 0.55 * np.ptp(big[:, 1])
+    leg2b = big + [0, up]
+    _fill(ax, leg2b, z=1, pc=pc)
+    _fill(ax, big, wrong=True, z=2, pc=pc)
+    from shapely.geometry import LineString, Polygon
+    hidden = LineString(leg2b).intersection(Polygon(big).buffer(0))
+    for part in getattr(hidden, "geoms", [hidden]):
+        if part.geom_type == "LineString" and part.length > 0.01:
+            c = np.asarray(part.coords)
+            ax.plot(c[:, 0], c[:, 1], color=INK, lw=0.9, ls=(0, (1.5, 1.5)), zorder=3)
+    top = big[:, 1].max()
+    ax.text(x3 + np.ptp(big[:, 0]) * 0.35, top + up * 0.55, T("leg 2"), fontsize=6.5, ha="center", va="center",
+            zorder=4)
+    ax.text(x3 + np.ptp(big[:, 0]) * 0.35, big[:, 1].min() + up * 0.6, T("leg 1"), fontsize=6.5, ha="center",
+            va="center", color="#555", zorder=4)
+    xa = x3 + np.ptp(big[:, 0]) + 0.9 * g
+    _arrow(ax, [xa, top + up * 0.8], [xa, top - up * 0.4], lw=2.0)
+    ax.text(xa, top - up * 0.5, T("push in, up to the top").replace(", ", ",\n"), fontsize=6.5,
+            fontweight="bold", ha="center", va="top")
+    ax.set_xlim(-0.25 * w, xa + 1.1 * g)
+    ax.set_ylim(-0.4, top + up + 0.1)
     ax.set_aspect("equal")
 
 
@@ -949,9 +971,10 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((3.5, 1.6), 0.35, fc="white", ec=INK, lw=1.3))
         ax.plot([3.5, 3.5, 3.7], [1.85, 1.6, 1.5], color=INK, lw=1.2)
         ax.text(3.5, 1.05, "24 h", fontsize=8, ha="center")
-    elif pic == "done":
-        ax.add_patch(Circle((2.0, 1.3), 0.95, fc="#e8f5e9", ec="#2e7d32", lw=2.0))
-        ax.plot([1.55, 1.9, 2.5], [1.3, 0.95, 1.75], color="#2e7d32", lw=4, solid_capstyle="round")
+    elif pic == "done":                       # final pressing: the iron on the garment
+        _pic_fabric(ax, 0.5, 0.35, 3.0, 0.9)
+        iax = ax.inset_axes((0.28, 0.42, 0.44, 0.5), transform=ax.transAxes)
+        draw_machine(iax, "iron")
     elif pic == "zip":
         _pic_fabric(ax, 0.4, 0.3, 1.5, 2.0)
         _pic_fabric(ax, 2.1, 0.3, 1.5, 2.0)
@@ -1136,6 +1159,8 @@ def draw(ax, pattern, step) -> None:
     except (KeyError, ValueError, IndexError) as exc:            # pragma: no cover - defensive
         if STRICT:
             raise
+        import booklet_qa as QA
+        QA.fallback(step.title, exc)
         ax.cla()
         draw_icon(ax, pattern, S.Step(step.title, data={"picture": ""}))
         ax.set_title(f"({type(exc).__name__})", fontsize=5, color="#aaa")

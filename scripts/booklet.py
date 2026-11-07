@@ -16,7 +16,8 @@ then      "Done!" with front and back view (in the free slot of the last step pa
 
 Everything is drawn with matplotlib (vector output via PdfPages, DejaVu Sans). Every text is
 wrapped to the width it really has (measured), so nothing leaves its panel; the test hook
-:data:`CHECKS` collects the panel bounding boxes.
+:data:`CHECKS` collects the panel bounding boxes; ``booklet_qa`` checks views, pictures and texts on
+every build.
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ import textwrap
 
 import numpy as np
 
+import booklet_qa as QA
 import diagrams as DG
 import ease as E
 import steps as S
@@ -365,7 +367,7 @@ def cover(pdf, pattern, steps, plans=None):
     level, hours = difficulty(pattern, steps)
     fig.text(0.5, 0.835, T(f"{len(pattern.pieces)} parts · {len(steps)} steps") + "  ·  " + T(level) + "  ·  "
              + T(f"about {hours:g} h"), fontsize=8, ha="center", va="top", color=GREY)
-    _views(fig, pattern, (0.06, 0.29, 0.88, 0.52))
+    _views(fig, pattern, (0.06, 0.29, 0.88, 0.52), check=True)
     # what it is sewn with
     tools = _sewn_with(pattern, steps)
     machines = [n for k, n in tools if k in ("sewing", "overlocker", "coverstitch", "hand")]
@@ -387,9 +389,11 @@ def cover(pdf, pattern, steps, plans=None):
     plt.close(fig)
 
 
-def _views(fig, pattern, rect, captions=True):
+def _views(fig, pattern, rect, captions=True, check=False):
     """Finished garment from the front and the back, side by side."""
     views = V.garment_views(pattern)
+    if check:
+        QA.check_views(pattern, views)
     if not views:
         ax = fig.add_axes(rect)
         rings = [DG._unfolded(pc, DG._outline(pc)) for pc in pattern.pieces]
@@ -745,6 +749,8 @@ def _panel(fig, pattern, n: int, step: S.Step, rect, prev_section: str):
     else:
         ax = fig.add_axes((x + 0.012, y + 0.012, pic_w - 0.024, pic_h))
     DG.draw(ax, pattern, step)
+    pos = ax.get_position()
+    QA.check_picture(ax, n, T(step.title), (pos.x0, pos.y0, pos.width, pos.height))
     # instructions (right ≈ 40 %)
     cx, cw = x + pic_w + 0.01, w - pic_w - 0.022
     tool = S.tool_for(pattern.options, step.stitch, step.data.get("knit")) if step.stitch else {}
@@ -770,8 +776,7 @@ def _panel(fig, pattern, n: int, step: S.Step, rect, prev_section: str):
             t.remove()
         for art in list(fig.artists[mark[2]:]):
             art.remove()
-    if CHECKS is not None:
-        CHECKS.append(dict(step=n, rect=rect, fig=fig, texts=fig.texts[first:], axes=None))
+    return dict(step=n, rect=rect, fig=fig, texts=fig.texts[first:], axes=None)
 
 
 def step_pages(pdf, pattern, steps, first_page: int) -> int:
@@ -788,11 +793,13 @@ def step_pages(pdf, pattern, steps, first_page: int) -> int:
         for k, st in enumerate(chunk):
             rect = (mx, top - (k + 1) * ph - k * gap, 1 - 2 * mx, ph)
             before = len(fig.axes)
-            _panel(fig, pattern, start + k + 1, st, rect, prev)
+            rec = _panel(fig, pattern, start + k + 1, st, rect, prev)
+            rec["axes"] = fig.axes[before:]
+            rec["page"] = page
+            _measure(rec)
+            QA.check_panel_text(rec)
             if CHECKS is not None:
-                CHECKS[-1]["axes"] = fig.axes[before:]
-                CHECKS[-1]["page"] = page
-                _measure(CHECKS[-1])
+                CHECKS.append(rec)
             prev = st.section
         if len(chunk) < STEPS_PER_PAGE:
             k = len(chunk)
@@ -913,6 +920,7 @@ def build(pattern, path: str, plans=None, steps: list[S.Step] | None = None) -> 
     from matplotlib.backends.backend_pdf import PdfPages
     steps = steps if steps is not None else S.assembly(pattern)
     DG._CTX["pattern"] = pattern
+    QA.reset()
     with plt.rc_context({"font.family": "DejaVu Sans", "pdf.fonttype": 42}):
         with PdfPages(path, metadata={"Title": f"{T(pattern.title)} – " + T("sewing instructions"),
                                       "Creator": "sewing-pattern-generator"}) as pdf:

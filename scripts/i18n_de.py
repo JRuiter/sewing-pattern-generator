@@ -523,9 +523,16 @@ TABLE: dict[str, str] = {
         "Overlock ({n}-Faden-Overlockstich, Differential etwa {n}, damit die Naht nicht wellt)",
 
     # ------------------------------------------------------------------ booklet
-    "right sides together": "rechts auf rechts", "leg 1: inside out": "Bein 1: links gewendet",
-    "leg 2: right side out": "Bein 2: rechts gewendet",
-    "leg 2 inside leg 1, waist edges even": "Bein 2 in Bein 1, Oberkanten bündig", "Basics": "Grundlagen", "and": "und", "Colours in this booklet": "Farben in dieser Anleitung",
+    "Booklet check": "Prüfung der Anleitung", "Where": "Wo", "Finding": "Befund",
+    "All pictures and texts passed the automatic checks (views complete, seams lie on each other or side by side, "
+    "pictures fill their area, no text outside its panel).":
+        "Alle Bilder und Texte haben die automatischen Prüfungen bestanden (Ansichten vollständig, Nähte liegen "
+        "übereinander oder nebeneinander, Bilder füllen ihre Fläche, kein Text außerhalb seines Kastens).",
+    "Booklet check: {n} finding(s), see validation_report.md":
+        "Prüfung der Anleitung: {n} Befund(e), siehe pruefbericht.md",
+    "Final pressing": "Bügeln", "right sides together": "rechts auf rechts", "leg 1: stays inside out": "Bein 1: bleibt links",
+    "leg 2: turn right side out": "Bein 2: auf rechts wenden", "turn": "wenden", "leg 1": "Bein 1",
+    "leg 2": "Bein 2", "push in, up to the top": "hinein, bis oben", "Basics": "Grundlagen", "and": "und", "Colours in this booklet": "Farben in dieser Anleitung",
     "Material": "Material", "For notches, labels and placement lines.": "Für Knipse, Beschriftung und Positionslinien.",
     "Press from the wrong side only, on the towel.": "Nur von links bügeln, auf dem Frottiertuch.",
     "To thread the elastic.": "Zum Gummi-Einziehen.", "Steam.": "Mit Dampf.",
@@ -631,8 +638,12 @@ TABLE: dict[str, str] = {
     "Both allowances together, then press them towards the back.": "Beide Zugaben zusammen, dann nach hinten bügeln.",
     "Sew the inseams": "Innenbeinnähte nähen", "The notches on the inseam meet.": "Die Knipse am Innenbein treffen sich.",
     "Put one leg inside the other": "Ein Bein ins andere stecken",
-    "Turn one leg right side out and slip it into the other (wrong side out): the legs lie right sides together.":
-        "Ein Bein auf rechts wenden und in das andere (links gewendete) stecken: die Beine liegen rechts auf rechts.",
+    "Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the top edges are even; "
+    "the hems point the same way.":
+        "Bein 2 auf rechts wenden. Bein 1 bleibt links. Bein 2 in Bein 1 schieben, bis die oberen Kanten bündig "
+        "sind; die Säume zeigen in dieselbe Richtung.",
+    "Now the legs lie right sides together and the crotch curves lie exactly on top of each other.":
+        "Jetzt liegen die beiden Hosenbeine rechts auf rechts, die Schrittrundungen liegen genau übereinander.",
     "Sew the crotch seam": "Schrittnaht nähen",
     "In one go from the front to the back top edge; the inseams meet exactly.":
         "In einem Zug von der vorderen zur hinteren Oberkante; die Innenbeinnähte treffen sich genau.",

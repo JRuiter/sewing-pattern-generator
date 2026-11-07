@@ -51,3 +51,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | `rise` | 15.9 cm | option front_rise_total − waistband height |  |
 | `inseam_finished` | 51.3 cm | option inseam_total |  |
 | `hem_width` | 27.7 cm | cuff length / cuff stretch ratio |  |
+
+## Booklet check
+
+All pictures and texts passed the automatic checks (views complete, seams lie on each other or side by side, pictures fill their area, no text outside its panel).

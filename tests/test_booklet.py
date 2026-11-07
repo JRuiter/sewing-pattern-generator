@@ -25,19 +25,8 @@ def _run(tmp_path, garment, options, lang="en", size=122):
 
 
 def _problems(checks):
-    bad = []
-    for rec in checks:
-        x, y, w, h = rec["rect"]
-        texts = [b for b in rec["boxes"] if b[0] == "text"]
-        for kind, txt, (x0, y0, x1, y1) in rec["boxes"]:
-            if x0 < x - 0.002 or y0 < y - 0.002 or x1 > x + w + 0.002 or y1 > y + h + 0.002:
-                bad.append((rec["step"], kind, txt))
-        for i in range(len(texts)):
-            for j in range(i + 1, len(texts)):
-                a, b = texts[i][2], texts[j][2]
-                if min(a[2], b[2]) - max(a[0], b[0]) > 0.003 and min(a[3], b[3]) - max(a[1], b[1]) > 0.003:
-                    bad.append((rec["step"], "overlap", texts[i][1], texts[j][1]))
-    return bad
+    import booklet_qa as QA
+    return [p for rec in checks for p in QA.text_problems(rec)]
 
 
 @pytest.fixture(scope="module")
@@ -129,3 +118,51 @@ def test_seams_of_different_shape_are_shown_side_by_side(kord):
         st = next(s for s in steps if s.title == title)
         sms = S.resolve_seams(pat, st)
         assert len(sms) == 1 and DG.overlay_parts(pat, sms[0]) is None, title
+
+
+def test_booklet_qa_finds_broken_drawings():
+    """The automatic booklet check reports the mistakes that once slipped through."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    import booklet_qa as QA
+    import views as V
+    hoodie, _, _ = GN.draft_from_spec(dict(garment="hoodie", size=140, options={"kangaroo": True}))
+    views = V.garment_views(hoodie)
+    views["front"]["layers"] = [lay for lay in views["front"]["layers"] if lay[1].key != "sleeve"]
+    QA.reset()
+    QA.check_views(hoodie, views)
+    assert any("'sleeve' missing" in i["text"] for i in QA.ISSUES)
+    harem, _, _ = GN.draft_from_spec(dict(garment="pants_basic", size=122, options={"style": "harem"}))
+    views = V.garment_views(harem)
+    views["back"]["layers"] = [lay for lay in views["back"]["layers"] if lay[1].key != "leg_cuff"]
+    QA.reset()
+    QA.check_views(harem, views)
+    assert any("leg_cuff" in i["text"] for i in QA.ISSUES)
+    # a tiny drawing in a big picture area
+    fig = plt.figure(figsize=B.PAGE)
+    ax = fig.add_axes((0.1, 0.1, 0.5, 0.4))
+    ax.plot([0, 1], [0, 1])
+    ax.set_xlim(-20, 20)
+    ax.set_ylim(-20, 20)
+    QA.reset()
+    QA.check_picture(ax, 3, "x", (0.1, 0.1, 0.5, 0.4))
+    plt.close(fig)
+    assert QA.ISSUES and QA.ISSUES[0]["kind"] == "picture"
+    QA.reset()
+
+
+@pytest.mark.parametrize("garment,options,size", [
+    ("pants_basic", {"style": "harem"}, 122), ("hoodie", {"kangaroo": True}, 140), ("dress", {}, 122),
+])
+def test_booklet_check_is_clean_and_reported(tmp_path, garment, options, size):
+    res = GN.run(dict(garment=garment, size=size, options=options, formats=["a4"], out=str(tmp_path)),
+                 verbose=False)
+    assert res["booklet_issues"] == []
+    assert "Booklet check" in (tmp_path / "validation_report.md").read_text(encoding="utf-8")
+
+
+def test_kord_booklet_check_is_clean(kord):
+    import booklet_qa as QA
+    assert QA.ISSUES == []
