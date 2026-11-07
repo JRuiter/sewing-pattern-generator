@@ -18,6 +18,8 @@ SLOW_TESTS = {
     "test_sheets_a0_a1",
     "test_round_trip",
     "test_generate_dxf_measure_file_and_construction",
+    "test_doll_photo_round_trip",
+    "test_generate_doll_end_to_end",
 }
 SLOW_FIXTURES = {"roll_pdf", "a4_pdf"}
 

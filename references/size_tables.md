@@ -185,3 +185,48 @@ in the instructions marks profile values with the source `profile`. Children's p
 older than **6 months** produce a warning (please measure again). `profiles.py show <name>`
 prints the growth since the previous entry and the next kids' size; `profiles.py export
 <name> file.smis` writes the profile as an XML measurement file.
+
+## Doll clothes (`--doll`)
+
+Dolls have no size table: the pattern is drafted from the doll's own measurements
+(`scripts/doll.py`). Supported dolls: 20–100 cm tall (fabric/rag dolls, Waldorf-style
+dolls, soft toys, baby dolls, fashion dolls). Garments: `dress`, `skirt`, `pants_basic`,
+`tshirt_basic`.
+
+**How to measure a doll:** use a soft tape or a piece of string (then measure the string
+with a ruler). Do not pull tight; on a stuffed doll the tape should just touch.
+
+| Measurement | Where |
+|---|---|
+| `height` (required) | top of the head to the soles |
+| `chest` | around the chest, under the arms |
+| `waist` | around the narrowest part of the body (on many dolls ≈ chest) |
+| `hip` | around the widest part of the bottom |
+| `head` | around the head at its widest (for the back opening check) |
+| `arm` | shoulder point to wrist |
+| `inseam` | crotch to soles, along the inside of the leg |
+| `side_length` | waist to soles, along the side |
+| `back_length` | nape of the neck to the waist (optional) |
+
+Only the height is required. Everything else is taken from typical fabric-doll proportions
+(fractions of the height: chest 0.62, waist 0.60, hip 0.66, head 0.72, neck 0.32, arm 0.27,
+inseam 0.28, side length 0.44, back length 0.20, shoulder 0.07, upper arm 0.22, wrist 0.16),
+and circumferences that were not given follow the ones that were (a chunky doll stays chunky).
+The plausibility check warns when, for example, the side length is not clearly longer than
+the inseam.
+
+**Doll defaults** (each can be overridden with an option): seam allowance 6 mm (dolls under
+30 cm: 5 mm), turned-up hems 10 mm (8 mm), woven fabric, wide fit (doll arms do not bend),
+tops and dresses with a **back opening** closed with narrow Velcro or snaps (allowance
+1.5 cm, option `opening_sa`) and a **bias-bound neckline** (`neck_finish: "bias"`; jersey
+tops get a neckband), dresses without waist elastic, pants as pull-on trousers with a 6 mm
+elastic in a casing, no pockets or rib cuffs. `back_opening: false` drafts a pull-over top
+whose neckline is enlarged until the doll's head fits through (needs stretchy fabric).
+
+**How the scale works:** the modules are drafted at a virtual child scale (the doll's side
+length enlarged to 65 cm), so every drafting rule, curve and minimum length applies in
+proportion, and the finished pattern is scaled back. The allowances are passed in so that
+they come out at exactly the doll value; the validation runs on the real doll pattern.
+Construction overrides, `--adjust` values and allowances are always given in real doll
+millimetres. Profiles: `profiles.py save rosa --measures '{"height": 45, "chest": 30}' --kind doll`
+switches the doll mode on for `--profile rosa`.

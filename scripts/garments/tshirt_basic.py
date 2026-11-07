@@ -24,7 +24,15 @@ DEFAULTS = dict(fit="normal", fabric="jersey", stretch=None, sleeve_style="set_i
                 band_stretch=None, sleeve_cuffs=False, hem_band=False, sa=10.0, hem_sa=20.0,
                 neck_band_h=None, chest_total=None, body_length=None, sleeve_len_total=None,
                 sleeve_opening=None, neck_extra=0.0, cuff_h=None, hem_band_h=None,
-                bicep_total=None, hem_total=None)
+                bicep_total=None, hem_total=None,
+                # back opening (doll clothes, woven tops): centre back split, closed with Velcro or
+                # snaps; opening_sa = allowance of the opening edge (overlap + turn-under)
+                back_opening=False, opening_sa=None,
+                # neckline finish: band (stretched neckband) or bias (bias binding strip, woven)
+                neck_finish="band",
+                # limits for unusual proportions (dolls): deepest armhole (mm, from the neck point)
+                # and the short-sleeve opening as a share of the upper-arm width
+                armhole_depth_max=None, sleeve_taper=0.9)
 
 
 def resolve_options(options):
@@ -51,8 +59,11 @@ def _body_frame(m, o, adult, C: Construction | None = None):
     slope = math.radians(C.val("shoulder_slope", 17.0, "fixed", unit="°"))
     drop = sh * math.tan(slope)
     sx, sy = nw + sh * math.cos(slope), -drop
-    AD = C.val("armhole_depth", 0.18 * Ct + 25 + (0.03 * Ct if o["fit"] in ("wide", "oversized") else 0),
-               "18 % of chest_width + 2.5 cm" + (" + 3 %" if o["fit"] in ("wide", "oversized") else ""))
+    ad = 0.18 * Ct + 25 + (0.03 * Ct if o["fit"] in ("wide", "oversized") else 0)
+    ad_how = "18 % of chest_width + 2.5 cm" + (" + 3 %" if o["fit"] in ("wide", "oversized") else "")
+    if o["armhole_depth_max"] and ad > o["armhole_depth_max"]:
+        ad, ad_how = o["armhole_depth_max"], ad_how + ", limited to option armhole_depth_max"
+    AD = C.val("armhole_depth", ad, ad_how)
     L = C.val("body_length", o["body_length"] or (m["back_length"] + 0.13 * m["height"]
                                                   + (0.12 * m["height"] if o["length"] == "tunic" else 0)),
               "option body_length" if o["body_length"] else "back length + 13 % of height"
@@ -103,7 +114,35 @@ def _body_piece(key, name, F, depth, scoop, o, hem_y, flare, notches):
     p = Piece(key, name, edges, cut_count=1, mirror=False, fabric="Main fabric",
               grain=(G.P(gx, -F["AD"] - 20), G.P(gx, hem_y + 40)))
     p.notches += notches
+    if key == "back" and o["back_opening"]:
+        open_back(p, opening_sa(o))
     return p
+
+
+def opening_sa(o) -> float:
+    """Allowance of a back opening edge: overlap for Velcro/snaps plus turn-under."""
+    return float(o["opening_sa"] or 2.5 * o["sa"])
+
+
+def open_back(piece, osa: float, length: float | None = None, sa: float | None = None) -> None:
+    """Turn the centre (fold) edge of a back piece into a back opening.
+
+    The piece is then cut twice (mirrored). With `length` only the top part of the centre
+    edge (measured from its start) is the opening; the rest becomes a centre back seam with
+    allowance `sa`."""
+    ce = piece.edge("center")
+    i = piece.edge_index("center")
+    L = G.length(ce.pts)
+    piece.cut_count, piece.mirror = 2, True
+    if length is None or length >= L - 1.0:
+        ce.fold, ce.sa, ce.turned = False, osa, True
+        ce.label = "Back opening (turn under)"
+        return
+    # not "turned": below the opening the edge continues as a seam (clip the allowance at the notch)
+    top = Edge("center_open", G.sub(ce.pts, 0.0, length), osa, False, "Back opening (turn under)")
+    rest = Edge("center", G.sub(ce.pts, length, L), sa, False, "Centre back seam")
+    piece.edges[i:i + 1] = [top, rest]
+    piece.notches.append(Notch("center", 0.0, 2))
 
 
 def _sleeve(F, o, m, cap_target, adult):
@@ -118,7 +157,7 @@ def _sleeve(F, o, m, cap_target, adult):
     if o["sleeve_opening"]:
         op = o["sleeve_opening"]
     elif o["sleeve_length"] == "short":
-        op = SW * 0.9
+        op = SW * o["sleeve_taper"]
     elif o["sleeve_cuffs"]:
         op = None
     else:
@@ -217,7 +256,8 @@ def _raglan(front, back, F, o, m, adult):
         op = cuff_len / E.band_ratio(o["band_fabric"], o["band_stretch"])
     else:
         cuff_len = 0.0
-        op = o["sleeve_opening"] or (SW * 0.9 if o["sleeve_length"] == "short" else max(m["wrist"] * 1.6, SW * 0.55))
+        op = o["sleeve_opening"] or (SW * o["sleeve_taper"] if o["sleeve_length"] == "short"
+                                     else max(m["wrist"] * 1.6, SW * 0.55))
     # sleeve seams leave the underarm perpendicular to the raglan line
     def perp(k, side):
         d = G.start_dir(k)                          # direction U → N
@@ -340,35 +380,58 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
     stretch = F["stretch"]
     neck_len = sum(pieces[[p.key for p in pieces].index(k)].edge(e).length * n for k, e, n in neck_parts)
     nb_h = o["neck_band_h"] or (25 if adult else 20)
-    ratio = E.band_ratio(o["band_fabric"], o["band_stretch"])
-    if o["neckline"] == "v":
-        ratio = min(0.95, ratio + 0.05)
-    nbl = neck_len * ratio
-    band = rect_piece("neckband", "Neckband", nbl, 2 * nb_h, sa=o["sa"] * 0.7, cut_count=1,
-                      fabric="Rib knit" if o["band_fabric"] == "rib" else "Main fabric",
-                      labels=("Seam edge", "Cross seam", "Seam edge", "Cross seam"), grain_vertical=True)
-    band.marks.append(Mark(G.line(G.P(0, nb_h), G.P(nbl, nb_h)), "fold", "Fold line"))
-    band.stretch_dir = "Stretch direction: along the length"
-    pieces.append(band)
-    lo_r, hi_r = E.band_ratio_range(o["band_fabric"])
-    seams.append(dict(name="Neckband ↔ neckline (stretched)", a=neck_parts, b=[("neckband", "bottom", 1)],
-                      type="ratio", lo=lo_r, hi=min(0.97, hi_r + (0.05 if o["neckline"] == "v" else 0))))
+    if o["neck_finish"] == "bias":
+        # bias binding: a strip as long as the neckline, folded lengthwise and sewn on flat;
+        # its ends are turned in at the back opening (or joined at a shoulder)
+        nb_h = o["neck_band_h"] or max(4.0, 0.6 * o["sa"])
+        band = rect_piece("neckband", "Neck binding (bias)", neck_len, 2 * nb_h, sa=o["sa"] * 0.7, cut_count=1,
+                          fabric="Main fabric", labels=("Seam edge", "End", "Seam edge", "End"),
+                          grain_vertical=False)
+        band.grain = (G.P(neck_len * 0.3, nb_h * 0.2), G.P(neck_len * 0.3 + nb_h * 1.6, nb_h * 1.8))
+        band.info.append("cut on the bias (45°)")
+        band.marks.append(Mark(G.line(G.P(0, nb_h), G.P(neck_len, nb_h)), "fold", "Fold line"))
+        pieces.append(band)
+        seams.append(dict(name="Neck binding ↔ neckline", a=neck_parts, b=[("neckband", "bottom", 1)],
+                          type="equal"))
+        nbl = neck_len
+    else:
+        ratio = E.band_ratio(o["band_fabric"], o["band_stretch"])
+        if o["neckline"] == "v":
+            ratio = min(0.95, ratio + 0.05)
+        nbl = neck_len * ratio
+        band = rect_piece("neckband", "Neckband", nbl, 2 * nb_h, sa=o["sa"] * 0.7, cut_count=1,
+                          fabric="Rib knit" if o["band_fabric"] == "rib" else "Main fabric",
+                          labels=("Seam edge", "Cross seam", "Seam edge", "Cross seam"), grain_vertical=True)
+        band.marks.append(Mark(G.line(G.P(0, nb_h), G.P(nbl, nb_h)), "fold", "Fold line"))
+        band.stretch_dir = "Stretch direction: along the length"
+        pieces.append(band)
+        lo_r, hi_r = E.band_ratio_range(o["band_fabric"])
+        seams.append(dict(name="Neckband ↔ neckline (stretched)", a=neck_parts, b=[("neckband", "bottom", 1)],
+                          type="ratio", lo=lo_r, hi=min(0.97, hi_r + (0.05 if o["neckline"] == "v" else 0))))
     b_stretch = E.fabric_info(o["band_fabric"], o["band_stretch"])[1]
-    deficit = m["head"] * 1.03 - neck_len * (1 + stretch / 100)
-    if deficit > 0 and o.get("_auto_neck", 0) < 8:
-        # enlarge the neckline automatically until it fits over the head
-        opts2 = dict(options or {})
-        opts2["neck_extra"] = o["neck_extra"] + deficit / 5.0 + 2.0
-        opts2["_auto_neck"] = o.get("_auto_neck", 0) + 1
-        return draft(measures, opts2, _garment)
-    if o["neck_extra"] > 0 and o.get("_auto_neck"):
-        notes.append(f"Neckline enlarged by {o['neck_extra'] / 10:.1f} cm so that it fits over the head.")
-    checks.append(dict(name="Neckline fits over the head", kind="min",
-                       value=nbl * (1 + b_stretch / 100), target=m["head"] * 1.0,
-                       note="neckband length incl. usable stretch ≥ head circumference"))
-    checks.append(dict(name="Neckline (fabric edge) fits over the head", kind="min",
-                       value=neck_len * (1 + stretch / 100), target=m["head"] * 1.0,
-                       note="neckline incl. stretch ≥ head circumference"))
+    if o["back_opening"]:
+        # the garment opens at the back: the head goes through the neckline plus both opening edges
+        open_len = back.edge("center").length
+        checks.append(dict(name="Head fits through the back opening", kind="min",
+                           value=neck_len * (1 + stretch / 100) + 2 * open_len, target=m["head"] * 1.05,
+                           note="neckline + both edges of the back opening ≥ head circumference + 5 %"))
+    else:
+        deficit = m["head"] * 1.03 - neck_len * (1 + stretch / 100)
+        if deficit > 0 and o.get("_auto_neck", 0) < 8:
+            # enlarge the neckline automatically until it fits over the head
+            opts2 = dict(options or {})
+            opts2["neck_extra"] = o["neck_extra"] + deficit / 5.0 + 2.0
+            opts2["_auto_neck"] = o.get("_auto_neck", 0) + 1
+            return draft(measures, opts2, _garment)
+        if o["neck_extra"] > 0 and o.get("_auto_neck"):
+            notes.append(f"Neckline enlarged by {o['neck_extra'] / 10:.1f} cm so that it fits over the head.")
+        if o["neck_finish"] != "bias":
+            checks.append(dict(name="Neckline fits over the head", kind="min",
+                               value=nbl * (1 + b_stretch / 100), target=m["head"] * 1.0,
+                               note="neckband length incl. usable stretch ≥ head circumference"))
+        checks.append(dict(name="Neckline (fabric edge) fits over the head", kind="min",
+                           value=neck_len * (1 + stretch / 100), target=m["head"] * 1.0,
+                           note="neckline incl. stretch ≥ head circumference"))
     if o["sleeve_cuffs"]:
         cuff = rect_piece("sleeve_cuff", "Sleeve cuff", sinfo["cuff_len"], 2 * sinfo["cuff_h"], sa=o["sa"],
                           cut_count=2, fabric="Rib knit", labels=("Seam edge", "Cross seam", "Seam edge", "Cross seam"))
@@ -441,6 +504,15 @@ FINISHED_LABELS = {
 }
 
 
+def back_opening_step(o) -> str:
+    osa = opening_sa(o)
+    return (f"**Back opening:** finish both centre back edges, press the opening allowance "
+            f"({osa / 10:.1f} cm) to the inside and stitch it down. The two edges overlap at the centre back: "
+            "sew a strip of narrow Velcro (or two or three snaps) onto the overlap, the soft side on the "
+            "left back, the hook side on the right back. The garment opens completely, which makes dressing "
+            "easy (dolls, small children).")
+
+
 def sewing_steps(pat):
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
@@ -451,12 +523,24 @@ def sewing_steps(pat):
                   "single notches at the front, double at the back."]
     else:
         steps += [f"**Shoulders:** place front and back right sides together and sew the shoulder seams {st}."]
-    steps += [
-        "**Neckband:** sew it into a ring across the short ends and fold it lengthwise wrong sides together. "
-        "Divide neckband and neckline into quarters (cross seam at one shoulder or centre back) and sew the "
-        "neckband on right sides together while stretching it. Press the seam allowance down and topstitch "
-        "with a twin needle if you like.",
-    ]
+    if o.get("back_opening"):
+        steps.append(back_opening_step(o))
+    if o.get("neck_finish") == "bias":
+        steps.append(
+            "**Neck binding:** fold the bias strip lengthwise wrong sides together and press. Pin it right "
+            "sides together to the neckline (raw edges together), letting each end stick out past the opening "
+            "edge by the allowance, and sew. Fold the ends in, turn the binding to the inside so it covers the "
+            "seam allowance, and stitch it down close to the fold.")
+    elif o.get("back_opening"):
+        steps.append(
+            "**Neckband:** fold it lengthwise wrong sides together. Sew it to the neckline right sides together "
+            "while stretching it slightly, from one opening edge to the other; fold the ends in at the opening.")
+    else:
+        steps.append(
+            "**Neckband:** sew it into a ring across the short ends and fold it lengthwise wrong sides together. "
+            "Divide neckband and neckline into quarters (cross seam at one shoulder or centre back) and sew the "
+            "neckband on right sides together while stretching it. Press the seam allowance down and topstitch "
+            "with a twin needle if you like.")
     if o["sleeve_style"] != "raglan":
         steps.append("**Set in the sleeves:** pin the centre of the sleeve cap (top notch) to the shoulder seam, "
                      "match the front/back notches and sew the sleeve in flat (ease the cap in slightly if needed).")
@@ -467,10 +551,12 @@ def sewing_steps(pat):
     if o["sleeve_cuffs"]:
         steps.append("**Sleeve cuffs:** sew into a ring, fold, and sew to the sleeve hem while stretching.")
     else:
-        steps.append("**Sleeve hem:** press the hem allowance under and sew with a twin needle/coverstitch.")
+        steps.append("**Sleeve hem:** press the hem allowance under and sew "
+                     + ("with a twin needle/coverstitch." if knit else "with a straight stitch."))
     if o["hem_band"]:
         steps.append("**Hem band:** sew into a ring, fold, divide into quarters and sew on while stretching.")
     else:
-        steps.append("**Hem:** press the hem allowance (2 cm) under and sew with a twin needle/coverstitch.")
+        steps.append(f"**Hem:** press the hem allowance ({o['hem_sa'] / 10:.1f} cm) under and sew "
+                     + ("with a twin needle/coverstitch." if knit else "with a straight stitch."))
     steps.append("Done! Press the seams.")
     return steps

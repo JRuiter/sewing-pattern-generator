@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from xml.sax.saxutils import escape
 
 import numpy as np
-from reportlab.lib.colors import Color, black, white
+from reportlab.lib.colors import Color, black
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rl_canvas
@@ -552,7 +552,9 @@ def _ink_raster(prims, cw, ch, res=1.0):
     return np.array(img, dtype=np.int32)
 
 
-def _find_free(ink, window, size_w, size_h, exclude=10.0, res=1.0):
+def _find_free(ink, window, size_w, size_h, exclude=10.0, res=1.0, least_ink=False):
+    """Top-left corner of a free window × size spot, or None. least_ink: the spot that
+    covers the fewest lines/texts instead of None."""
     x0, y0, x1, y1 = window
     xa, ya = int((x0 + exclude) / res), int((y0 + exclude) / res)
     xb, yb = int((x1 - exclude) / res), int((y1 - exclude) / res)
@@ -567,7 +569,10 @@ def _find_free(ink, window, size_w, size_h, exclude=10.0, res=1.0):
     s = pad[hh:, ww:] - pad[:-hh, ww:] - pad[hh:, :-ww] + pad[:-hh, :-ww]
     free = np.argwhere(s == 0)
     if len(free) == 0:
-        return None
+        if not least_ink:
+            return None
+        r, cc = np.unravel_index(int(np.argmin(s)), s.shape)
+        return (xa + cc) * res, (ya + r) * res
     # prefer the bottom left (away from the page header)
     r, cc = free[np.argmax(free[:, 0] * 10 - free[:, 1])]
     return (xa + cc) * res, (ya + r) * res
@@ -720,13 +725,14 @@ def _render_tiles(c, pattern, lay: L.Layout, start_no=1, total=None, overview=Tr
         # control squares in a free spot
         spot = _find_free(ink, win, 84, 56)
         if spot is None:
-            spot = _find_free(ink, win, 56, 56)
+            # crowded page (small pieces, e.g. doll clothes): also try close to the page edge
+            spot = _find_free(ink, win, 56, 56) or _find_free(ink, win, 56, 56, exclude=3.0)
             if spot is None:
+                # no free spot: draw the square where it crosses the fewest lines (never hide
+                # pattern lines under a white box)
                 warnings.append(t["label"])
-                spot = (win[0] + L.OVERLAP + 5, win[3] - 70)
-                c.setFillColor(white)
-                px, py = page.to_pdf(spot[0] - 2, spot[1] + 54)
-                c.rect(px, py, 58 * MM, 58 * MM, stroke=0, fill=1)
+                spot = _find_free(ink, win, 56, 56, exclude=3.0, least_ink=True) or \
+                    (win[0] + L.OVERLAP + 5, win[3] - 70)
                 control_squares_pdf_single(c, spot[0] + margin - win[0] + 1, spot[1] + margin - win[1] + 2, page_h)
             else:
                 control_squares_pdf_single(c, spot[0] + margin - win[0] + 1, spot[1] + margin - win[1] + 2, page_h)

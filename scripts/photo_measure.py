@@ -296,6 +296,25 @@ def _seam_from_profile(gray, mask, y_from, y_to, x_from=None, x_to=None, px_per_
     return y_from + i, float(prof[i] / max(base, 1e-6))
 
 
+def _hem_angle(lm, crotch) -> float:
+    """Leg rotation (degrees, as used for the principal axis) that makes the hem edge horizontal."""
+    ys, xs = np.nonzero(lm)
+    cols = np.unique(xs)
+    if len(cols) < 10:
+        return 0.0
+    bot = np.array([ys[xs == c].max() for c in cols], float)
+    lo, hi = np.percentile(cols, [20, 80])
+    sel = (cols >= lo) & (cols <= hi)
+    best = (1e18, 0.0)
+    for cand in np.linspace(-25, 25, 101):
+        M = cv2.getRotationMatrix2D((float(crotch[0]), float(crotch[1])), -cand, 1.0)
+        p = np.stack([cols[sel], bot[sel], np.ones(sel.sum())], 1) @ M.T
+        spread = float(np.ptp(p[:, 1]))
+        if spread < best[0]:
+            best = (spread, float(cand))
+    return best[1]
+
+
 def measure_pants(mask, img, px_per_mm):
     s = px_per_mm
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -357,7 +376,9 @@ def measure_pants(mask, img, px_per_mm):
     def width_at(y):
         rr = _row_runs(mask[int(y)])
         return (max(r[1] for r in rr) - min(r[0] for r in rr)) / s if rr else 0.0
-    waist_flat = np.median([width_at(top + (wb_h * s if wb_h else 30 * s) * f) for f in (0.3, 0.5, 0.7)])
+    # without a detected waistband: the top 3 cm (small garments: the top fifth of the rise)
+    wb_ref = wb_h if wb_h else min(30.0, 0.2 * front_rise)
+    waist_flat = np.median([width_at(top + wb_ref * s * f) for f in (0.3, 0.5, 0.7)])
     hip_y = top + (wb_h + 0.55 * (front_rise - wb_h)) * s
     hip_flat = width_at(hip_y)
     # legs one by one, aligned to their own axis
@@ -377,6 +398,10 @@ def measure_pants(mask, img, px_per_mm):
         if u[1] < 0:
             u = -u
         ang = math.degrees(math.atan2(u[0], u[1]))      # deviation from vertical
+        if evals.max() < 3.0 * evals.min():
+            # short, wide leg (doll clothes, shorts): the principal axis is undefined; turn
+            # the leg so that its hem edge is horizontal instead
+            ang = _hem_angle(lm, crotch)
         M = cv2.getRotationMatrix2D((float(crotch[0]), float(crotch[1])), -ang, 1.0)
         lr = cv2.warpAffine(lm, M, mask.shape[::-1], flags=cv2.INTER_NEAREST)
         gr = cv2.warpAffine(gray, M, mask.shape[::-1], flags=cv2.INTER_LINEAR)

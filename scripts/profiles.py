@@ -10,7 +10,8 @@ default `./profiles`):
      "history": [{"measured": "2026-05-01", "measures_cm": {"height": 116, ...}}]}
 
 Precedence when drafting: size table < profile < measurement file < measurements given
-explicitly (CLI `--measures`, spec `measures_cm`/`measures_in`). Children's profiles
+explicitly (CLI `--measures`, spec `measures_cm`/`measures_in`). A profile with
+`kind: doll` switches on the doll clothes mode (doll.py). Children's profiles
 (`kind: child`, or height < 160 cm) older than 6 months get a warning (growth).
 
 CLI:
@@ -146,6 +147,8 @@ def apply(spec: dict, directory: str | None = None) -> tuple[dict, list[str]]:
     if prof.get("fit") and not opts.get("fit"):
         opts["fit"] = prof["fit"]
     out["options"] = opts
+    if prof.get("kind") == "doll":
+        out.setdefault("doll", True)            # doll clothes mode (doll.py)
     if not out.get("formats") and prof.get("default_format"):
         out["formats"] = [x.strip() for x in str(prof["default_format"]).split(",")]
     if out.get("size") is None and "height" not in prof["measures_cm"] and prof.get("size"):
@@ -162,7 +165,7 @@ def main(argv=None):
     s = sub.add_parser("save")
     s.add_argument("name")
     s.add_argument("--measures", required=True, help="measurements in cm as JSON")
-    s.add_argument("--kind", choices=["child", "adult"])
+    s.add_argument("--kind", choices=["child", "adult", "doll"])
     s.add_argument("--fit")
     s.add_argument("--format")
     s.add_argument("--date", help="measuring date YYYY-MM-DD (default today)")

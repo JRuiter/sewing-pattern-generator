@@ -1,6 +1,6 @@
 ---
 name: sewing-pattern-generator
-description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt/zip jacket, skirt, dress, beanie, loop scarf.
+description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt/zip jacket, skirt, dress, beanie, loop scarf; doll clothes ("Puppenkleidung", "Kleider für die Stoffpuppe").
 ---
 
 # Sewing pattern generator
@@ -43,6 +43,19 @@ Ask for the missing points together in one short message, each with a default
 Do not ask again afterwards; resolve anything unclear with a sensible default and say
 so in the result.
 
+**Doll clothes** (fabric doll, soft toy, fashion doll; height 20–100 cm): ask instead for the
+doll's height (head to feet) and, measured with a tape or a string around the doll: chest,
+waist, hip, head, arm length (shoulder to wrist), inseam and side length (waist to soles).
+Only the height is required; missing values follow typical fabric-doll proportions. Then
+`generate.py --doll --garment dress --measures '{"height": 45, "chest": 30, …}'`
+(spec `"doll": true`). Supported: `dress`, `skirt`, `pants_basic`, `tshirt_basic`. Doll defaults
+(each can be overridden): seam allowance 6 mm (5 mm under 30 cm), hems 10 mm, woven fabric, wide
+fit, tops and dresses open completely at the back (Velcro/snaps, because a stuffed head rarely
+fits through a neckline) with a bias-bound neckline, pants with a narrow elastic casing, no
+pockets/cuffs. Recommend thin cotton, a short stitch and fray stop. A doll gets a profile with
+`profiles.py save rosa --measures '{…}' --kind doll`. Details: `scripts/doll.py`,
+`references/size_tables.md` ("Doll clothes").
+
 **Measurement profiles:** when the user gives body measurements for a person, offer once to
 save them (`python scripts/profiles.py save lena --measures '{…}' --kind child`). Later
 requests such as "trousers for Lena" then need no measurement questions:
@@ -80,6 +93,9 @@ Then the print files:
 ```bash
 python scripts/generate.py --project project/project.json --format roll610,a4 --out out/copy
 ```
+Doll clothes can be copied too: add `--doll` (`reverse.pipeline.run(..., doll=True)`); the
+result has doll allowances and a back opening, and `generate.py --project` prints it. Doll tops
+measure best with long sleeves (very short, wide doll sleeves: take the sleeve width with a tape).
 Mode B works for **pants** (`--type pants`) and for **T-shirts / raglan tops**
 (`--type top`, module `tshirt_basic`). For tops the photo gives chest and hem width, length,
 underarm depth, the front neckline (width and depth), back neck depth, the shoulder point,
@@ -204,6 +220,7 @@ present. Fix anything odd or tell the user openly.
 - `scripts/profiles.py`, `measure_files.py`: measurement profiles and `.smis`/`.vit` files
 - `scripts/nested.py`, `export_dxf.py`: nested multi-size patterns, DXF export
 - `scripts/garments/*.py`: garment modules `draft(measures, options) -> Pattern`
+- `scripts/doll.py`: doll clothes mode (doll measurements, virtual drafting scale, doll defaults)
 - `scripts/validate.py`: sewability checks
 - `scripts/layout.py`, `render.py`, `instructions.py`, `diagrams.py`: layout, PDF/SVG/PNG, instructions
   and step diagrams (step → seam mapping in `diagrams.STEP_SEAMS`)

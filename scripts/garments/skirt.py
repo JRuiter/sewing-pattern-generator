@@ -107,7 +107,12 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     pat = Pattern("skirt", titles[style], "", pieces, dict(m), o, seams=seams, corners=corners, checks=checks,
                   notes=[f"Elastic {25 if not adult else 30} mm wide, length {elastic / 10:.0f} cm (+2 cm)"])
     pat.finished = dict(top_circ=top_len, hem_circ=hem, length=L, waist_relaxed=elastic)
+    pat.options["_gap"] = 30.0                      # opening for threading the elastic
     return pat
+
+
+def _cm_text(mm: float) -> str:
+    return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
 
 
 def sewing_steps(pat):
@@ -116,9 +121,11 @@ def sewing_steps(pat):
     if st == "gathered":
         s.append("**Gather:** run two gathering threads (longest stitch length) along the top edge and pull "
                  "them up to the waistband length; spread the gathers evenly.")
-    s += ["**Waistband:** sew into a ring (cross seam at the back, leave 3 cm open), fold lengthwise and sew "
-          "to the skirt top edge right sides together. Thread the elastic, join the ends, close the opening.",
+    narrow = pat.piece("front").edge("hem").sa / 2
+    s += [f"**Waistband:** sew into a ring (cross seam at the back, leave {_cm_text(pat.options.get('_gap', 30.0))} "
+          "open), fold lengthwise and sew to the skirt top edge right sides together. Thread the elastic, join "
+          "the ends, close the opening.",
           "**Hem:** press the hem allowance under twice and stitch." if st != "circle" else
-          "**Hem:** let the skirt hang for 24 h, level the hem, then sew a narrow hem (2 × 0.7 cm).",
+          f"**Hem:** let the skirt hang for 24 h, level the hem, then sew a narrow hem (2 × {round(narrow / 10, 2):g} cm).",
           "Done!"]
     return s

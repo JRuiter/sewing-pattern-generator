@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import adjust as ADJ  # noqa: E402
 import construction as K  # noqa: E402
 import diagrams as DG  # noqa: E402
+import doll as DOLL  # noqa: E402
 import export_dxf as D  # noqa: E402
 import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
@@ -72,6 +73,9 @@ def spec_from_project(path: str, spec: dict | None = None) -> dict:
     out = dict(garment=p["module"], size=p["size_estimate"],
                options={k: v for k, v in p["options"].items() if not k.startswith("_")},
                size_label=f"copied from garment (≈ size {p['size_estimate']})")
+    if p.get("doll"):
+        # doll clothes: the options are at the virtual drafting scale (doll.py)
+        out.update(_doll_scale=p["doll_scale"], size_label="doll clothes (copied from garment)")
     out.update(spec or {})
     out.pop("project", None)
     return out
@@ -82,6 +86,12 @@ def draft_from_spec(spec: dict):
         spec = spec_from_project(spec["project"], spec)
     spec, prof_warn = PR.apply(spec)
     mod = get(spec["garment"])
+    if spec.get("_doll_scale"):
+        pat = DOLL.draft_project(mod, spec["garment"], spec["size"], spec.get("options") or {},
+                                 spec["_doll_scale"], spec.get("adjustments"))
+        pat.options["units"] = U.check(spec.get("units"))
+        pat.size_label = spec["size_label"]
+        return pat, {k: "estimated from the garment" for k in pat.measures}, list(prof_warn)
     units = U.check(spec.get("units"))
     # precedence: size table < profile < measurement file < explicit measurements
     explicit = {**M.normalize_keys(U.to_cm(spec.get("measures_in"), "imperial") or {}),
@@ -92,17 +102,25 @@ def draft_from_spec(spec: dict):
         from_file, fw = MF.read_file(spec["measures_file"])
         file_warn += fw
     given = {**(spec.get("_profile_measures_cm") or {}), **M.normalize_keys(from_file), **explicit}
-    measures, sources = M.complete_measures(given or None, spec.get("size"))
+    doll = DOLL.is_doll(spec)
+    if doll:
+        measures, sources = DOLL.complete_measures(given)
+    else:
+        measures, sources = M.complete_measures(given or None, spec.get("size"))
     for k in spec.get("_profile_measures_cm") or {}:
         if k not in explicit and k not in from_file and sources.get(k) == "user":
             sources[k] = "profile"
-    warn = file_warn + M.validate_measures(measures)
+    warn = file_warn + (DOLL.validate_measures(measures) if doll else M.validate_measures(measures))
     opts = dict(spec.get("options") or {})
     if spec.get("adjustments"):
         opts["adjustments"] = {**(opts.get("adjustments") or {}), **spec["adjustments"]}
-    pat = ADJ.draft(mod, spec["garment"], measures, opts)
+    if doll:
+        pat = DOLL.draft(mod, spec["garment"], measures, DOLL.defaults(spec["garment"], opts, measures))
+    else:
+        pat = ADJ.draft(mod, spec["garment"], measures, opts)
     pat.options["units"] = units
-    pat.size_label = spec.get("size_label") or size_label(spec.get("size"), given or None)
+    pat.size_label = spec.get("size_label") or (DOLL.size_label(measures) if doll
+                                                else size_label(spec.get("size"), given or None))
     return pat, sources, warn
 
 
@@ -110,7 +128,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
     out = spec.get("out", "out")
     os.makedirs(out, exist_ok=True)
     spec, _ = PR.apply(spec)          # profile defaults (fit, output format) before drafting
-    sizes = NE.parse_sizes(spec.get("size"))
+    sizes = [None] if DOLL.is_doll(spec) else NE.parse_sizes(spec.get("size"))
     drafts = []                       # nested sizes: (label, pattern) per size
     if len(sizes) > 1:
         reports, report, warn, md_parts = [], [], [], []
@@ -275,6 +293,9 @@ def main(argv=None):
     ap.add_argument("--project", help="project.json from photo mode B (reverse engineering)")
     ap.add_argument("--garment", default="pants_basic")
     ap.add_argument("--size")
+    ap.add_argument("--doll", action="store_true",
+                    help="doll clothes: measurements of the doll in cm (--measures, at least height), "
+                         "narrow allowances, back opening (see doll.py)")
     ap.add_argument("--measures", help='body measurements in cm as JSON, e.g. \'{"hip": 68}\'')
     ap.add_argument("--style")
     ap.add_argument("--fit")
@@ -330,7 +351,7 @@ def main(argv=None):
                     measures_cm=None if imperial else measures,
                     measures_in=measures if imperial else None,
                     formats=fmts,
-                    measures_file=a.measures_file, export_measures=a.export_measures)
+                    measures_file=a.measures_file, export_measures=a.export_measures, doll=a.doll)
     if a.fabric_layout:
         spec["fabric_layout"] = a.fabric_layout
     if a.profile:
