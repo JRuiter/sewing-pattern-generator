@@ -41,6 +41,7 @@ import construction as K  # noqa: E402
 import diagrams as DG  # noqa: E402
 import doll as DOLL  # noqa: E402
 import export_dxf as D  # noqa: E402
+import i18n  # noqa: E402
 import instructions as I  # noqa: E402
 import layout as L  # noqa: E402
 import machines as MC  # noqa: E402
@@ -70,7 +71,9 @@ def _slug(text: str) -> str:
 
 
 def _basename(pat) -> str:
-    lab = pat.size_label.split(" (")[0].replace("size ", "size").replace("'s", "")
+    import re
+    lab = pat.size_label.split(" (")[0].replace("'s", "")
+    lab = re.sub(r"^(size|gr\.?)\s*", i18n.fname("size"), lab, flags=re.I)
     return f"{_slug(pat.title)}_{lab.replace(' ', '_').lower()}"
 
 
@@ -102,6 +105,7 @@ def draft_from_spec(spec: dict):
         pat.options["units"] = U.check(spec.get("units"))
         pat.size_label = spec["size_label"]
         _custom_title(pat, spec)
+        i18n.localize_pattern(pat)
         return pat, {k: "estimated from the garment" for k in pat.measures}, list(prof_warn)
     units = U.check(spec.get("units"))
     # precedence: size table < profile < measurement file < explicit measurements
@@ -133,6 +137,7 @@ def draft_from_spec(spec: dict):
     pat.size_label = spec.get("size_label") or (DOLL.size_label(measures) if doll
                                                 else size_label(spec.get("size"), given or None))
     _custom_title(pat, spec)
+    i18n.localize_pattern(pat)
     return pat, sources, warn
 
 
@@ -144,7 +149,18 @@ def _custom_title(pat, spec: dict) -> None:
         pat.options["title"] = t
 
 
+def language_of(spec: dict) -> str:
+    return i18n.check(spec.get("language") or (spec.get("options") or {}).get("language"))
+
+
 def run(spec: dict, verbose: bool = True) -> dict:
+    """Generate everything; texts in the language of the spec (`language`, default English)."""
+    with i18n.language(language_of(spec)):
+        return _run(spec, verbose)
+
+
+def _run(spec: dict, verbose: bool = True) -> dict:
+    F = i18n.fname
     out = spec.get("out", "out")
     os.makedirs(out, exist_ok=True)
     spec, _ = PR.apply(spec)          # profile defaults (fit, output format) before drafting
@@ -159,7 +175,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
             reports.append(r_)
             report += r_
             warn += [w for w in w_ if w not in warn]
-            part = V.to_markdown(r_, title=f"Sewability check · {p_.size_label}")
+            part = V.to_markdown(r_, title=i18n.t("Sewability check") + f" · {p_.size_label}")
             if p_.construction:
                 part += "\n\n" + K.to_markdown(p_.construction)
             md_parts.append(part)
@@ -174,15 +190,15 @@ def run(spec: dict, verbose: bool = True) -> dict:
         if pat.construction:
             report_md += "\n\n" + K.to_markdown(pat.construction)
     base = spec.get("basename") or (
-        f"{_slug(pat.title)}_sizes_{'_'.join(d[0] for d in drafts)}" if drafts
+        f"{_slug(pat.title)}{F('_sizes_')}{'_'.join(d[0] for d in drafts)}" if drafts
         else _basename(pat))
-    with open(os.path.join(out, "validation_report.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out, F("validation_report.md")), "w", encoding="utf-8") as f:
         f.write(report_md)
     result = dict(pattern=pat, report=report, report_md=report_md, files={}, warnings=warn, ok=V.is_ok(report))
     if not V.is_ok(report):
         if verbose:
             print(report_md)
-            print("\nVALIDATION FAILED: no print files were written.", file=sys.stderr)
+            print("\n" + i18n.t("VALIDATION FAILED: no print files were written."), file=sys.stderr)
         return result
     files = {}
     formats = spec.get("formats") or ["roll610", "a4"]
@@ -201,31 +217,31 @@ def run(spec: dict, verbose: bool = True) -> dict:
                 key = f"ROLL{int(width)}"
                 L.PAPER[key] = (width, 1200.0)
                 lay = L.layout_tiles(pat, key)
-                p = os.path.join(out, f"{base}_roll{int(width)}_strips.pdf")
+                p = os.path.join(out, f"{base}{F('_roll')}{int(width)}{F('_strips.pdf')}")
                 R.render_tiles_pdf(pat, lay, p)
                 n = sum(not t["empty"] for t in lay.tiles)
                 files[f"PDF roll {int(width)} mm, {n} strips of 120 cm to glue (piece wider than the roll)"] = p
                 warn.append(f"At least one piece is wider than the roll ({width / 10:.0f} cm). "
                             f"It is split across {n} strips with 1 cm overlap; please glue them together.")
-                png = os.path.join(out, f"{base}_roll{int(width)}_preview.png")
+                png = os.path.join(out, f"{base}{F('_roll')}{int(width)}{F('_preview.png')}")
                 R.render_png(pat, lay, png)
                 files[f"Preview roll {int(width)} mm"] = png
                 master_lay = master_lay or lay
                 continue
-            p = os.path.join(out, f"{base}_roll{int(width)}.pdf")
+            p = os.path.join(out, f"{base}{F('_roll')}{int(width)}.pdf")
             R.render_roll_pdf(pat, lay, p)
             files[f"PDF roll {int(width)} mm ({lay.page_w:.0f} × {lay.page_h:.0f} mm)"] = p
-            png = os.path.join(out, f"{base}_roll{int(width)}_preview.png")
+            png = os.path.join(out, f"{base}{F('_roll')}{int(width)}{F('_preview.png')}")
             R.render_png(pat, lay, png)
             files[f"Preview roll {int(width)} mm"] = png
             master_lay = master_lay or lay
         elif f in ("a4", "letter"):
             lay = L.layout_tiles(pat, f.upper())
-            p = os.path.join(out, f"{base}_{f}_tiled.pdf")
+            p = os.path.join(out, f"{base}_{f}{F('_tiled.pdf')}")
             _, sq_warn = R.render_tiles_pdf(pat, lay, p)
             n = sum(not t["empty"] for t in lay.tiles)
             files[f"PDF {f.upper()} tiles to glue ({n} pages + overview)"] = p
-            png = os.path.join(out, f"{base}_{f}_preview.png")
+            png = os.path.join(out, f"{base}_{f}{F('_preview.png')}")
             R.render_png(pat, lay, png)
             files[f"Preview {f.upper()} tiles"] = png
             if master_lay is None:
@@ -234,7 +250,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
             width = float(spec.get("projector_width_mm", 1500.0))
             lay = L.layout_projector(pat, width)
             dark = f == "projector_dark"
-            p = os.path.join(out, f"{base}_projector{'_dark' if dark else ''}.pdf")
+            p = os.path.join(out, f"{base}{F('_projector')}{F('_dark') if dark else ''}.pdf")
             R.render_projector_pdf(pat, lay, p, dark=dark)
             files[f"PDF projector{' (dark)' if dark else ''}, 1 page 1:1 ({lay.page_w:.0f} × {lay.page_h:.0f} mm)"] = p
         elif f in ("a0", "a1"):
@@ -242,7 +258,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
             p = os.path.join(out, f"{base}_{f}.pdf")
             R.render_sheets_pdf(pat, lay, p, tiled)
             files[f"PDF {f.upper()} ({lay.sheets} sheet(s)" + (", oversized pieces tiled" if tiled else "") + ")"] = p
-            png = os.path.join(out, f"{base}_{f}_preview.png")
+            png = os.path.join(out, f"{base}_{f}{F('_preview.png')}")
             R.render_png(pat, lay, png)
             files[f"Preview {f.upper()}"] = png
             master_lay = master_lay or lay
@@ -252,7 +268,7 @@ def run(spec: dict, verbose: bool = True) -> dict:
             raise ValueError(f"Unknown format {fmt}")
     if master_lay is None:
         master_lay = L.layout_roll(pat, 610)
-    svg = os.path.join(out, f"{base}_master_1to1.svg")
+    svg = os.path.join(out, f"{base}{F('_master_1to1.svg')}")
     R.render_svg(pat, master_lay, svg)
     files["SVG master 1:1"] = svg
     for f in (x.lower() for x in formats):
@@ -264,15 +280,15 @@ def run(spec: dict, verbose: bool = True) -> dict:
                 D.write_dxf(sp, p, dxf_lay, seam_layer="14" if f == "dxf14" else "8")
                 files[f"DXF for cutters/CAD (AAMA layers, mm, 1:1){' size ' + lab if lab else ''}"] = p
     if spec.get("export_measures"):
-        p = os.path.join(out, "body_measurements.smis")
+        p = os.path.join(out, F("body_measurements.smis"))
         MF.write_file(p, pat.measures, notes=f"{pat.title}, {pat.size_label}")
         files["Body measurements (XML measurement file)"] = p
     plans = I.fabric_consumption(big, spec.get("fabric_widths_mm"), spec.get("fabric_layout", "auto"))
-    zp = os.path.join(out, "cutting_layout.png")
+    zp = os.path.join(out, F("cutting_layout.png"))
     I.render_fabric_png(big, plans, zp)
     files["Cutting layout"] = zp
-    md_path = os.path.join(out, "sewing_instructions.md")
-    pdf_path = os.path.join(out, "sewing_instructions.pdf")
+    md_path = os.path.join(out, F("sewing_instructions.md"))
+    pdf_path = os.path.join(out, F("sewing_instructions.pdf"))
     files["Sewing instructions (PDF)"] = pdf_path
     files["Sewing instructions (Markdown)"] = md_path
     step_list = ST.assembly(big)
@@ -283,11 +299,12 @@ def run(spec: dict, verbose: bool = True) -> dict:
         md, nested_rows = I.nested_section(md, pat, spec.get("fabric_widths_mm"),
                                            spec.get("fabric_layout", "auto"))
     if warn:
-        md = md.replace("## Body measurements", "## Body measurements\n\n" + "\n".join(f"> ⚠️ {w}" for w in warn), 1)
+        bm = "## " + i18n.t("Body measurements")
+        md = md.replace(bm, bm + "\n\n" + "\n".join(f"> ⚠️ {i18n.t(w)}" for w in warn), 1)
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
     I.instructions_pdf(big, md, pdf_path, plans, step_list, images=[zp])
-    js = os.path.join(out, "pattern.json")
+    js = os.path.join(out, F("pattern.json"))
     data = big.summary()
     if drafts:
         data["size"] = pat.size_label
@@ -302,9 +319,9 @@ def run(spec: dict, verbose: bool = True) -> dict:
     result["plans"] = plans
     if verbose:
         print(report_md)
-        print("\nFiles:")
+        print("\n" + i18n.t("Files") + ":")
         for k, v in files.items():
-            print(f"  {k}: {v}")
+            print(f"  {i18n.t(k)}: {v}")
     return result
 
 
@@ -342,6 +359,7 @@ def main(argv=None):
     ap.add_argument("--machines", help="the sewist's machines, comma-separated: "
                     "sewing, straight_only, stretch_stitch, twin_needle, overlocker, coverstitch "
                     "(adapts seam allowances, seam/hem methods and the instructions; see machines.py)")
+    ap.add_argument("--lang", help="language of all generated texts and file names: en (default) or de")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
     fmts = [x.strip() for x in a.format.split(",")] if a.format else None
@@ -386,6 +404,8 @@ def main(argv=None):
         spec["units"] = a.units
     if a.machines:
         spec["machines"] = MC.to_list(a.machines)
+    if a.lang:
+        spec["language"] = i18n.check(a.lang)
     res = run(spec)
     return 0 if res["ok"] else 2
 

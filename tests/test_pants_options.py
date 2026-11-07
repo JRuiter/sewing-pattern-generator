@@ -79,7 +79,7 @@ def test_single_back_pocket(kord):
 def test_back_pocket_step_uses_the_real_seam_allowance():
     pat = _draft(**{**KORD, "seam_allowance_mm": 7.5})
     press = next(s for s in ST.assembly(pat) if s.title == "Press the edges under")
-    assert press.text.startswith("8 mm") and press.amount == pytest.approx(7.5)
+    assert press.text.startswith("7.5 mm") and press.amount == pytest.approx(7.5)
 
 
 def test_hem_casing_allowance_and_steps(kord):

@@ -149,3 +149,52 @@ def test_project_options_survive_machines(tmp_path):
     spec = GN.spec_from_project(os.path.join(root, proj), {"options": {"machines": ["sewing", "overlocker"]}})
     assert spec["options"]["machines"] == ["sewing", "overlocker"]
     assert spec["options"].get("style")
+
+
+# ------------------------------------------------------------------ no sewing machine (#39)
+
+def test_parse_without_sewing_machine():
+    assert MC.parse("overlocker,hand") == {"overlocker", "hand", "no_sewing_machine"}
+    assert MC.parse("overlocker_only") == {"overlocker", "hand", "no_sewing_machine"}
+    assert MC.parse(["overlocker", "no_sewing_machine"]) == {"overlocker", "hand", "no_sewing_machine"}
+    # a sewing-machine key wins over "hand"
+    assert MC.parse("sewing,overlocker,hand") == {"sewing", "overlocker", "hand"}
+    assert MC.parse("overlocker") == {"sewing", "overlocker"}
+    assert not MC.has_sewing_machine(MC.parse("overlocker,hand"))
+
+
+@pytest.mark.parametrize("kind,knit,machine,stitch", [
+    ("seam", False, "overlocker", "4-thread overlock"),
+    ("seam", True, "overlocker", "4-thread overlock"),
+    ("finish", False, "overlocker", "already finished"),
+    ("hem", False, "hand", "blind stitch"),
+    ("topstitch", False, "hand", "back stitch"),
+    ("band", True, "overlocker", "4-thread overlock"),
+])
+def test_method_without_sewing_machine(kind, knit, machine, stitch):
+    d = MC.method({"machines": "overlocker,hand"}, kind, knit)
+    assert (d["machine"], d["stitch"]) == (machine, stitch)
+
+
+def test_overlocker_only_pants_steps():
+    import steps as ST
+    opts = {"style": "trousers", "fabric": "corduroy", "pockets": ["side"], "fake_fly": True,
+            "back_pockets": 1, "hem_finish": "elastic_casing"}
+    pat = _draft("pants_basic", "overlocker,hand", options=opts)
+    assert _seam_sa(pat) == pytest.approx(7.5)            # woven seams on the overlocker too
+    steps = ST.assembly(pat)
+    tools = {ST.tool_for(pat.options, s.stitch, s.data.get("knit"))["machine"] for s in steps if s.stitch}
+    assert "sewing" not in tools and {"overlocker", "hand"} <= tools
+    text = " ".join(ST.as_texts(steps, pat.options)).lower()
+    for bad in ("sewing machine", "zigzag", "straight stitch", "topstitch on the machine"):
+        assert bad not in text, bad
+    assert "by hand with a back stitch" in text and "blind" in text and "tacking stitch" in text
+    assert "box of small hand stitches" in text
+    assert not any(s.title.startswith("Finish the") for s in steps)      # the overlock seam finishes
+    casing = next(s for s in steps if s.title == "Sew the hem casing")
+    assert "overlocker, fold 3.5 cm to the inside once" in casing.text
+    crotch = next(s for s in steps if s.title == "Sew the crotch seam")
+    assert "slowly" in crotch.tip
+    assert steps[3].title == "Set up the overlocker"
+    md = MC.markdown(pat)
+    assert "by hand" in md and "before they reach the knife" in md and "thread chain" in md

@@ -32,6 +32,7 @@ import numpy as np
 
 import geometry as G
 import steps as S
+from i18n import t as T
 
 RIGHT_SIDE = "#f1d39b"          # right side of the fabric
 RIGHT_EDGE = "#8a6d3b"
@@ -147,13 +148,49 @@ def _piece_label(ax, pattern, pc, ring, T=ID, text=None, size=8.0, avoid=None):
                     ha="center", va="top", fontsize=size * 0.72, color="#555", zorder=9)
 
 
-def _fill(ax, pts, wrong=False, z=1, alpha=1.0, lw=1.1):
+# Colour language (legend in the booklet): the fabric decides the colour, right and wrong side differ.
+# (right side, wrong side, texture of the right side)
+PALETTES = {
+    "main": (RIGHT_SIDE, WRONG_SIDE, ""),
+    "corduroy": ("#9c7656", "#efe3cf", "wale"),
+    "velvet": ("#7e5a86", "#efe6f0", "pile"),
+    "lining": ("#90caf9", "#e3f2fd", ""),
+    "rib": ("#a5d6a7", "#eef7ee", "rib"),
+}
+HAND_STITCH = (0, (0.6, 1.8))       # red dotted: by hand
+DONE_STITCH = "#9e9e9e"             # grey dashed: already sewn
+FOLD_LINE = (0, (6, 2, 1, 2))       # blue dash-dot: fold / press line
+_CTX: dict = {"pattern": None, "hand": False}
+
+
+def palette_key(pc=None, pattern=None) -> str:
+    """Which colour a piece gets: rib, lining (pocket bag fabric) or the main fabric."""
+    pattern = pattern if pattern is not None else _CTX["pattern"]
+    fab = (getattr(pc, "fabric_key", None) or getattr(pc, "fabric", "") or "").lower() if pc is not None else ""
+    if "rib" in fab:
+        return "rib"
+    if fab.startswith("lining"):
+        return "lining"
+    main = (pattern.options.get("fabric", "") if pattern is not None and isinstance(pattern.options, dict)
+            else "")
+    return main if main in PALETTES else "main"
+
+
+def palette(pc=None, pattern=None) -> tuple[str, str, str]:
+    return PALETTES[palette_key(pc, pattern)]
+
+
+def _fill(ax, pts, wrong=False, z=1, alpha=1.0, lw=1.1, pc=None):
+    right, back, texture = palette(pc)
     if wrong:
-        ax.fill(pts[:, 0], pts[:, 1], fc=WRONG_SIDE, ec=INK, lw=lw, zorder=z, alpha=alpha,
+        ax.fill(pts[:, 0], pts[:, 1], fc=back, ec=INK, lw=lw, zorder=z, alpha=alpha,
                 hatch="////", **_hatch_kw())
         ax.fill(pts[:, 0], pts[:, 1], fc="none", ec=INK, lw=lw, zorder=z + 0.1)
     else:
-        ax.fill(pts[:, 0], pts[:, 1], fc=RIGHT_SIDE, ec=INK, lw=lw, zorder=z, alpha=alpha)
+        ax.fill(pts[:, 0], pts[:, 1], fc=right, ec=INK, lw=lw, zorder=z, alpha=alpha)
+        if texture:                  # wales / pile / rib ribs along the grain
+            ax.fill(pts[:, 0], pts[:, 1], fc="none", ec="none", zorder=z + 0.05,
+                    hatch={"wale": "||", "pile": "...", "rib": "||"}[texture], **_hatch_kw())
 
 
 def _hatch_kw():
@@ -163,9 +200,12 @@ def _hatch_kw():
     return {}
 
 
-def _stitch(ax, pts, z=6, lw=1.6, color=STITCH):
+def _stitch(ax, pts, z=6, lw=1.6, color=STITCH, hand=None):
+    """Stitch line: red solid = sew now on a machine, red dotted = by hand."""
     pts = np.asarray(pts, float)
-    ax.plot(pts[:, 0], pts[:, 1], color=color, lw=lw, ls=(0, (3.2, 1.6)), zorder=z, solid_capstyle="butt")
+    hand = _CTX["hand"] if hand is None else hand
+    ax.plot(pts[:, 0], pts[:, 1], color=color, lw=lw * (1.25 if hand else 1.0), ls=HAND_STITCH if hand else "-",
+            zorder=z, solid_capstyle="butt", dash_capstyle="round")
 
 
 def _arrow(ax, p0, p1, z=8, color=INK, lw=1.4, head=None, rad=0.0):
@@ -245,7 +285,7 @@ def _dim(ax, a, b, text, size, z=9, side=1.0):
     m = (a + b) / 2
     d = G.unit(b - a)
     nv = np.array([-d[1], d[0]]) * side
-    ax.text(*(m + nv * size * 0.04), text, fontsize=7.5, ha="center", va="center", zorder=z,
+    ax.text(*(m + nv * size * 0.04), T(text), fontsize=7.5, ha="center", va="center", zorder=z,
             bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none"))
 
 
@@ -329,8 +369,8 @@ def _draw_overlays(ax, pattern, step, sms, parts):
         rb = ring_b + sh
         if _coincide(ra, rb):                     # identical pieces: show the lower layer
             ra = ra + np.array([size * 0.015, -size * 0.02])
-        _fill(ax, ra, wrong=False, z=1)
-        _fill(ax, rb, wrong=True, z=2, alpha=0.93)
+        _fill(ax, ra, wrong=False, z=1, pc=A)
+        _fill(ax, rb, wrong=True, z=2, alpha=0.93, pc=B)
         edge = A.edge(ea).pts + sh
         _stitch(ax, edge)
         _pins(ax, edge, size)
@@ -378,7 +418,7 @@ def draw_join(ax, pattern, step, sms):
         pc = pattern.piece(k)
         T = (np.eye(2), offs[k], False)
         r = rings[keys.index(k)] + offs[k]
-        _fill(ax, r, wrong=False, z=1)
+        _fill(ax, r, wrong=False, z=1, pc=pc)
         _piece_label(ax, pattern, pc, rings[keys.index(k)], T, size=8)
         allpts.append(r)
     for i, sm in enumerate(sms):
@@ -417,13 +457,13 @@ def draw_ring(ax, pattern, step):
     # bottom layer right side up, top layer folded over: wrong side visible
     bot = np.array([[0, 0], [half, 0], [half, H], [0, H]], float)
     top = bot + np.array([0.0, 0.0])
-    _fill(ax, bot + [half * 0.03, -H * 0.06], wrong=False, z=1)
-    _fill(ax, top, wrong=True, z=2)
+    _fill(ax, bot + [half * 0.03, -H * 0.06], wrong=False, z=1, pc=pc)
+    _fill(ax, top, wrong=True, z=2, pc=pc)
     # fold at the left, short raw ends at the right: stitch there
     _stitch(ax, [[half - sa, -H * 0.06], [half - sa, H]])
     _pins(ax, np.array([[half, 0.0], [half, H]]), max(half, H) * 0.9, count=2, inward=True)
     ax.plot([0, 0], [0, H], color=INK, lw=2.2, zorder=5)
-    ax.text(-half * 0.03, H / 2, "fold", rotation=90, ha="right", va="center", fontsize=7, color="#555")
+    ax.text(-half * 0.03, H / 2, T("fold"), rotation=90, ha="right", va="center", fontsize=7, color="#555")
     _arrow(ax, [half * 0.8, H * 1.45], [half * 0.2, H * 1.45], rad=0.35)
     pc_lab = (np.eye(2), np.zeros(2), False)
     _piece_label(ax, pattern, pc, top, pc_lab, size=8)
@@ -435,16 +475,16 @@ def draw_fold(ax, pattern, step):
     L, H = _band_dims(pc)
     w = min(L, H * 6)                       # a section of the band
     flat = np.array([[0, 0], [w, 0], [w, H], [0, H]], float)
-    _fill(ax, flat, wrong=True, z=1)
-    ax.plot([0, w], [H / 2, H / 2], color=INK, lw=1.0, ls=(0, (6, 2, 1, 2)), zorder=3)
-    ax.text(w * 1.02, H / 2, "fold line", fontsize=7, va="center", color="#555")
+    _fill(ax, flat, wrong=True, z=1, pc=pc)
+    ax.plot([0, w], [H / 2, H / 2], color=ACCENT[1], lw=1.2, ls=FOLD_LINE, zorder=3)
+    ax.text(w * 1.02, H / 2, T("fold line"), fontsize=7, va="center", color="#555")
     _arrow(ax, [w * 0.5, H * 0.95], [w * 0.5, H * 0.05], rad=-0.5)
     # result: folded band, right side outside
     res = np.array([[0, 0], [w, 0], [w, H / 2], [0, H / 2]], float) + [0, -H * 1.1]
-    _fill(ax, res, wrong=False, z=1)
+    _fill(ax, res, wrong=False, z=1, pc=pc)
     ax.plot([0, w], [res[2, 1], res[2, 1]], color=INK, lw=2.0, zorder=3)
-    ax.text(w * 1.02, res[2, 1], "fold", fontsize=7, va="center", color="#555")
-    ax.text(w * 1.02, res[0, 1], "raw edges", fontsize=7, va="center", color="#555")
+    ax.text(w * 1.02, res[2, 1], T("fold"), fontsize=7, va="center", color="#555")
+    ax.text(w * 1.02, res[0, 1], T("raw edges"), fontsize=7, va="center", color="#555")
     _piece_label(ax, pattern, pc, flat, ID, size=8)
     _finish_axes(ax, [flat, res, [[w * 1.35, 0]]], pad=0.06)
 
@@ -478,7 +518,7 @@ def _quarter_pins(ax, cy, rx, ry, z, labels=("", "", "", ""), label_dy=0.0):
         if labels[k]:
             dx = {0: 0.0, 1: 0.2, 2: 0.0, 3: -0.2}[k]
             dy = {0: -0.2, 1: 0.0, 2: 0.2, 3: 0.0}[k]
-            ax.text(x + dx, y + dy + label_dy, labels[k], fontsize=6.5, ha="center", va="center",
+            ax.text(x + dx, y + dy + label_dy, T(labels[k]), fontsize=6.5, ha="center", va="center",
                     color="#444", zorder=z + 2)
 
 
@@ -498,9 +538,9 @@ def draw_quarter(ax, pattern, step):
     _quarter_pins(ax, 0.0, 1.0, 0.3, 2, labs)
     ax.text(0.85, 1.35, letters(pattern)[band.key], fontsize=8, fontweight="bold", ha="center",
             va="center", zorder=9, bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=INK, lw=0.9))
-    ax.text(0.0, -0.75, target, fontsize=7, ha="center", va="center", zorder=9,
+    ax.text(0.0, -0.75, T(target), fontsize=7, ha="center", va="center", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
-    ax.text(1.05, 1.35, band.name, fontsize=7, ha="left", va="center")
+    ax.text(1.05, 1.35, T(band.name), fontsize=7, ha="left", va="center")
     ax.set_xlim(-1.5, 2.2)
     ax.set_ylim(-1.3, 1.8)
     ax.set_aspect("equal")
@@ -518,13 +558,13 @@ def draw_attach(ax, pattern, step):
     _arrow(ax, [0.55, -0.58], [-0.25, -0.58], color=STITCH, lw=1.6, rad=-0.12)
     ax.text(0.0, 0.12, letters(pattern)[band.key], fontsize=8, fontweight="bold", ha="center",
             va="center", zorder=9, bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=INK, lw=0.9))
-    ax.text(0.0, -0.85, target, fontsize=7, ha="center", va="bottom", zorder=9,
+    ax.text(0.0, -0.85, T(target), fontsize=7, ha="center", va="bottom", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
-    ax.text(1.12, 0.3, "band folded,\nraw edges down", fontsize=6.5, ha="left", va="center", color="#444")
+    ax.text(1.12, 0.3, T("band folded,\nraw edges down"), fontsize=6.5, ha="left", va="center", color="#444")
     if step.stretch:
         _arrow(ax, [-1.1, -0.15], [-1.55, -0.15], lw=1.6)
         _arrow(ax, [1.1, -0.15], [1.55, -0.15], lw=1.6)
-        ax.text(1.35, -0.32, "stretch", fontsize=7, ha="center", va="top")
+        ax.text(1.35, -0.32, T("stretch"), fontsize=7, ha="center", va="top")
     ax.set_xlim(-1.8, 2.3)
     ax.set_ylim(-1.3, 0.9)
     ax.set_aspect("equal")
@@ -551,7 +591,7 @@ def _xsection(ax, origin, scale, kind, amount_txt=""):
         if kind != "press":
             ax.plot([ox + 2.15 * s] * 2, [oy - 0.15 * s, oy + 0.55 * s], color=STITCH, lw=1.6, zorder=11)
         if amount_txt:
-            ax.text(ox + 2.45 * s, oy - 0.35 * s, amount_txt, fontsize=6.5, ha="center", va="top", zorder=11)
+            ax.text(ox + 2.45 * s, oy - 0.35 * s, T(amount_txt), fontsize=6.5, ha="center", va="top", zorder=11)
     elif kind == "edge":
         ax.plot([ox, ox + 3 * s], [oy, oy], color=RIGHT_EDGE, lw=2.4, zorder=10)
         xs = np.linspace(ox + 2.3 * s, ox + 3 * s, 7)
@@ -577,8 +617,14 @@ def _detail(ax, kind, amount_txt):
     iax.set_ylim(-1.5, 1.6)
     iax.set_aspect("equal")
     iax.axis("off")
-    iax.add_patch(Circle((1.75, 0.05), 1.5, fc="white", ec="#9e9e9e", lw=1.0, zorder=1))
+    iax.add_patch(Circle((1.75, 0.05), 1.5, fc="white", ec="#9e9e9e", lw=1.4, zorder=1))
     _xsection(iax, (0.35, -0.15), 0.85, kind, amount_txt)
+    caption = {"edge": "Cross-section of the edge", "press": "Cross-section: pressed edge"}.get(
+        kind, "Cross-section of the hem")
+    iax.text(1.75, 1.62, T(caption), ha="center", va="bottom", fontsize=5.8, color="#555", zorder=12,
+             clip_on=False)
+    # magnifier handle
+    iax.plot([0.7, 0.05], [-1.0, -1.45], color="#9e9e9e", lw=3.0, solid_capstyle="round", zorder=0.5)
 
 
 def draw_edge(ax, pattern, step, kind="edge"):
@@ -586,7 +632,7 @@ def draw_edge(ax, pattern, step, kind="edge"):
     ring = _outline(pc)
     full = _unfolded(pc, ring)
     size = max(np.ptp(full, 0))
-    _fill(ax, full, wrong=(kind in ("hem", "press")), z=1)
+    _fill(ax, full, wrong=(kind in ("hem", "press")), z=1, pc=pc)
     for k, (p, e) in enumerate(step.edges):
         if p != pc.key:
             continue
@@ -635,7 +681,7 @@ def draw_gather(ax, pattern, step):
     pc, ename = _edge_piece(pattern, step)
     full = _unfolded(pc, _outline(pc))
     size = max(np.ptp(full, 0))
-    _fill(ax, full, z=1)
+    _fill(ax, full, z=1, pc=pc)
     pts = pc.edge(ename).pts
     for d in (5.0, 12.0):
         ax.plot(*G.offset_polyline(pts, -d).T, color=STITCH, lw=1.1, ls=(0, (4, 2)), zorder=5)
@@ -643,7 +689,7 @@ def draw_gather(ax, pattern, step):
     t = G.unit(b - a)
     for p, sgn in ((a, -1), (b, 1)):
         _arrow(ax, p + t * sgn * size * 0.02, p + t * sgn * size * 0.16, color=STITCH, lw=1.4)
-    ax.text(*(b + t * size * 0.1 + np.array([0, size * 0.04])), "pull", fontsize=7, ha="center")
+    ax.text(*(b + t * size * 0.1 + np.array([0, size * 0.04])), T("pull"), fontsize=7, ha="center")
     _piece_label(ax, pattern, pc, full, size=8)
     _finish_axes(ax, [full, a - t * size * 0.2, b + t * size * 0.2])
 
@@ -652,12 +698,12 @@ def draw_place(ax, pattern, step):
     pocket = pattern.piece(step.pieces[0])
     base = pattern.piece(step.pieces[1])
     full = _unfolded(base, _outline(base))
-    _fill(ax, full, z=1)
-    mark = next((m for m in base.marks if step.data.get("mark", "") in m.label), None)
+    _fill(ax, full, z=1, pc=base)
+    mark = next((m for m in base.marks if step.data.get("mark", "") in (getattr(m, "key", None) or m.label)), None)
     _piece_label(ax, pattern, base, full, size=8)
     if mark is not None and len(mark.pts) >= 3:
         mp = np.asarray(mark.pts, float)
-        _fill(ax, mp, z=3)
+        _fill(ax, mp, z=3, pc=pocket)
         top_y = mp[:, 1].max()
         sides = [(mp[i], mp[(i + 1) % len(mp)]) for i in range(len(mp))]
         for a, b in sides:
@@ -716,13 +762,13 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((2.0, 1.1), 0.38, fc=RIGHT_SIDE, ec=INK, lw=0.8))
         ax.plot([1.3, 2.7], [1.85, 1.85], color=INK, lw=1)
         ax.add_patch(Circle((2.5, 2.0), 0.06, fc=INK))
-        ax.text(3.1, 1.1, "30–40°", fontsize=8, va="center")
+        ax.text(3.1, 1.1, T("30–40°"), fontsize=8, va="center")
     elif pic == "cut":
         _pic_fabric(ax, 0.4, 0.4, 3.2, 1.8)
         outline = np.array([[0.9, 0.7], [2.2, 0.7], [2.5, 1.9], [1.0, 1.9]])
         ax.plot(*np.vstack([outline, outline[:1]]).T, color=INK, lw=1.2, ls=(0, (4, 2)), zorder=4)
         _arrow(ax, [0.6, 1.6], [0.6, 0.6], lw=1.0)
-        ax.text(0.5, 1.1, "grain", rotation=90, fontsize=6.5, ha="right", va="center")
+        ax.text(0.5, 1.1, T("grain"), rotation=90, fontsize=6.5, ha="right", va="center")
         _pic_scissors(ax, 2.95, 1.3, 0.45, rot=-75)
     elif pic == "notch":
         _pic_fabric(ax, 0.6, 0.5, 2.8, 1.2)
@@ -742,15 +788,15 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Rectangle((2.4, 0.6), 1.2, 1.4, fc=RIGHT_SIDE, ec=INK, lw=1.3))
         _arrow(ax, [1.9, 1.3], [2.3, 1.3], lw=1.6)
         _arrow(ax, [1.2, 2.2], [1.2, 2.5], lw=1.2, rad=0.0)
-        ax.text(1.2, 0.35, "inside out", fontsize=7, ha="center")
-        ax.text(3.0, 0.35, "right side out", fontsize=7, ha="center")
+        ax.text(1.2, 0.35, T("inside out"), fontsize=7, ha="center")
+        ax.text(3.0, 0.35, T("right side out"), fontsize=7, ha="center")
     elif pic == "elastic":
         ax.add_patch(Rectangle((0.3, 1.0), 3.4, 0.6, fc=RIGHT_SIDE, ec=INK, lw=1.3))
         ax.plot([0.3, 3.7], [1.3, 1.3], color="#eeeeee", lw=6, zorder=3, alpha=0.0)
         ax.plot([0.9, 2.6], [1.3, 1.3], color=INK, lw=3.5, zorder=4, alpha=0.35)
         _pic_safety_pin(ax, 2.95, 1.3, 0.4)
         _arrow(ax, [2.9, 1.9], [3.6, 1.9], lw=1.4)
-        ax.text(1.75, 0.65, "elastic, with a safety pin", fontsize=7, ha="center")
+        ax.text(1.75, 0.65, T("elastic, with a safety pin"), fontsize=7, ha="center")
     elif pic == "velcro":
         _pic_fabric(ax, 0.6, 0.4, 1.4, 1.8)
         _pic_fabric(ax, 2.0, 0.4, 1.4, 1.8, wrong=True)
@@ -764,7 +810,7 @@ def draw_icon(ax, pattern, step):
         for i, x in enumerate(xs[:-1]):
             y0, y1 = (1.35, 1.15) if i % 2 == 0 else (1.15, 1.35)
             ax.plot([x, xs[i + 1]], [y0, y1], color=STITCH, lw=1.1)
-        ax.text(2.0, 0.25, "ladder stitch: the stitches disappear", fontsize=7, ha="center")
+        ax.text(2.0, 0.25, T("ladder stitch: the stitches disappear"), fontsize=7, ha="center")
     elif pic == "level":
         ax.plot([1.0, 3.0], [2.3, 2.3], color=INK, lw=2.0)
         skirt = np.array([[1.6, 2.25], [2.4, 2.25], [3.0, 0.5], [1.0, 0.5]])
@@ -837,6 +883,15 @@ def draw_machine(ax, key: str) -> None:
         ax.add_patch(Rectangle((0.35, 0.25), 0.55, 0.12, fc="#fff59d", ec=INK, lw=lw))
         for x in np.linspace(0.45, 0.85, 6):
             ax.plot([x, x], [0.37, 0.31], color=INK, lw=0.7)
+    elif key == "clips":
+        for i, x in enumerate((0.3, 0.62)):
+            ax.add_patch(Poly([[x - 0.12, 0.2], [x + 0.12, 0.2], [x + 0.12, 0.8], [x - 0.12, 0.8], [x - 0.12, 0.62],
+                               [x + 0.04, 0.62], [x + 0.04, 0.38], [x - 0.12, 0.38]], closed=True,
+                              fc=ACCENT[i], ec=INK, lw=0.9))
+    elif key == "towel":
+        ax.add_patch(Rectangle((0.1, 0.25), 0.8, 0.5, fc="#e1f5fe", ec=INK, lw=lw))
+        for x in np.linspace(0.18, 0.82, 9):
+            ax.plot([x, x], [0.25, 0.75], color="#90caf9", lw=0.8, ls=(0, (1, 1.5)))
     elif key == "chalk":
         ax.add_patch(Poly([[0.2, 0.35], [0.7, 0.35], [0.8, 0.55], [0.3, 0.55]], closed=True, fc="#e1f5fe",
                           ec=INK, lw=lw))
@@ -844,6 +899,144 @@ def draw_machine(ax, key: str) -> None:
 
 
 # --------------------------------------------------------------------------- dispatch
+
+# --------------------------------------------------------------------------- labels and views
+
+def _tag(ax, xy, text, size=8.0, z=11):
+    """Piece label as a strip of masking tape (FL/FR/BL/BR …)."""
+    ax.text(xy[0], xy[1], text, ha="center", va="center", fontsize=size, fontweight="bold", color=INK,
+            rotation=-6, zorder=z,
+            bbox=dict(boxstyle="square,pad=0.35", fc="#fff6c9", ec="#c9b46a", lw=0.8))
+
+
+def _chalk(ax, pts, z=6):
+    """Marking line (chalk): white dashed on a dark outline."""
+    pts = np.asarray(pts, float)
+    ax.plot(pts[:, 0], pts[:, 1], color="#555555", lw=2.6, zorder=z, solid_capstyle="round")
+    ax.plot(pts[:, 0], pts[:, 1], color="white", lw=1.4, ls=(0, (3, 2)), zorder=z + 0.1)
+
+
+def _mirror_x(pts, axis_x):
+    p = np.asarray(pts, float).copy()
+    p[:, 0] = 2 * axis_x - p[:, 0]
+    return p
+
+
+def _only_side(label: str) -> str:
+    """'left'/'right' for marks that belong on one leg only ('… (right back leg only)')."""
+    low = (label or "").lower()
+    if "only" in low:
+        return "left" if "(left" in low else "right" if "(right" in low else ""
+    return ""
+
+
+LEG_TAGS = {("front", False): "FL", ("front", True): "FR", ("back", False): "BR", ("back", True): "BL"}
+
+
+def draw_label(ax, pattern, step):
+    """The four leg pieces right side up, as worn: FL, FR, BL, BR as tape tags; one-leg marks only
+    on their leg (the drafted front is the left front leg, the drafted back the right back leg)."""
+    allp = []
+    x = 0.0
+    size = max(max(np.ptp(_outline(pattern.piece(k)), 0)) for k in ("front", "back"))
+    for key, mirrored in (("front", True), ("front", False), ("back", True), ("back", False)):
+        pc = pattern.piece(key)
+        ring = _outline(pc)
+        if mirrored:
+            ring = _mirror_x(ring, 0.0)
+        sh = np.array([x - ring[:, 0].min(), -ring[:, 1].min()])
+        r = ring + sh
+        _fill(ax, r, z=1, pc=pc)
+        side_here = {("front", False): "left", ("front", True): "right",
+                     ("back", False): "right", ("back", True): "left"}[(key, mirrored)]
+        for m in pc.marks:
+            lab = getattr(m, "key", None) or m.label
+            only = _only_side(lab)
+            if only and only != side_here:
+                continue
+            if not only and m.style == "fold":
+                continue
+            pts = np.asarray(m.pts, float)
+            if mirrored:
+                pts = _mirror_x(pts, 0.0)
+            pts = pts + sh
+            if m.style == "placement" and len(pts) >= 3:
+                ax.fill(pts[:, 0], pts[:, 1], fc="none", ec="none", zorder=3)
+            _chalk(ax, pts, z=5)
+        c = np.array([(r[:, 0].min() + r[:, 0].max()) / 2, r[:, 1].min() + np.ptp(r[:, 1]) * 0.55])
+        _tag(ax, c, T(LEG_TAGS[(key, mirrored)]), size=10)
+        ax.text(c[0], r[:, 1].max() + size * 0.05, T("waist ↑"), ha="center", va="bottom", fontsize=6.5,
+                color="#555")
+        allp.append(r)
+        allp.append([[c[0], r[:, 1].max() + size * 0.12]])
+        x = r[:, 0].max() + size * 0.12
+    _finish_axes(ax, allp, pad=0.04)
+
+
+def garment_views(pattern) -> dict:
+    """Finished garment from the front and from the back: [(ring, piece, marks)] per view."""
+    keys = {pc.key for pc in pattern.pieces}
+    views: dict = {}
+    for view in ("front", "back"):
+        if view not in keys:
+            continue
+        pc = pattern.piece(view)
+        if pattern.garment.startswith("pants") and not pc.on_fold:
+            ring = np.asarray(pc.seam_ring(), float)
+            cr = pc.edge("crotch").pts
+            top = cr[0] if cr[0][1] >= cr[-1][1] else cr[-1]
+            ax_x = float(top[0])
+            other = _mirror_x(ring, ax_x)
+            from shapely.geometry import Polygon
+            u = Polygon(ring).buffer(0).union(Polygon(other).buffer(0))
+            sil = np.asarray(u.exterior.coords, float) if u.geom_type == "Polygon" else ring
+            # drafted front = left front (seen from the front: on the right); drafted back = right back
+            marks = []
+            for m in pc.marks:
+                lab = getattr(m, "key", None) or m.label
+                only = _only_side(lab)
+                pts = np.asarray(m.pts, float)
+                if m.style == "fold":
+                    continue
+                drafted_side = "left" if view == "front" else "right"
+                if only and only != drafted_side:
+                    pts = _mirror_x(pts, ax_x)
+                marks.append((m.style, pts))
+                if not only:
+                    marks.append((m.style, _mirror_x(pts, ax_x)))
+            seams = [cr, _mirror_x(cr, ax_x)]
+            views[view] = dict(rings=[(sil, pc)], marks=marks, seams=seams)
+        else:
+            ring = _unfolded(pc, np.asarray(pc.seam_ring(), float))
+            views[view] = dict(rings=[(ring, pc)], marks=[(m.style, np.asarray(m.pts, float)) for m in pc.marks
+                                                         if m.style != "fold"], seams=[])
+        band = next((p for p in pattern.pieces if p.key in ("waistband",)), None)
+        if band is not None and views[view]["rings"]:
+            sil = views[view]["rings"][0][0]
+            _L, H = _band_dims(band)
+            y1 = sil[:, 1].max()
+            x0, x1 = sil[:, 0].min(), sil[:, 0].max()
+            top = sil[sil[:, 1] > y1 - 0.02 * np.ptp(sil[:, 1])]
+            if len(top) >= 2:
+                x0, x1 = top[:, 0].min(), top[:, 0].max()
+            views[view]["rings"].append((np.array([[x0, y1], [x1, y1], [x1, y1 + H / 2], [x0, y1 + H / 2]]), band))
+    return views
+
+
+def draw_view(ax, pattern, view: dict, back: bool = False):
+    """One garment view (see garment_views)."""
+    allp = []
+    for ring, pc in view["rings"]:
+        _fill(ax, ring, z=1, pc=pc)
+        allp.append(ring)
+    for sm in view["seams"]:
+        ax.plot(sm[:, 0], sm[:, 1], color=INK, lw=0.9, zorder=3)
+    for style, pts in view["marks"]:
+        if style == "placement" and len(pts) >= 3:
+            ax.fill(pts[:, 0], pts[:, 1], fc=palette(None, pattern)[0], ec=INK, lw=0.9, zorder=3)
+        ax.plot(pts[:, 0], pts[:, 1], color="#5d4037", lw=0.8, ls=(0, (2, 1.2)), zorder=4)
+    _finish_axes(ax, allp, pad=0.03)
+
 
 DIAGRAMS = {
     "seam": draw_seam,
@@ -858,6 +1051,7 @@ DIAGRAMS = {
     "gather": draw_gather,
     "place": draw_place,
     "icon": draw_icon,
+    "label": draw_label,
 }
 
 
@@ -867,6 +1061,8 @@ STRICT = False          # tests: raise instead of drawing the fallback pictogram
 def draw(ax, pattern, step) -> None:
     """Draw one step into ax (falls back to the pictogram if the data is incomplete)."""
     fn = DIAGRAMS.get(step.diagram, draw_icon)
+    tool = S.tool_for(pattern.options, step.stitch, step.data.get("knit")) if step.stitch else {}
+    _CTX.update(pattern=pattern, hand=tool.get("machine") == "hand")
     try:
         fn(ax, pattern, step)
         for t in ax.texts:                      # close-ups: labels outside the view are cut
@@ -904,14 +1100,16 @@ def _shrink_png(path):
         pass
 
 
-def render_steps(pattern, steps: list, out_dir: str, sub: str = "steps") -> dict[int, str]:
+def render_steps(pattern, steps: list, out_dir: str, sub: str | None = None) -> dict[int, str]:
     """One PNG per step with a diagram; returns {step number (1-based): relative path}."""
+    import i18n
+    sub = sub or i18n.fname("steps")
     os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
     res = {}
     for i, st in enumerate(steps, 1):
         if not isinstance(st, S.Step) or st.diagram == "icon":
             continue
-        rel = f"{sub}/step_{i:02d}.png"
+        rel = f"{sub}/{i18n.fname('step_')}{i:02d}.png"
         render_step(pattern, st, os.path.join(out_dir, rel), number=i)
         res[i] = rel
     return res

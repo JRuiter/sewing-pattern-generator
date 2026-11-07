@@ -128,5 +128,6 @@ def cap_ease_target_mm(fabric: str) -> float:
 
 
 def describe(fit: str, fabric: str, stretch: float | None = None) -> str:
+    from i18n import t
     label, s, _ = fabric_info(fabric, stretch)
-    return f"{FIT_LABELS.get(fit, fit)} fit, {label} ({s:.0f} % stretch)"
+    return t(f"{FIT_LABELS.get(fit, fit)} fit") + f", {t(label)} (" + t(f"{s:.0f} % stretch") + ")"

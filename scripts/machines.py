@@ -11,6 +11,14 @@ a list (or comma-separated string) of
 | `twin_needle` | a twin needle (stretch twin needle 4 mm) fits the sewing machine |
 | `overlocker` | overlocker / serger (3/4-thread) |
 | `coverstitch` | coverstitch machine (or a combi machine with cover stitch) |
+| `hand` | hand needle; listed **without** any sewing-machine key it means "no sewing machine" |
+| `no_sewing_machine` | there is no sewing machine (alias `overlocker_only` = overlocker + this) |
+
+Without a sewing machine (e.g. `["overlocker", "hand"]`) every seam and edge finish is
+sewn on the overlocker (7.5 mm seam allowance, woven fabric too) and every step that needs
+a straight stitch is done **by hand**: topstitching → back stitch, hems and casings →
+blind/hem stitch, basting → tacking stitch, bar tacks → hand bar tack, joining elastic → a
+box of hand stitches.
 
 German and common aliases work too (`overlock`, `serger`, `coverlock`, `zickzack`,
 `zwillingsnadel`, …). Without the option (`None`) the instructions stay generic
@@ -32,7 +40,9 @@ machine (for an icon).
 """
 from __future__ import annotations
 
-KEYS = ("sewing", "straight_only", "stretch_stitch", "twin_needle", "overlocker", "coverstitch")
+KEYS = ("sewing", "straight_only", "stretch_stitch", "twin_needle", "overlocker", "coverstitch", "hand",
+        "no_sewing_machine")
+SEWING_MACHINE_KEYS = ("sewing", "straight_only", "stretch_stitch", "twin_needle")
 
 LABELS = {
     "sewing": "Sewing machine (straight stitch and zigzag)",
@@ -41,6 +51,8 @@ LABELS = {
     "twin_needle": "Twin needle",
     "overlocker": "Overlocker / serger",
     "coverstitch": "Coverstitch machine",
+    "hand": "Hand needle",
+    "no_sewing_machine": "No sewing machine",
 }
 
 ALIASES = {
@@ -54,6 +66,10 @@ ALIASES = {
     "overlocker": "overlocker", "overlock": "overlocker", "serger": "overlocker", "overlockmaschine": "overlocker",
     "coverstitch": "coverstitch", "cover": "coverstitch", "coverlock": "coverstitch",
     "covermaschine": "coverstitch", "cover_stitch": "coverstitch",
+    "hand": "hand", "hand_needle": "hand", "needle": "hand", "handnadel": "hand", "von_hand": "hand",
+    "no_sewing_machine": "no_sewing_machine", "no_sewing": "no_sewing_machine", "none": "no_sewing_machine",
+    "keine_naehmaschine": "no_sewing_machine", "keine_nähmaschine": "no_sewing_machine",
+    "overlocker_only": "overlocker_only", "nur_overlock": "overlocker_only", "serger_only": "overlocker_only",
 }
 
 KINDS = ("seam", "finish", "hem", "topstitch", "band")
@@ -63,7 +79,10 @@ FRENCH_SEAM_SA_MM = 15.0  # woven seams on a straight-stitch-only machine
 
 
 def parse(value) -> frozenset[str] | None:
-    """List/comma string → set of machine keys (None = not specified). A sewing machine is assumed."""
+    """List/comma string → set of machine keys (None = not specified).
+
+    A sewing machine is assumed unless the list says there is none: `no_sewing_machine`
+    (`overlocker_only`), or `hand` without any sewing-machine key."""
     if value is None or value == "":
         return None
     items = value.split(",") if isinstance(value, str) else list(value)
@@ -73,10 +92,23 @@ def parse(value) -> frozenset[str] | None:
         if not k:
             continue
         if k not in ALIASES:
-            raise ValueError(f"Unknown machine '{it}'. Allowed: {', '.join(KEYS)}")
-        out.add(ALIASES[k])
-    out.add("sewing")
+            raise ValueError(f"Unknown machine '{it}'. Allowed: {', '.join(KEYS)}, overlocker_only")
+        if ALIASES[k] == "overlocker_only":
+            out |= {"overlocker", "no_sewing_machine"}
+        else:
+            out.add(ALIASES[k])
+    if "hand" in out and not out & set(SEWING_MACHINE_KEYS):
+        out.add("no_sewing_machine")
+    if "no_sewing_machine" in out:
+        out -= set(SEWING_MACHINE_KEYS)
+        out.add("hand")
+    else:
+        out.add("sewing")
     return frozenset(out)
+
+
+def has_sewing_machine(m) -> bool:
+    return m is not None and "no_sewing_machine" not in m
 
 
 def of(options: dict | None) -> frozenset[str] | None:
@@ -108,6 +140,8 @@ def method(options: dict | None, kind: str, knit: bool) -> dict | None:
     if m is None:
         return None
     needle = "jersey/stretch needle 80" if knit else "universal needle 80"
+    if not has_sewing_machine(m):
+        return _no_machine(m, kind, knit)
     if kind == "seam":
         if knit:
             if "overlocker" in m:
@@ -186,6 +220,40 @@ def method(options: dict | None, kind: str, knit: bool) -> dict | None:
     return method(options, "seam", knit)
 
 
+HAND_NEEDLE = "hand sewing needle, polyester thread"
+
+
+def _no_machine(m, kind: str, knit: bool) -> dict:
+    """Overlocker (and maybe coverstitch) but no sewing machine: straight stitches by hand."""
+    ov = "overlocker" in m
+    if kind in ("seam", "band"):
+        if ov:
+            return _d("overlocker", "4-thread overlock", "with the overlocker (4-thread overlock stitch"
+                      + (", differential feed about 1.3" if knit else ", differential 1.0") + ")"
+                      + (", stretching only the band" if kind == "band" and knit else ""),
+                      width=6.0, length=3.0, needle="overlocker needles (ELx705 or as the manual says)")
+        return _d("hand", "back stitch", "by hand with a back stitch (stitches 2–3 mm)", length=2.5,
+                  needle=HAND_NEEDLE)
+    if kind == "finish":
+        if ov:
+            return _d("overlocker", "already finished", "nothing to do: the overlock seam is already finished; "
+                      "press the allowances to one side", needle=None)
+        return _d("hand", "overcast stitch", "overcast the edges by hand", needle=HAND_NEEDLE)
+    if kind == "hem":
+        if knit and "coverstitch" in m:
+            return _d("coverstitch", "2-needle cover stitch", "with the coverstitch machine from the right side",
+                      width=4.0, length=3.0, needle="coverstitch needles")
+        return _d("hand", "blind stitch", "by hand with a blind (hem) stitch, catching only a thread or two of "
+                  "the outer fabric" + ("; finish the raw edge with the overlocker first" if ov else ""),
+                  length=5.0, needle=HAND_NEEDLE)
+    # topstitch
+    if knit and "coverstitch" in m:
+        return _d("coverstitch", "2-needle cover stitch", "with the coverstitch machine", width=4.0, length=3.0,
+                  needle="coverstitch needles")
+    return _d("hand", "back stitch", "by hand with a back stitch (stitches 2–3 mm, visible from the right side)",
+              length=2.5, needle=HAND_NEEDLE)
+
+
 def tool_for(options: dict | None, kind: str, knit: bool) -> str | None:
     """'sewing' | 'overlocker' | 'coverstitch' for a kind of step (None if unknown)."""
     d = method(options, kind, knit)
@@ -210,7 +278,7 @@ def seam_phrase(options: dict | None, knit: bool) -> str:
         if f and f["stitch"] == "wide zigzag":
             return d["text"] + ", then finish both allowances together with a wide zigzag"
         return d["text"]
-    if d["stitch"] == "French seam":
+    if d["stitch"] == "French seam" or d["machine"] == "overlocker":
         return d["text"]
     f = method(options, "finish", knit)
     tail = "the overlocker" if f and f["machine"] == "overlocker" else "a zigzag"
@@ -238,7 +306,7 @@ def allowance_defaults(options: dict | None, knit: bool) -> dict:
     if (m is None or o.get("seam_allowance_mm") is not None or o.get("sa") is not None
             or str(o.get("seam_allowance", "")).lower() == "none"):
         return {}
-    if knit and "overlocker" in m:
+    if "overlocker" in m and (knit or not has_sewing_machine(m)):
         return {"seam_allowance_mm": OVERLOCK_SA_MM}
     if not knit and "straight_only" in m:
         return {"seam_allowance_mm": FRENCH_SEAM_SA_MM}
@@ -249,11 +317,21 @@ def allowance_defaults(options: dict | None, knit: bool) -> dict:
 
 ROW_LABELS = {"seam": "Seams", "finish": "Edge finish", "hem": "Hems", "topstitch": "Topstitching",
               "band": "Cuffs, bands, waistband"}
-MACHINE_NAMES = {"sewing": "Sewing machine", "overlocker": "Overlocker", "coverstitch": "Coverstitch"}
+MACHINE_NAMES = {"sewing": "Sewing machine", "overlocker": "Overlocker", "coverstitch": "Coverstitch",
+                 "hand": "Hand needle"}
+
+OVERLOCKER_HINTS = [
+    "Pull pins out before they reach the knife (clips are safer at the overlocker).",
+    "Sew curves (crotch, pocket bag) slowly and guide only the fabric just in front of the presser foot.",
+    "Leave a thread chain of 5 cm at the end of every seam; thread it back under the stitches with a "
+    "darning needle or secure it with a drop of seam sealant.",
+]
 
 
 def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
     tips = []
+    if not has_sewing_machine(m):
+        return tips
     if knit and "overlocker" not in m and "straight_only" not in m:
         tips.append("No overlocker: that is fine. Sew knit seams with the narrow zigzag or stretch stitch; "
                     "the fabric does not fray, so the edges need no further finishing (optional wide zigzag).")
@@ -269,33 +347,42 @@ def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
 def markdown(pattern) -> str | None:
     """'Your machines' section for the sewing instructions (None if the machines are unknown)."""
     import ease as E
+    from i18n import num
+    from i18n import t as T
     o = pattern.options
     m = of(o)
     if m is None:
         return None
     knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))[2]
     have = [k for k in KEYS if k in m and not (k == "sewing" and "straight_only" in m)]
-    lines = ["You told me you sew with: " + ", ".join(LABELS[k] for k in have) + ".", "",
-             "| Step | Machine | Stitch | Settings |", "|---|---|---|---|"]
+    lines = [T("You told me you sew with:") + " " + ", ".join(T(LABELS[k]) for k in have) + ".", ""]
+    if not has_sewing_machine(m):
+        lines += [T("There is no sewing machine, so every step that needs a straight stitch is done **by hand**: "
+                    "topstitching with a back stitch, hems and casings with a blind stitch, basting with a tacking "
+                    "stitch, bar tacks by hand, elastic ends with a box of hand stitches."), ""]
+    lines += ["| " + " | ".join(T(h) for h in ("Step", "Machine", "Stitch", "Settings")) + " |", "|---|---|---|---|"]
     for kind in KINDS:
         d = method(o, kind, knit)
         assert d is not None
         st = []
         if d["width_mm"]:
-            st.append(f"width {d['width_mm']:g} mm")
+            st.append(T("width") + f" {num(d['width_mm'])} mm")
         if d["length_mm"]:
-            st.append(f"length {d['length_mm']:g} mm")
+            st.append(T("length") + f" {num(d['length_mm'])} mm")
         if d["needle"]:
-            st.append(d["needle"])
-        lines.append(f"| {ROW_LABELS[kind]} | {MACHINE_NAMES[d['machine']]} | {d['stitch']} | {', '.join(st)} |")
+            st.append(T(d["needle"]))
+        lines.append(f"| {T(ROW_LABELS[kind])} | {T(MACHINE_NAMES[d['machine']])} | {T(d['stitch'])} | "
+                     f"{', '.join(st)} |")
     sa = o.get("_sa_from_machines")
     if sa == OVERLOCK_SA_MM:
-        lines += ["", "Seam allowance 7.5 mm because you sew the seams on the overlocker: guide the fabric so "
-                  "the knife just skims the edge."]
+        lines += ["", T("Seam allowance 7.5 mm because you sew the seams on the overlocker: guide the fabric so "
+                        "the knife just skims the edge.")]
     elif sa == FRENCH_SEAM_SA_MM:
-        lines += ["", "Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm)."]
-    tips = missing_tips(m, knit)
+        lines += ["", T("Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm).")]
+    tips = [T(x) for x in missing_tips(m, knit)]
+    if "overlocker" in m:
+        tips += [T("At the overlocker:") + " " + T(h) for h in OVERLOCKER_HINTS]
     if tips:
-        lines += [""] + [f"- {t}" for t in tips]
-    lines += ["", "Test the stitch on a scrap of your fabric first (two layers, same direction as the seam)."]
+        lines += [""] + [f"- {x}" for x in tips]
+    lines += ["", T("Test the stitch on a scrap of your fabric first (two layers, same direction as the seam).")]
     return "\n".join(lines)

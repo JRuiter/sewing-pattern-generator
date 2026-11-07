@@ -136,7 +136,8 @@ def markdown(pattern) -> str:
     applied = pattern.options.get("_adjustments_applied") or []
     if not applied:
         return ""
-    rows = ["| Adjustment | Change | Acts on |", "|---|---|---|"]
+    from i18n import num, t
+    rows = ["| " + " | ".join(t(h) for h in ("Adjustment", "Change", "Acts on")) + " |", "|---|---|---|"]
     for key, d, what in applied:
-        rows.append(f"| {key} | {d / 10:+.1f} cm | {what} |")
+        rows.append(f"| {key} | {num(f'{d / 10:+.1f}')} cm | {t(what)} |")
     return "\n".join(rows)

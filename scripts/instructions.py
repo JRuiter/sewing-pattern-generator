@@ -11,6 +11,7 @@ import layout as L
 import machines as MC
 import measurements as M
 import units as U
+from i18n import t as T
 
 FABRIC_DEFAULT_WIDTH = {"Main fabric": 1500.0, "Rib knit": 700.0, "Lining": 1400.0}
 
@@ -49,11 +50,11 @@ def render_fabric_png(pattern, plans, path):
             # folded selvage to selvage: fold on the left, both selvages on the right
             ax.add_patch(plt.Rectangle((0, 0), W / 2, fl, fc="#f0f0f0", ec="#555", lw=1))
             ax.plot([0, 0], [0, fl], color="#c00", lw=1.4, ls=(0, (6, 2, 1, 2)))
-            ax.text(-12, fl / 2, "fold", rotation=90, fontsize=6, va="center", ha="right", color="#c00")
-            ax.text(W / 2 + 8, fl / 2, "selvages (both layers)", rotation=90, fontsize=6, va="center")
+            ax.text(-12, fl / 2, T("fold"), rotation=90, fontsize=6, va="center", ha="right", color="#c00")
+            ax.text(W / 2 + 8, fl / 2, T("selvages (both layers)"), rotation=90, fontsize=6, va="center")
             if pl.get("single_section"):
                 ax.add_patch(plt.Rectangle((0, fl), W, H - fl, fc="#fafafa", ec="#555", lw=1))
-                ax.text(W / 2, fl + 12, "unfolded: single layer", fontsize=6, ha="center", va="top",
+                ax.text(W / 2, fl + 12, T("unfolded: single layer"), fontsize=6, ha="center", va="top",
                         style="italic")
         else:
             ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
@@ -62,31 +63,32 @@ def render_fabric_png(pattern, plans, path):
             pi, k = pl["meta"][p.index]
             ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6)
             c = ring.mean(axis=0)
-            nm = pattern.pieces[pi].name.split(" (")[0]
+            nm = T(pattern.pieces[pi].name).split(" (")[0]
             if p.layers == 2:
                 nm += " ×2"
             elif p.pinned:
-                nm += " (on fold)"
+                nm += " " + T("(on fold)")
             elif pattern.pieces[pi].on_fold:
-                nm += " (unfolded)"
-            ax.text(c[0], c[1], nm + (" (flipped)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
+                nm += " " + T("(unfolded)")
+            ax.text(c[0], c[1], nm + (" " + T("(flipped)") if p.mirrored else ""), fontsize=6, ha="center",
+                    va="center")
         if pl.get("nap"):
             ax.annotate("", xy=(W + 22, H * 0.45), xytext=(W + 22, H * 0.15),
                         arrowprops=dict(arrowstyle="-|>", lw=1.4, color="#7a4a1e"))
-            ax.text(W / 2, -22, "Nap ↓, all pieces waist up", fontsize=7, ha="center", va="bottom",
+            ax.text(W / 2, -22, T("Nap ↓, all pieces waist up"), fontsize=7, ha="center", va="bottom",
                     color="#7a4a1e", fontweight="bold")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
-        ax.text(W + 55, H / 2, "grainline / selvage", rotation=90, fontsize=6, va="center")
+        ax.text(W + 55, H / 2, T("grainline / selvage"), rotation=90, fontsize=6, va="center")
         ax.set_xlim(-30, W + 90)
         ax.set_ylim(H + 30, -60)
         ax.set_aspect("equal")
         ax.axis("off")
-        how = "folded (double layer)" if folded else "single layer"
-        ax.set_title(f"{fab}: {U.fabric_width(W, units)} wide, {how}\n"
-                     f"needed ≈ {U.fabric_length(pl['need_mm'], units)}",
+        how = T("folded (double layer)") if folded else T("single layer")
+        ax.set_title(f"{T(fab)}: " + T(f"{U.fabric_width(W, units)} wide") + f", {how}\n"
+                     + T("needed") + f" ≈ {U.fabric_length(pl['need_mm'], units)}",
                      fontsize=8)
-    fig.suptitle(f"Cutting layout · {pattern.title} {pattern.size_label}", fontsize=10)
+    fig.suptitle(T("Cutting layout") + f" · {T(pattern.title)} {T(pattern.size_label)}", fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
@@ -95,44 +97,44 @@ def render_fabric_png(pattern, plans, path):
 
 def layout_text(pl, units: str = "metric") -> str:
     if pl.get("mode") == "folded":
-        t = "folded selvage to selvage, cut on fold pieces at the fold"
+        t = T("folded selvage to selvage, cut on fold pieces at the fold")
     else:
-        t = "single layer"
+        t = T("single layer")
     if pl.get("nap"):
-        t += "; nap: all pieces with the waist towards the same end, none turned round"
+        t += T("; nap: all pieces with the waist towards the same end, none turned round")
     alt = pl.get("alternative")
+    t += T(", incl. 10 % for shrinkage")
     if alt:
-        other = "folded" if alt["mode"] == "folded" else "single layer"
-        t += f", incl. 10 % for shrinkage; {other} would need {U.fabric_length(alt['need_mm'], units)}"
-    else:
-        t += ", incl. 10 % for shrinkage"
+        other = T("folded") if alt["mode"] == "folded" else T("single layer")
+        t += "; " + other + " " + T(f"would need {U.fabric_length(alt['need_mm'], units)}")
     return t
 
 
 def fold_text(pattern, plans) -> str | None:
     """How to cut the pieces marked "place on fold", for the layouts actually used."""
-    names = [p.name for p in pattern.pieces if p.on_fold]
+    names = [T(p.name) for p in pattern.pieces if p.on_fold]
     if not names:
         return None
-    t = (f"**Cut on fold** ({', '.join(names)}): the paper piece is only one half. Its fold edge "
+    t = (f"**{T('Cut on fold')}** ({', '.join(names)}): " + T("the paper piece is only one half. Its fold edge "
          "(dash-dot line, bracket arrows \"PLACE ON FOLD\") is the centre of the piece: it gets no "
-         "seam allowance and is never cut.")
+         "seam allowance and is never cut."))
     modes = {pl.get("mode") for pl in plans.values()}
     unfolded = "single" in modes or any(pl.get("single_section") for pl in plans.values())
     if "folded" in modes:
-        t += (" On the folded fabric, lay the fold edge exactly on the fabric fold, pin it and cut "
-              "through both layers; opened out you get the whole piece.")
+        t += " " + T("On the folded fabric, lay the fold edge exactly on the fabric fold, pin it and cut "
+                     "through both layers; opened out you get the whole piece.")
     if unfolded:
-        t += (" Where the cutting layout shows a piece \"(unfolded)\" on a single layer, fold the fabric "
-              "along the grain just wide enough for the piece and place the fold edge on that fold, or "
-              "trace the paper piece, flip it over along the fold edge and trace the second half.")
+        t += " " + T("Where the cutting layout shows a piece \"(unfolded)\" on a single layer, fold the fabric "
+                     "along the grain just wide enough for the piece and place the fold edge on that fold, or "
+                     "trace the paper piece, flip it over along the fold edge and trace the second half.")
     return t
 
 
 def piece_table(pattern):
-    rows = ["| Piece | Cutting | Fabric | Seam allowance |", "|---|---|---|---|"]
+    rows = ["| " + " | ".join(T(h) for h in ("Piece", "Cutting", "Fabric", "Seam allowance")) + " |",
+            "|---|---|---|---|"]
     for p in pattern.pieces:
-        rows.append(f"| {p.name} | {p.cut_text()} | {p.fabric} | {p.sa_text(U.of(pattern))} |")
+        rows.append(f"| {T(p.name)} | {p.cut_text()} | {T(p.fabric)} | {p.sa_text(U.of(pattern))} |")
     return "\n".join(rows)
 
 
@@ -143,11 +145,12 @@ def finished_table(pattern):
     before = pattern.options.get("_finished_before") if isinstance(pattern.options, dict) else None
     u = U.of(pattern)
     if before:
-        rows = ["| Finished measurement | Before | After | Change |", "|---|---|---|---|"]
+        rows = ["| " + " | ".join(T(h) for h in ("Finished measurement", "Before", "After", "Change")) + " |",
+                "|---|---|---|---|"]
     else:
-        rows = ["| Finished measurement | Value |", "|---|---|"]
+        rows = ["| " + T("Finished measurement") + " | " + T("Value") + " |", "|---|---|"]
     for k, v in pattern.finished.items():
-        lab = labels.get(k, (k,))[0]
+        lab = T(labels.get(k, (k,))[0])
         if before:
             b = before.get(k)
             if b is None:
@@ -162,13 +165,13 @@ def finished_table(pattern):
 
 
 def measures_table(pattern, sources=None):
-    rows = ["| Body measurement | Value | Source |", "|---|---|---|"]
+    rows = ["| " + " | ".join(T(h) for h in ("Body measurement", "Value", "Source")) + " |", "|---|---|---|"]
     keys = ["height", "chest", "waist", "hip", "head", "neck", "inseam", "side_length", "arm",
             "back_length", "shoulder", "thigh", "ankle"]
     for k in keys:
         if k in pattern.measures:
             src = (sources or {}).get(k, "table")
-            rows.append(f"| {M.LABELS.get(k, k)} | {U.length(pattern.measures[k], U.of(pattern))} | {src} |")
+            rows.append(f"| {T(M.LABELS.get(k, k))} | {U.length(pattern.measures[k], U.of(pattern))} | {T(src)} |")
     return "\n".join(rows)
 
 
@@ -194,7 +197,7 @@ def instructions_pdf(pattern, md: str, path: str, plans, steps, images=None) -> 
     from pypdf import PdfWriter
 
     import booklet as B
-    ref_md = _without_section(md, "## Sewing instructions")
+    ref_md = _without_section(md, "## " + T("Sewing instructions"))
     with tempfile.TemporaryDirectory() as tmp:
         bk = B.build(pattern, os.path.join(tmp, "booklet.pdf"), plans, steps)
         ref = markdown_to_pdf(ref_md, os.path.join(tmp, "reference.pdf"), images=images,
@@ -202,7 +205,7 @@ def instructions_pdf(pattern, md: str, path: str, plans, steps, images=None) -> 
         w = PdfWriter()
         for p in (bk, ref):
             w.append(p)
-        w.add_metadata({"/Title": f"{pattern.title} – sewing instructions"})
+        w.add_metadata({"/Title": f"{T(pattern.title)} – " + T("sewing instructions")})
         with open(path, "wb") as f:
             w.write(f)
     return path
@@ -221,56 +224,57 @@ def _without_section(md: str, heading: str) -> str:
 def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_images=None):
     o = pattern.options
     fab_label, stretch, knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))
-    lines = [f"# {pattern.title} · {pattern.size_label}", "",
+    u = U.of(pattern)
+    lines = [f"# {T(pattern.title)} · {T(pattern.size_label)}", "",
              f"*{E.describe(o.get('fit', 'normal'), o.get('fabric', 'jersey'), o.get('stretch'))}* · "
-             "original parametric draft. The pattern is yours to use.", "",
-             "> **Important:** With a new pattern, first sew a **test garment** from inexpensive fabric "
-             "with similar stretch and check the fit.", "",
-             "## Files", ""]
+             + T("original parametric draft. The pattern is yours to use."), "",
+             "> " + T("**Important:** With a new pattern, first sew a **test garment** from inexpensive fabric "
+                      "with similar stretch and check the fit."), "",
+             "## " + T("Files"), ""]
     for k, v in files.items():
-        lines.append(f"- {k}: `{os.path.basename(v)}`")
-    lines += ["", "## Printing", "",
-              "- Always print at **100 % / \"Actual size\"** (not \"Fit to page\").",
-              ("- Measure the **5 × 5 cm** control square (or the **1 inch** square) before you cut."
-               if U.of(pattern) == "imperial" else "- Measure the **5 × 5 cm** control square before you cut."),
-              "- Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
-              "a custom paper size with exactly this width and length, and turn rotation/scaling off.",
-              "", "## Body measurements", "", measures_table(pattern, sources), "",
-              "## Finished measurements (virtually sewn)", "", finished_table(pattern), ""]
+        lines.append(f"- {T(k)}: `{os.path.basename(v)}`")
+    lines += ["", "## " + T("Printing"), "",
+              "- " + T("Always print at **100 % / \"Actual size\"** (not \"Fit to page\")."),
+              "- " + (T("Measure the **5 × 5 cm** control square (or the **1 inch** square) before you cut.")
+                      if u == "imperial" else T("Measure the **5 × 5 cm** control square before you cut.")),
+              "- " + T("Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
+                       "a custom paper size with exactly this width and length, and turn rotation/scaling off."),
+              "", "## " + T("Body measurements"), "", measures_table(pattern, sources), "",
+              "## " + T("Finished measurements (virtually sewn)"), "", finished_table(pattern), ""]
     adj = ADJ.markdown(pattern)
     if adj:
-        lines += ["## Fit adjustments (from the test garment)", "", adj, "",
-                  "The adjustments are saved in `pattern.json` and are applied again when you "
-                  "generate this pattern from it (also in another size).", ""]
-    lines += ["## Pattern pieces", "", piece_table(pattern), "",
-              "## Fabric needed", ""]
+        lines += ["## " + T("Fit adjustments (from the test garment)"), "", adj, "",
+                  T("The adjustments are saved in `pattern.json` and are applied again when you "
+                    "generate this pattern from it (also in another size)."), ""]
+    lines += ["## " + T("Pattern pieces"), "", piece_table(pattern), "",
+              "## " + T("Fabric needed"), ""]
     for fab, pl in plans.items():
-        lines.append(f"- **{fab}:** about {U.fabric_length(pl['need_mm'], U.of(pattern))} at "
-                     f"{U.fabric_width(pl['width'], U.of(pattern))} width ({layout_text(pl, U.of(pattern))})")
+        lines.append(f"- **{T(fab)}:** " + T(f"about {U.fabric_length(pl['need_mm'], u)} at "
+                     f"{U.fabric_width(pl['width'], u)} width") + f" ({layout_text(pl, u)})")
         if pl.get("note"):
-            lines.append(f"  - ⚠️ {pl['note']}")
+            lines.append(f"  - ⚠️ {T(pl['note'])}")
     for n in pattern.notes:
-        lines.append(f"- {n}")
-    lines += ["", "Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
-              "\"flipped\" = place the piece face down, \"×2\" = cut through both layers of the folded "
-              "fabric, which gives a mirrored pair, \"(unfolded)\" = cut-on-fold piece shown opened out).", ""]
+        lines.append(f"- {T(n)}")
+    lines += ["", T("Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
+                    "\"flipped\" = place the piece face down, \"×2\" = cut through both layers of the folded "
+                    "fabric, which gives a mirrored pair, \"(unfolded)\" = cut-on-fold piece shown opened out)."), ""]
     ft = fold_text(pattern, plans)
     if ft:
         lines += [ft, ""]
     mach = MC.markdown(pattern)
     if mach:
-        lines += ["## Your machines", "", mach, ""]
-    lines += ["## Sewing instructions", "",
-              "The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your "
-              "pieces, IKEA style: parts list, tools, then one action per step.", "",
-              ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
-               "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")
-              + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]
+        lines += ["## " + T("Your machines"), "", mach, ""]
+    lines += ["## " + T("Sewing instructions"), "",
+              T("The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your "
+                "pieces, IKEA style: parts list, tools, then one action per step."), "",
+              (T("Seam allowance is included in the pattern (see table).") + " " if A.has_allowance(pattern) else
+               T("**The pattern has NO seam allowance.** Add the allowances from the table when you cut.") + " ")
+              + (T("Use a jersey/stretch needle for jersey and sweat.") if knit else ""), ""]
     for i, s in enumerate(all_steps(pattern), 1):
         lines.append(f"{i}. {s}")
         if step_images and i in step_images:
-            lines.append(f"   ![Step {i}]({step_images[i]})")
-    lines += ["", "## Validation report", "", report_md, ""]
+            lines.append(f"   ![{T('Step')} {i}]({step_images[i]})")
+    lines += ["", "## " + T("Validation report"), "", report_md, ""]
     return "\n".join(lines)
 
 
@@ -285,31 +289,33 @@ def nested_section(md: str, nested, widths=None, mode="auto"):
     labels = getattr(get(nested.garment), "FINISHED_LABELS", {})
     u = U.of(nested.nest_big)
     keys = [k for k in nested.nest_big.finished][:4]
-    head = "| Size | Line | Fabric needed | " + " | ".join(labels.get(k, (k,))[0] for k in keys) + " |"
+    head = ("| " + " | ".join(T(h) for h in ("Size", "Line", "Fabric needed")) + " | "
+            + " | ".join(T(labels.get(k, (k,))[0]) for k in keys) + " |")
     rows = [head, "|" + "---|" * (3 + len(keys))]
     data = []
     for n in nested.nest:
         p = n["pattern"]
         plans = fabric_consumption(p, widths, mode)
-        fab = "; ".join(f"{k}: {U.fabric_length(v['need_mm'], u)}" for k, v in plans.items())
-        line = f"{COLOR_NAMES[n['layer']]}, {DASH_NAMES[n['layer']]}"
-        rows.append(f"| {p.size_label} | {line} | {fab} | "
+        fab = "; ".join(f"{T(k)}: {U.fabric_length(v['need_mm'], u)}" for k, v in plans.items())
+        line = f"{T(COLOR_NAMES[n['layer']])}, {T(DASH_NAMES[n['layer']])}"
+        rows.append(f"| {T(p.size_label)} | {line} | {fab} | "
                     + " | ".join(U.length(p.finished[k], u) for k in keys) + " |")
         data.append({"size": p.size_label, "layer": f"Size {n['label']}",
                      "finished_mm": {k: round(v, 1) for k, v in p.finished.items()},
                      "fabric_mm": {k: v["need_mm"] for k, v in plans.items()}})
-    sec = ["## Sizes in this pattern (nested)", "",
-           "All sizes are drawn on top of each other, aligned at the same construction point. Every "
+    sec = ["## " + T("Sizes in this pattern (nested)"), "",
+           T("All sizes are drawn on top of each other, aligned at the same construction point. Every "
            "size has its own colour and line and its own **PDF layer**: in Acrobat/Reader open the "
            "*Layers* panel and switch off the sizes you do not need before printing. Cut along the "
            "line of your size. Sizes can be blended: e.g. width of one size, length of another, by "
-           "drawing a smooth line between the two outlines.", "", *rows, "",
-           "Fabric, finished measurements and sewing steps below refer to the largest size "
-           f"({nested.nest_big.size_label}); the validation report has one table per size.", ""]
+           "drawing a smooth line between the two outlines."), "", *rows, "",
+           T("Fabric, finished measurements and sewing steps below refer to the largest size") +
+           f" ({T(nested.nest_big.size_label)}); " + T("the validation report has one table per size."), ""]
     lines = md.splitlines()
-    first = lines[0].split(" · ")[0] + " · " + nested.size_label
+    first = lines[0].split(" · ")[0] + " · " + T(nested.size_label)
     md = "\n".join([first] + lines[1:])
-    md = md.replace("## Pattern pieces", "\n".join(sec) + "\n## Pattern pieces", 1)
+    pp = "## " + T("Pattern pieces")
+    md = md.replace(pp, "\n".join(sec) + "\n" + pp, 1)
     return md, data
 
 
@@ -395,6 +401,6 @@ def markdown_to_pdf(md: str, path: str, images: list[str] | None = None, base_di
             tw = th * w / h
         story.append(Image(img, width=tw, height=th))
     doc = SimpleDocTemplate(path, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm,
-                            topMargin=15 * mm, bottomMargin=15 * mm, title="Sewing instructions")
+                            topMargin=15 * mm, bottomMargin=15 * mm, title=T("Sewing instructions"))
     doc.build(story)
     return path

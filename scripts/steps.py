@@ -27,7 +27,7 @@ import ease as E
 # --------------------------------------------------------------------------- model
 
 STITCH_KINDS = ("seam", "band", "finish", "hem", "topstitch", "baste", "gather", "elastic", "zip", "hand",
-                "press", "")
+                "bartack", "press", "")
 
 
 @dataclass
@@ -40,7 +40,8 @@ class Step:
     pieces: list[str] = field(default_factory=list)
     stitch: str = ""                            # see STITCH_KINDS
     repeat: int = 1                             # ×2: do it on both legs / sleeves
-    tip: str = ""                               # warning or hint (the "!" box)
+    tip: str = ""                               # warning: the yellow "Important" box
+    hint: str = ""                              # helpful hint: the green "Tip" box
     section: str = ""                           # group heading (Pockets, Waistband, …)
     amount: float = 0.0                         # mm: hem depth, fold distance, opening …
     stretch: bool = False                       # stretch the band while sewing
@@ -48,16 +49,20 @@ class Step:
 
     def as_text(self, options: dict | None = None) -> str:
         """One line of the Markdown instructions."""
-        parts = [f"**{self.title}**" + ("." if not self.title.endswith(("!", ".", "?")) else "")]
+        from i18n import t
+        title = t(self.title)
+        parts = [f"**{title}**" + ("." if not title.endswith(("!", ".", "?")) else "")]
         if self.text:
-            parts.append(self.text)
+            parts.append(t(self.text))
         tool = tool_for(options or {}, self.stitch, self.data.get("knit")) if self.stitch else None
         if tool and tool.get("phrase"):
-            parts.append(f"({tool['phrase']})")
+            parts.append(f"({t(tool['phrase'])})")
         if self.repeat > 1:
-            parts.append(f"Do this {_times(self.repeat)}.")
+            parts.append(t(f"Do this {_times(self.repeat)}."))
         if self.tip:
-            parts.append(f"Tip: {self.tip}")
+            parts.append(t("Tip:") + " " + t(self.tip))
+        if self.hint:
+            parts.append(t(self.hint))
         return " ".join(parts)
 
 
@@ -96,6 +101,18 @@ def _settings(d: dict) -> str:
     return ""
 
 
+# no sewing machine: what each straight-stitch kind of step becomes by hand
+HAND_STITCHES = {
+    "baste": ("tacking stitch, 1 cm long", "by hand with a tacking stitch (long running stitches)"),
+    "gather": ("2 rows of running stitch", "by hand: two rows of running stitches, pull the threads"),
+    "elastic": ("box of hand stitches", "overlap the ends and sew a box of small hand stitches through both"),
+    "zip": ("back stitch", "by hand with a back stitch"),
+    "bartack": ("hand bar tack", "by hand: 4–5 stitches on top of each other, then wrap them with buttonhole "
+                "stitches"),
+    "hand": ("ladder stitch", "by hand, ladder stitch"),
+}
+
+
 def tool_for(options: dict, kind: str, knit: bool | None = None) -> dict:
     """Machine and stitch for a kind of stitching.
 
@@ -114,6 +131,9 @@ def tool_for(options: dict, kind: str, knit: bool | None = None) -> dict:
             return {"machine": d["machine"], "name": MACHINE_NAMES.get(d["machine"], d["machine"]),
                     "stitch": d["stitch"] + _settings(d), "phrase": d["text"]}
     own = owned_machines(options)
+    if own is not None and not MC.has_sewing_machine(own) and kind in HAND_STITCHES:
+        stitch, phrase = HAND_STITCHES[kind]
+        return {"machine": "hand", "name": MACHINE_NAMES["hand"], "stitch": stitch, "phrase": phrase}
     if own is None and kind in ("seam", "band", "hem"):
         # machines not known: the picture shows the sewing machine, the text stays generic
         if kind == "hem":
@@ -169,6 +189,8 @@ def tool_for(options: dict, kind: str, knit: bool | None = None) -> dict:
         return res("sewing", "straight stitch 2.5 mm, zipper foot")
     if kind == "hand":
         return res("hand", "ladder stitch", "by hand, ladder stitch")
+    if kind == "bartack":
+        return res("sewing", "narrow zigzag 2 × 0.3 mm, 1 cm long", "with a bar tack (dense narrow zigzag)")
     if kind == "press":
         return res("iron", "steam" if knit else "steam, cotton setting", "")
     return {}
@@ -179,10 +201,12 @@ def needs_finish(options: dict, knit: bool) -> bool:
 
     Woven: always. Knit: only when the user's machines are known and the seam is not sewn on
     the overlocker (then the allowances are finished together with a wide zigzag)."""
-    if not knit:
-        return True
     import machines as MC
-    if MC.of(options) is None:
+    m = MC.of(options)
+    if not knit:
+        # without a sewing machine the woven seams are overlocked, which finishes them
+        return not (m is not None and not MC.has_sewing_machine(m) and "overlocker" in m)
+    if m is None:
         return False
     d = MC.method(options, "finish", True)
     return bool(d) and d["machine"] != "overlocker" and d["stitch"] != "none"
@@ -204,7 +228,7 @@ def machines_needed(steps: list[Step], options: dict, knit: bool | None = None) 
 # Small helpers so the garment modules read like a list of actions.
 
 def cm(mm: float) -> str:
-    return f"{mm / 10:g} cm" if mm >= 15 else f"{mm:.0f} mm"
+    return f"{mm / 10:g} cm" if mm >= 15 else f"{round(mm, 1):g} mm"
 
 
 def seam(title: str, seams: list[str], text: str = "", **kw) -> Step:
@@ -284,14 +308,29 @@ def prepare(pattern) -> list[Step]:
              "Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.",
              section="Prepare"),
         icon("Cut out all pieces", "cut",
-             "Follow the cutting layout; grainline arrows parallel to the selvage.", section="Prepare"),
+             "Follow the cutting layout; grainline arrows parallel to the selvage.", section="Prepare",
+             tip=("Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction."
+                  if E.has_nap(pattern.options) else ""),
+             hint="Cut both layers at once with long strokes; keep the fabric flat on the table."),
         icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
-             section="Prepare"),
-        icon("Set up the machine", "needle",
-             ("Jersey/stretch needle 75–80, polyester thread." if knit else
-              "Universal needle 80, polyester thread.") + " Sew a test seam on a scrap first.",
-             section="Prepare"),
+             section="Prepare", tip="Never deeper than half the seam allowance."),
+        _setup_step(pattern, knit),
     ]
+
+
+def _setup_step(pattern, knit: bool) -> Step:
+    import machines as MC
+    m = MC.of(pattern.options)
+    if m is not None and not MC.has_sewing_machine(m):
+        what = "the overlocker" if "overlocker" in m else "your machine"
+        return icon(f"Set up {what}", "needle",
+                    "Test seam on two layers of a scrap: differential 1.0" + (" (knit 1.3)" if knit else "")
+                    + ", stitch length 3. Hand needle and polyester thread for the hand stitches.",
+                    section="Prepare", hint="See the basics page at the front of the booklet.")
+    return icon("Set up the machine", "needle",
+                ("Jersey/stretch needle 75–80, polyester thread." if knit else
+                 "Universal needle 80, polyester thread.") + " Sew a test seam on a scrap first.",
+                section="Prepare", hint="See the basics page at the front of the booklet.")
 
 
 def done(text: str = "Press all seams.", **kw) -> Step:
@@ -328,8 +367,19 @@ def assembly(pattern) -> list[Step]:
     else:
         body = [Step("Sew the pieces together", "Right sides together, matching the notches.", stitch="seam")]
     knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
+    own = owned_machines(pattern.options)
     for s in body:
         s.data.setdefault("knit", knit)
+        if own is not None and "overlocker" in own and s.stitch in ("seam", "band"):
+            t = tool_for(pattern.options, s.stitch, s.data["knit"])
+            if t.get("machine") == "overlocker":
+                curved = any(w in " ".join(s.seams).lower() for w in ("crotch", "pocket bag", "armhole", "sleeve"))
+                text = ("Sew the curve slowly; pull the clips before they reach the knife." if curved
+                        else "Pull the pins before they reach the knife.")
+                if not s.tip:
+                    s.tip = text
+                elif not s.hint and "knife" not in s.tip:
+                    s.hint = text
         if s.data.get("picture") == "done" and s.text == "Press all seams.":
             s.text = "Press all seams" + E.press_note(pattern.options.get("fabric"))
     return prepare(pattern) + body

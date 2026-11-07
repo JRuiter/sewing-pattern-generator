@@ -74,8 +74,13 @@ machine and stitch; the instructions get a "Your machines" table (stitch, width/
 kind of step) and tips for what is missing (e.g. a twin needle instead of a coverstitch). Without
 an overlocker nothing is missing: knit seams use a narrow zigzag/stretch stitch. A knit on a
 straight-stitch-only machine works but is fragile: suggest a woven fabric or the double row of
-long straight stitches the instructions describe. In the reply, mention in one line how the
-pattern was adapted to their machines.
+long straight stitches the instructions describe. **No sewing machine at all** (only an
+overlocker): `--machines overlocker,hand` (or `overlocker_only`; `hand` without any sewing-machine
+key means "no sewing machine"). Then every seam is overlocked (7.5 mm allowance, woven fabric too)
+and every straight-stitch step is done by hand: topstitching → back stitch, hems/casings → blind
+stitch, basting → tacking stitch, bar tacks by hand, elastic ends → a box of hand stitches; the
+steps add overlocker hints (pins out before the knife, curves slowly, thread chains). In the reply,
+mention in one line how the pattern was adapted to their machines.
 
 **Measurement profiles:** when the user gives body measurements for a person, offer once to
 save them (`python scripts/profiles.py save lena --measures '{…}' --kind child`). Later
@@ -156,6 +161,12 @@ its own colour/line, PDF layer (switch sizes on/off in Acrobat's *Layers* panel)
 Use it for siblings or to blend between sizes; all sizes share the same options.
 Imperial users: `--units imperial` (measurements in inches, reports in inches/yards).
 
+**German output:** `--lang de` (spec `"language": "de"`) writes every output in German: piece labels, sewing
+steps, booklet, cutting layout, reports and diagrams, with German file names (`naehanleitung.pdf`,
+`pruefbericht.md`, `zuschnittplan.png`, `schnitt.json`, `…_master_1zu1.svg`, `…_a4_kleben.pdf`), decimal
+commas and "Gr. 122". All texts go through one string table (`scripts/i18n.py`, German entries in
+`scripts/i18n_de.py`); a new output text needs a German entry there. Option names and construction value keys stay English.
+
 Modules and main options:
 
 | Module | Styles/options |
@@ -188,8 +199,12 @@ pieces tiled), `a4`, `letter` (tiles with 10 mm overlap and an overview page), `
 `projector` / `projector_dark` (one page 1:1 for projector sewing, 10 cm calibration grid,
 thick lines).
 Always written as well: SVG master 1:1, PNG preview, cutting layout PNG, sewing
-instructions (PDF: IKEA-style booklet with cover, parts list, machines and tools, then one action per
-step, each drawn from the real pieces; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
+instructions (PDF: IKEA-style booklet: title page with the finished garment from the front and the back
+and all key data (size, fabric amounts, notions, machines, seam allowance, difficulty, time); parts and
+material with the colour/line legend; machines and the basics for them (overlocker, hand stitches, sewing
+machine); the steps two per page, each with its picture from the real pieces, 2–4 numbered actions and
+the yellow "Important" / green "Tip" boxes (`Step.tip` / `Step.hint`); 1:1 templates for lines transferred
+after cutting (`Mark.template`); a "Done!" page; plus Markdown with a PNG per step in `steps/`), `pattern.json`,
 `validation_report.md`. The steps follow the machines the user owns (spec option `machines`, e.g.
 `["sewing", "overlocker", "coverstitch"]`): overlocker seams, coverstitch hems, otherwise zigzag/twin needle.
 Cutting layout: `--fabric-layout auto|folded|single` (default `auto` = the shorter of
@@ -242,6 +257,7 @@ present. Fix anything odd or tell the user openly.
 
 ## Files
 - `scripts/generate.py`: complete flow (CLI)
+- `scripts/i18n.py`, `i18n_de.py`: output language (`--lang de`), one central string table
 - `scripts/geometry.py`, `pattern.py`, `measurements.py`, `ease.py`, `units.py`, `allowance.py`:
   foundations (geometry, pieces, sizes, ease, imperial units, seam allowances)
 - `scripts/construction.py`, `adjust.py`, `notches.py`: construction values, toile adjustments, notches

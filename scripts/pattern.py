@@ -46,6 +46,7 @@ class Mark:
     pts: np.ndarray
     style: str = "mark"         # mark | fold | placement
     label: str = ""
+    template: bool = False      # transferred after cutting: the booklet prints a 1:1 template
 
 
 @dataclass
@@ -108,16 +109,18 @@ class Piece:
         return errs
 
     def cut_text(self) -> str:
+        from i18n import t
         if self.on_fold:
             if self.cut_count == 1:
-                return "cut 1 on fold"
-            return f"cut {self.cut_count} on fold"
+                return t("cut 1 on fold")
+            return t(f"cut {self.cut_count} on fold")
         if self.cut_count == 2 and self.mirror:
-            return "cut 2 (mirrored pair)"
-        return f"cut {self.cut_count}"
+            return t("cut 2 (mirrored pair)")
+        return t(f"cut {self.cut_count}")
 
     def sa_text(self, units: str = "metric") -> str:
         import units as U
+        from i18n import t
 
         def cm(v):
             return U.allowance(v, units).removesuffix(" cm")
@@ -132,20 +135,20 @@ class Piece:
 
         def describe(vals):
             common = max(vals, key=lambda k: len(vals[k]))
-            rest = [f"{', '.join(sorted(set(names)))}: {cm(k)}{unit}" for k, names in vals.items() if k != common]
+            rest = [f"{', '.join(sorted(set(t(n) for n in names)))}: {cm(k)}{unit}" for k, names in vals.items() if k != common]
             return common, rest
 
         vals = grouped("sa")
         if not vals:
-            return "no seam allowance"
+            return t("no seam allowance")
         if all(k == 0 for k in vals):
             hints = {k: v for k, v in grouped("sa_hint").items() if k > 0}
             if not hints:
-                return "NO seam allowance included"
+                return t("NO seam allowance included")
             common, rest = describe(hints)
-            return "; ".join([f"NO seam allowance included: add {cm(common)}{unit}"] + rest)
+            return "; ".join([t(f"NO seam allowance included: add {cm(common)}{unit}")] + rest)
         common, rest = describe(vals)
-        return "; ".join([f"seam allowance {cm(common)}{unit} included"] + rest)
+        return "; ".join([t(f"seam allowance {cm(common)}{unit} included")] + rest)
 
     def transformed(self, fn) -> Piece:
         """Copy with all points transformed by fn."""

@@ -25,6 +25,7 @@ import layout as L
 import nested as NE
 import notches as N
 import units as U
+from i18n import t as tr
 
 MM = 72.0 / 25.4        # pt je mm
 PT = 25.4 / 72.0        # mm je pt
@@ -193,7 +194,7 @@ def fold_symbol(edge, obstacles=()):
 
     def pick(room):
         """First text/size that fits along `room` mm, or None."""
-        for tx in FOLD_TEXTS:
+        for tx in map(tr, FOLD_TEXTS):
             for sz in FOLD_SIZES:
                 if text_w_mm(tx, sz, True) <= room:
                     return tx, sz
@@ -203,7 +204,7 @@ def fold_symbol(edge, obstacles=()):
     choice = pick(hi - lo)
     if choice is None:                     # too little room next to the obstacles: use the whole edge
         lo, hi = margin, L_ - margin
-        choice = pick(hi - lo) or (FOLD_TEXTS[-1], FOLD_SIZES[-1])
+        choice = pick(hi - lo) or (tr(FOLD_TEXTS[-1]), FOLD_SIZES[-1])
     text, size = choice
     span = min(0.8 * (hi - lo), FOLD_MAX_SPAN)
     w = max(span, text_w_mm(text, size, True))
@@ -262,7 +263,7 @@ def piece_prims(piece, pattern, extra_label=None):
             ang = math.degrees(math.atan2(t[1], t[0]))
             if ang > 90 or ang < -90:
                 ang += 180
-            prims.append(Prim("text", text=mk.label, size=7, pts=mid, angle=ang, ly=1.5))
+            prims.append(Prim("text", text=tr(mk.label), size=7, pts=mid, angle=ang, ly=1.5))
     # grainline
     if piece.grain is not None:
         g0, g1 = np.asarray(piece.grain[0], float), np.asarray(piece.grain[1], float)
@@ -273,7 +274,7 @@ def piece_prims(piece, pattern, extra_label=None):
         ang = math.degrees(math.atan2(d[1], d[0]))
         if ang > 90 or ang < -90:
             ang += 180
-        prims.append(Prim("text", text="Grainline", size=7, pts=(g0 + g1) / 2, angle=ang, ly=1.5))
+        prims.append(Prim("text", text=tr("Grainline"), size=7, pts=(g0 + g1) / 2, angle=ang, ly=1.5))
     # "place on fold" bracket arrows (see fold_symbol)
     avoid = []
     obstacles = [mk.pts for mk in piece.marks] + ([np.array(piece.grain, float)] if piece.grain is not None else [])
@@ -283,15 +284,15 @@ def piece_prims(piece, pattern, extra_label=None):
             prims += sym["prims"]
             avoid.append(sym["region"])
     # label block
-    lines = [piece.name, f"{pattern.title} · {pattern.size_label}".strip(" ·"),
-             piece.cut_text() + f" ({piece.fabric})"]
+    lines = [tr(piece.name), f"{tr(pattern.title)} · {tr(pattern.size_label)}".strip(" ·"),
+             piece.cut_text() + f" ({tr(piece.fabric)})"]
     if piece.on_fold:
-        lines.append("place this edge on the fold")
+        lines.append(tr("place this edge on the fold"))
     lines.append(piece.sa_text(U.of(pattern)))
     if piece.stretch_dir:
-        lines.append(piece.stretch_dir)
+        lines.append(tr(piece.stretch_dir))
     for info in piece.info:
-        lines.append(info)
+        lines.append(tr(info))
     if extra_label:
         lines.append(extra_label)
     sizes = [13.0] + [8.5] * (len(lines) - 1)
@@ -455,7 +456,7 @@ def control_squares_pdf(c, x_mm, y_top_mm, page_h_mm):
     yi = y + side - inch
     c.rect(xi, yi, inch, inch, stroke=1, fill=0)
     c.setFont(FONT, 7)
-    c.drawCentredString(xi + inch / 2, yi + inch / 2 - 2, "1 inch")
+    c.drawCentredString(xi + inch / 2, yi + inch / 2 - 2, tr("1 inch"))
     return 50.0 + 5.0 + 25.4, 50.0
 
 
@@ -470,37 +471,37 @@ def legend_pdf(c, x_mm, y_top_mm, page_h_mm, with_allowance=True):
     for k, (st, label) in enumerate(items):
         y = y_top_mm + 4 + k * 6
         page.line(np.array([[x_mm, y], [x_mm + 18, y]]), st)
-        page.text(x_mm + 21, y + 1.2, label, 7.5, center=False)
+        page.text(x_mm + 21, y + 1.2, tr(label), 7.5, center=False)
     page.line(np.array([[x_mm, y_top_mm + 28], [x_mm + 18, y_top_mm + 28]]), "grain")
     for h in _arrow_heads(np.array([x_mm, y_top_mm + 28]), np.array([x_mm + 18, y_top_mm + 28]), 3):
         page.line(h, "grain")
-    page.text(x_mm + 21, y_top_mm + 29.2, "Grainline (parallel to the selvage)", 7.5, center=False)
+    page.text(x_mm + 21, y_top_mm + 29.2, tr("Grainline (parallel to the selvage)"), 7.5, center=False)
     page.line(np.array([[x_mm + 9, y_top_mm + 31], [x_mm + 9, y_top_mm + 37]]), "notch")
-    page.text(x_mm + 21, y_top_mm + 35.2, "Notches (single = front, double = back)", 7.5, center=False)
+    page.text(x_mm + 21, y_top_mm + 35.2, tr("Notches (single = front, double = back)"), 7.5, center=False)
 
 
 def size_legend_pdf(c, pattern, x_mm, y_top_mm, page_h_mm):
     """Nested sizes: line sample + size per layer (each in its own layer)."""
     page = PdfPage(c, 0, page_h_mm)
-    page.text(x_mm, y_top_mm + 4, "Sizes (PDF layers: switch sizes on/off before printing)", 7.5, True,
+    page.text(x_mm, y_top_mm + 4, tr("Sizes (PDF layers: switch sizes on/off before printing)"), 7.5, True,
               center=False)
     for k, n in enumerate(pattern.nest):
         y = y_top_mm + 10 + k * 5.5
         c._code.append(f"/OC /oc{n['layer']} BDC")
         page.line(np.array([[x_mm, y], [x_mm + 18, y]]), "cut", color=n["color"], dash=n["dash"])
-        page.text(x_mm + 21, y + 1.2, f"Size {n['label']}", 7.5, center=False, color=n["color"])
+        page.text(x_mm + 21, y + 1.2, tr(f"Size {n['label']}"), 7.5, center=False, color=n["color"])
         c._code.append("EMC")
 
 
 def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, compact=False):
     page = PdfPage(c, page_w_mm, page_h_mm)
-    page.text(left, top + 7, f"{pattern.title} · {pattern.size_label}", 16, True, center=False)
-    page.text(left, top + 13.5, subtitle, 8.5, center=False)
-    page.text(left, top + 19, "Print at 100 % / \"Actual size\". Do NOT use \"Fit to page\".",
+    page.text(left, top + 7, f"{tr(pattern.title)} · {tr(pattern.size_label)}", 16, True, center=False)
+    page.text(left, top + 13.5, tr(subtitle), 8.5, center=False)
+    page.text(left, top + 19, tr("Print at 100 % / \"Actual size\". Do NOT use \"Fit to page\"."),
               8, center=False)
-    page.text(left, top + 23.5, "Measure the control square before cutting.", 8, center=False)
-    page.text(left, top + 28, "Original parametric draft. "
-              "Sew a test garment the first time you use this pattern.", 7.5, center=False)
+    page.text(left, top + 23.5, tr("Measure the control square before cutting."), 8, center=False)
+    page.text(left, top + 28, tr("Original parametric draft. "
+              "Sew a test garment the first time you use this pattern."), 7.5, center=False)
     if compact:
         control_squares_pdf(c, left, top + 33, page_h_mm)
     else:
@@ -520,7 +521,7 @@ def _setup_canvas(path, w_mm, h_mm, title):
 
 
 def render_roll_pdf(pattern, lay: L.Layout, path):
-    c = _setup_canvas(path, lay.page_w, lay.page_h, f"{pattern.title} {pattern.size_label}")
+    c = _setup_canvas(path, lay.page_w, lay.page_h, f"{tr(pattern.title)} {tr(pattern.size_label)}")
     header_pdf(c, pattern, lay.page_w, lay.page_h,
                f"Roll {lay.meta['roll']:.0f} mm · page size {lay.page_w:.0f} × {lay.page_h:.0f} mm "
                f"(portrait) · {len(pattern.pieces)} pattern pieces")
@@ -602,11 +603,11 @@ def render_projector_pdf(pattern, lay: L.Layout, path, dark: bool = False):
     for j in range(1, ny + 1):
         page.text(2, j * g - 2, f"{j * 10} cm", 7, color=gc, center=False)
     # header
-    page.text(8, 14, f"{pattern.title} · {pattern.size_label}", 18, True, center=False, color=fg)
-    page.text(8, 22, f"Projector file · 1:1 · {W:.0f} × {H:.0f} mm · grid {g / 10:.0f} cm · "
-              "calibrate until the grid squares and the control square measure exactly.", 9,
+    page.text(8, 14, f"{tr(pattern.title)} · {tr(pattern.size_label)}", 18, True, center=False, color=fg)
+    page.text(8, 22, tr(f"Projector file · 1:1 · {W:.0f} × {H:.0f} mm · grid {g / 10:.0f} cm · "
+              "calibrate until the grid squares and the control square measure exactly."), 9,
               center=False, color=fg)
-    page.text(8, 28, "Grainline arrows are parallel to the long page edge (lay the selvage along it).",
+    page.text(8, 28, tr("Grainline arrows are parallel to the long page edge (lay the selvage along it)."),
               9, center=False, color=fg)
     if dark:
         c.setStrokeColorRGB(1, 1, 1)
@@ -620,7 +621,7 @@ def render_projector_pdf(pattern, lay: L.Layout, path, dark: bool = False):
     c.drawCentredString((sx + 25) * MM, (H - 36) * MM, "5 × 5 cm")
     c.rect((sx + 55) * MM, (H - 10) * MM - 72.0, 72.0, 72.0, stroke=1, fill=0)
     c.setFont(FONT, 7)
-    c.drawCentredString((sx + 55 + 12.7) * MM, (H - 10 - 12.7) * MM - 2, "1 inch")
+    c.drawCentredString((sx + 55 + 12.7) * MM, (H - 10 - 12.7) * MM - 2, tr("1 inch"))
     for p in layout_prims(pattern, lay):
         page.prim(p)
     if NE.is_nested(pattern):
@@ -742,8 +743,8 @@ def _render_overview(c, pattern, lay, pages, page_w, page_h):
         "   diamonds and lines must match exactly. Then glue them down.",
         "4. Cut the pieces out along the solid cutting line (seam allowance is included).",
     ]
-    for k, t in enumerate(lines):
-        pg.text(10, 95 + k * 5, t, 8 if k else 9, bold=(k == 0), center=False)
+    for k, ln in enumerate(lines):
+        pg.text(10, 95 + k * 5, tr(ln), 8 if k else 9, bold=(k == 0), center=False)
     # plan
     top = 128.0
     avail_w, avail_h = page_w - 20, page_h - top - 15
@@ -758,16 +759,16 @@ def _render_overview(c, pattern, lay, pages, page_w, page_h):
         rect = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]])
         if t["empty"]:
             pg.line(tp(rect), "tile")
-            pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s, "empty", 6, color=(0.5, 0.5, 0.5))
+            pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s, tr("empty"), 6, color=(0.5, 0.5, 0.5))
         else:
             pg.line(tp(rect), "diamond")
             pg.text(ox + (x0 + x1) / 2 * s, oy + (y0 + y1) / 2 * s + 2,
-                    f"{t['label']} (S. {t['page_no']})", 7, True, color=(0.35, 0.35, 0.65))
+                    tr(f"{t['label']} (p. {t['page_no']})"), 7, True, color=(0.35, 0.35, 0.65))
     for pl in lay.placements:
         ring = L.placed_ring(pattern.pieces[pl.index].cut_ring(), pl)
         pg.line(tp(np.vstack([ring, ring[:1]])), "cut")
         cxy = Polygon(ring).representative_point()
-        pg.text(ox + cxy.x * s, oy + cxy.y * s, pattern.pieces[pl.index].name.split(" (")[0], 6.5, True)
+        pg.text(ox + cxy.x * s, oy + cxy.y * s, tr(pattern.pieces[pl.index].name).split(" (")[0], 6.5, True)
 
 
 def _render_tiles(c, pattern, lay: L.Layout, start_no=1, total=None, overview=True):
@@ -817,12 +818,13 @@ def _render_tiles(c, pattern, lay: L.Layout, start_no=1, total=None, overview=Tr
         r, col = t["row"], t["col"]
         nb = []
         if col > 0:
-            nb.append(f"left: {chr(65 + r)}{col}")
+            nb.append(tr("left") + f": {chr(65 + r)}{col}")
         if r > 0:
-            nb.append(f"top: {chr(64 + r)}{col + 1}")
-        info = f"Page {t['page_no']}/{total} · {t['label']} · {pattern.title} {pattern.size_label}"
+            nb.append(tr("top") + f": {chr(64 + r)}{col + 1}")
+        info = (tr(f"Page {t['page_no']}/{total}") + f" · {t['label']} · {tr(pattern.title)} "
+                f"{tr(pattern.size_label)}")
         if nb:
-            info += " · glue to " + ", ".join(nb)
+            info += " · " + tr("glue to") + " " + ", ".join(nb)
         page.text(win[0] + (L.OVERLAP if col > 0 else 0) + 2, win[1] + (L.OVERLAP if r > 0 else 0) + 4,
                   info, 6.5, center=False, color=(0.25, 0.25, 0.25))
         # control squares in a free spot
@@ -859,7 +861,7 @@ def control_squares_pdf_single(c, x_mm, y_top_mm, page_h_mm):
     inch = 72.0
     c.rect(x + 2 * MM, y + 2 * MM, inch, inch, stroke=1, fill=0)
     c.setFont(FONT, 6)
-    c.drawCentredString(x + 2 * MM + inch / 2, y + 2 * MM + inch / 2, "1 inch")
+    c.drawCentredString(x + 2 * MM + inch / 2, y + 2 * MM + inch / 2, tr("1 inch"))
 
 
 def render_tiles_pdf(pattern, lay: L.Layout, path):
@@ -893,20 +895,22 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
            'xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" '
            f'width="{W:.2f}mm" height="{total_h:.2f}mm" '
            f'viewBox="0 0 {W:.2f} {total_h:.2f}">',
-           f"<title>{escape(pattern.title)} {escape(pattern.size_label)} · scale 1:1 (unit mm)</title>",
+           f"<title>{escape(tr(pattern.title))} {escape(tr(pattern.size_label))} · "
+           f"{escape(tr('scale 1:1 (unit mm)'))}</title>",
            '<style>text{font-family:"DejaVu Sans",Arial,sans-serif}</style>']
     for si, s in enumerate(sheets):
         base = si * (H + 20)
         out.append(f'<g transform="translate(0 {base:.2f})">')
         out.append(f'<rect x="0" y="0" width="{W:.2f}" height="{H:.2f}" fill="white" stroke="#bbb" stroke-width="0.3"/>')
-        out.append(f'<text x="8" y="13" font-size="5.6" font-weight="bold">{escape(pattern.title)} · {escape(pattern.size_label)}</text>')
-        out.append('<text x="8" y="19.5" font-size="3">Print at 100 % / actual size. '
-                   'Measure the 5 × 5 cm control square.</text>')
+        out.append(f'<text x="8" y="13" font-size="5.6" font-weight="bold">{escape(tr(pattern.title))} · '
+                   f'{escape(tr(pattern.size_label))}</text>')
+        out.append('<text x="8" y="19.5" font-size="3">'
+                   + escape(tr("Print at 100 % / actual size. Measure the 5 × 5 cm control square.")) + '</text>')
         sx = W - 88.4
         out.append(f'<rect x="{sx:.2f}" y="10" width="50" height="50" fill="none" stroke="black" stroke-width="0.26"/>')
         out.append(f'<text x="{sx + 25:.2f}" y="36" font-size="3.2" text-anchor="middle" font-weight="bold">5 × 5 cm</text>')
         out.append(f'<rect x="{sx + 55:.2f}" y="10" width="25.4" height="25.4" fill="none" stroke="black" stroke-width="0.26"/>')
-        out.append(f'<text x="{sx + 67.7:.2f}" y="23.5" font-size="2.5" text-anchor="middle">1 inch</text>')
+        out.append(f'<text x="{sx + 67.7:.2f}" y="23.5" font-size="2.5" text-anchor="middle">' + escape(tr('1 inch')) + '</text>')
         out.append(f'<g transform="translate(0 {oy:.2f})">')
         groups: list = [None] + ([n["layer"] for n in pattern.nest] if NE.is_nested(pattern) else [])
         for grp in groups:
@@ -914,7 +918,7 @@ def render_svg(pattern, lay: L.Layout, path, header_h=None):
                 n = pattern.nest[grp]
                 gid = "size_" + "".join(ch if ch.isalnum() else "_" for ch in str(n["label"]))
                 out.append(f'<g id="{gid}" class="size-layer" inkscape:groupmode="layer" '
-                           f'inkscape:label="Size {escape(str(n["label"]))}">')
+                           f'inkscape:label="{escape(tr("Size " + str(n["label"])))}">')
             for p in prims:
                 if p.sheet != s or p.layer != grp:
                     continue
@@ -994,14 +998,15 @@ def render_png(pattern, lay: L.Layout, path, dpi_mm: float = 0.6, show_tiles=Tru
                         fontsize=7, ha="center", va="center", alpha=0.6)
         if lay.kind == "roll":
             ax.add_patch(plt.Rectangle((W - 88.4, 10), 50, 50, fill=False, ec="k", lw=0.6))
-            ax.text(8, 14, f"{pattern.title} · {pattern.size_label}", fontsize=8, fontweight="bold")
+            ax.text(8, 14, f"{tr(pattern.title)} · {tr(pattern.size_label)}", fontsize=8, fontweight="bold")
         ax.set_xlim(-5, W + 5)
         ax.set_ylim(H + 5, -5)
         ax.set_aspect("equal")
         ax.axis("off")
         if lay.kind == "sheets":
-            ax.set_title(f"{lay.meta['paper']} sheet {s + 1}", fontsize=8)
-    fig.suptitle(title or f"{pattern.title} {pattern.size_label} · preview ({lay.kind})", fontsize=10)
+            ax.set_title(tr(f"{lay.meta['paper']} sheet {s + 1}"), fontsize=8)
+    fig.suptitle(title or f"{tr(pattern.title)} {tr(pattern.size_label)} · " + tr(f"preview ({lay.kind})"),
+                 fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=110)
     plt.close(fig)

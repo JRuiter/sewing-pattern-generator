@@ -49,20 +49,24 @@ class Construction:
 
 
 def to_markdown(rows: list[dict], unknown: list[str] | None = None) -> str:
+    from i18n import num, t
     if not rows:
         return ""
-    lines = ["### Construction values", "",
-             "Override any of these with the option `construction`, values in mm "
-             "(e.g. `{\"construction\": {\"" + rows[0]["name"] + "\": "
+
+    def cm(v):
+        return num(f"{v / 10:.1f}") + " cm"
+    lines = ["### " + t("Construction values"), "",
+             t("Override any of these with the option `construction`, values in mm")
+             + " (" + t("e.g.") + " `{\"construction\": {\"" + rows[0]["name"] + "\": "
              + f"{rows[0]['value']:.0f}" + "}}`).", "",
-             "| Name | Value | Derived from | Note |", "|---|---|---|---|"]
+             "| " + " | ".join(t(h) for h in ("Name", "Value", "Derived from", "Note")) + " |", "|---|---|---|---|"]
     for r in rows:
-        v = f"{r['value'] / 10:.1f} cm" if r["unit"] == "mm" else f"{r['value']:g}"
+        v = cm(r["value"]) if r["unit"] == "mm" else num(f"{r['value']:g}")
         note = ""
         if r["overridden"]:
             c = r["computed"]
-            note = "overridden (drafted: " + (f"{c / 10:.1f} cm" if r["unit"] == "mm" else f"{c:g}") + ")"
-        lines.append(f"| `{r['name']}` | {v} | {r['formula']} | {note} |")
+            note = t("overridden (drafted:") + " " + (cm(c) if r["unit"] == "mm" else num(f"{c:g}")) + ")"
+        lines.append(f"| `{r['name']}` | {v} | {t(r['formula'])} | {note} |")
     if unknown:
-        lines += ["", "> ⚠️ Unknown construction value(s) ignored: " + ", ".join(f"`{u}`" for u in unknown)]
+        lines += ["", "> ⚠️ " + t("Unknown construction value(s) ignored:") + " " + ", ".join(f"`{u}`" for u in unknown)]
     return "\n".join(lines)
