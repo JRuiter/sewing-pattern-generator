@@ -72,7 +72,9 @@
 - **Rib knit:** about 0.20 m at 70 cm width (single layer, incl. 10 % for shrinkage)
 - Elastic 20 mm wide, length 49 cm (+2 cm overlap for joining)
 
-Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair).
+Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair, "(unfolded)" = cut-on-fold piece shown opened out).
+
+**Cut on fold** (Waistband (elastic)): the paper piece is only one half. Its fold edge (dash-dot line, bracket arrows "PLACE ON FOLD") is the centre of the piece: it gets no seam allowance and is never cut. On the folded fabric, lay the fold edge exactly on the fabric fold, pin it and cut through both layers; opened out you get the whole piece. Where the cutting layout shows a piece "(unfolded)" on a single layer, fold the fabric along the grain just wide enough for the piece and place the fold edge on that fold, or trace the paper piece, flip it over along the fold edge and trace the second half.
 
 ## Sewing instructions
 
@@ -128,10 +130,11 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Leg cuff: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Leg cuff: grainline & cutting | present | cut 2 |  | ✅ OK | Rib knit |
+| Geometry | Waistband (elastic): cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre front |
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 30 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 31 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

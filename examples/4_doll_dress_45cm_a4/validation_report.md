@@ -41,12 +41,14 @@
 | Labels | Skirt back: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Back: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Back opening (turn under): corners mirrored at the fold line |
 | Geometry | Sleeve: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Sleeve hem: corners mirrored at the fold line |
+| Geometry | Front: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.4° off 90° |  | ✅ OK | Centre (fold) |
+| Geometry | Skirt front: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre (fold) |
 | Labels | Front: notches | on the cutting line | 1 notch mark(s) |  | ✅ OK |  |
 | Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 | Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 | Labels | Skirt back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 43 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 45 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

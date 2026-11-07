@@ -46,6 +46,8 @@
     "_cuff_len": 193.58617118672208,
     "_hem_c": 276.5516731238887,
     "_blouse": 0.0,
+    "_casing_turn": 7.0,
+    "_casing_gap": 30.0,
     "units": "metric"
   },
   "measures_mm": {
@@ -572,6 +574,15 @@
       "actual": "cut 2",
       "delta": "",
       "note": "Rib knit"
+    },
+    {
+      "group": "Geometry",
+      "name": "Waistband (elastic): cut-on-fold edge",
+      "status": "OK",
+      "target": "straight, no SA, 90° corners, on grain",
+      "actual": "ok, corners ≤ 0.0° off 90°",
+      "delta": "",
+      "note": "Centre front"
     },
     {
       "group": "Labels",

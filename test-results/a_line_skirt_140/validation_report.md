@@ -16,5 +16,8 @@
 | Labels | Waistband (elastic): grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Front skirt: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
 | Geometry | Back skirt: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
+| Geometry | Front skirt: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre (fold) |
+| Geometry | Back skirt: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre (fold) |
+| Geometry | Waistband (elastic): cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre |
 
-**Result:** 14 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 17 OK, 0 warning(s), 0 error(s): the pattern is sewable.

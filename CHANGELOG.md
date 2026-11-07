@@ -2,6 +2,15 @@
 
 All notable changes to this skill are listed here. Versions follow [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Cut-on-fold edges**: every fold edge now carries the standard bracket symbol (two arrows pointing at the fold, "PLACE ON FOLD") instead of a text-only label. It is sized to the edge, so short fold edges such as a doll waistband get "ON FOLD"/"FOLD" in a smaller font instead of text running off the piece, and it keeps clear of fold-over lines and the grainline; the label block no longer covers it.
+- The sewing instructions explain how to cut the pieces marked "on fold" for the layout used (on the fabric fold, or opened out on a single layer), and the cutting layout marks opened-out fold pieces "(unfolded)".
+
+### Added
+- Validation check for every cut-on-fold edge: straight, no seam allowance, neighbouring edges at 90° (no peak or dip at the centre once unfolded), on grain.
+
 ## [1.1.0] - 2026-11-07
 
 ### Added

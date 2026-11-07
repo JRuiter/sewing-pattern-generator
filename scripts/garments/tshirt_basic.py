@@ -108,7 +108,8 @@ def _body_piece(key, name, F, depth, scoop, o, hem_y, flare, notches):
         Edge("side", side, o["sa"], label="Side seam"),
         Edge("armhole", arm, o["sa"], label="Armhole"),
         Edge("shoulder", G.line(S, N), o["sa"], label="Shoulder"),
-        Edge("neckline", neck, o["sa"] * 0.7, label="Neckline"),
+        Edge("neckline", neck, o["sa"] * 0.7, label="Neckline",
+             pointed=o["neckline"] == "v" and key == "front"),
     ]
     gx = q * 0.45
     p = Piece(key, name, edges, cut_count=1, mirror=False, fabric="Main fabric",
@@ -222,7 +223,7 @@ def _raglan(front, back, F, o, m, adult):
         neck_part = G.length(neck) - G.length(neck_rest)
         e = pc.edges
         new = [e[0], e[1], e[2], Edge("raglan", rag, o["sa"], label="Raglan seam"),
-               Edge("neckline", neck_rest, e[5].sa, label="Neckline")]
+               Edge("neckline", neck_rest, e[5].sa, label="Neckline", pointed=e[5].pointed)]
         pc.edges = new
         curves[pc.key] = (rag, neck_part)
     rf, npf = curves["front"]

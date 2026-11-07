@@ -934,7 +934,7 @@ def test_parse_sizes():
 
 def _line_prims(prims, layer=None):
     return [(p.style, np.round(np.asarray(p.pts), 3)) for p in prims
-            if p.kind == "line" and p.style != "grain" and (layer is None or p.layer == layer)]
+            if p.kind == "line" and p.style not in ("grain", "fold_arrow") and (layer is None or p.layer == layer)]
 
 
 def test_nested_layers_match_single_sizes():

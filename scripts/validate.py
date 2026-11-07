@@ -6,6 +6,8 @@ Checks:
   3. Circumferences = body measurement + ease (± 1 %), plausible lengths, head/foot/hip fit through
   4. Geometry: closed outline, no self-intersection, seam allowance present everywhere
   5. Every piece has a grainline and cutting instructions
+  6. Fold edges: straight, no seam allowance, the neighbouring edges meet them at a right
+     angle (no peak or dip at the centre once unfolded), parallel to the grainline
 """
 from __future__ import annotations
 
@@ -253,9 +255,70 @@ def check_notches(pat: Pattern):
     return res
 
 
+FOLD_STRAIGHT_TOL = 0.5   # mm, max deviation of a fold edge from a straight line
+FOLD_GRAIN_TOL = 1.0      # degrees between fold edge and grainline (OK)
+
+
+def _worse(a: str, b: str) -> str:
+    order = ("OK", "WARNING", "ERROR")
+    return a if order.index(a) >= order.index(b) else b
+
+
+def check_folds(pat: Pattern):
+    """Cut-on-fold edges. The fold is a mirror line: it must be straight and carry no seam
+    allowance, and every edge must meet it at 90°, otherwise the unfolded piece gets a peak
+    or a dip at the centre (neckline, hem, waist). The fold edge that goes on the fabric fold
+    must run along the grain, because the fabric fold does."""
+    res = []
+    for pc in pat.pieces:
+        folds = [i for i, e in enumerate(pc.edges) if e.fold]
+        if not folds:
+            continue
+        status, found, worst_ang = "OK", [], 0.0
+
+        best_grain = None
+        for i in folds:
+            e = pc.edges[i]
+            pts = np.asarray(e.pts, float)
+            a, b = pts[0], pts[-1]
+            d = G.unit(b - a)
+            n = np.array([-d[1], d[0]])
+            dev = float(np.abs((pts - a) @ n).max())
+            name = e.label or e.name
+            if dev > FOLD_STRAIGHT_TOL:
+                status = _worse(status, "ERROR")
+                found.append(f"'{name}' not straight ({dev:.1f} mm)")
+            if e.sa > 0:
+                status = _worse(status, "ERROR")
+                found.append(f"'{name}' has a seam allowance ({e.sa:.0f} mm)")
+            for other, ang in ((pc.edges[i - 1], G.corner_angle(pc.edges[i - 1].pts, e.pts)),
+                               (pc.edges[(i + 1) % len(pc.edges)],
+                                G.corner_angle(e.pts, pc.edges[(i + 1) % len(pc.edges)].pts))):
+                if other.fold or other.pointed:    # V-neck: the point is checked as a corner
+                    continue
+                dang = abs(ang - 90.0)
+                worst_ang = max(worst_ang, dang)
+                st = _status_angle(dang)
+                if st != "OK":
+                    status = _worse(status, st)
+                    found.append(f"'{other.label or other.name}' meets '{name}' at {ang:.1f}°")
+            if pc.grain is not None:
+                g = G.unit(np.asarray(pc.grain[1], float) - np.asarray(pc.grain[0], float))
+                gdev = float(np.degrees(np.arccos(min(1.0, abs(float(g @ d))))))
+                best_grain = gdev if best_grain is None else min(best_grain, gdev)
+        if best_grain is not None and best_grain > FOLD_GRAIN_TOL:
+            status = _worse(status, "WARNING")
+            found.append(f"fold edge {best_grain:.1f}° off the grainline")
+        actual = "; ".join(found) if found else f"ok, corners ≤ {worst_ang:.1f}° off 90°"
+        res.append(Check("Geometry", f"{pc.name}: cut-on-fold edge", status,
+                         "straight, no SA, 90° corners, on grain", actual, "",
+                         ", ".join(pc.edges[i].label or pc.edges[i].name for i in folds)))
+    return res
+
+
 def validate(pat: Pattern, raise_on_error: bool = False):
     report = (check_seams(pat) + check_corners(pat) + check_values(pat) + check_geometry(pat)
-              + check_turned(pat) + check_notches(pat))
+              + check_turned(pat) + check_folds(pat) + check_notches(pat))
     if raise_on_error and any(c.status == "ERROR" for c in report):
         raise ValidationError(report)
     return report

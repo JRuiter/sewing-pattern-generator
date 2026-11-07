@@ -70,7 +70,9 @@
 - Thin, soft fabrics work best (cotton poplin, batiste, old T-shirts); thick fabric makes the tiny seams bulky.
 - The back opens completely: close it with narrow Velcro (1 cm) or 2–3 small snaps.
 
-Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair).
+Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair, "(unfolded)" = cut-on-fold piece shown opened out).
+
+**Cut on fold** (Front, Skirt front): the paper piece is only one half. Its fold edge (dash-dot line, bracket arrows "PLACE ON FOLD") is the centre of the piece: it gets no seam allowance and is never cut. Where the cutting layout shows a piece "(unfolded)" on a single layer, fold the fabric along the grain just wide enough for the piece and place the fold edge on that fold, or trace the paper piece, flip it over along the fold edge and trace the second half.
 
 ## Sewing instructions
 
@@ -140,12 +142,14 @@ Seam allowance is included in the pattern (see table).
 | Labels | Skirt back: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
 | Geometry | Back: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Back opening (turn under): corners mirrored at the fold line |
 | Geometry | Sleeve: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Sleeve hem: corners mirrored at the fold line |
+| Geometry | Front: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.4° off 90° |  | ✅ OK | Centre (fold) |
+| Geometry | Skirt front: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.0° off 90° |  | ✅ OK | Centre (fold) |
 | Labels | Front: notches | on the cutting line | 1 notch mark(s) |  | ✅ OK |  |
 | Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 | Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 | Labels | Skirt back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 43 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 45 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

@@ -66,6 +66,8 @@ def render_fabric_png(pattern, plans, path):
                 nm += " ×2"
             elif p.pinned:
                 nm += " (on fold)"
+            elif pattern.pieces[pi].on_fold:
+                nm += " (unfolded)"
             ax.text(c[0], c[1], nm + (" (flipped)" if p.mirrored else ""), fontsize=6, ha="center", va="center")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
@@ -96,6 +98,26 @@ def layout_text(pl, units: str = "metric") -> str:
         t += f", incl. 10 % for shrinkage; {other} would need {U.fabric_length(alt['need_mm'], units)}"
     else:
         t += ", incl. 10 % for shrinkage"
+    return t
+
+
+def fold_text(pattern, plans) -> str | None:
+    """How to cut the pieces marked "place on fold", for the layouts actually used."""
+    names = [p.name for p in pattern.pieces if p.on_fold]
+    if not names:
+        return None
+    t = (f"**Cut on fold** ({', '.join(names)}): the paper piece is only one half. Its fold edge "
+         "(dash-dot line, bracket arrows \"PLACE ON FOLD\") is the centre of the piece: it gets no "
+         "seam allowance and is never cut.")
+    modes = {pl.get("mode") for pl in plans.values()}
+    unfolded = "single" in modes or any(pl.get("single_section") for pl in plans.values())
+    if "folded" in modes:
+        t += (" On the folded fabric, lay the fold edge exactly on the fabric fold, pin it and cut "
+              "through both layers; opened out you get the whole piece.")
+    if unfolded:
+        t += (" Where the cutting layout shows a piece \"(unfolded)\" on a single layer, fold the fabric "
+              "along the grain just wide enough for the piece and place the fold edge on that fold, or "
+              "trace the paper piece, flip it over along the fold edge and trace the second half.")
     return t
 
 
@@ -190,8 +212,11 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
         lines.append(f"- {n}")
     lines += ["", "Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
               "\"flipped\" = place the piece face down, \"×2\" = cut through both layers of the folded "
-              "fabric, which gives a mirrored pair).", "",
-              "## Sewing instructions", "",
+              "fabric, which gives a mirrored pair, \"(unfolded)\" = cut-on-fold piece shown opened out).", ""]
+    ft = fold_text(pattern, plans)
+    if ft:
+        lines += [ft, ""]
+    lines += ["## Sewing instructions", "",
               ("Seam allowance is included in the pattern (see table). " if A.has_allowance(pattern) else
                "**The pattern has NO seam allowance.** Add the allowances from the table when you cut. ")
               + ("Use a jersey/stretch needle for jersey and sweat." if knit else ""), ""]

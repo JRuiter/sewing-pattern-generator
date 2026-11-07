@@ -33,11 +33,13 @@
 | Geometry | Front: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
 | Geometry | Back: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Hem: corners mirrored at the fold line |
 | Geometry | Sleeve: turned allowance lies flat | ≤ 0.5 mm | 0.0 mm |  | ✅ OK | Sleeve hem: corners mirrored at the fold line |
+| Geometry | Front: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.2° off 90° |  | ✅ OK | Centre (fold) |
+| Geometry | Back: cut-on-fold edge | straight, no SA, 90° corners, on grain | ok, corners ≤ 0.4° off 90° |  | ✅ OK | Centre (fold) |
 | Labels | Front: notches | on the cutting line | 1 notch mark(s) |  | ✅ OK |  |
 | Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 | Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 
-**Result:** 34 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 36 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 
@@ -50,5 +52,6 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | `front_neck_depth` | 11.0 cm | neck_width_half + 2.5 cm |  |
 | `back_neck_depth` | 2.0 cm | fixed |  |
 | `shoulder_length` | 12.5 cm | shoulder + allowance for fit 'normal' |  |
+| `shoulder_slope` | 17 | fixed |  |
 | `armhole_depth` | 19.6 cm | 18 % of chest_width + 2.5 cm |  |
 | `body_length` | 97.3 cm | option body_length |  |
