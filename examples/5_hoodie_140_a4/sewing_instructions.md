@@ -78,9 +78,9 @@ The printed instructions (`sewing_instructions.pdf`) show every step as a pictur
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage.
-3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch.
-4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
+4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
 5. **Hem the pocket openings**. Press 1.5 cm under and topstitch. (sewing machine: twin needle 4 mm, stitch 3 mm)
    ![Step 5](steps/step_05.png)
 6. **Press the top edge under**. 1 cm to the wrong side.

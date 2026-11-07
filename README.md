@@ -5,9 +5,9 @@ A [Claude skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/o
 garment. Parametric drafting, seam validation, and print-ready 1:1 PDFs for plotter rolls, A0/A1, or A4
 tiling.
 
-All generated files (pattern labels, sewing instructions, reports) are in English. Claude answers
-in the language you write in, and the skill also triggers on German requests ("Schnittmuster
-erstellen", "Lieblingshose kopieren" …).
+All generated files (pattern labels, sewing booklet, reports) are in English, or in German if you
+ask for it (*"Anleitung auf Deutsch"*). Claude answers in the language you write in, and the skill
+also triggers on German requests ("Schnittmuster erstellen", "Lieblingshose kopieren" …).
 
 ## Example prompts
 
@@ -78,16 +78,17 @@ together, plus an overview page.
 
 > *"A hoodie with kangaroo pocket, size 140."*
 
-A cover with all parts, a parts list with letters, fabric and notions, the machines and tools you
-need, then one action per step. Every picture is drawn from your actual pattern pieces: right side
-shaded, wrong side hatched, pins, stitch line, sewing direction, and the stitch setting for your
-machine.
+A title page with the finished garment from the front and back and the key facts (fabric, seam
+allowance, difficulty, time), the parts with letters, fabric and notions, the machines and basics,
+then two steps per page with numbered actions, tips and warnings. Every picture is drawn from your
+actual pattern pieces: right side shaded, wrong side hatched, pins, stitch line, sewing direction,
+and the stitch setting for your machine.
 
 <table><tr>
-<td><img src="docs/images/booklet_cover.png" alt="Booklet cover with all parts"></td>
+<td><img src="docs/images/booklet_cover.png" alt="Booklet title page"></td>
 <td><img src="docs/images/booklet_parts.png" alt="Parts list, fabric and tools"></td>
 <td><img src="docs/images/booklet_steps.png" alt="Sewing steps with pictures"></td>
-</tr><tr><td>Cover</td><td>What you need</td><td>Steps</td></tr></table>
+</tr><tr><td>Title page</td><td>Parts and material</td><td>Steps</td></tr></table>
 
 ### A cutting layout and how much fabric to buy
 

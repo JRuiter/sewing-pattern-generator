@@ -292,7 +292,7 @@ def make_images():
     for src, name in jobs:
         _shrink(src, os.path.join(IMAGES, name))
     booklet = os.path.join(e5, "sewing_instructions.pdf")
-    for page, name in [(1, "booklet_cover.png"), (2, "booklet_parts.png"), (4, "booklet_steps.png")]:
+    for page, name in [(1, "booklet_cover.png"), (2, "booklet_parts.png"), (7, "booklet_steps.png")]:
         _pdf_page(booklet, page, os.path.join(IMAGES, name))
 
 
