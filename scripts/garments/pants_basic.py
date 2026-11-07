@@ -815,19 +815,26 @@ def assembly(pat: Pattern) -> list:
     out.append(S.icon("Put one leg inside the other", "turn",
                       "Turn one leg right side out and slip it into the other (wrong side out): the legs lie "
                       "right sides together.", section="Crotch"))
+    import machines as MC
+    seam_m = MC.method(o, "seam", knit)
+    on_ov = bool(seam_m and seam_m["machine"] == "overlocker")
+    no_machine = not MC.has_sewing_machine(MC.of(o)) if MC.of(o) is not None else False
     out.append(S.seam("Sew the crotch seam", ["Front crotch seam", "Back crotch seam"],
                       "In one go from the front to the back top edge; the inseams meet exactly.",
-                      tip="Sew the crotch curve a second time for strength.", section="Crotch"))
+                      tip=("Sew the curve slowly, clips off before the knife." if on_ov
+                           else "Sew the crotch curve a second time for strength."), section="Crotch"))
     finished("Finish the crotch seam", [("front", "crotch"), ("back", "crotch")])
     fly = o.get("_fly")
     if fly:
         tip = ("The stitching catches the crotch seam allowance." if fly["catches_sa"] else
                "The stitching does not catch the crotch seam allowance: pin a strip of fabric "
                "(about 5 × 14 cm) underneath for strength.")
-        out.append(S.topstitch("Topstitch the fake fly", [("front", "crotch")], fly["offset"],
+        out.append(S.topstitch("Topstitch the fake fly" + (" by hand" if no_machine else ""),
+                               [("front", "crotch")], fly["offset"],
                                f"Only on the {fly['side']} front leg (as worn), before the waistband: two rows "
                                f"{_cm_text(fly['spacing'])} apart along the J line ({_cm_text(fly['offset'])} from "
-                               f"centre front, {fly['length'] / 10:.1f} cm long), bar tack at the crotch seam.",
+                               f"centre front, {fly['length'] / 10:.1f} cm long), "
+                               + ("hand bar tack" if no_machine else "bar tack") + " at the crotch seam.",
                                tip=tip, section="Crotch", data={"fly": True}))
     wb = o["waistband"]
     gap = o.get("_casing_gap", 30.0)
@@ -906,9 +913,11 @@ def assembly(pat: Pattern) -> list:
         el = o.get("_hem_elastic_len", 200.0)
         out += [
             S.hem("Sew the hem casing", [("front", "hem"), ("back", "hem")], casing,
-                  f"Press 5 mm under, then {_cm_text(casing)} to the inside; sew close to the inner fold and leave "
-                  "3 cm open at the inseam.", tip="Keep the casing free: do not catch the elastic channel.",
-                  repeat=2, section=sec, data={"casing": True, "hem_sa": hs}),
+                  (f"Finish the raw edge with the overlocker, fold {_cm_text(hs)} to the inside once and sew "
+                   "along the finished edge" if on_ov else
+                   f"Press 5 mm under, then {_cm_text(casing)} to the inside; sew close to the inner fold")
+                  + "; leave 3 cm open at the inseam.", tip="Keep the casing free: do not catch the elastic channel.",
+                  repeat=2, section=sec, data={"casing": True, "hem_sa": hs, "overlocked": on_ov}),
             S.icon("Thread the elastic", "elastic",
                    f"{el / 10:.0f} cm per leg + 2 cm overlap (fit it on the child): thread it with a safety pin, "
                    "overlap the ends 2 cm and sew them together, then close the opening.",

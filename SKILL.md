@@ -74,8 +74,13 @@ machine and stitch; the instructions get a "Your machines" table (stitch, width/
 kind of step) and tips for what is missing (e.g. a twin needle instead of a coverstitch). Without
 an overlocker nothing is missing: knit seams use a narrow zigzag/stretch stitch. A knit on a
 straight-stitch-only machine works but is fragile: suggest a woven fabric or the double row of
-long straight stitches the instructions describe. In the reply, mention in one line how the
-pattern was adapted to their machines.
+long straight stitches the instructions describe. **No sewing machine at all** (only an
+overlocker): `--machines overlocker,hand` (or `overlocker_only`; `hand` without any sewing-machine
+key means "no sewing machine"). Then every seam is overlocked (7.5 mm allowance, woven fabric too)
+and every straight-stitch step is done by hand: topstitching → back stitch, hems/casings → blind
+stitch, basting → tacking stitch, bar tacks by hand, elastic ends → a box of hand stitches; the
+steps add overlocker hints (pins out before the knife, curves slowly, thread chains). In the reply,
+mention in one line how the pattern was adapted to their machines.
 
 **Measurement profiles:** when the user gives body measurements for a person, offer once to
 save them (`python scripts/profiles.py save lena --measures '{…}' --kind child`). Later

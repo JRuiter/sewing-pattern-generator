@@ -6,6 +6,7 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ### Added
 - **Pants options** (#39): `fake_fly` (J topstitch line on the left front leg with its own step; the step only says the stitching catches the crotch seam allowance when it really does), `back_pockets: 1|2` with `back_pocket_side` (a single pocket is cut once and its mark names the leg), `hem_finish: "elastic_casing"` (hem allowance 5 mm + elastic + 10 mm, 3 cm opening at the inseam, elastic length per leg in the notes and steps), `pocket_bag_fabric` (the inner pocket bag becomes its own "Lining" group in the cutting layout and fabric consumption).
+- **Overlocker without a sewing machine** (`--machines overlocker,hand` or `overlocker_only`): seams on the overlocker with 7.5 mm allowance (woven too), every straight-stitch step by hand (back stitch, blind stitch, tacking stitch, hand bar tack, a box of hand stitches for elastic), no separate edge-finishing steps, overlocker hints in the steps and the machines table, hem casing finished and folded once. (#39)
 - Option `title` for every garment: the name on the pieces, in the instructions and in the file names. (#39)
 - Fabrics **corduroy** and **velvet**, with a nap: the cutting layout keeps every main-fabric piece waist up ("Nap ↓, all pieces waist up") and the fabric consumption follows; option `nap` for any other fabric. Pressing note per fabric (corduroy/velvet from the wrong side on a terry towel). (#39)
 
