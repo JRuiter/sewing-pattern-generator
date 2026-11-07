@@ -1,4 +1,4 @@
-"""IKEA-style sewing booklet (vector PDF).
+"""Illustrated sewing booklet (vector PDF).
 
 Page 1    cover: name, size/fit/fabric, the finished garment from the front and the back,
           the machines it is sewn with, a note about the test garment

@@ -5,6 +5,7 @@
   python tools/make_examples.py examples   # only examples/
   python tools/make_examples.py results    # only test-results/
   python tools/make_examples.py doll       # only examples/4_doll_dress_45cm_a4
+  python tools/make_examples.py images     # only docs/images/ (README pictures, from examples/)
 """
 from __future__ import annotations
 
@@ -120,6 +121,66 @@ def make_examples():
     print("\n".join(md))
     make_doll_example()
 
+    # 5: hoodie with kangaroo pocket, size 140, A4 tiles: the booklet with the most steps
+    GN.run(dict(garment="hoodie", size=140, options={"kangaroo": True}, formats=["a4"],
+                out=os.path.join(ex, "5_hoodie_140_a4"), basename="hoodie_size140"), verbose=False)
+    # 6: nested sizes: joggers 98/110/122 on one 610 mm roll, one colour and PDF layer per size
+    GN.run(dict(garment="pants_basic", size="98,110,122", options={"style": "jogger"},
+                formats=["roll610"], out=os.path.join(ex, "6_joggers_nested_98_110_122_roll610"),
+                basename="joggers_98_110_122"), verbose=False)
+    make_images()
+
+
+# README pictures: copied or rendered from examples/, shrunk to a web-friendly width.
+IMAGES = os.path.join(ROOT, "docs", "images")
+
+
+def _shrink(src, dst, width=900):
+    from PIL import Image, ImageChops
+    im = Image.open(src).convert("RGB")
+    box = ImageChops.difference(im, Image.new("RGB", im.size, "white")).getbbox()
+    if box:                                   # trim white margins, keep 20 px
+        m = 20
+        im = im.crop((max(box[0] - m, 0), max(box[1] - m, 0),
+                      min(box[2] + m, im.width), min(box[3] + m, im.height)))
+    if im.width > width:
+        im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
+    if dst.endswith(".jpg"):
+        im.save(dst, quality=82, optimize=True)
+    else:
+        im.save(dst, optimize=True)
+
+
+def _pdf_page(pdf, page, dst, width=700):
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as t:
+        subprocess.run(["pdftoppm", "-png", "-r", "110", "-f", str(page), "-l", str(page), pdf,
+                        os.path.join(t, "p")], check=True)
+        _shrink(os.path.join(t, sorted(os.listdir(t))[0]), dst, width)
+
+
+def make_images():
+    _reset(IMAGES)
+    ex = os.path.join(ROOT, "examples")
+    e1, e2 = os.path.join(ex, "1_harem_pants_122_roll610"), os.path.join(ex, "2_harem_pants_122_a4")
+    e3, e4 = os.path.join(ex, "3_photo_mode_b"), os.path.join(ex, "4_doll_dress_45cm_a4")
+    e5, e6 = os.path.join(ex, "5_hoodie_140_a4"), os.path.join(ex, "6_joggers_nested_98_110_122_roll610")
+    jobs = [
+        (os.path.join(e1, "harem_pants_size122_roll610_preview.png"), "pattern_roll.png"),
+        (os.path.join(e2, "harem_pants_size122_a4_preview.png"), "pattern_a4_tiles.png"),
+        (os.path.join(e5, "cutting_layout.png"), "cutting_layout.png"),
+        (os.path.join(e4, "doll_dress_45cm_a4_preview.png"), "doll_dress.png"),
+        (os.path.join(e6, "joggers_98_110_122_roll610_preview.png"), "nested_sizes.png"),
+        (os.path.join(e3, "photo_flat_with_reference_card.jpg"), "photo_input.jpg"),
+        (os.path.join(e3, "project", "overlay_measurement.png"), "photo_overlay.jpg"),
+    ]
+    for src, name in jobs:
+        _shrink(src, os.path.join(IMAGES, name))
+    booklet = os.path.join(e5, "sewing_instructions.pdf")
+    for page, name in [(1, "booklet_cover.png"), (2, "booklet_parts.png"), (4, "booklet_steps.png")]:
+        _pdf_page(booklet, page, os.path.join(IMAGES, name))
+
 
 # 4: doll clothes: a dress for a 45 cm fabric doll, A4 tiles (doll.py)
 DOLL_CM = {"height": 45, "chest": 30, "waist": 28, "hip": 31, "head": 32, "arm": 12, "inseam": 14,
@@ -140,5 +201,7 @@ if __name__ == "__main__":
         make_examples()
     if "doll" in what:
         make_doll_example()
+    if "images" in what and "examples" not in what:
+        make_images()
     if "results" in what:
         make_results()

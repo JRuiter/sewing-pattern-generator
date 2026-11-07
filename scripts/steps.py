@@ -1,4 +1,4 @@
-"""Structured sewing steps: one action per step, the data behind the IKEA-style booklet.
+"""Structured sewing steps: one action per step, the data behind the illustrated booklet.
 
 A garment module describes its construction as a list of :class:`Step` objects
 (``assembly(pattern)``). Every step is one action ("Sew the side seams", "Fold the

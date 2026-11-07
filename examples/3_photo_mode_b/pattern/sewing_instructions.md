@@ -78,7 +78,7 @@ Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvag
 
 ## Sewing instructions
 
-The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces, IKEA style: parts list, tools, then one action per step.
+The printed instructions (`sewing_instructions.pdf`) show every step as a picture of your pieces: parts list, tools, then one action per step.
 
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
