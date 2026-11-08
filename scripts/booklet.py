@@ -44,6 +44,7 @@ NOTION_WORDS = {"elastic": "Elastic", "zip": "Zip", "velcro": "Velcro", "snap": 
                 "drawstring": "Drawstring", "cord": "Cord", "binding": "Binding"}
 IMPORTANT = ("#fff3c4", "#d4a600")      # yellow box
 TIP = ("#e3f4e1", "#2e7d32")            # green box
+ALT = ("#e6eef8", "#4a6fa5")            # blue box: another way to do it
 OK_GREEN, BAD_RED = "#2e7d32", "#c62828"
 NAVY = "#263750"                        # number badges, bullets, ×2 badges
 
@@ -284,6 +285,7 @@ def _legend(fig, pattern, x, y, w) -> float:
     y -= 0.04 * int(np.ceil(len(keys) / 3)) + 0.01
     items = [("Sew now (machine)", dict(color=DG.STITCH, lw=1.8, ls="-")),
              ("Sew by hand", dict(color=DG.STITCH, lw=2.0, ls=DG.HAND_STITCH)),
+             ("Already sewn", dict(color=DG.DONE_STITCH, lw=1.4, ls=DG.DONE_LS)),
              ("Fold / press line", dict(color=DG.ACCENT[1], lw=1.2, ls=DG.FOLD_LINE)),
              ("Marking (chalk)", "chalk"),
              ("Pin", "pin"),
@@ -305,7 +307,7 @@ def _legend(fig, pattern, x, y, w) -> float:
         else:
             ax.plot([0.0, 1.0], [0.5, 0.5], **kind)
         fig.text(cx + 0.068, cy, T(lab), fontsize=7, va="center")
-    y -= 0.03 * 2
+    y -= 0.03 * int(np.ceil(len(items) / 3))
     return y0 - y
 
 
@@ -632,7 +634,7 @@ def _actions(text: str) -> list[str]:
     if not text:
         return []
     parts = [p.strip(" ;") for p in re.split(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9„\"])|;\s+", text) if p.strip(" ;")]
-    while len(parts) > 4:
+    while len(parts) > 5:
         i = min(range(len(parts) - 1), key=lambda k: len(parts[k]) + len(parts[k + 1]))
         parts[i:i + 2] = [parts[i].rstrip(".") + "; " + parts[i + 1][:1].lower() + parts[i + 1][1:]]
     return [p[:1].upper() + p[1:] for p in parts]
@@ -769,6 +771,9 @@ def _panel(fig, pattern, n: int, step: S.Step, rect, prev_section: str):
             yy -= _important(fig, cx, yy, cw, T(step.tip), fs * 0.92) + 0.008
         if step.hint:
             yy -= _important(fig, cx, yy, cw, T(step.hint), fs * 0.92, label="Tip", colors=TIP, icon="") + 0.008
+        if step.alt:
+            yy -= _important(fig, cx, yy, cw, T(step.alt), fs * 0.92, label="Alternative", colors=ALT,
+                             icon="") + 0.008
         if yy >= y + (0.045 if step.repeat > 1 else 0.008):
             break
         # too long: remove what this pass drew and try a smaller size

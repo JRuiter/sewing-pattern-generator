@@ -158,7 +158,7 @@ PALETTES = {
     "rib": ("#a5d6a7", "#eef7ee", "rib"),
 }
 HAND_STITCH = (0, (0.6, 1.8))       # red dotted: by hand
-DONE_STITCH = "#9e9e9e"             # grey dashed: already sewn
+DONE_STITCH = "#7a7a7a"             # grey dashed: already sewn
 FOLD_LINE = (0, (6, 2, 1, 2))       # blue dash-dot: fold / press line
 _CTX: dict = {"pattern": None, "hand": False}
 
@@ -445,6 +445,9 @@ def draw_opened_fold(ax, pattern, step, sm, old):
     for pc, r in group_a:
         _fill(ax, r, z=1 if pc is A else 1.1, pc=pc)
     _fill(ax, rb, z=1, pc=B)
+    for pc, _r in group_a:
+        draw_done(ax, pattern, step, pc, ID, skip=tuple(e for p, e in a_old if p == pc.key) + (ea,))
+    draw_done(ax, pattern, step, B, Tb, skip=(b_old[0][1], eb))
     for e in a_line:
         _done_line(ax, e, z=6)
     ea_pts, eb_pts = A.edge(ea).pts, _apply(Tb, B.edge(eb).pts)
@@ -553,6 +556,8 @@ def draw_pair(ax, pattern, step, sm):
     _fill(ax, rb2, z=1, pc=B)
     for e in (EA, eb2):
         ax.plot(e[:, 0], e[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+    draw_done(ax, pattern, step, A, ID, skip=(ea,))
+    draw_done(ax, pattern, step, B, Tb, skip=(eb,))
     _notches(ax, A, ea, ID, size)
     _notches(ax, B, eb, Tb, size)
     _piece_label(ax, pattern, A, ra, ID, size=8)
@@ -587,7 +592,9 @@ def _draw_overlays(ax, pattern, step, sms, parts):
         if _coincide(ra, rb):                     # identical pieces: show the lower layer
             ra = ra + np.array([size * 0.015, -size * 0.02])
         _fill(ax, ra, wrong=False, z=1, pc=A)
+        draw_done(ax, pattern, step, A, Ta, skip=(ea,), z=1.5)
         _fill(ax, rb, wrong=True, z=2, alpha=0.93, pc=B)
+        draw_done(ax, pattern, step, B, Tb2, skip=(eb,), z=2.5, wrong=True)
         edge = A.edge(ea).pts + sh
         moved = _resample(_apply(Tb2, B.edge(eb).pts))
         dev = min(np.abs(moved - _resample(edge)).max(), np.abs(moved[::-1] - _resample(edge)).max())
@@ -640,6 +647,7 @@ def draw_join(ax, pattern, step, sms):
         T = (np.eye(2), offs[k], False)
         r = rings[keys.index(k)] + offs[k]
         _fill(ax, r, wrong=False, z=1, pc=pc)
+        draw_done(ax, pattern, step, pc, T, skip=tuple(e for sm in sms for p, e, _n in sm["a"] + sm["b"] if p == k))
         _piece_label(ax, pattern, pc, rings[keys.index(k)], T, size=8)
         allpts.append(r)
     for i, sm in enumerate(sms):
@@ -700,6 +708,8 @@ def draw_fold(ax, pattern, step):
     ax.plot([0, w], [H / 2, H / 2], color=ACCENT[1], lw=1.2, ls=FOLD_LINE, zorder=3)
     ax.text(w * 1.02, H / 2, T("fold line"), fontsize=7, va="center", color="#555")
     _arrow(ax, [w * 0.5, H * 0.95], [w * 0.5, H * 0.05], rad=-0.5)
+    if step.data.get("hands") == "fold":
+        draw_hand(ax, w * 0.78, H * 1.05, H * 0.75, angle=180, z=12)
     # result: folded band, right side outside
     res = np.array([[0, 0], [w, 0], [w, H / 2], [0, H / 2]], float) + [0, -H * 1.1]
     _fill(ax, res, wrong=False, z=1, pc=pc)
@@ -781,11 +791,16 @@ def draw_attach(ax, pattern, step):
             va="center", zorder=9, bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=INK, lw=0.9))
     ax.text(0.0, -0.85, T(target), fontsize=7, ha="center", va="bottom", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
-    ax.text(1.12, 0.3, T("band folded,\nraw edges down"), fontsize=6.5, ha="left", va="center", color="#444")
+    hands = step.stretch and step.data.get("hands") == "stretch"
+    ax.text(1.12, 0.62 if hands else 0.3, T("band folded,\nraw edges down"), fontsize=6.5, ha="left",
+            va="bottom" if hands else "center", color="#444")
     if step.stretch:
         _arrow(ax, [-1.1, -0.15], [-1.55, -0.15], lw=1.6)
         _arrow(ax, [1.1, -0.15], [1.55, -0.15], lw=1.6)
         ax.text(1.35, -0.32, T("stretch"), fontsize=7, ha="center", va="top")
+        if step.data.get("hands") == "stretch":
+            draw_hand(ax, -1.22, 0.22, 0.4, angle=-90, z=12)
+            draw_hand(ax, 1.22, 0.22, 0.4, angle=90, mirror=True, z=12)
     ax.set_xlim(-1.8, 2.3)
     ax.set_ylim(-1.3, 0.9)
     ax.set_aspect("equal")
@@ -854,6 +869,8 @@ def draw_edge(ax, pattern, step, kind="edge"):
     full = _unfolded(pc, ring)
     size = max(np.ptp(full, 0))
     _fill(ax, full, wrong=(kind in ("hem", "press")), z=1, pc=pc)
+    draw_done(ax, pattern, step, pc, ID, skip=tuple(e for p, e in step.edges if p == pc.key), z=2.5,
+              wrong=kind in ("hem", "press"))
     for k, (p, e) in enumerate(step.edges):
         if p != pc.key:
             continue
@@ -878,6 +895,12 @@ def draw_edge(ax, pattern, step, kind="edge"):
             _arrow(ax, G.point_at(cut, G.length(cut) * 0.4) - _inward(cut)[len(cut) // 3] * size * 0.06,
                    G.point_at(fold, G.length(fold) * 0.4) + _inward(fold)[len(fold) // 3] * step.amount * 1.4,
                    rad=-0.45)
+            if first and step.data.get("hands") == "fold":
+                i6 = int(len(cut) * 0.65)
+                hp = G.point_at(cut, G.length(cut) * 0.65) - _inward(cut)[i6] * size * 0.09
+                nv = _inward(cut)[i6]
+                draw_hand(ax, hp[0], hp[1], size * 0.13, angle=math.degrees(math.atan2(nv[1], nv[0])) - 90,
+                          z=12)
         elif kind == "topstitch" and step.amount > 0:
             _stitch(ax, G.offset_polyline(pts, -step.amount))
             m = G.length(pts) * 0.8
@@ -903,6 +926,7 @@ def draw_gather(ax, pattern, step):
     full = _unfolded(pc, _outline(pc))
     size = max(np.ptp(full, 0))
     _fill(ax, full, z=1, pc=pc)
+    draw_done(ax, pattern, step, pc, ID, skip=(ename,))
     pts = pc.edge(ename).pts
     for d in (5.0, 12.0):
         ax.plot(*G.offset_polyline(pts, -d).T, color=STITCH, lw=1.1, ls=(0, (4, 2)), zorder=5)
@@ -920,6 +944,7 @@ def draw_place(ax, pattern, step):
     base = pattern.piece(step.pieces[1])
     full = _unfolded(base, _outline(base))
     _fill(ax, full, z=1, pc=base)
+    draw_done(ax, pattern, step, base, ID)
     mark = next((m for m in base.marks if step.data.get("mark", "") in (getattr(m, "key", None) or m.label)), None)
     _piece_label(ax, pattern, base, full, size=8)
     if mark is not None and len(mark.pts) >= 3:
@@ -1281,6 +1306,9 @@ STRICT = False          # tests: raise instead of drawing the fallback pictogram
 def draw(ax, pattern, step) -> None:
     """Draw one step into ax (falls back to the pictogram if the data is incomplete)."""
     fn = DIAGRAMS.get(step.diagram, draw_icon)
+    view = ASSEMBLED.get(step.data.get("view", ""))
+    if view is not None and view[1](pattern):
+        fn = view[0]
     tool = S.tool_for(pattern.options, step.stitch, step.data.get("knit")) if step.stitch else {}
     _CTX.update(pattern=pattern, hand=tool.get("machine") == "hand")
     try:
@@ -1337,3 +1365,356 @@ def render_steps(pattern, steps: list, out_dir: str, sub: str | None = None) -> 
         render_step(pattern, st, os.path.join(out_dir, rel), number=i)
         res[i] = rel
     return res
+
+
+# --------------------------------------------------------------------------- progress
+# What earlier steps sewed stays visible: seams as grey dashed lines, hems and topstitching as
+# grey dashed lines beside the edge, pockets already on the front. "Already sewn" in the legend.
+
+def _done(step) -> dict:
+    return step.data.get("done") or {}
+
+
+def _fold_mirror(pc):
+    """Mirror function for a piece cut on the fold (the other half), or None."""
+    folds = [e for e in pc.edges if e.fold]
+    if not folds:
+        return None
+    a, b = folds[0].pts[0], folds[0].pts[-1]
+    return lambda pts: G.mirror_line(np.asarray(pts, float), a, b)
+
+
+def _pocket_poly(base, mark_key: str, unfold=True):
+    """The placement mark of a pocket on its base piece (opened out when the base is cut on the fold)."""
+    mark = next((m for m in base.marks if mark_key and mark_key in (getattr(m, "key", None) or m.label)), None)
+    if mark is None or len(mark.pts) < 3:
+        return None
+    mp = np.asarray(mark.pts, float)
+    folds = [e for e in base.edges if e.fold]
+    if folds and unfold:
+        from shapely.geometry import Polygon
+        fa, fb = folds[0].pts[0], folds[0].pts[-1]
+        u = Polygon(mp).buffer(0).union(Polygon(G.mirror_line(mp, fa, fb)).buffer(0.01)).buffer(-0.005)
+        if u.geom_type == "Polygon":
+            mp = np.asarray(u.exterior.coords, float)[:-1]
+            mp = mp[[i for i in range(len(mp)) if np.hypot(*(mp[i] - mp[i - 1])) > 1.0]]
+    return mp
+
+
+def _pocket_stitched_sides(pocket, base, mp):
+    """The sides of a placed pocket that are stitched (openings and the hem-band edge stay open)."""
+    full = _unfolded(base, _outline(base))
+    top_y, bot_y = mp[:, 1].max(), mp[:, 1].min()
+    hem_y = full[:, 1].min()
+    slanted_open = any(e.name == "opening" for e in pocket.edges)
+    out = []
+    for i in range(len(mp)):
+        a, b = mp[i], mp[(i + 1) % len(mp)]
+        d0 = G.unit(b - a)
+        horiz_top = abs(a[1] - top_y) < 1 and abs(b[1] - top_y) < 1
+        at_hem = abs(a[1] - bot_y) < 1 and abs(b[1] - bot_y) < 1 and bot_y - hem_y < 20
+        slanted = 0.2 < abs(d0[0]) < 0.98
+        if at_hem or (slanted if slanted_open else horiz_top):
+            continue
+        n = np.array([-d0[1], d0[0]]) * 3.0
+        out.append(np.array([a + n, b + n]))
+    return out
+
+
+def draw_done(ax, pattern, step, pc, T=ID, skip=(), z=5.5, pockets=True, wrong=False, half=False):
+    """Draw on piece pc (placed with transform T) what earlier steps sewed on it.
+
+    skip: edge names sewn in this step (they get the red line instead). wrong: the piece is seen
+    from the wrong side (pockets show only their stitching). half: a piece cut on the fold is drawn as
+    drafted (one half)."""
+    done = _done(step)
+    if not done:
+        return
+    mir = None if half else _fold_mirror(pc)
+    try:
+        for p, e in done.get("seams", []):
+            if p != pc.key or e in skip:
+                continue
+            pts = pc.edge(e).pts
+            _done_line(ax, _apply(T, pts), z=z)
+            if mir is not None:
+                _done_line(ax, _apply(T, mir(pts)), z=z)
+        for p, e, d in done.get("lines", []):
+            if p != pc.key or e in skip:
+                continue
+            pts = G.offset_polyline(pc.edge(e).pts, -d)
+            _done_line(ax, _apply(T, pts), z=z, lw=1.1)
+            if mir is not None:
+                _done_line(ax, _apply(T, mir(pts)), z=z, lw=1.1)
+        if pockets:
+            for pocket_key, host, mark in done.get("placed", []):
+                if host != pc.key or not pattern.has(pocket_key):
+                    continue
+                pocket = pattern.piece(pocket_key)
+                mp = _pocket_poly(pc, mark, unfold=not half)
+                if mp is None:
+                    continue
+                if not wrong:
+                    _fill(ax, _apply(T, mp), z=z - 0.4, pc=pocket, lw=0.9)
+                for seg in _pocket_stitched_sides(pocket, pc, mp):
+                    _done_line(ax, _apply(T, seg), z=z, lw=1.1)
+    except (KeyError, ValueError, IndexError):          # pragma: no cover - a missing edge: draw nothing
+        return
+
+
+# --------------------------------------------------------------------------- assembled views
+# Pieces that are already sewn together are drawn together: the body opened out flat (front and back
+# joined at the shoulders) for the hood and the sleeves, the body folded at the shoulders for the side
+# seams. Built from the real pieces by fitting the sewn edges onto each other.
+
+def _seam_full(pc):
+    return _unfolded(pc, np.asarray(pc.seam_ring(), float))
+
+
+def _seam_half(pc):
+    return np.asarray(pc.seam_ring(), float)
+
+
+def _attach_T(src, dst, ring, avoid, reverse=False, penalty=None):
+    """Transform (R, t, flip) that puts edge src onto edge dst (start on start) with ring outside the
+    avoid polygon. reverse: also try src backwards. penalty(ring_placed) adds to the score."""
+    from shapely.geometry import Polygon
+    d = _resample(dst)
+    poly_avoid = Polygon(avoid).buffer(0)
+    best = None
+    for flip in (False, True):
+        m = np.array([-1.0, 1.0]) if flip else np.array([1.0, 1.0])
+        s0 = _resample(src) * m
+        for cand in ((s0, s0[::-1]) if reverse else (s0,)):
+            R, t, rms = _fit(cand, d)
+            placed = (ring * m) @ R.T + t
+            poly = Polygon(placed).buffer(0)
+            over = poly.intersection(poly_avoid).area / max(min(poly.area, poly_avoid.area), 1e-9)
+            score = rms + 1e4 * max(over - 0.02, 0) + (penalty(placed) if penalty else 0.0)
+            if best is None or score < best[0]:
+                best = (score, (R, t, flip))
+    return best[1]
+
+
+def body_flat(pattern):
+    """One side of the body opened out at the shoulder seam, right side up: the front half as drafted
+    and the back half folded out above it. {piece: (pc, T, ring)} with ring already transformed."""
+    F, B = pattern.piece("front"), pattern.piece("back")
+    rf, rb = _seam_half(F), _seam_half(B)
+    Tb = _attach_T(B.edge("shoulder").pts, F.edge("shoulder").pts, rb, rf)
+    # turn the whole picture so that the shoulder seam is level, front below, back above
+    sh = F.edge("shoulder").pts
+    d = sh[-1] - sh[0]
+    ang = -math.atan2(d[1], d[0])
+    Rg = np.array([[math.cos(ang), -math.sin(ang)], [math.sin(ang), math.cos(ang)]])
+    if (rf @ Rg.T)[:, 1].mean() > (sh @ Rg.T)[:, 1].mean():          # the front must hang down
+        Rg = -Rg
+    Tf = (Rg, np.zeros(2), False)
+    Tb2 = (Rg @ Tb[0], Tb[1] @ Rg.T, Tb[2])
+    return {"front": (F, Tf, _apply(Tf, rf)), "back": (B, Tb2, _apply(Tb2, rb))}
+
+
+def _away(points, gap, from_pts):
+    """Translation that moves points away from from_pts by gap."""
+    v = G.unit(np.mean(points, 0) - np.mean(from_pts, 0))
+    return v * gap
+
+
+def _body_pieces_ok(pattern) -> bool:
+    try:
+        return (pattern.has("front") and pattern.has("back") and
+                {"shoulder", "armhole", "neckline", "side"} <= {e.name for e in pattern.piece("front").edges}
+                and {"shoulder", "armhole", "neckline"} <= {e.name for e in pattern.piece("back").edges})
+    except Exception:  # pragma: no cover
+        return False
+
+
+def _draw_body(ax, pattern, step, body, skip=()):
+    """The opened-out body half: front and back, what is sewn on them, the shoulder seam grey dashed,
+    the centre lines named (they are folds of the pieces)."""
+    allp = []
+    for key in ("back", "front"):
+        pc, Tp, ring = body[key]
+        _fill(ax, ring, z=1, pc=pc)
+        draw_done(ax, pattern, step, pc, Tp, skip=tuple(skip) + ("shoulder",), half=True)
+        _piece_label(ax, pattern, pc, _seam_half(pc), Tp, size=8, avoid=None)
+        fold = next((e for e in pc.edges if e.fold), None)
+        if fold is not None:
+            fp = _apply(Tp, fold.pts)
+            ax.plot(fp[:, 0], fp[:, 1], color=ACCENT[1], lw=1.2, ls=FOLD_LINE, zorder=5)
+            m = fp.mean(0)
+            ang = math.degrees(math.atan2(*(fp[-1] - fp[0])[::-1]))
+            ang = ang - 180 if ang > 90 else ang + 180 if ang < -90 else ang
+            ax.text(m[0], m[1], T("centre front" if key == "front" else "centre back"), rotation=ang,
+                    rotation_mode="anchor", fontsize=6.3, color="#555", ha="center", va="top", zorder=10,
+                    bbox=dict(boxstyle="round,pad=0.1", fc="white", ec="none", alpha=0.8))
+        allp.append(ring)
+    _done_line(ax, _apply(body["front"][1], body["front"][0].edge("shoulder").pts), z=6, lw=1.5)
+    return allp
+
+
+def _red(ax, pts):
+    ax.plot(pts[:, 0], pts[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+
+
+def draw_flat_sleeve(ax, pattern, step):
+    """Set in the sleeves flat: front and back opened out at the shoulder seam, so the armhole is one
+    curve; the sleeve beside it, cap top towards the shoulder seam."""
+    body = body_flat(pattern)
+    F, B, SL = pattern.piece("front"), pattern.piece("back"), pattern.piece("sleeve")
+    _f, Tb, _rb = body["back"]
+    _f, Tf, _rf = body["front"]
+    allp = _draw_body(ax, pattern, step, body, skip=("armhole",))
+    size = max(np.ptp(np.vstack(allp), 0))
+    dst = G.join(_apply(Tf, F.edge("armhole").pts), _apply(Tb, B.edge("armhole").pts)[::-1])
+    src = G.join(SL.edge("cap_front").pts, SL.edge("cap_back").pts)
+    ring = np.asarray(SL.seam_ring(), float)
+    Ts = _attach_T(src, dst, ring, np.vstack(allp))
+    Ts = (Ts[0], Ts[1] + _away(_apply(Ts, ring), size * 0.12, dst), Ts[2])
+    rs = _apply(Ts, ring)
+    _fill(ax, rs, z=1, pc=SL)
+    draw_done(ax, pattern, step, SL, Ts, skip=("cap_front", "cap_back"))
+    _piece_label(ax, pattern, SL, ring, Ts, size=8)
+    _red(ax, dst)
+    for e in ("cap_front", "cap_back"):
+        _red(ax, _apply(Ts, SL.edge(e).pts))
+        _notches(ax, SL, e, Ts, size)
+    _notches(ax, F, "armhole", Tf, size)
+    _notches(ax, B, "armhole", Tb, size)
+    top = _apply(Ts, SL.edge("cap_front").pts[-1:])[0]
+    sh = _apply(Tf, F.edge("shoulder").pts[:1])[0]
+    _arrow(ax, top, sh, color=INK, lw=1.3, rad=0.25)
+    ax.annotate(T("top of the cap → shoulder seam"), (top[0], top[1]), xytext=(4, 10),
+                textcoords="offset points", ha="left", va="bottom", fontsize=6.8, fontweight="bold",
+                color=INK, zorder=10, bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
+    _finish_axes(ax, allp + [rs, [[top[0] + size * 0.35, top[1] + size * 0.06]]], pad=0.04)
+
+
+def draw_flat_hood(ax, pattern, step):
+    """Sew the hood on: front and back opened out at the shoulder seam, so half the neckline is one curve
+    from centre front to centre back; the hood (folded at its centre seam) beside it."""
+    body = body_flat(pattern)
+    F, B, H = pattern.piece("front"), pattern.piece("back"), pattern.piece("hood")
+    _f, Tb, _rb = body["back"]
+    _f, Tf, _rf = body["front"]
+    allp = _draw_body(ax, pattern, step, body, skip=("neckline",))
+    size = max(np.ptp(np.vstack(allp), 0))
+    dst = G.join(_apply(Tf, F.edge("neckline").pts)[::-1], _apply(Tb, B.edge("neckline").pts))   # CF → CB
+    src = H.edge("neck").pts                                                               # CF → CB
+    ring = np.asarray(H.seam_ring(), float)
+    Th = _attach_T(src, dst, ring, np.vstack(allp))
+    Th = (Th[0], Th[1] + _away(_apply(Th, ring), size * 0.1, dst), Th[2])
+    rh = _apply(Th, ring)
+    _fill(ax, rh, z=1, pc=H)
+    draw_done(ax, pattern, step, H, Th, skip=("neck",))
+    _piece_label(ax, pattern, H, ring, Th, size=8)
+    _red(ax, dst)
+    _red(ax, _apply(Th, src))
+    _notches(ax, H, "neck", Th, size)
+    _notches(ax, F, "neckline", Tf, size)
+    _notches(ax, B, "neckline", Tb, size)
+    hc = _apply(Th, src[-1:])[0]
+    cb = dst[-1]
+    _arrow(ax, hc, cb, color=INK, lw=1.3, rad=0.3)
+    ax.annotate(T("centre seam → centre back"), (hc[0], hc[1]), xytext=(6, 4), textcoords="offset points",
+                ha="left", va="bottom", fontsize=6.8, fontweight="bold", color=INK, zorder=10,
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
+    _finish_axes(ax, allp + [rh, [[hc[0] + size * 0.4, hc[1]]]], pad=0.04)
+
+
+def draw_folded_body(ax, pattern, step):
+    """Side and sleeve seams: the garment folded right sides together at the shoulders; the front lies on
+    top (wrong side up), the sleeves folded in half lengthwise; side and sleeve seam in one red line."""
+    from shapely.geometry import LineString, Polygon
+    from shapely.ops import split
+    F, B, SL = pattern.piece("front"), pattern.piece("back"), pattern.piece("sleeve")
+    rf = _seam_full(F)
+    mir = _fold_mirror(F)
+    # front half of the sleeve: split at the line from the top of the cap to the middle of the hem
+    ring = np.asarray(SL.seam_ring(), float)
+    top = SL.edge("cap_front").pts[-1]
+    hem = SL.edge("hem").pts
+    hm = G.point_at(hem, G.length(hem) / 2)
+    d = G.unit(hm - top)
+    cut = LineString([top - d * 2000, hm + d * 2000])
+    parts = split(Polygon(ring).buffer(0), cut)
+    cf_mid = G.point_at(SL.edge("cap_front").pts, SL.edge("cap_front").length / 2)
+    from shapely.geometry import Point
+    half = min(parts.geoms, key=lambda g: g.distance(Point(cf_mid)))
+    rh = np.asarray(half.exterior.coords, float)
+    shoulder_y = F.edge("shoulder").pts[:, 1].max()
+    Ts = _attach_T(SL.edge("cap_front").pts, F.edge("armhole").pts, rh, rf,
+                   penalty=lambda r: 1e3 * max(r[:, 1].min() - shoulder_y + 1.0, 0) if False else
+                   1e3 * float(np.mean(r[:, 1]) > shoulder_y))
+    rs = _apply(Ts, rh)
+    size = max(np.ptp(np.vstack([rf, rs]), 0))
+    # the back peeks out below the front
+    off = np.array([size * 0.012, -size * 0.015])
+    rb = _seam_full(B) + off
+    _fill(ax, rb, z=0.8, pc=B)
+    halves = [(rs, Ts, None)]
+    if mir is not None:
+        halves.append((mir(rs), Ts, mir))
+    for r, _t, _m in halves:
+        _fill(ax, r + off, z=0.8, pc=SL)
+        _fill(ax, r, wrong=True, z=1.2, pc=SL)
+    _fill(ax, rf, wrong=True, z=1.3, pc=F)
+    draw_done(ax, pattern, step, F, ID, skip=("side", "shoulder"), wrong=True, z=5.6)
+    side = [F.edge("side").pts]
+    sl_seam = [_apply(Ts, SL.edge("seam_front").pts)]
+    arm = [F.edge("armhole").pts]
+    if mir is not None:
+        side.append(mir(side[0]))
+        sl_seam.append(mir(sl_seam[0]))
+        arm.append(mir(arm[0]))
+    for e in arm:
+        _done_line(ax, e, z=6, lw=1.5)
+    for e in side + sl_seam:
+        _stitch(ax, e, z=7, lw=2.2)
+    _pins(ax, side[0], size, count=2)
+    _pins(ax, sl_seam[0], size, count=2)
+    # underarm: the armhole seams meet
+    ua = F.edge("side").pts[-1]
+    ax.annotate(T("armhole seams meet"), (ua[0], ua[1]), xytext=(-14, -22), textcoords="offset points",
+                fontsize=6.8, fontweight="bold", color=INK, zorder=10, ha="right", va="top",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85),
+                arrowprops=dict(arrowstyle="-", color=INK, lw=0.8))
+    fs = F.edge("shoulder").pts
+    ax.text(*(fs.mean(0) + np.array([0, size * 0.02])), T("fold (shoulder)"), fontsize=6.5, ha="center",
+            va="bottom", color="#555", zorder=10)
+    _piece_label(ax, pattern, F, rf, ID, size=8)
+    _direction(ax, F.edge("side").pts, size, offset=size * 0.05)
+    allp = [rf, rs, rb] + ([mir(rs)] if mir is not None else [])
+    _finish_axes(ax, allp, pad=0.04)
+
+
+ASSEMBLED = {
+    "flat_sleeve": (draw_flat_sleeve, lambda p: _body_pieces_ok(p) and p.has("sleeve")),
+    "flat_hood": (draw_flat_hood, lambda p: _body_pieces_ok(p) and p.has("hood")),
+    "folded": (draw_folded_body, lambda p: _body_pieces_ok(p) and p.has("sleeve")),
+}
+
+
+# --------------------------------------------------------------------------- hands
+
+SKIN = "#f6d5bd"
+
+
+def draw_hand(ax, x, y, s, angle=0.0, mirror=False, z=12, action=""):
+    """A flat hand seen from above, fingers pointing up (angle in degrees, counter-clockwise)."""
+    import matplotlib.transforms as mtrans
+    from matplotlib.patches import FancyBboxPatch
+    tr = mtrans.Affine2D().scale(-1 if mirror else 1, 1).rotate_deg(angle).scale(s).translate(x, y) + ax.transData
+    kw = dict(fc=SKIN, ec=INK, lw=1.0, zorder=z, transform=tr)
+    ax.add_patch(FancyBboxPatch((-0.42, -0.55), 0.84, 0.75, boxstyle="round,pad=0.0,rounding_size=0.3", **kw))
+    for fx, fl in ((-0.32, 0.55), (-0.11, 0.66), (0.1, 0.62), (0.3, 0.48)):
+        ax.add_patch(FancyBboxPatch((fx - 0.08, 0.05), 0.17, fl, boxstyle="round,pad=0.0,rounding_size=0.085",
+                                    **kw))
+    th = FancyBboxPatch((-0.09, -0.32), 0.17, 0.52, boxstyle="round,pad=0.0,rounding_size=0.085", **kw)
+    th.set_transform(mtrans.Affine2D().rotate_deg(52).translate(-0.42, -0.12) + tr)
+    ax.add_patch(th)
+    # cover the finger roots so the palm reads as one shape
+    ax.add_patch(FancyBboxPatch((-0.4, -0.3), 0.8, 0.45, boxstyle="round,pad=0.0,rounding_size=0.2",
+                                fc=SKIN, ec="none", zorder=z + 0.01, transform=tr))
+    if action:
+        ax.text(x, y - s * 0.75, T(action), fontsize=6.3, ha="center", va="top", color="#444", zorder=z + 1)

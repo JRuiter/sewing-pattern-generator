@@ -42,6 +42,7 @@ class Step:
     repeat: int = 1                             # ×2: do it on both legs / sleeves
     tip: str = ""                               # warning: the yellow "Important" box
     hint: str = ""                              # helpful hint: the green "Tip" box
+    alt: str = ""                               # another way to do it: the blue "Alternative" box
     section: str = ""                           # group heading (Pockets, Waistband, …)
     amount: float = 0.0                         # mm: hem depth, fold distance, opening …
     stretch: bool = False                       # stretch the band while sewing
@@ -63,6 +64,8 @@ class Step:
             parts.append(t("Tip:") + " " + t(self.tip))
         if self.hint:
             parts.append(t(self.hint))
+        if self.alt:
+            parts.append(t("Alternative:") + " " + t(self.alt))
         return " ".join(parts)
 
 

@@ -183,21 +183,35 @@ def assembly(pat):
         rep = 2 if zipped else 1
         out += [
             ST.hem("Hem the pocket openings", [("kangaroo_pocket", "opening")], 15.0,
-                   "Press 1.5 cm under and topstitch.", stitch="topstitch", repeat=rep, section=sec),
-            ST.press("Press the top edge under", [("kangaroo_pocket", "top")], "1 cm to the wrong side.",
+                   "Fold each slanted opening edge 1.5 cm to the wrong side and press. "
+                   "Topstitch 1.2 cm from the fold, right side up, so the stitching catches the raw edge.",
+                   stitch="topstitch", repeat=rep, section=sec),
+            ST.press("Press the top edge under", [("kangaroo_pocket", "top"), ("kangaroo_pocket", "side")],
+                     "Press the top edge and both short sides 1 cm to the wrong side. "
+                     "Trim the allowance at the corners at an angle so they lie flat.",
                      amount=10.0, repeat=rep, section=sec),
             ST.place("Stitch the pocket on", "kangaroo_pocket", "front", "Kangaroo pocket",
                      ("Front edge on the centre front edge; stitch top edge and side. Bottom and front edge are "
                       "caught in the hem band and zip seams.") if zipped else
-                     "On the marking; stitch top edge and sides. The bottom edge is caught by the hem band.",
-                     repeat=rep, section=sec),
+                     "Lay the front right side up. Place the pocket right side up on the marking, bottom "
+                     "raw edges level with the hem, and pin. "
+                     "Topstitch 3 mm from the pressed edges: up one side, across the top, down the other side. "
+                     "Baste the bottom edge within the seam allowance; the hem band catches it later.",
+                     repeat=rep, section=sec,
+                     tip="Backstitch or bar tack at the top of each opening: these corners take the strain.",
+                     alt="Pin first, then try on or hold against the child: the pocket may sit 1–2 cm "
+                         "higher or lower than the marking."),
         ]
     base = T.assembly(pat, neck=not hood, open_bands=zipped, done=False)
     if hood:
         sec = "Hood"
         lined = bool(o.get("hood_lining"))
+        hsa = ST.cm(pat.piece("hood").edge("center").sa)
         hood_steps = [ST.seam("Sew the hood centre seam", ["Hood centre seam"],
-                              "Hood pieces right sides together.", repeat=2 if lined else 1, section=sec)]
+                              "Lay the two hood pieces right sides together, curved back edges level, and pin from "
+                              f"the neck edge upwards. Sew with {hsa} seam allowance. "
+                              "Press the allowances to one side.", repeat=2 if lined else 1, section=sec,
+                              hint="Topstitch 6 mm beside the seam through the allowances: the seam stays flat.")]
         if lined:
             hood_steps += [
                 ST.Step("Join hood and lining", "Right sides together along the front edge; sew, then turn "
@@ -207,15 +221,26 @@ def assembly(pat):
         else:
             fe = pat.piece("hood").edge("front_edge").sa
             hood_steps.append(ST.hem("Hem the hood front edge", [("hood", "front_edge")], fe,
-                                     "Press to the inside along the fold line and topstitch (room for a "
-                                     "drawstring).", stitch="topstitch", section=sec))
+                                     f"Fold the front edge {ST.cm(fe)} to the wrong side along the fold line and "
+                                     f"press. Topstitch {ST.cm(max(fe - 5.0, fe * 0.6))} from the fold, close to "
+                                     "the raw edge; leave the ends open for a drawstring.",
+                                     stitch="topstitch", section=sec,
+                                     alt="Lined hood (option hood_lining): no hem, the lining finishes the "
+                                         "front edge and the hood is warmer."))
         hood_steps += [
             ST.seam("Sew the hood on", ["Hood ↔"],
-                    "Hood right sides together to the neckline: centre seam at centre back, " +
-                    ("front edges end exactly at the centre front edges." if zipped else
-                     "front edges meet at centre front (overlap 1 cm if needed)."), section=sec),
+                    "Body opened out flat, right side up. Lay the hood right side down onto the neckline, "
+                    "neck edges level. "
+                    "Hood centre seam on centre back, hood notches on the shoulder seams; " +
+                    ("front edges end exactly at the centre front edges. " if zipped else
+                     "front edges meet at centre front (overlap 1 cm). ") +
+                    f"Sew all round with {ST.cm(pat.piece('front').edge('neckline').sa)} seam allowance.",
+                    section=sec, data={"view": "flat_hood"}),
             ST.finish("Finish the neck seam", [("front", "neckline"), ("back", "neckline")],
-                      "Cover the seam allowance with jersey binding or finish it.", section=sec),
+                      "Finish both allowances together. Press them down towards the body.",
+                      section=sec,
+                      alt="Neatest finish: cover the allowance with a strip of jersey or cotton tape "
+                          "from shoulder to shoulder over the back neck and stitch it down on both edges."),
         ]
         i = next((k for k, s in enumerate(base) if s.section == "Sleeves"), 1)
         base = base[:i] + hood_steps + base[i:]
