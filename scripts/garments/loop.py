@@ -32,14 +32,21 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
 def assembly(pat):
     """The construction as one-action steps (see steps.py)."""
     import steps as ST
+    sa = ST.cm(pat.piece("loop").edge("bottom").sa)
     return [
-        ST.seam("Sew the long seam", ["Long edges"], "Fold lengthwise right sides together; sew into a tube.",
-                section="Loop"),
-        ST.icon("Turn the tube", "turn", "Right side out.", section="Loop"),
-        ST.seam("Sew the cross seam", ["Cross seam"], "Slip one end into the other (right sides together); "
-                "sew around, leaving 5 cm open.", section="Loop"),
-        ST.icon("Close the opening by hand", "hand", "Turn and close with a ladder stitch.", stitch="hand",
-                section="Loop"),
+        ST.seam("Sew the long seam", ["Long edges"],
+                "Fold the piece lengthwise right sides together, long edges level, and pin. "
+                f"Sew with {sa} seam allowance along the whole length: you get a tube.", section="Loop"),
+        ST.icon("Turn half of the tube", "turn",
+                "Reach into the tube and turn one half right side out over the other half. "
+                "Now both ends lie on top of each other, right sides together.", section="Loop",
+                hint="The long seams lie on top of each other: pin there first."),
+        ST.seam("Sew the cross seam", ["Cross seam"],
+                "Pin the two ends together all round, long seams on top of each other. "
+                f"Sew round with {sa} seam allowance, leaving 5 cm open.", section="Loop"),
+        ST.icon("Close the opening by hand", "hand",
+                "Turn the loop right side out through the opening. Fold the allowances in and close the opening "
+                "with a ladder stitch.", stitch="hand", section="Loop"),
         ST.done(""),
     ]
 

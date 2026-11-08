@@ -86,32 +86,32 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
 4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
-5. **Sew the side seams**. Front and back leg right sides together; single notches = front, double = back. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Always the front and back of the SAME leg (FL + BL, FR + BR).
+5. **Sew the side seams**. Lay front and back of the same leg right sides together, side edges level: single notches = front, double notches = back. Pin, then sew with 10 mm seam allowance from the top edge to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Always the front and back of the SAME leg (FL + BL, FR + BR).
    ![Step 5](steps/step_05.png)
-6. **Sew the inseams**. The notches on the inseam meet. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point and sew towards the hem. Pin the notches first, then the ends.
+6. **Sew the inseams**. Open the leg out at the side seam and fold it right sides together, inseam edges level. Pin the notches first, then the ends. Sew with 10 mm seam allowance from the crotch point to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point: the four seams meet there later.
    ![Step 6](steps/step_06.png)
 7. **Put one leg inside the other**. Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the top edges are even; the hems point the same way. Now the legs lie right sides together and the crotch curves lie exactly on top of each other.
-8. **Sew the crotch seam**. In one go from the front to the back top edge; the inseams meet exactly. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength. The inseams lie exactly on top of each other; press their allowances in opposite directions. Pull the inner leg out afterwards.
+8. **Sew the crotch seam**. Pin the crotch curves together, starting at the inseams: they lie exactly on top of each other. Sew with 10 mm seam allowance in one go from the front top edge to the back top edge. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength. Press the inseam allowances in opposite directions: the crossing lies flat. Pull the inner leg out afterwards.
    ![Step 8](steps/step_08.png)
-9. **Close the waistband into a ring**. Right sides together across the short ends (centre back); leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
+9. **Close the waistband into a ring**. Fold the waistband crosswise right sides together and sew the short ends (centre back) with 10 mm seam allowance; leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 9](steps/step_09.png)
-10. **Fold the waistband in half**. Lengthwise, wrong sides together, along the fold line.
+10. **Fold the waistband in half**. Fold lengthwise wrong sides together along the fold line and press.
    ![Step 10](steps/step_10.png)
-11. **Mark quarters**. On waistband and pants top edge: centre front, centre back, sides.
+11. **Mark quarters**. Mark centre front, centre back and both sides with pins, on the waistband and on the pants top edge.
    ![Step 11](steps/step_11.png)
-12. **Sew the waistband on**. Raw edges together, opening at the back on the inside; quarter marks meet. (an overlocker or a narrow zigzag/stretch stitch)
+12. **Sew the waistband on**. Pants right side out: slide the waistband over them, raw edges level, the opening at the back on the inside. Match the quarter pins. Sew all round with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 12](steps/step_12.png)
 13. **Thread the elastic**. With a safety pin through the opening; overlap the ends by 2 cm and sew them together. (sewing machine: wide zigzag 4 × 2.5 mm)
 14. **Close the opening**. Spread the gathers evenly, close the opening and stitch in the ditch at the side seams so the elastic cannot twist. (sewing machine: twin needle 4 mm, stitch 3 mm)
-15. **Close the cuffs into rings**. Right sides together across the short ends. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+15. **Close the cuffs into rings**. Fold each cuff crosswise right sides together, short edges level. Sew with 10 mm seam allowance; finger-press the allowances open. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
    ![Step 15](steps/step_15.png)
-16. **Fold the cuffs in half**. Lengthwise, wrong sides together. Do this twice.
+16. **Fold the cuffs in half**. Fold the ring lengthwise wrong sides together, raw edges level. The seam allowance is now inside; the right side shows all round. Do this twice.
    ![Step 16](steps/step_16.png)
-17. **Mark quarters**. On cuff and leg opening. Do this twice.
+17. **Mark quarters**. Mark quarters with pins on the cuff and on the leg opening; the cuff seam is one of them. Do this twice.
    ![Step 17](steps/step_17.png)
-18. **Sew the cuffs on**. Slip the cuff over the right-side-out leg, cuff seam at the inseam. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+18. **Sew the cuffs on**. Turn the leg right side out. Slide the cuff over the leg end, raw edges level, cuff seam on the inseam. Match the quarter pins. Sew with 10 mm seam allowance, cuff on top, stretching only the cuff. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. One hand in front of the presser foot, one behind it: both stretch evenly.
    ![Step 18](steps/step_18.png)
-19. **Press the allowance up**. Seam allowance towards the pants. Do this twice.
+19. **Press the allowance up**. Press the seam allowance up towards the pants. Do this twice.
    ![Step 19](steps/step_19.png)
 20. **Final pressing**. Press all seams with steam; do not press down hard on sweat.
 

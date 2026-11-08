@@ -61,7 +61,7 @@ All sizes are drawn on top of each other, aligned at the same construction point
 
 | Size | Line | Fabric needed | Hip width | Thigh width | Leg width at mid-leg | Leg opening |
 |---|---|---|---|---|---|---|
-| size 98 | red, solid | Main fabric: 0.75 m; Rib knit: 0.15 m | 62.7 cm | 39.9 cm | 31.3 cm | 17.2 cm |
+| size 98 | red, solid | Main fabric: 0.65 m; Rib knit: 0.15 m | 62.7 cm | 39.9 cm | 31.3 cm | 17.2 cm |
 | size 110 | blue, long dashes | Main fabric: 0.80 m; Rib knit: 0.15 m | 67.1 cm | 42.8 cm | 33.3 cm | 18.4 cm |
 | size 122 | green, short dashes | Main fabric: 0.90 m; Rib knit: 0.20 m | 72.6 cm | 46.4 cm | 36.0 cm | 20.0 cm |
 
@@ -98,42 +98,42 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
 4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
-5. **Sew the pocket bag to the opening**. Inner pocket bag right sides together on the pocket opening of the front leg. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: The opening is on the bias: do not stretch it. A strip of stay tape ironed onto the opening keeps it in shape.
+5. **Sew the pocket bag to the opening**. Lay the inner pocket bag right sides together on the pocket opening of the front leg, edges level, and pin. Sew along the opening with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: The opening is on the bias: do not stretch it. A strip of stay tape ironed onto the opening keeps it in shape.
    ![Step 5](steps/step_05.png)
-6. **Clip and turn the bag inside**. Clip the curved allowance, turn the bag to the inside and press the edge. Do this twice. Tip: Roll the edge 1–2 mm to the inside: no pocket bag may show from the outside.
+6. **Clip and turn the bag inside**. Clip the curved allowance every 1 cm, close to the stitching. Turn the bag to the inside and press the edge. Do this twice. Tip: Roll the edge 1–2 mm to the inside: no pocket bag may show from the outside.
    ![Step 6](steps/step_06.png)
-7. **Topstitch the pocket edge**. (sewing machine: twin needle 4 mm, stitch 3 mm) Do this twice.
+7. **Topstitch the pocket edge**. Right side up, topstitch 5 mm from the edge through all layers. (sewing machine: twin needle 4 mm, stitch 3 mm) Do this twice.
    ![Step 7](steps/step_07.png)
-8. **Sew the pocket bag seam**. Side panel right sides together under the pocket bag; the "pocket opening" mark meets the opening edge. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Fold the front leg out of the way: sew only the two pocket bag layers. Turn it over afterwards and check from the outside that the opening lies flat.
+8. **Sew the pocket bag seam**. Lay the side panel right sides together under the pocket bag so that the "pocket opening" mark meets the opening edge. Pin the two pocket bag layers and sew them together along the curve with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Fold the front leg out of the way: sew only the two pocket bag layers. Turn it over afterwards and check from the outside that the opening lies flat.
    ![Step 8](steps/step_08.png)
-9. **Baste the side panel to the leg**. Top edge and side seam, inside the seam allowance. (sewing machine: longest straight stitch, no backstitch) Do this twice. Tip: The pocket opening lies flat, not pulled. Baste 4 mm from the edge, inside the seam allowance.
+9. **Baste the side panel to the leg**. Lay the leg flat on the side panel. Baste the top edge and the side edge together, inside the seam allowance. (sewing machine: longest straight stitch, no backstitch) Do this twice. Tip: The pocket opening lies flat, not pulled. Baste 4 mm from the edge, inside the seam allowance.
    ![Step 9](steps/step_09.png)
-10. **Sew the side seams**. Front and back leg right sides together; single notches = front, double = back. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Always the front and back of the SAME leg (FL + BL, FR + BR).
+10. **Sew the side seams**. Lay front and back of the same leg right sides together, side edges level: single notches = front, double notches = back. Pin, then sew with 10 mm seam allowance from the top edge to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Always the front and back of the SAME leg (FL + BL, FR + BR).
    ![Step 10](steps/step_10.png)
-11. **Sew the inseams**. The notches on the inseam meet. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point and sew towards the hem. Pin the notches first, then the ends.
+11. **Sew the inseams**. Open the leg out at the side seam and fold it right sides together, inseam edges level. Pin the notches first, then the ends. Sew with 10 mm seam allowance from the crotch point to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point: the four seams meet there later.
    ![Step 11](steps/step_11.png)
 12. **Put one leg inside the other**. Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the top edges are even; the hems point the same way. Now the legs lie right sides together and the crotch curves lie exactly on top of each other.
-13. **Sew the crotch seam**. In one go from the front to the back top edge; the inseams meet exactly. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength. The inseams lie exactly on top of each other; press their allowances in opposite directions. Pull the inner leg out afterwards.
+13. **Sew the crotch seam**. Pin the crotch curves together, starting at the inseams: they lie exactly on top of each other. Sew with 10 mm seam allowance in one go from the front top edge to the back top edge. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength. Press the inseam allowances in opposite directions: the crossing lies flat. Pull the inner leg out afterwards.
    ![Step 13](steps/step_13.png)
-14. **Close the waistband into a ring**. Right sides together across the short ends (centre back); leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
+14. **Close the waistband into a ring**. Fold the waistband crosswise right sides together and sew the short ends (centre back) with 10 mm seam allowance; leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 14](steps/step_14.png)
-15. **Fold the waistband in half**. Lengthwise, wrong sides together, along the fold line.
+15. **Fold the waistband in half**. Fold lengthwise wrong sides together along the fold line and press.
    ![Step 15](steps/step_15.png)
-16. **Mark quarters**. On waistband and pants top edge: centre front, centre back, sides.
+16. **Mark quarters**. Mark centre front, centre back and both sides with pins, on the waistband and on the pants top edge.
    ![Step 16](steps/step_16.png)
-17. **Sew the waistband on**. Raw edges together, opening at the back on the inside; quarter marks meet. (an overlocker or a narrow zigzag/stretch stitch)
+17. **Sew the waistband on**. Pants right side out: slide the waistband over them, raw edges level, the opening at the back on the inside. Match the quarter pins. Sew all round with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 17](steps/step_17.png)
 18. **Thread the elastic**. With a safety pin through the opening; overlap the ends by 2 cm and sew them together. (sewing machine: wide zigzag 4 × 2.5 mm)
 19. **Close the opening**. Spread the gathers evenly, close the opening and stitch in the ditch at the side seams so the elastic cannot twist. (sewing machine: twin needle 4 mm, stitch 3 mm)
-20. **Close the cuffs into rings**. Right sides together across the short ends. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+20. **Close the cuffs into rings**. Fold each cuff crosswise right sides together, short edges level. Sew with 10 mm seam allowance; finger-press the allowances open. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
    ![Step 20](steps/step_20.png)
-21. **Fold the cuffs in half**. Lengthwise, wrong sides together. Do this twice.
+21. **Fold the cuffs in half**. Fold the ring lengthwise wrong sides together, raw edges level. The seam allowance is now inside; the right side shows all round. Do this twice.
    ![Step 21](steps/step_21.png)
-22. **Mark quarters**. On cuff and leg opening. Do this twice.
+22. **Mark quarters**. Mark quarters with pins on the cuff and on the leg opening; the cuff seam is one of them. Do this twice.
    ![Step 22](steps/step_22.png)
-23. **Sew the cuffs on**. Slip the cuff over the right-side-out leg, cuff seam at the inseam. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+23. **Sew the cuffs on**. Turn the leg right side out. Slide the cuff over the leg end, raw edges level, cuff seam on the inseam. Match the quarter pins. Sew with 10 mm seam allowance, cuff on top, stretching only the cuff. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. One hand in front of the presser foot, one behind it: both stretch evenly.
    ![Step 23](steps/step_23.png)
-24. **Press the allowance up**. Seam allowance towards the pants. Do this twice.
+24. **Press the allowance up**. Press the seam allowance up towards the pants. Do this twice.
    ![Step 24](steps/step_24.png)
 25. **Final pressing**. Press all seams with steam; do not press down hard on sweat.
 

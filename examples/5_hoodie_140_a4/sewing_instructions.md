@@ -64,8 +64,8 @@
 
 ## Fabric needed
 
-- **Main fabric:** about 1.15 m at 150 cm width (single layer, incl. 10 % for shrinkage; folded would need 1.35 m)
-- **Rib knit:** about 0.30 m at 70 cm width (single layer, incl. 10 % for shrinkage)
+- **Main fabric:** about 1.00 m at 150 cm width (single layer, incl. 10 % for shrinkage; folded would need 1.30 m)
+- **Rib knit:** about 0.25 m at 70 cm width (single layer, incl. 10 % for shrinkage)
 
 Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "flipped" = place the piece face down, "×2" = cut through both layers of the folded fabric, which gives a mirrored pair, "(unfolded)" = cut-on-fold piece shown opened out).
 

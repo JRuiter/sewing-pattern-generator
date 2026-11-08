@@ -9,7 +9,7 @@ The same pattern as example 1, tiled onto A4 pages with 10 mm overlap, glue area
 ## At a glance
 
 - **Pieces:** 4
-- **Fabric to buy:** main fabric 0.90 m at 150 cm width, rib knit 0.25 m at 70 cm width
+- **Fabric to buy:** main fabric 0.90 m at 150 cm width, rib knit 0.20 m at 70 cm width
 - **Sewing steps:** 20
 - **Sewability checks:** 31 of 31 OK
 

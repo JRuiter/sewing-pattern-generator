@@ -618,7 +618,7 @@
     },
     "Rib knit": {
       "width": 700.0,
-      "need": 250.0,
+      "need": 200.0,
       "layout": "single"
     }
   }

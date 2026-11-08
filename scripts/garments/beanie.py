@@ -58,18 +58,31 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
 def assembly(pat):
     """The construction as one-action steps (see steps.py)."""
     import steps as ST
+    sa = ST.cm(pat.piece("beanie").edge("right").sa)
     out = [ST.seam("Sew side and crown seams", ["Side seams", "Crown seam"],
-                   "Both pieces right sides together; in one go.", section="Beanie")]
+                   "Lay both pieces right sides together, edges level, and pin. "
+                   f"Sew with {sa} seam allowance in one go, from one lower edge over the crown to the other. "
+                   "Stretch the seam slightly as you sew.", section="Beanie",
+                   hint="Sew the crown curve slowly and turn the fabric in small steps.")]
     if pat.options.get("brim") and pat.has("brim"):
-        out += [ST.ring("Close the brim into a ring", "brim", "Right sides together across the short ends.",
-                        section="Brim"),
-                ST.fold_band("Fold the brim in half", "brim", "Lengthwise, wrong sides together.", section="Brim"),
+        out += [ST.ring("Close the brim into a ring", "brim",
+                        "Fold the brim crosswise right sides together, short edges level. "
+                        f"Sew with {sa} seam allowance; finger-press the allowances open.", section="Brim"),
+                ST.fold_band("Fold the brim in half", "brim",
+                             "Fold the ring lengthwise wrong sides together, raw edges level. "
+                             "The seam allowance is now inside.", section="Brim", data={"hands": "fold"}),
                 ST.attach_band("Sew the brim on", "brim", ["Brim"], "beanie edge",
-                               "Brim seam at the back seam; quarter both with pins.", section="Brim")]
+                               "Beanie right side out: slide the brim over it, raw edges level, brim seam on a side "
+                               "seam. Pin both at the quarters. "
+                               f"Sew with {sa} seam allowance, brim on top, stretching only the brim.",
+                               section="Brim", data={"hands": "stretch"},
+                               hint="One hand in front of the presser foot, one behind it: both stretch evenly.")]
     else:
         hs = pat.piece("beanie").edge("bottom").sa or 20.0
-        out.append(ST.hem("Sew the hem", [("beanie", "bottom")], hs, f"Press {ST.cm(hs)} under.", repeat=2,
-                          section="Hem"))
+        out.append(ST.hem("Sew the hem", [("beanie", "bottom")], hs,
+                          f"Fold the lower edge {ST.cm(hs)} to the wrong side and press. "
+                          f"Sew it down {ST.cm(max(hs - 5.0, hs * 0.6))} from the fold, stretching slightly.",
+                          repeat=2, section="Hem"))
     out += [ST.icon("Turn right side out", "turn", section="Finish"), ST.done("")]
     return out
 
