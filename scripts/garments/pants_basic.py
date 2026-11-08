@@ -834,9 +834,10 @@ def assembly(pat: Pattern) -> list:
                       hint="Pin the notches first, then the ends."))
     finished("Finish the inseams", [("front", "inseam"), ("back", "inseam")])
     out.append(S.icon("Put one leg inside the other", "turn",
-                      "Turn one leg right side out and slip it into the other (wrong side out): the legs lie "
-                      "right sides together.", section="Crotch",
-                      hint="The legs now lie right sides together, the hems point the same way."))
+                      "Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the "
+                      "top edges are even; the hems point the same way.", section="Crotch",
+                      hint="Now the legs lie right sides together and the crotch curves lie exactly on top of "
+                      "each other."))
     import machines as MC
     seam_m = MC.method(o, "seam", knit)
     on_ov = bool(seam_m and seam_m["machine"] == "overlocker")

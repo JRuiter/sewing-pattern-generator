@@ -180,3 +180,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | `rise` | 16.5 cm | (side length − inseam) + seat ease − waistband height |  |
 | `inseam_finished` | 54.0 cm | inseam − allowance to the floor + blousing |  |
 | `hem_width` | 28.5 cm | cuff length / cuff stretch ratio |  |
+
+## Booklet check
+
+All pictures and texts passed the automatic checks (views complete, seams lie on each other or side by side, pictures fill their area, no text outside its panel).

@@ -115,7 +115,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
    ![Step 20](steps/step_20.png)
 21. **Sew the hem band on**. Right sides together, raw edges meet. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 21](steps/step_21.png)
-22. **Done!** Press all seams with steam; do not press down hard on sweat.
+22. **Final pressing**. Press all seams with steam; do not press down hard on sweat.
 
 ## Validation report
 

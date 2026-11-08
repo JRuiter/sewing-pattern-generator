@@ -334,7 +334,7 @@ def _setup_step(pattern, knit: bool) -> Step:
 
 
 def done(text: str = "Press all seams.", **kw) -> Step:
-    return icon("Done!", "done", text, section="Finish", **kw)
+    return icon("Final pressing", "done", text, section="Finish", **kw)
 
 
 def covered_seams(pattern, steps: list[Step]) -> set[str]:

@@ -66,3 +66,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | `shoulder_slope` | 17 | fixed |  |
 | `armhole_depth` | 19.5 cm | 18 % of chest_width + 2.5 cm + 3 % |  |
 | `body_length` | 52.2 cm | back length + 13 % of height |  |
+
+## Booklet check
+
+All pictures and texts passed the automatic checks (views complete, seams lie on each other or side by side, pictures fill their area, no text outside its panel).

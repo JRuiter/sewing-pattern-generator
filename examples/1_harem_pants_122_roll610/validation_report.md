@@ -51,3 +51,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | `rise` | 24.3 cm | (side length − inseam) + seat ease + harem drop − waistband height |  |
 | `inseam_finished` | 48.2 cm | inseam − allowance to the floor − harem drop + blousing |  |
 | `hem_width` | 28.5 cm | cuff length / cuff stretch ratio |  |
+
+## Booklet check
+
+All pictures and texts passed the automatic checks (views complete, seams lie on each other or side by side, pictures fill their area, no text outside its panel).

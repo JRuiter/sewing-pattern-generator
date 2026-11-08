@@ -112,7 +112,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
    ![Step 10](steps/step_10.png)
 11. **Sew the inseams**. The notches on the inseam meet. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point and sew towards the hem. Pin the notches first, then the ends.
    ![Step 11](steps/step_11.png)
-12. **Put one leg inside the other**. Turn one leg right side out and slip it into the other (wrong side out): the legs lie right sides together. The legs now lie right sides together, the hems point the same way.
+12. **Put one leg inside the other**. Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the top edges are even; the hems point the same way. Now the legs lie right sides together and the crotch curves lie exactly on top of each other.
 13. **Sew the crotch seam**. In one go from the front to the back top edge; the inseams meet exactly. (an overlocker or a narrow zigzag/stretch stitch) Tip: Sew the crotch curve a second time for strength. The inseams lie exactly on top of each other; press their allowances in opposite directions. Pull the inner leg out afterwards.
    ![Step 13](steps/step_13.png)
 14. **Close the waistband into a ring**. Right sides together across the short ends (centre back); leave 3 cm open for the elastic. (an overlocker or a narrow zigzag/stretch stitch)
@@ -135,7 +135,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
    ![Step 23](steps/step_23.png)
 24. **Press the allowance up**. Seam allowance towards the pants. Do this twice.
    ![Step 24](steps/step_24.png)
-25. **Done!** Press all seams with steam; do not press down hard on sweat.
+25. **Final pressing**. Press all seams with steam; do not press down hard on sweat.
 
 ## Validation report
 
