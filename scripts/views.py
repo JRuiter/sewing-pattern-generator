@@ -310,7 +310,7 @@ def _hood_peak(pattern) -> float:
 
 def _hood(hood, neck, view, cx, peak: float = 0.0):
     """Hood behind the neck (front view) or lying on the back (back view); a designed tip
-    (`peak`, mm) points down the back in the back view and peeks out above in the front view."""
+    (`peak`, mm) points down the back in the back view."""
     hr = np.asarray(hood.seam_ring(), float)
     hh = float(np.ptp(hr[:, 1]))
     nw = float(np.ptp(neck[:, 0]))
@@ -320,10 +320,6 @@ def _hood(hood, neck, view, cx, peak: float = 0.0):
         rx, ry, c = nw * 0.62, hh * 0.14, (cx, ny - hh * 0.06)
         pts = np.c_[c[0] + rx * np.sign(np.cos(t)) * np.abs(np.cos(t)) ** 0.7,
                     c[1] + ry * np.sign(np.sin(t)) * np.abs(np.sin(t)) ** 0.9]
-        if peak > 0:                # the tip lies on the back and shows above the shoulders
-            top = pts[:, 1] > c[1] + ry * 0.55
-            k = np.clip(1 - np.abs(pts[:, 0] - (c[0] + rx * 0.35)) / (rx * 0.45), 0, 1)
-            pts[:, 1] = pts[:, 1] + np.where(top, k ** 1.5 * peak * 0.45, 0.0)
     else:                          # hangs down the back from the neckline
         rx, ry, c = nw * 0.62, hh * 0.62, (cx, ny)
         lower = t[(t >= np.pi) & (t <= 2 * np.pi)]
