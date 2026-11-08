@@ -83,7 +83,7 @@
   },
   "finished_mm": {
     "chest_circ": 807.3,
-    "hem_circ": 565.1,
+    "hem_circ": 653.9,
     "length": 522.0,
     "sleeve_len": 560.5,
     "sleeve_opening": 200.1,
@@ -137,7 +137,7 @@
         {
           "name": "neckline",
           "label": "Neckline",
-          "sa": 7.0,
+          "sa": 10.0,
           "fold": false,
           "length_mm": 156.3
         }
@@ -188,7 +188,7 @@
         {
           "name": "neckline",
           "label": "Neckline",
-          "sa": 7.0,
+          "sa": 10.0,
           "fold": false,
           "length_mm": 99.3
         }
@@ -287,7 +287,7 @@
           "label": "Seam edge",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 282.6
+          "length_mm": 327.0
         },
         {
           "name": "right",
@@ -301,7 +301,7 @@
           "label": "Seam edge",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 282.6
+          "length_mm": 327.0
         },
         {
           "name": "left",
@@ -503,9 +503,9 @@
       "group": "Seam pairs",
       "name": "Hem band ↔ hem (stretched)",
       "status": "OK",
-      "target": "70–92 % of 80.7 cm",
-      "actual": "56.5 cm = 70 %",
-      "delta": "-242.2 mm",
+      "target": "78–92 % of 80.7 cm",
+      "actual": "65.4 cm = 81 %",
+      "delta": "-153.4 mm",
       "note": "rib band is stretched while sewing"
     },
     {
@@ -654,6 +654,15 @@
     },
     {
       "group": "Measurements",
+      "name": "Hem band goes over the hips",
+      "status": "OK",
+      "target": "≥ 78.8 cm",
+      "actual": "117.7 cm",
+      "delta": "+389.5 mm",
+      "note": "hem band length incl. usable stretch ≥ hip + 5 %"
+    },
+    {
+      "group": "Measurements",
       "name": "Sleeve length plausible",
       "status": "OK",
       "target": "50.4 cm – 70.0 cm",
@@ -686,7 +695,7 @@
       "target": "closed, SA present",
       "actual": "ok",
       "delta": "",
-      "note": "seam allowance 1.0 cm included; Neckline: 0.7 cm"
+      "note": "seam allowance 1.0 cm included"
     },
     {
       "group": "Labels",
@@ -704,7 +713,7 @@
       "target": "closed, SA present",
       "actual": "ok",
       "delta": "",
-      "note": "seam allowance 1.0 cm included; Neckline: 0.7 cm"
+      "note": "seam allowance 1.0 cm included"
     },
     {
       "group": "Labels",

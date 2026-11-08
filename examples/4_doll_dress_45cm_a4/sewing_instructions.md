@@ -81,9 +81,9 @@ The printed instructions (`sewing_instructions.pdf`) show every step as a pictur
 Seam allowance is included in the pattern (see table). 
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Single layer: cut the second piece of a pair with the paper piece turned over (printed side down).
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
-4. **Set up the machine**. Universal needle 80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
+4. **Set up the machine**. Sewing machine: universal needle 80, polyester thread. Sew a test seam on two layers of a scrap. See the basics page at the front of the booklet.
 5. **Sew the shoulder seams**. Lay front and back right sides together, shoulder edges level, and pin. Sew with 6 mm seam allowance from the neckline to the armhole. Press the allowances towards the back. (a straight stitch, then finish the edges) Do this twice.
    ![Step 5](steps/step_05.png)
 6. **Finish the shoulder seams**. Finish both allowances together, from the right side of the upper layer. Press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
@@ -95,7 +95,7 @@ Seam allowance is included in the pattern (see table).
 9. **Sew on the Velcro**. Lay the right back over the left back so the edges overlap at the centre back. Sew the soft side to the right side of the left back and the hook side to the inside of the right back, stitching round each strip (or sew on 2–3 snaps). (sewing machine: straight stitch 3 mm) Tip: The garment opens completely: easy dressing.
 10. **Fold the binding in half**. Fold the bias strip lengthwise wrong sides together, raw edges level, and press. Shape it into a curve with the iron.
    ![Step 10](steps/step_10.png)
-11. **Sew the neck binding on**. Lay the binding on the right side of the neckline, raw edges level; let each end stick out past the opening edge by the allowance. Pin without stretching. Sew with 6 mm seam allowance. Trim the allowance to half and clip it in the curves. (a straight stitch, then finish the edges)
+11. **Sew the neck binding on**. Lay the binding on the right side of the neckline, raw edges level; let each end stick out past the opening edge by the allowance. Pin without stretching. Sew with 4.2 mm seam allowance. Trim the allowance to half and clip it in the curves. (a straight stitch, then finish the edges)
    ![Step 11](steps/step_11.png)
 12. **Stitch the binding down**. Fold the ends in. Turn the binding to the inside over the allowance and press. Stitch it down close to the fold. (sewing machine: straight stitch 3 mm) Press first: the binding then rolls inside by itself.
    ![Step 12](steps/step_12.png)

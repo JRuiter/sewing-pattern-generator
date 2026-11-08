@@ -100,15 +100,24 @@ def rise_ease_mm(fit: str, adult: bool) -> float:
             "oversized": base * 1.6, "harem": base * 1.3}[fit]
 
 
-def band_ratio(band_fabric: str, stretch: float | None = None) -> float:
-    """Length of a rib band / neckband relative to the edge it is sewn to."""
+def band_ratio(band_fabric: str, stretch: float | None = None, use: str = "neck") -> float:
+    """Length of a rib band / neckband relative to the edge it is sewn to.
+
+    use="hem": a hem band only hugs the body lightly (it has to go over the hips and should not
+    balloon the garment), so it is longer than a neckband or a cuff."""
     _, s, _ = fabric_info(band_fabric, stretch)
+    if use == "hem":
+        if band_fabric == "rib":
+            return max(0.80, min(0.90, 0.90 - (s - 50) * 0.003))   # 50 % → 0.90; 80 % → 0.81
+        return max(0.85, min(0.95, 0.95 - (s - 30) * 0.003))
     if band_fabric == "rib":
         return max(0.70, min(0.85, 0.85 - (s - 50) * 0.005))     # 50 % → 0.85; 80 % → 0.70
     return max(0.80, min(0.92, 0.92 - (s - 30) * 0.004))          # jersey strip
 
 
-def band_ratio_range(band_fabric: str) -> tuple[float, float]:
+def band_ratio_range(band_fabric: str, use: str = "neck") -> tuple[float, float]:
+    if use == "hem":
+        return (0.78, 0.92) if band_fabric == "rib" else (0.83, 0.97)
     return (0.70, 0.85) if band_fabric == "rib" else (0.80, 0.92)
 
 

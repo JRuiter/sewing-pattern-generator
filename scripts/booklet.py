@@ -234,6 +234,13 @@ def _materials(pattern, plans, steps) -> list[tuple[str, str, str]]:
     out.append(("hand" if "hand" in own else "sewing", T("Polyester sewing thread"),
                 T("In the colour of the fabric; overlocker: 4 cones.") if "overlocker" in own else
                 T("In the colour of the fabric.")))
+    used = {t["machine"] for t in S.machines_needed(steps, pattern.options)}
+    if any("clear elastic" in st.hint for st in steps):
+        out.append(("tape", T("Clear elastic or twill tape"), T("Sewn into the shoulder seams, so they do not "
+                                                                "stretch out.")))
+    if "overlocker" in used:
+        out.append(("hand", T("Darning needle"), T("To thread the thread chains back under the overlock "
+                                                   "stitches.")))
     out.append(("clips", T("Pins or clips"),
                 T("Clips are safer at the overlocker: pins must come out before the knife.")
                 if "overlocker" in own else T("Pin across the seam line.")))
@@ -332,14 +339,38 @@ def _key_data(pattern, steps, plans) -> list[tuple[str, str]]:
     machines = [t for t in S.machines_needed(steps, pattern.options)
                 if t["machine"] in ("sewing", "overlocker", "coverstitch", "hand")]
     rows.append(("Sewn with", " + ".join(T(t["name"]) for t in machines) or T("Sewing machine")))
-    sa = _common_sa(pattern)
-    hems = sorted({round(e.sa, 1) for pc in pattern.pieces for e in pc.edges if e.name == "hem" and e.sa > 0})
-    rows.append(("Seam allowance", T("included") + ": " + U.allowance(sa, u)
-                 + (" · " + T("hem") + " " + ", ".join(U.allowance(h, u) for h in hems) if hems else "")))
+    rows.append(("Seam allowance", _sa_summary(pattern)))
     level, hours = difficulty(pattern, steps)
     rows.append(("Parts and steps", T(f"{len(pattern.pieces)} parts · {len(steps)} steps")))
     rows.append(("Difficulty", T(level) + " · " + T(f"about {hours:g} h")))
     return rows
+
+
+def _sa_summary(pattern) -> str:
+    """The seam allowances of the pieces in one line: the common one, every edge that differs
+    (neckline, casing, front edge …) and the turned-up hems."""
+    import allowance as A
+    u = U.of(pattern)
+    if not A.has_allowance(pattern):
+        return T("none: add it when you cut (see the parts table)")
+    sa = _common_sa(pattern)
+    others: dict[str, float] = {}
+    hems: set[float] = set()
+    for pc in pattern.pieces:
+        for e in pc.edges:
+            if e.sa <= 0 or e.fold:
+                continue
+            v = round(e.sa, 1)
+            if e.turned:
+                hems.add(v)
+            elif v != sa:
+                lab = T(e.label or e.name).split(" (")[0]
+                others.setdefault(lab, v)
+    parts = [U.allowance(sa, u)]
+    parts += [f"{lab} {U.allowance(v, u)}" for lab, v in sorted(others.items())]
+    if hems:
+        parts.append(T("turned-up hems") + " " + ", ".join(U.allowance(h, u) for h in sorted(hems)))
+    return " · ".join(parts)
 
 
 def _sewn_with(pattern, steps) -> list[tuple[str, str]]:
@@ -419,10 +450,52 @@ def _views(fig, pattern, rect, captions=True, check=False):
         cx, y0 = float(np.mean(a.get_xlim())), a.get_ylim()[0]
         a.set_xlim(cx - sx / 2, cx + sx / 2)
         a.set_ylim(y0, y0 + sy)
-    for i, name in enumerate(views):
+    cap = 0.04 if captions else 0.0
+    # wide garments (long sleeves): one above the other when that draws them clearly larger
+    side_w, side_h = w / n * 0.94 * PAGE[0], (h - cap) * PAGE[1]
+    stack_w, stack_h = w * 0.94 * PAGE[0], ((h - n * cap) / n) * PAGE[1]
+    scale_side = min(side_w / sx, side_h / sy) if sx > 0 and sy > 0 else 0.0
+    scale_stack = min(stack_w / sx, stack_h / sy) if sx > 0 and sy > 0 else 0.0
+    places = []
+    if n == 2 and scale_stack > 1.2 * scale_side:
+        row_h = (h - n * cap) / n
+        for i in range(n):
+            y0 = y + (n - 1 - i) * (row_h + cap) + cap
+            need = sy * scale_stack / PAGE[1]
+            lift = max(0.0, (row_h - need) / 2)
+            places.append(((x + w * 0.03, y0 + lift, w * 0.94, row_h), (x + w / 2, y0 + lift - 0.022)))
+    else:
+        need = sy * scale_side / PAGE[1]
+        lift = max(0.0, (h - cap - need) / 2)       # centre a wide garment instead of a gap above it
+        for i in range(n):
+            places.append(((x + i * w / n, y + cap - 0.01 + lift, w / n * 0.94, h - cap),
+                           (x + (i + 0.47) * w / n, y + 0.005 + lift)))
+    for a, ((ax0, ay0, aw, ah), (tx, ty)), name in zip(axes, places, views):
+        a.set_position((ax0, ay0, aw, ah))
         if captions:
-            fig.text(x + (i + 0.47) * w / n, y + 0.005, T("Front view" if name == "front" else "Back view"),
-                     fontsize=9, ha="center", color=GREY)
+            fig.text(tx, ty, T("Front view" if name == "front" else "Back view"), fontsize=9, ha="center",
+                     color=GREY)
+
+
+def wearer(pattern) -> str:
+    """Who wears the garment: "doll", "child" or "adult" (for the texts that name them)."""
+    if pattern.options.get("doll"):
+        return "doll"
+    return "child" if pattern.measures.get("height", 1700) < 1580 else "adult"
+
+
+def _sides_note(pattern) -> str:
+    """What right/wrong side and left/right (as worn) mean, with an example from this garment."""
+    keys = {pc.key for pc in pattern.pieces}
+    who = {"doll": "the doll", "child": "the child", "adult": "the person"}[wearer(pattern)]
+    if keys & {"front", "back"} and pattern.garment.startswith("pants"):
+        example = f": the left front leg is on the right when you look at {who}."
+    elif "sleeve" in keys:
+        example = f": the left sleeve is on the right when you look at {who}."
+    else:
+        example = "."
+    return ("Right/wrong side of the fabric = the side of the fabric. Left/right (as worn) = seen from "
+            f"{who} wearing it" + example)
 
 
 def parts_page(pdf, pattern, steps, plans, page_no: int):
@@ -438,8 +511,8 @@ def parts_page(pdf, pattern, steps, plans, page_no: int):
     parts_h = float(np.clip(0.94 - 0.05 - 0.03 - 0.05 - mat_h - 0.05 - legend_h - 0.06, 0.13, 0.38))
     _title(fig, 0.06, 0.945, "Parts")
     y = 0.915 - _parts_list(fig, pattern, 0.06, 0.915, 0.88, parts_h)
-    sa = dict(_key_data(pattern, steps, plans)).get("Seam allowance", "")
-    _, h = _text(fig, 0.06, y, T("Seam allowance") + ": " + sa, 0.88, 7.5, color="#444")
+    _, h = _text(fig, 0.06, y, T("Seam allowance (included)") + ": " + _sa_summary(pattern), 0.88, 7.5,
+                 color="#444")
     y -= h + 0.025
     _title(fig, 0.06, y, "Material")
     y -= 0.035
@@ -447,9 +520,7 @@ def parts_page(pdf, pattern, steps, plans, page_no: int):
     _title(fig, 0.06, y, "Colours in this booklet", 11)
     y -= 0.035
     y -= _legend(fig, pattern, 0.06, y, 0.88)
-    _text(fig, 0.06, y - 0.004, T("Right/wrong side of the fabric = the side of the fabric. Left/right (as worn) "
-          "= seen from the child wearing it: the left front leg is on the right when you look at the child."),
-          0.88, 7, color="#444")
+    _text(fig, 0.06, y - 0.004, T(_sides_note(pattern)), 0.88, 7, color="#444")
     pdf.savefig(fig)
     plt.close(fig)
 
@@ -494,9 +565,9 @@ def _basic_overlocker(fig, pattern, x, y, w) -> float:
     DG._dim(ax, np.array([needle, -1.5]), np.array([edge, -1.5]), S.cm(sa), 40, side=-1.0)
     ax.text(20, 18, T("seam allowance"), fontsize=6.5, ha="center", color="#555")
     lines = [T(f"Seam allowance {S.cm(sa)}: the needle runs on the seam line, the knife trims only a sliver."),
-             T("Test seam on two layers of a scrap: differential 1.0" + (" (knit 1.3)" if knit else "")
-               + ", stitch length 3."),
-             T("Curves (crotch, pocket bag): sew slowly and steer the fabric, do not pull it."),
+             T("Test seam on two layers of a scrap: differential " + ("1.3 (knits, also sweat and rib)" if knit
+               else "1.0") + ", stitch length 3."),
+             T(_curves_line(pattern)),
              T("At the end sew a 5 cm thread chain off the fabric; thread it back under the stitches with a "
                "darning needle.")]
     yy = y - 0.035
@@ -508,6 +579,13 @@ def _basic_overlocker(fig, pattern, x, y, w) -> float:
     hb = _important(fig, x + w * 0.48, yy - 0.004, w * 0.51, T("Pull the pins or clips out before they reach "
                     "the knife: a pin in the knife breaks it."), 7.2)
     return max(0.215, y - (yy - hb - 0.01))
+
+
+def _curves_line(pattern) -> str:
+    import machines as MC
+    c = MC.curved_parts(pattern)
+    return (f"Curves ({c}): sew slowly and steer the fabric, do not pull it." if c else
+            "Curves: sew slowly and steer the fabric, do not pull it.")
 
 
 def _stitch_pic(ax, kind):
@@ -545,6 +623,14 @@ def _stitch_pic(ax, kind):
     elif kind == "zigzag":
         xs = np.linspace(0.8, 9.2, 19)
         ax.plot(xs, np.where(np.arange(19) % 2, 2.5, 1.5), color=DG.STITCH, lw=1.2)
+    elif kind in ("cover", "cover_end"):
+        ax.fill([0.3, 9.7, 9.7, 0.3], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
+        end = 6.2 if kind == "cover_end" else 9.2
+        for yy in (1.6, 2.4):
+            ax.plot([0.8, end], [yy, yy], color=DG.STITCH, lw=1.5)
+        if kind == "cover_end":
+            ax.plot([0.8, 2.0], [1.6, 1.6], color=DG.STITCH, lw=3.0, alpha=0.5)
+            ax.plot([0.8, 2.0], [2.4, 2.4], color=DG.STITCH, lw=3.0, alpha=0.5)
     elif kind == "topstitch":
         ax.fill([0.3, 9.7, 9.7, 0.3], [0.6, 0.6, 3.4, 3.4], fc=fc, ec=INK, lw=0.9)
         ax.plot([0.3, 9.7], [3.4, 3.4], color=INK, lw=2.2)
@@ -564,6 +650,31 @@ MACHINE_BASICS = [("straight", "Straight stitch", "Seams in woven fabric, 2.5 mm
                   ("zigzag", "Zigzag", "Knit seams (narrow) and finishing the edges (wide)."),
                   ("topstitch", "Topstitching", "Right side up, with the same distance to the edge all the way; "
                    "use the edge of the presser foot as a guide.")]
+
+
+HAND_KIND = {"tacking stitch": "tacking", "back stitch": "back", "blind stitch": "blind", "hand bar tack": "bartack",
+             "ladder stitch": "ladder", "box of hand stitches": "back", "2 rows of running stitch": "tacking"}
+
+
+def _hand_basics(pattern, steps) -> list:
+    """Only the hand stitches the steps really use (a picture and a line each)."""
+    kinds = set()
+    for s in steps:
+        t = S.tool_for(pattern.options, s.stitch, s.data.get("knit")) if s.stitch else {}
+        if s.data.get("picture") == "hand" and t.get("machine", "hand") == "hand":
+            kinds.add("ladder")
+        if not s.stitch:
+            continue
+        if t.get("machine") == "hand":
+            st = str(t.get("stitch", "")).split(",")[0].strip()
+            kinds.add(next((v for k, v in HAND_KIND.items() if st.startswith(k)), "back"))
+    return [it for it in HAND_BASICS if it[0] in kinds]
+
+
+COVER_BASICS = [("cover", "Cover stitch", "Hems and topstitching on knits: right side up, two needles on top, the "
+                  "looper covers the raw edge underneath."),
+                 ("cover_end", "Ending the seam", "Sew 1 cm over the start, lift the needles, pull the fabric back "
+                  "and cut; knot the needle threads on the wrong side.")]
 
 
 def _basic_grid(fig, title, items, x, y, w) -> float:
@@ -599,10 +710,13 @@ def tools_pages(pdf, pattern, steps, page_no: int) -> int:
     blocks = []
     if "overlocker" in used:
         blocks.append(("overlocker", 0.24))
-    if "hand" in used:
-        blocks.append(("hand", 0.04 + int(np.ceil(len(HAND_BASICS) / 3)) * 0.13))
-    if "sewing" in used or "coverstitch" in used or not blocks:
+    hand_items = _hand_basics(pattern, steps)
+    if hand_items:
+        blocks.append(("hand", 0.04 + int(np.ceil(len(hand_items) / 3)) * 0.13))
+    if "sewing" in used or not blocks:
         blocks.append(("sewing", 0.04 + 0.13))
+    if "coverstitch" in used:
+        blocks.append(("coverstitch", 0.04 + 0.13))
     for kind, h in blocks:
         if y - h - 0.03 < 0.04:
             pdf.savefig(fig)
@@ -616,7 +730,9 @@ def tools_pages(pdf, pattern, steps, page_no: int) -> int:
         if kind == "overlocker":
             used_h = _basic_overlocker(fig, pattern, 0.08, y, 0.84)
         elif kind == "hand":
-            used_h = _basic_grid(fig, "Basics: hand stitches", HAND_BASICS, 0.08, y, 0.84)
+            used_h = _basic_grid(fig, "Basics: hand stitches", hand_items, 0.08, y, 0.84)
+        elif kind == "coverstitch":
+            used_h = _basic_grid(fig, "Basics: the coverstitch machine", COVER_BASICS, 0.08, y, 0.84)
         else:
             used_h = _basic_grid(fig, "Basics: the sewing machine", MACHINE_BASICS, 0.08, y, 0.84)
         y -= used_h + 0.01
@@ -904,17 +1020,21 @@ def _done_panel(fig, pattern, steps, rect):
 
 
 def _fit_check(pattern) -> str:
-    """What to check on the test garment, for this kind of garment."""
+    """What to check on the test garment, for this kind of garment and wearer."""
     keys = {pc.key for pc in pattern.pieces}
-    doll = bool(pattern.options.get("doll"))
-    if doll:
+    who = wearer(pattern)
+    if who == "doll":
         return ("Try the test garment on the doll: does it go over the head, does the opening close, is the "
                 "length right? Adjust the measurements and print the pattern again before you cut the good fabric.")
+    on = "Try the test garment on the child" if who == "child" else "Try the test garment on"
     if "sleeve" in keys or "hood" in keys:
-        return ("Try the test garment on the child: length, chest width, sleeve length and the neckline. Adjust "
-                "the measurements or options and print the pattern again before you cut the good fabric.")
-    return ("Try the test garment on the child: length, width at the hip and the waistband. Adjust the measurements or "
-            "options and print the pattern again before you cut the good fabric.")
+        what = "length, chest width, sleeve length and the neckline"
+    elif pattern.garment.startswith("pants"):
+        what = "length, width at the hip, the crotch and the waistband"
+    else:
+        what = "length, width at the hip and the waistband"
+    return (f"{on}: {what}. Adjust the measurements or options and print the pattern again before you cut the "
+            "good fabric.")
 
 
 def done_page(pdf, pattern, steps, page_no: int) -> int:

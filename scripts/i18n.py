@@ -139,9 +139,52 @@ def t(text: str) -> str:
                 pos = mm.end()
             res.append(v[pos:])
             return "".join(res)
+    joined = _by_sentence(text)
+    if joined is not None:
+        return joined
     if _wordy(text):
+        if text not in MISSING:
+            _LAST.append(text)
         MISSING.add(text)
     return _DEC.sub(",", text)          # numbers without a table entry still get the decimal comma
+
+
+_SENT = (re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9„\"(])"),           # sentences first,
+         re.compile(r"(?<=[.;!?])\s+(?=[A-Za-z0-9„\"(])"))      # then also the parts of a sentence
+
+
+def _by_sentence(text: str) -> str | None:
+    """A text of several sentences without an entry of its own: translate it sentence by sentence
+    (then, if needed, split at ";" too; such a part is looked up with a full stop). None unless every
+    part has an entry, so step texts that combine known sentences (e.g. with or without an overlocker)
+    need no entry of their own."""
+    for rx in _SENT:
+        parts = rx.split(text.strip())
+        if len(parts) < 2:
+            continue
+        n = len(MISSING)
+        out = []
+        for p in parts:
+            semi = p.endswith(";")
+            tr = t(p[:-1] + "." if semi else p)
+            if len(MISSING) > n:
+                _undo(n, None)
+                out = []
+                break
+            out.append(tr[:-1] + ";" if semi and tr.endswith(".") else tr)
+        if out:
+            return " ".join(out)
+    return None
+
+
+def _undo(n: int, value):
+    """Forget the sentences recorded as missing while trying the sentence-wise translation."""
+    while len(MISSING) > n and _LAST:
+        MISSING.discard(_LAST.pop())
+    return value
+
+
+_LAST: list[str] = []          # missing texts in the order they were recorded (for _undo)
 
 
 _DEC = re.compile(r"(?<=\d)\.(?=\d)")

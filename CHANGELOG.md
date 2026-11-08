@@ -4,6 +4,26 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Coverstitch basics** in the booklet (stitch picture, how to end the seam) when the coverstitch machine is used; the sewing-machine basics only appear when a sewing machine is used, and the hand-stitch basics only list the stitches the steps really use.
+- **Cutting step shows the real cutting layout** (all fabrics, rib stretch direction "along the bands"), and the text says whether to cut on the fold or single layer (turn the paper piece over for the second piece).
+- **Machine set-up step for every machine used** (sewing machine needle, overlocker cones and differential feed, coverstitch) with a test seam on scraps.
+- Materials list adds clear elastic/twill tape for knit shoulders and a darning needle for overlocker chains.
+
+### Changed
+- **Seam allowances in the text always match the pieces** (`steps.fix_allowance`): neckline, hood and band allowances are the full allowance when the band is sewn on the overlocker (the knife needs it), 0.7 × otherwise; the parts page lists every allowance that differs.
+- **Overlocker seams** are pressed to one side (never "pressed open"); the pin warning appears once; the curve tip names the real curves of the garment (armhole and neckline for tops, crotch and pocket bag for pants).
+- **Knits are not edge-finished** (no extra zigzag/overlock finishing steps), hand hems use a blind stitch, and "free arm" hints only appear with a sewing machine.
+- **Hem bands** use a hem ratio of 80–90 % (instead of the neckline ratio) and are checked to go over the hips; cuffs say to pin at the cuff seam and the opposite fold.
+- Fit check, left/right note and title-page wording depend on who wears it (child, adult, doll) and on the garment (legs, sleeves).
+- Title-page views use the same scale front and back; raglan tops show their sleeves.
+- Knit dress skirts are hemmed with a single fold like the bodice.
+
+### Fixed
+- German booklets: untranslated sizes ("women's size"), skirt names, curve hints, fit-check and wearer notes, "fit 'oversized'"; long sentences are translated sentence by sentence when no full entry exists.
+- Neckband ring step said 10 mm while the band has 7 mm (translated edge labels were not recognised).
+- Waistband steps were labelled "band folded"; basting steps showed a finished-edge cross-section; ✅/❌/⚠️ printed as empty boxes in the PDF report.
+
 ## [1.5.0] - 2026-11-08
 
 ### Added

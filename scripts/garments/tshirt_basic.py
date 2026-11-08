@@ -35,6 +35,17 @@ DEFAULTS = dict(fit="normal", fabric="jersey", stretch=None, sleeve_style="set_i
                 armhole_depth_max=None, sleeve_taper=0.9)
 
 
+def neck_sa(o) -> float:
+    """Seam allowance of the neckline (and its band): narrower than the other seams (the curve lies
+    flatter), except on the overlocker, where the knife needs the full allowance to trim."""
+    import machines as MC
+    knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))[2]
+    d = MC.method(o, "band", knit) if MC.of(o) is not None else None
+    if d and d.get("machine") == "overlocker":
+        return o["sa"]
+    return o["sa"] * 0.7
+
+
 def resolve_options(options):
     o = dict(DEFAULTS)
     o.update({k: v for k, v in (options or {}).items() if v is not None})
@@ -108,7 +119,7 @@ def _body_piece(key, name, F, depth, scoop, o, hem_y, flare, notches):
         Edge("side", side, o["sa"], label="Side seam"),
         Edge("armhole", arm, o["sa"], label="Armhole"),
         Edge("shoulder", G.line(S, N), o["sa"], label="Shoulder"),
-        Edge("neckline", neck, o["sa"] * 0.7, label="Neckline",
+        Edge("neckline", neck, neck_sa(o), label="Neckline",
              pointed=o["neckline"] == "v" and key == "front"),
     ]
     gx = q * 0.45
@@ -300,7 +311,7 @@ def _raglan(front, back, F, o, m, adult):
              turned=not o["sleeve_cuffs"]),
         Edge("seam_front", sf[::-1], o["sa"], label="Sleeve seam"),
         Edge("raglan_front", kf, o["sa"], label="Raglan seam front"),
-        Edge("neck", hals, o["sa"] * 0.7, label="Neckline"),
+        Edge("neck", hals, neck_sa(o), label="Neckline"),
     ]
     p = Piece("sleeve", "Raglan sleeve", edges, cut_count=2, mirror=True, fabric="Main fabric",
               grain=(G.P(0, -dy - 10), G.P(0, hem_y + 30)))
@@ -385,7 +396,7 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
         # bias binding: a strip as long as the neckline, folded lengthwise and sewn on flat;
         # its ends are turned in at the back opening (or joined at a shoulder)
         nb_h = o["neck_band_h"] or max(4.0, 0.6 * o["sa"])
-        band = rect_piece("neckband", "Neck binding (bias)", neck_len, 2 * nb_h, sa=o["sa"] * 0.7, cut_count=1,
+        band = rect_piece("neckband", "Neck binding (bias)", neck_len, 2 * nb_h, sa=neck_sa(o), cut_count=1,
                           fabric="Main fabric", labels=("Seam edge", "End", "Seam edge", "End"),
                           grain_vertical=False)
         band.grain = (G.P(neck_len * 0.3, nb_h * 0.2), G.P(neck_len * 0.3 + nb_h * 1.6, nb_h * 1.8))
@@ -400,7 +411,7 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
         if o["neckline"] == "v":
             ratio = min(0.95, ratio + 0.05)
         nbl = neck_len * ratio
-        band = rect_piece("neckband", "Neckband", nbl, 2 * nb_h, sa=o["sa"] * 0.7, cut_count=1,
+        band = rect_piece("neckband", "Neckband", nbl, 2 * nb_h, sa=neck_sa(o), cut_count=1,
                           fabric="Rib knit" if o["band_fabric"] == "rib" else "Main fabric",
                           labels=("Seam edge", "Cross seam", "Seam edge", "Cross seam"), grain_vertical=True)
         band.marks.append(Mark(G.line(G.P(0, nb_h), G.P(nbl, nb_h)), "fold", "Fold line"))
@@ -445,14 +456,19 @@ def draft(measures: dict, options: dict | None = None, _garment="tshirt_basic") 
                            value=sinfo["cuff_len"] * (1 + b_stretch / 100), target=m["wrist"] * 1.55,
                            note="hand circumference ≈ 1.55 × wrist"))
     if o["hem_band"]:
-        hb_len = (front.edge("hem").length + back.edge("hem").length) * 2 * E.band_ratio(o["band_fabric"], o["band_stretch"])
+        hem_ratio = E.band_ratio(o["band_fabric"], o["band_stretch"], use="hem")
+        hb_len = (front.edge("hem").length + back.edge("hem").length) * 2 * hem_ratio
         hband = rect_piece("hem_band", "Hem band", hb_len / 2, 2 * hem_band_h, sa=o["sa"], cut_count=1,
                            fold_left=True, fabric="Rib knit" if o["band_fabric"] == "rib" else "Main fabric",
                            labels=("Seam edge", "Cross seam", "Seam edge", "Centre"))
         hband.marks.append(Mark(G.line(G.P(0, hem_band_h), G.P(hb_len / 2, hem_band_h)), "fold", "Fold line"))
         pieces.append(hband)
+        lo_h, hi_h = E.band_ratio_range(o["band_fabric"], use="hem")
         seams.append(dict(name="Hem band ↔ hem (stretched)", a=[("front", "hem", 2), ("back", "hem", 2)],
-                          b=[("hem_band", "bottom", 2)], type="ratio", lo=0.70, hi=0.92))
+                          b=[("hem_band", "bottom", 2)], type="ratio", lo=lo_h, hi=hi_h))
+        checks.append(dict(name="Hem band goes over the hips", kind="min",
+                           value=hb_len * (1 + b_stretch / 100), target=m["hip"] * 1.05,
+                           note="hem band length incl. usable stretch ≥ hip + 5 %"))
     # ease check
     pat = Pattern(_garment, "T-Shirt" if o["sleeve_length"] == "short" else "Long-sleeve shirt", "", pieces, dict(m), o,
                   seams=seams, corners=corners, checks=checks, notes=notes)
@@ -651,7 +667,7 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
                         section=sec, data={"hands": "fold"}),
             S.attach_band("Sew the cuffs on", "sleeve_cuff", ["Sleeve cuff"], "sleeve hem",
                           "Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, "
-                          "cuff seam on the sleeve seam. Pin at the quarters. "
+                          "cuff seam on the sleeve seam; pin there and at the opposite folds of cuff and sleeve. "
                           "Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the "
                           "sleeve between two pins.", repeat=2, section=sec,
                           hint="One hand in front of the presser foot, one behind it: both stretch evenly.",

@@ -589,7 +589,7 @@ TABLE: dict[str, str] = {
     "{s}: {n} at {n} width": "{s}: {n} bei {n} Breite", "{n} m at {n}\" width": "{n} m bei {n}\" Breite",
 
     # ------------------------------------------------------------------ diagrams
-    "fold line": "Bruchlinie", "sewn": "genäht", "fold over": "umklappen", "fold = sewn seam": "Bruch = genähte Naht", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten",
+    "fold line": "Bruchlinie", "sewn": "genäht", "fold over": "umklappen", "fold = sewn seam": "Bruch = genähte Naht", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten", "waistband folded,\nraw edges down": "Bund gefaltet,\noffene Kanten unten",
     "stretch": "dehnen", "pull": "ziehen", "grain": "Fadenlauf", "inside out": "links gewendet",
     "right side out": "rechts gewendet", "elastic, with a safety pin": "Gummi, mit Sicherheitsnadel",
     "ladder stitch: the stitches disappear": "Matratzenstich: die Stiche verschwinden", "pants top edge": "Hosenoberkante",
@@ -1146,6 +1146,8 @@ TABLE.update({
     "shoulder + allowance for fit 'normal'": "Schulter + Zugabe für Passform „normal“",
     "shoulder + allowance for fit 'wide'": "Schulter + Zugabe für Passform „weit“",
     "shoulder + allowance for fit 'slim'": "Schulter + Zugabe für Passform „schmal“",
+    "shoulder + allowance for fit 'oversized'": "Schulter + Zugabe für Passform „oversized“",
+    "shoulder + allowance for fit 'harem'": "Schulter + Zugabe für Passform „Haremshose“",
     "the skirt is gathered (intended extra length)": "der Rock ist gekräuselt (gewollte Mehrlänge)",
     "waist seam + both edges of the skirt opening ≥ hip + {n} %": "Taillennaht + beide Kanten des Rockschlitzes ≥ Hüfte + {n} %",
     "waistband unstretched ≥ hip (the elastic gathers it)": "Bund ungedehnt ≥ Hüfte (das Gummi rafft ihn)",
@@ -1345,7 +1347,7 @@ TABLE.update({
     'Lay front and back right sides together, shoulder edges level, and pin. Sew with {s} seam allowance from the neckline to the armhole. Press the allowances towards the back.':
         'Vorder- und Rückenteil rechts auf rechts legen, Schulterkanten bündig, und stecken. Mit {s} Nahtzugabe vom Halsausschnitt zum Armloch nähen. Die Zugaben nach hinten bügeln.',
     'Knit stretches at the shoulder: sew a strip of clear elastic or twill tape into the seam.':
-        'Jersey dehnt sich an der Schulter: ein Stück Framilon oder Nahtband mitfassen.',
+        'Strickstoff dehnt sich an der Schulter: ein Stück Framilon (transparentes Gummiband) oder Nahtband mitfassen.',
     'Open the body out flat, right side up. Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, single notch on the front, double notch on the back. Pin from the middle to both ends, easing in the extra length of the cap. Sew with {s} seam allowance, sleeve underneath; press the allowances towards the sleeve.':
         'Den Körper flach aufklappen, rechte Seite oben. Den Ärmel rechts auf rechts auf das Armloch legen: Kugelmitte auf die Schulternaht, einfacher Knips vorne, doppelter Knips hinten. Von der Mitte zu beiden Enden stecken und die Mehrweite der Kugel einhalten. Mit {s} Nahtzugabe nähen, Ärmel unten; die Zugaben zum Ärmel bügeln.',
     'Sleeve on the bottom: the feed dogs ease the cap in without pleats.':
@@ -1610,4 +1612,132 @@ TABLE.update({
         'Nur EINE Tasche: auf der rechten Hinterhose (getragen). {s}',
     'Only ONE pocket: on the left back leg (as worn). {s}':
         'Nur EINE Tasche: auf der linken Hinterhose (getragen). {s}',
+})
+
+# booklet review 2026-11-08: texts that adapt to the wearer, the machines and the cutting layout
+TABLE.update({
+    "A-line skirt": "A-Linien-Rock",
+    "women's size {n}": "Damengröße {n}", "men's size {n}": "Herrengröße {n}",
+    "US women's size {n}": "US-Damengröße {n}", "UK women's size {n}": "UK-Damengröße {n}",
+    "US kids' size {n}": "US-Kindergröße {n}",
+    "Clear elastic or twill tape": "Framilon oder Nahtband",
+    "Sewn into the shoulder seams, so they do not stretch out.":
+        "Wird in die Schulternähte mitgefasst, damit sie nicht ausleiern.",
+    "Darning needle": "Stopfnadel",
+    "To thread the thread chains back under the overlock stitches.":
+        "Um die Fadenketten unter die Overlockstiche zurückzuziehen.",
+    "Cross-section: topstitched": "Querschnitt: abgesteppt",
+    "Curves (armhole, neckline): sew slowly and steer the fabric, do not pull it.":
+        "Rundungen (Armloch, Halsausschnitt): langsam nähen und den Stoff führen, nicht ziehen.",
+    "Curves (crotch): sew slowly and steer the fabric, do not pull it.":
+        "Rundungen (Schritt): langsam nähen und den Stoff führen, nicht ziehen.",
+    "Curves (neckline): sew slowly and steer the fabric, do not pull it.":
+        "Rundungen (Halsausschnitt): langsam nähen und den Stoff führen, nicht ziehen.",
+    "Curves: sew slowly and steer the fabric, do not pull it.":
+        "Rundungen: langsam nähen und den Stoff führen, nicht ziehen.",
+    "Sew curves (armhole, neckline) slowly and guide only the fabric just in front of the presser foot.":
+        "Rundungen (Armloch, Halsausschnitt) langsam nähen und nur den Stoff direkt vor dem Nähfuß führen.",
+    "Sew curves (crotch) slowly and guide only the fabric just in front of the presser foot.":
+        "Rundungen (Schritt) langsam nähen und nur den Stoff direkt vor dem Nähfuß führen.",
+    "Sew curves (neckline) slowly and guide only the fabric just in front of the presser foot.":
+        "Rundungen (Halsausschnitt) langsam nähen und nur den Stoff direkt vor dem Nähfuß führen.",
+    "Sew curves slowly and guide only the fabric just in front of the presser foot.":
+        "Rundungen langsam nähen und nur den Stoff direkt vor dem Nähfuß führen.",
+    "Cut with long strokes; keep the fabric flat on the table.":
+        "Mit langen Schnitten zuschneiden; der Stoff bleibt flach auf dem Tisch.",
+    "Single layer: cut the second piece of a pair with the paper piece turned over (printed side down).":
+        "Einlagig: Für das zweite Teil eines Paares das Papierteil umdrehen (bedruckte Seite nach unten).",
+    "Follow the cutting layout; grainline arrows parallel to the selvage. Rib knit: the ribs run along the "
+    "grainline, so every band stretches along its length (across the fabric).":
+        "Nach dem Zuschnittplan; Fadenlaufpfeile parallel zur Webkante. Bündchenstoff: Die Rippen laufen im "
+        "Fadenlauf, so dehnt sich jedes Bündchen in seiner Länge (quer zum Stoff).",
+    "Hem band goes over the hips": "Saumbündchen passt über die Hüfte",
+    "hem band length incl. usable stretch ≥ hip + {n} %": "Saumbündchenlänge inkl. nutzbarer Dehnung ≥ Hüfte + {n} %",
+    "Neckline enlarged by {n} cm so that it fits over the head.":
+        "Halsausschnitt um {n} cm vergrößert, damit er über den Kopf passt.",
+    "Sewing machine: jersey/stretch needle {n}–{n}, polyester thread.":
+        "Nähmaschine: Jersey-/Stretchnadel {n}–{n}, Polyestergarn.",
+    "Sewing machine: universal needle {n}, polyester thread.": "Nähmaschine: Universalnadel {n}, Polyestergarn.",
+    "Overlocker: {n} cones of polyester thread, differential {n} (knits, also sweat and rib), {n} if the seam waves.":
+        "Overlock: {n} Konen Polyestergarn, Differential {n} (Strickstoffe, auch Sweat und Bündchen), {n}, wenn "
+        "die Naht wellt.",
+    "Overlocker: {n} cones of polyester thread, differential {n}.":
+        "Overlock: {n} Konen Polyestergarn, Differential {n}.",
+    "Coverstitch: {n} needles, test the hem on a folded scrap.":
+        "Coverlock: {n} Nadeln, den Saum an einem umgeschlagenen Rest testen.",
+    "Sew a test seam on two layers of a scrap.": "Eine Probenaht an zwei Lagen eines Rests nähen.",
+    "Set up the machines": "Maschinen einrichten",
+    "Seam allowance (included)": "Nahtzugabe (enthalten)",
+    "turned-up hems": "umgeschlagene Säume",
+    "none: add it when you cut (see the parts table)": "keine: beim Zuschneiden zugeben (siehe Teiletabelle)",
+    "Test seam on two layers of a scrap: differential {n} (knits, also sweat and rib), stitch length {n}.":
+        "Probenaht an zwei Lagen eines Rests: Differential {n} (Strickstoffe, auch Sweat und Bündchen), "
+        "Stichlänge {n}.",
+    "Test seam on two layers of a scrap: differential {n}, stitch length {n}.":
+        "Probenaht an zwei Lagen eines Rests: Differential {n}, Stichlänge {n}.",
+    "Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, cuff seam on the sleeve "
+    "seam; pin there and at the opposite folds of cuff and sleeve. Sew with the cuff on top, stretching the cuff "
+    "(not the sleeve) to the length of the sleeve between two pins.":
+        "Den Ärmel auf rechts wenden. Das Bündchen über das Ärmelende schieben, offene Kanten bündig, Bündchennaht "
+        "auf die Ärmelnaht; dort und an den gegenüberliegenden Bruchkanten von Bündchen und Ärmel stecken. Mit dem "
+        "Bündchen oben nähen und dabei das Bündchen (nicht den Ärmel) zwischen zwei Nadeln auf die Länge des "
+        "Ärmels dehnen.",
+    "elastic on the seam allowance, zigzag": "Gummi auf der Nahtzugabe, Zickzack",
+    "stretch the elastic": "Gummi dehnen",
+    "opening": "Öffnung",
+    "stitch close to the fold, over the opening": "knapp an der Bruchkante über die Öffnung steppen",
+    "stretch: along the bands": "Dehnung: längs der Bündchen",
+    "Fold each cuff crosswise right sides together, short edges level.":
+        "Jedes Bündchen quer rechts auf rechts falten, kurze Kanten bündig.",
+    "Fold the band crosswise right sides together, short edges level.":
+        "Das Bündchen quer rechts auf rechts falten, kurze Kanten bündig.",
+    "Sew with {n} mm seam allowance; press the allowances to one side.":
+        "Mit {n} mm Nahtzugabe nähen; die Zugaben zu einer Seite bügeln.",
+    "Sew with {n} cm seam allowance; press the allowances to one side.":
+        "Mit {n} cm Nahtzugabe nähen; die Zugaben zu einer Seite bügeln.",
+    "Sew with {n} mm seam allowance; finger-press the allowances open.":
+        "Mit {n} mm Nahtzugabe nähen; die Zugaben mit dem Finger auseinanderstreichen.",
+    "Sew it down by hand with a blind stitch: catch only {n}–{n} threads of the outer fabric.":
+        "Von Hand mit Blindstich annähen: nur {n}–{n} Fäden des Oberstoffs fassen.",
+    "Fold the sleeve hem {n} cm to the wrong side and press.": "Den Ärmelsaum {n} cm nach links umschlagen und bügeln.",
+    "Fold the hem {n} cm to the wrong side and press.": "Den Saum {n} cm nach links umschlagen und bügeln.",
+    "Fold the sleeve hem {n} mm to the wrong side and press.": "Den Ärmelsaum {n} mm nach links umschlagen und bügeln.",
+    "Fold the hem {n} mm to the wrong side and press.": "Den Saum {n} mm nach links umschlagen und bügeln.",
+})
+
+# who wears it: right/wrong side and left/right (as worn), the fit check on the test garment
+_WHO = {"the child": ("dem Kind", "das", "das Kind"), "the person": ("der Person", "die", "die Person"),
+        "the doll": ("der Puppe", "die", "die Puppe")}
+for _en, (_dat, _rel, _acc) in _WHO.items():
+    _base_en = ("Right/wrong side of the fabric = the side of the fabric. Left/right (as worn) = seen from "
+                f"{_en} wearing it")
+    _base_de = f"Rechte/linke Stoffseite = die Seite des Stoffs. Links/rechts (getragen) = von {_dat} aus gesehen, {_rel} es trägt"
+    TABLE.setdefault(_base_en + ".", _base_de + ".")
+    TABLE.setdefault(_base_en + f": the left front leg is on the right when you look at {_en}.",
+                     _base_de + f": Das linke Vorderbein ist rechts, wenn du {_acc} ansiehst.")
+    TABLE.setdefault(_base_en + f": the left sleeve is on the right when you look at {_en}.",
+                     _base_de + f": Der linke Ärmel ist rechts, wenn du {_acc} ansiehst.")
+for _on_en, _on_de in (("Try the test garment on the child", "Probiere das Probeteil am Kind an"),
+                       ("Try the test garment on", "Probiere das Probeteil an")):
+    for _w_en, _w_de in (("length, chest width, sleeve length and the neckline",
+                          "Länge, Brustweite, Ärmellänge und Halsausschnitt"),
+                         ("length, width at the hip, the crotch and the waistband",
+                          "Länge, Weite an der Hüfte, Schritt und Bund"),
+                         ("length, width at the hip and the waistband", "Länge, Weite an der Hüfte und Bund")):
+        TABLE.setdefault(f"{_on_en}: {_w_en}. Adjust the measurements or options and print the pattern again before "
+                         "you cut the good fabric.",
+                         f"{_on_de}: {_w_de}. Passe Maße oder Optionen an und drucke den Schnitt neu, bevor du den "
+                         "guten Stoff zuschneidest.")
+
+TABLE.update({
+    "Basics: the coverstitch machine": "Grundlagen: die Coverlock",
+    "Cover stitch": "Coverstich",
+    "Hems and topstitching on knits: right side up, two needles on top, the looper covers the raw edge underneath.":
+        "Säume und Absteppen an Strickstoffen: rechte Seite oben, zwei Nadeln oben, der Greifer deckt die offene "
+        "Kante unten ab.",
+    "Ending the seam": "Naht beenden",
+    "Sew {n} cm over the start, lift the needles, pull the fabric back and cut; knot the needle threads on the "
+    "wrong side.":
+        "{n} cm über den Anfang nähen, Nadeln hochstellen, den Stoff nach hinten ziehen und abschneiden; die "
+        "Nadelfäden auf der linken Seite verknoten.",
 })

@@ -97,7 +97,8 @@ def test_steps_and_instructions_name_the_machines():
     assert "7.5 mm" in md
     zig = _draft("tshirt_basic", "sewing", size=140)
     steps = " ".join(I.all_steps(zig))
-    assert "narrow zigzag" in steps and "wide zigzag" in steps
+    # knits do not fray: no separate edge-finishing (wide zigzag) steps
+    assert "narrow zigzag" in steps and "wide zigzag" not in steps
     assert any("twin needle" in t for t in MC.missing_tips(MC.of(zig.options), True))
     # generic text without machines (unchanged behaviour)
     plain = " ".join(I.all_steps(_draft("tshirt_basic", None, size=140)))
