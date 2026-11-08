@@ -95,9 +95,9 @@ The printed instructions (`sewing_instructions.pdf`) show every step as a pictur
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Rib knit: the ribs run along the grainline, so every band stretches along its length (across the fabric). Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
-4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
+4. **Set up the machine**. Sewing machine: jersey/stretch needle 75–80, polyester thread. Sew a test seam on two layers of a scrap. See the basics page at the front of the booklet.
 5. **Sew the pocket bag to the opening**. Lay the inner pocket bag right sides together on the pocket opening of the front leg, edges level, and pin. Sew along the opening with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: The opening is on the bias: do not stretch it. A strip of stay tape ironed onto the opening keeps it in shape.
    ![Step 5](steps/step_05.png)
 6. **Clip and turn the bag inside**. Clip the curved allowance every 1 cm, close to the stitching. Turn the bag to the inside and press the edge. Do this twice. Tip: Roll the edge 1–2 mm to the inside: no pocket bag may show from the outside.

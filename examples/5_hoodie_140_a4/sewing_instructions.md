@@ -6,7 +6,7 @@
 
 ## Files
 
-- PDF A4 tiles to glue (15 pages + overview): `hoodie_size140_a4_tiled.pdf`
+- PDF A4 tiles to glue (14 pages + overview): `hoodie_size140_a4_tiled.pdf`
 - Preview A4 tiles: `hoodie_size140_a4_preview.png`
 - SVG master 1:1: `hoodie_size140_master_1to1.svg`
 - Cutting layout: `cutting_layout.png`
@@ -42,7 +42,7 @@
 | Finished measurement | Value |
 |---|---|
 | Chest width | 80.7 cm |
-| Hem width | 56.5 cm |
+| Hem width | 65.4 cm |
 | Length from neck point | 52.2 cm |
 | Sleeve length | 56.1 cm |
 | Sleeve opening | 20.0 cm |
@@ -54,8 +54,8 @@
 
 | Piece | Cutting | Fabric | Seam allowance |
 |---|---|---|---|
-| Front | cut 1 on fold | Main fabric | seam allowance 1.0 cm included; Neckline: 0.7 cm |
-| Back | cut 1 on fold | Main fabric | seam allowance 1.0 cm included; Neckline: 0.7 cm |
+| Front | cut 1 on fold | Main fabric | seam allowance 1.0 cm included |
+| Back | cut 1 on fold | Main fabric | seam allowance 1.0 cm included |
 | Sleeve | cut 2 (mirrored pair) | Main fabric | seam allowance 1.0 cm included |
 | Sleeve cuff | cut 2 | Rib knit | seam allowance 1.0 cm included |
 | Hem band | cut 1 on fold | Rib knit | seam allowance 1.0 cm included |
@@ -78,9 +78,9 @@ The printed instructions (`sewing_instructions.pdf`) show every step as a pictur
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Rib knit: the ribs run along the grainline, so every band stretches along its length (across the fabric). Single layer: cut the second piece of a pair with the paper piece turned over (printed side down).
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
-4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
+4. **Set up the machine**. Sewing machine: jersey/stretch needle 75–80, polyester thread. Sew a test seam on two layers of a scrap. See the basics page at the front of the booklet.
 5. **Hem the pocket openings**. Fold each slanted opening edge 1.5 cm to the wrong side and press. Topstitch 1.2 cm from the fold, right side up, so the stitching catches the raw edge. (sewing machine: twin needle 4 mm, stitch 3 mm)
    ![Step 5](steps/step_05.png)
 6. **Press the top edge under**. Press the top edge and both short sides 1 cm to the wrong side. Trim the allowance at the corners at an angle so they lie flat.
@@ -93,7 +93,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
    ![Step 9](steps/step_09.png)
 10. **Hem the hood front edge**. Fold the front edge 2.5 cm to the wrong side along the fold line and press. Topstitch 2 cm from the fold, close to the raw edge; leave the ends open for a drawstring. (sewing machine: twin needle 4 mm, stitch 3 mm) Alternative: Lined hood (option hood_lining): no hem, the lining finishes the front edge and the hood is warmer.
    ![Step 10](steps/step_10.png)
-11. **Sew the hood on**. Body opened out flat, right side up. Lay the hood right side down onto the neckline, neck edges level. Hood centre seam on centre back, hood notches on the shoulder seams; front edges meet at centre front (overlap 1 cm). Sew all round with 7 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch)
+11. **Sew the hood on**. Body opened out flat, right side up. Lay the hood right side down onto the neckline, neck edges level. Hood centre seam on centre back, hood notches on the shoulder seams; front edges meet at centre front (overlap 1 cm). Sew all round with 10 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 11](steps/step_11.png)
 12. **Finish the neck seam**. Finish both allowances together. Press them down towards the body. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Alternative: Neatest finish: cover the allowance with a strip of jersey or cotton tape from shoulder to shoulder over the back neck and stitch it down on both edges.
    ![Step 12](steps/step_12.png)
@@ -105,7 +105,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
    ![Step 15](steps/step_15.png)
 16. **Fold the cuffs in half**. Fold the ring lengthwise wrong sides together, raw edges level. The seam allowance is now inside; the right side shows all round. Do this twice.
    ![Step 16](steps/step_16.png)
-17. **Sew the cuffs on**. Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, cuff seam on the sleeve seam. Pin at the quarters. Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the sleeve between two pins. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. One hand in front of the presser foot, one behind it: both stretch evenly.
+17. **Sew the cuffs on**. Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, cuff seam on the sleeve seam; pin there and at the opposite folds of cuff and sleeve. Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the sleeve between two pins. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. One hand in front of the presser foot, one behind it: both stretch evenly.
    ![Step 17](steps/step_17.png)
 18. **Close the hem band into a ring**. Fold the band crosswise right sides together, short edges level. Sew with 10 mm seam allowance; finger-press the allowances open. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 18](steps/step_18.png)
@@ -128,7 +128,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Seam pairs | Shoulder seam front ↔ back | 12.8 cm | 12.8 cm | +0.0 mm | ✅ OK |  |
 | Seam pairs | Sleeve seam (front ↔ back) | 40.3 cm | 40.3 cm | -0.0 mm | ✅ OK |  |
 | Seam pairs | Sleeve cuff ↔ sleeve hem (stretched) | 70–85 % of 28.6 cm | 20.0 cm = 70 % | -85.8 mm | ✅ OK | rib band is stretched while sewing |
-| Seam pairs | Hem band ↔ hem (stretched) | 70–92 % of 80.7 cm | 56.5 cm = 70 % | -242.2 mm | ✅ OK | rib band is stretched while sewing |
+| Seam pairs | Hem band ↔ hem (stretched) | 78–92 % of 80.7 cm | 65.4 cm = 81 % | -153.4 mm | ✅ OK | rib band is stretched while sewing |
 | Seam pairs | Hood ↔ neckline (each side) | 25.6 cm | 25.6 cm | +0.0 mm | ✅ OK |  |
 | Seam pairs | Hood centre seam (left ↔ right) | 47.4 cm | 47.4 cm | +0.0 mm | ✅ OK |  |
 | Angles/transitions | Underarm: side seam ↔ armhole front | 90° | 90.3° | +0.3° | ✅ OK |  |
@@ -145,12 +145,13 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Measurements | Chest circumference pattern = body + ease | 80.7 cm | 80.7 cm | +0.0 % | ✅ OK | body 69.0 cm + +17 % ease |
 | Measurements | Neckline (fabric edge) fits over the head | ≥ 53.5 cm | 63.9 cm | +104.0 mm | ✅ OK | neckline incl. stretch ≥ head circumference |
 | Measurements | Hand fits through the sleeve cuff | ≥ 21.4 cm | 36.0 cm | +146.3 mm | ✅ OK | hand circumference ≈ 1.55 × wrist |
+| Measurements | Hem band goes over the hips | ≥ 78.8 cm | 117.7 cm | +389.5 mm | ✅ OK | hem band length incl. usable stretch ≥ hip + 5 % |
 | Measurements | Sleeve length plausible | 50.4 cm – 70.0 cm | 56.1 cm | +0.0 mm | ✅ OK | arm length 56.0 cm |
 | Measurements | Body length plausible | 42.0 cm – 86.8 cm | 52.2 cm | +0.0 mm | ✅ OK | from the neck point |
 | Measurements | Hood tall enough | ≥ 29.4 cm | 33.5 cm | +41.0 mm | ✅ OK | hood height ≥ 0.55 × head circumference |
-| Geometry | Front: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Neckline: 0.7 cm |
+| Geometry | Front: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Front: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
-| Geometry | Back: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Neckline: 0.7 cm |
+| Geometry | Back: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Back: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Sleeve: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Sleeve: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
@@ -171,7 +172,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 | Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 
-**Result:** 47 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 48 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

@@ -182,7 +182,9 @@ def _sleeve(pattern, body_pc, cx, side):
     sl = _pc(pattern, "sleeve")
     if sl is None:
         return []
-    arm = body_pc.edge("armhole").pts
+    names = [e.name for e in body_pc.edges]
+    # set-in sleeve: from the armhole; raglan: from the raglan line (its top is at the neckline)
+    arm = body_pc.edge("armhole" if "armhole" in names else "raglan").pts
     s = arm[0] if arm[0][1] > arm[-1][1] else arm[-1]          # shoulder point
     u = arm[-1] if s is arm[0] else arm[0]                      # underarm point
     ring = np.asarray(sl.seam_ring(), float)
@@ -190,13 +192,16 @@ def _sleeve(pattern, body_pc, cx, side):
     bicep = float(np.ptp(ring[:, 0])) / 2
     hem_w = sl.edge("hem").length / 2
     del bicep
-    a = np.radians(38)               # hanging down and a little outwards, like a garment laid flat
+    raglan = "armhole" not in names
+    # hanging down and a little outwards, like a garment laid flat; a raglan sleeve starts at the
+    # neckline, so its top edge runs flatter (it continues the shoulder line)
+    a = np.radians(58 if raglan else 38)
     d = np.array([np.sin(a), -np.cos(a)])
     if s[0] < cx:
         d[0] = -d[0]
     n = np.array([-d[1], d[0]])
-    if np.dot(n, u - s) < 0:
-        n = -n
+    if (n[1] > 0) if raglan else (np.dot(n, u - s) < 0):
+        n = -n                     # the underarm edge lies below the top edge
     out = []
     outer, inner = s + d * L, s + d * L + n * hem_w
     mid = (outer + inner) / 2
@@ -281,7 +286,7 @@ def _top_view(pattern, view):
                 if full and ends[-1][1] - ends[0][0] < 0.9 * (full[-1][1] - full[0][0]):
                     gathers += _gathers(ends[0][0], ends[-1][1], hy, 0.03 * height)
     layers.insert(0, (_ring(body), pc, 1))
-    if "armhole" in names:
+    if "armhole" in names or "raglan" in names:
         layers += _sleeve(pattern, pc, cx, "drafted") + _sleeve(pattern, pc, cx, "mirror")
     if "neckline" in names:
         neck = pc.edge("neckline").pts

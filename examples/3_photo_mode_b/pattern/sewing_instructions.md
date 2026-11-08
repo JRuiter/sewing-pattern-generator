@@ -83,9 +83,9 @@ The printed instructions (`sewing_instructions.pdf`) show every step as a pictur
 Seam allowance is included in the pattern (see table). Use a jersey/stretch needle for jersey and sweat.
 
 1. **Pre-wash the fabric**. Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.
-2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
+2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Rib knit: the ribs run along the grainline, so every band stretches along its length (across the fabric). Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
-4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
+4. **Set up the machine**. Sewing machine: jersey/stretch needle 75–80, polyester thread. Sew a test seam on two layers of a scrap. See the basics page at the front of the booklet.
 5. **Sew the side seams**. Lay front and back of the same leg right sides together, side edges level: single notches = front, double notches = back. Pin, then sew with 10 mm seam allowance from the top edge to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Always the front and back of the SAME leg (FL + BL, FR + BR).
    ![Step 5](steps/step_05.png)
 6. **Sew the inseams**. Open the leg out at the side seam and fold it right sides together, inseam edges level. Pin the notches first, then the ends. Sew with 10 mm seam allowance from the crotch point to the hem. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Start exactly at the crotch point: the four seams meet there later.

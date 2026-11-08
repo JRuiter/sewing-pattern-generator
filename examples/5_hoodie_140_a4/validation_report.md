@@ -7,7 +7,7 @@
 | Seam pairs | Shoulder seam front ↔ back | 12.8 cm | 12.8 cm | +0.0 mm | ✅ OK |  |
 | Seam pairs | Sleeve seam (front ↔ back) | 40.3 cm | 40.3 cm | -0.0 mm | ✅ OK |  |
 | Seam pairs | Sleeve cuff ↔ sleeve hem (stretched) | 70–85 % of 28.6 cm | 20.0 cm = 70 % | -85.8 mm | ✅ OK | rib band is stretched while sewing |
-| Seam pairs | Hem band ↔ hem (stretched) | 70–92 % of 80.7 cm | 56.5 cm = 70 % | -242.2 mm | ✅ OK | rib band is stretched while sewing |
+| Seam pairs | Hem band ↔ hem (stretched) | 78–92 % of 80.7 cm | 65.4 cm = 81 % | -153.4 mm | ✅ OK | rib band is stretched while sewing |
 | Seam pairs | Hood ↔ neckline (each side) | 25.6 cm | 25.6 cm | +0.0 mm | ✅ OK |  |
 | Seam pairs | Hood centre seam (left ↔ right) | 47.4 cm | 47.4 cm | +0.0 mm | ✅ OK |  |
 | Angles/transitions | Underarm: side seam ↔ armhole front | 90° | 90.3° | +0.3° | ✅ OK |  |
@@ -24,12 +24,13 @@
 | Measurements | Chest circumference pattern = body + ease | 80.7 cm | 80.7 cm | +0.0 % | ✅ OK | body 69.0 cm + +17 % ease |
 | Measurements | Neckline (fabric edge) fits over the head | ≥ 53.5 cm | 63.9 cm | +104.0 mm | ✅ OK | neckline incl. stretch ≥ head circumference |
 | Measurements | Hand fits through the sleeve cuff | ≥ 21.4 cm | 36.0 cm | +146.3 mm | ✅ OK | hand circumference ≈ 1.55 × wrist |
+| Measurements | Hem band goes over the hips | ≥ 78.8 cm | 117.7 cm | +389.5 mm | ✅ OK | hem band length incl. usable stretch ≥ hip + 5 % |
 | Measurements | Sleeve length plausible | 50.4 cm – 70.0 cm | 56.1 cm | +0.0 mm | ✅ OK | arm length 56.0 cm |
 | Measurements | Body length plausible | 42.0 cm – 86.8 cm | 52.2 cm | +0.0 mm | ✅ OK | from the neck point |
 | Measurements | Hood tall enough | ≥ 29.4 cm | 33.5 cm | +41.0 mm | ✅ OK | hood height ≥ 0.55 × head circumference |
-| Geometry | Front: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Neckline: 0.7 cm |
+| Geometry | Front: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Front: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
-| Geometry | Back: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included; Neckline: 0.7 cm |
+| Geometry | Back: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Back: grainline & cutting | present | cut 1 on fold |  | ✅ OK | Main fabric |
 | Geometry | Sleeve: outline & seam allowance | closed, SA present | ok |  | ✅ OK | seam allowance 1.0 cm included |
 | Labels | Sleeve: grainline & cutting | present | cut 2 (mirrored pair) |  | ✅ OK | Main fabric |
@@ -50,7 +51,7 @@
 | Labels | Back: notches | on the cutting line | 2 notch mark(s) |  | ✅ OK |  |
 | Labels | Sleeve: notches | on the cutting line | 4 notch mark(s) |  | ✅ OK | 1 at corners |
 
-**Result:** 47 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 48 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

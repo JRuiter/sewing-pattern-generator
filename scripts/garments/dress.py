@@ -33,7 +33,7 @@ TOP_KEYS = ("fit", "fabric", "stretch", "sleeve_style", "sleeve_length", "neckli
             "band_stretch", "sleeve_cuffs", "sa", "hem_sa", "neck_band_h", "chest_total",
             "sleeve_len_total", "sleeve_opening", "cuff_h", "construction", "notch_style",
             "seam_allowance", "units", "back_opening", "opening_sa", "neck_finish",
-            "armhole_depth_max", "sleeve_taper", "bicep_total")
+            "armhole_depth_max", "sleeve_taper", "bicep_total", "machines")
 GATHER_RANGE = (1.0, 2.5)
 
 FINISHED_LABELS = dict(T.FINISHED_LABELS, length=("Dress length from neck point", "length"),
@@ -307,7 +307,7 @@ def assembly(pat):
                       section="Waist",
                       hint="Sew over the gathers slowly and keep them straight with a pin tip."))
     if o.get("waist_elastic"):
-        out.append(ST.icon("Sew in the elastic", "elastic",
+        out.append(ST.icon("Sew in the elastic", "elastic_on",
                           f"Overlap the ends of the elastic ({o.get('_elastic', 0) / 10:.0f} cm) and sew them into "
                           "a ring. Pin it to the waist seam allowance at the quarters. "
                           "Sew it on with a zigzag, stretching it between the pins. "
@@ -321,6 +321,11 @@ def assembly(pat):
                 ST.hem("Sew a narrow hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs / 2,
                       f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again by the same "
                       "amount. Sew it down close to the inner fold.", section="Hem")]
+    elif E.fabric_info(o["fabric"], o.get("stretch"))[2]:
+        # knits do not fray: one fold, like the bodice and sleeve hems
+        out.append(ST.hem("Sew the hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs,
+                         f"Fold the hem allowance {ST.cm(hs)} to the wrong side and press. "
+                         f"Sew it down {ST.cm(max(hs - 5.0, hs * 0.6))} from the fold.", section="Hem"))
     else:
         out.append(ST.hem("Sew the hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs,
                          f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again "

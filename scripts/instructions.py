@@ -35,6 +35,9 @@ def need_mm(length: float) -> float:
     return math.ceil(length * 1.10 / 50.0) * 50.0
 
 
+PLAN_PALETTE = ["#cfe2f3", "#fce5cd", "#d9ead3", "#ead1dc", "#fff2cc", "#d0e0e3", "#f4cccc"]
+
+
 def render_fabric_png(pattern, plans, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -49,88 +52,112 @@ def render_fabric_png(pattern, plans, path):
     fig_h = min(13.0, max(3.6, fig_w * max_h / tot_w + 0.8))
     fig, axs = plt.subplots(1, n, figsize=(fig_w, fig_h), squeeze=False,
                             gridspec_kw=dict(width_ratios=[w for w, _ in spans]))
-    units = U.of(pattern)
-    palette = ["#cfe2f3", "#fce5cd", "#d9ead3", "#ead1dc", "#fff2cc", "#d0e0e3", "#f4cccc"]
     for ax, (fab, pl) in zip(axs[0], plans.items()):
-        W, H = pl["width"], pl["length"]
-        folded = pl.get("mode") == "folded"
-        fl = min(pl.get("fold_length", 0.0), H) if folded else 0.0
-        if folded:
-            # folded selvage to selvage: fold on the left, both selvages on the right
-            ax.add_patch(plt.Rectangle((0, 0), W / 2, fl, fc="#f0f0f0", ec="#555", lw=1))
-            ax.plot([0, 0], [0, fl], color="#c00", lw=1.4, ls=(0, (6, 2, 1, 2)))
-            ax.text(-12, fl / 2, T("fold"), rotation=90, fontsize=6, va="center", ha="right", color="#c00")
-            ax.text(W / 2 + 8, fl / 2, T("selvages (both layers)"), rotation=90, fontsize=6, va="center")
-            if pl.get("single_section"):
-                ax.add_patch(plt.Rectangle((0, fl), W, H - fl, fc="#fafafa", ec="#555", lw=1))
-                ax.text(W / 2, fl + 12, T("unfolded: single layer"), fontsize=6, ha="center", va="top",
-                        style="italic")
-        else:
-            ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
-        rep = pl.get("repeat")
-        if rep:
-            # stripes (and the vertical lines of checks) drawn lightly over the fabric
-            sections = [(0.0, fl, W / 2)] if folded else [(0.0, H, W)]
-            if folded and pl.get("single_section"):
-                sections.append((fl, H, W))
-            for y0, y1, w in sections:
-                y = y0
-                while y <= y1 + 1e-6:
-                    ax.plot([0, w], [y, y], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
-                    y += rep[1]
-                if pl.get("print") == "plaid":
-                    x = 0.0
-                    while x <= w + 1e-6:
-                        ax.plot([x, x], [y0, y1], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
-                        x += rep[0]
-        for p in pl["placements"]:
-            ring = L.placed_ring(pl["rings"][p.index], p)
-            pi, k = pl["meta"][p.index]
-            ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6,
-                    alpha=0.85 if rep else 1.0)
-            c = ring.mean(axis=0)
-            nm = T(pattern.pieces[pi].name).split(" (")[0]
-            if p.layers == 2:
-                nm += " ×2"
-            elif p.pinned:
-                nm += " " + T("(on fold)")
-            elif pattern.pieces[pi].on_fold:
-                nm += " " + T("(unfolded)")
-            # "flipped" only matters for a single layer: through both layers it is a mirrored pair anyway
-            if p.mirrored and p.layers == 1 and not p.pinned:
-                nm += " " + T("(flipped)")
-            w_piece = float(np.ptp(ring[:, 0]))
-            fs = 6 if w_piece > 0.12 * W else 4.5
-            ax.text(c[0], c[1], nm, fontsize=fs, ha="center", va="center", wrap=True)
-            mp = (pl.get("match_pts") or [None] * len(pl["rings"]))[p.index]
-            if rep and mp and mp[0] is not None:
-                q = p.apply(np.array([mp[0][0]]))[0]
-                ax.plot([q[0]], [q[1]], marker="^", color="#c00", ms=4.5, zorder=5)
-        if pl.get("nap"):
-            ax.annotate("", xy=(W + 22, H * 0.45), xytext=(W + 22, H * 0.15),
-                        arrowprops=dict(arrowstyle="-|>", lw=1.4, color="#7a4a1e"))
-            label = {"one_way": "One-way print ↓, all pieces top end up",
-                     "stripes": "Stripes: every ▲ on the same stripe, all pieces top end up",
-                     "plaid": "Checks: every ▲ on the same line, all pieces top end up"}.get(
-                pl.get("print"), "Nap ↓, all pieces waist up")
-            ax.text(W / 2, -22, T(label), fontsize=7, ha="center", va="bottom", color="#7a4a1e",
-                    fontweight="bold")
-        ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
-                    arrowprops=dict(arrowstyle="<->", lw=0.8))
-        ax.text(W + 55, H / 2, T("grainline / selvage"), rotation=90, fontsize=6, va="center")
-        ax.set_xlim(-30, W + 90)
-        ax.set_ylim(H + 30, -60)
-        ax.set_aspect("equal")
-        ax.axis("off")
-        how = T("folded (double layer)") if folded else T("single layer")
-        ax.set_title(f"{T(fab)}: " + T(f"{U.fabric_width(W, units)} wide") + f", {how}\n"
-                     + T("needed") + f" ≈ {U.fabric_length(pl['need_mm'], units)}",
-                     fontsize=8)
+        draw_plan(ax, pattern, fab, pl)
     fig.suptitle(T("Cutting layout") + f" · {T(pattern.title)} {T(pattern.size_label)}", fontsize=10)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)
     return path
+
+
+def stretch_pieces(pattern) -> list:
+    """Pieces whose stretch has to run along their length (bands, cuffs, waistbands of rib)."""
+    return [pc for pc in pattern.pieces if L.fabric_group(pc) == "Rib knit" or getattr(pc, "stretch_dir", "")]
+
+
+def draw_plan(ax, pattern, fab, pl, compact: bool = False):
+    """One fabric of the cutting layout into ax (the PNG, and the cutting step of the booklet).
+
+    compact: smaller labels and a one-line title, for the booklet."""
+    import matplotlib.pyplot as plt
+    units = U.of(pattern)
+    fs_small = 4.5 if compact else 6
+    W, H = pl["width"], pl["length"]
+    folded = pl.get("mode") == "folded"
+    fl = min(pl.get("fold_length", 0.0), H) if folded else 0.0
+    if folded:
+        # folded selvage to selvage: fold on the left, both selvages on the right
+        ax.add_patch(plt.Rectangle((0, 0), W / 2, fl, fc="#f0f0f0", ec="#555", lw=1))
+        ax.plot([0, 0], [0, fl], color="#c00", lw=1.4, ls=(0, (6, 2, 1, 2)))
+        ax.text(-12, fl / 2, T("fold"), rotation=90, fontsize=fs_small, va="center", ha="right", color="#c00")
+        ax.text(W / 2 + 8, fl / 2, T("selvages (both layers)"), rotation=90, fontsize=fs_small, va="center")
+        if pl.get("single_section"):
+            ax.add_patch(plt.Rectangle((0, fl), W, H - fl, fc="#fafafa", ec="#555", lw=1))
+            ax.text(W / 2, fl + 12, T("unfolded: single layer"), fontsize=fs_small, ha="center", va="top",
+                    style="italic")
+    else:
+        ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
+    rep = pl.get("repeat")
+    if rep:
+        # stripes (and the vertical lines of checks) drawn lightly over the fabric
+        sections = [(0.0, fl, W / 2)] if folded else [(0.0, H, W)]
+        if folded and pl.get("single_section"):
+            sections.append((fl, H, W))
+        for y0, y1, w in sections:
+            y = y0
+            while y <= y1 + 1e-6:
+                ax.plot([0, w], [y, y], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
+                y += rep[1]
+            if pl.get("print") == "plaid":
+                x = 0.0
+                while x <= w + 1e-6:
+                    ax.plot([x, x], [y0, y1], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
+                    x += rep[0]
+    for p in pl["placements"]:
+        ring = L.placed_ring(pl["rings"][p.index], p)
+        pi, k = pl["meta"][p.index]
+        ax.fill(ring[:, 0], ring[:, 1], fc=PLAN_PALETTE[pi % len(PLAN_PALETTE)], ec="k", lw=0.6,
+                alpha=0.85 if rep else 1.0)
+        c = ring.mean(axis=0)
+        nm = T(pattern.pieces[pi].name).split(" (")[0]
+        if p.layers == 2:
+            nm += " ×2"
+        elif p.pinned:
+            nm += " " + T("(on fold)")
+        elif pattern.pieces[pi].on_fold:
+            nm += " " + T("(unfolded)")
+        # "flipped" only matters for a single layer: through both layers it is a mirrored pair anyway
+        if p.mirrored and p.layers == 1 and not p.pinned:
+            nm += " " + T("(flipped)")
+        w_piece = float(np.ptp(ring[:, 0]))
+        fs = (6 if w_piece > 0.12 * W else 4.5) * (0.75 if compact else 1.0)
+        ax.text(c[0], c[1], nm, fontsize=fs, ha="center", va="center", wrap=True)
+        mp = (pl.get("match_pts") or [None] * len(pl["rings"]))[p.index]
+        if rep and mp and mp[0] is not None:
+            q = p.apply(np.array([mp[0][0]]))[0]
+            ax.plot([q[0]], [q[1]], marker="^", color="#c00", ms=4.5, zorder=5)
+    if pl.get("nap"):
+        ax.annotate("", xy=(W + 22, H * 0.45), xytext=(W + 22, H * 0.15),
+                    arrowprops=dict(arrowstyle="-|>", lw=1.4, color="#7a4a1e"))
+        label = {"one_way": "One-way print ↓, all pieces top end up",
+                 "stripes": "Stripes: every ▲ on the same stripe, all pieces top end up",
+                 "plaid": "Checks: every ▲ on the same line, all pieces top end up"}.get(
+            pl.get("print"), "Nap ↓, all pieces waist up")
+        ax.text(W / 2, -22, T(label), fontsize=fs_small + 1, ha="center", va="bottom", color="#7a4a1e",
+                fontweight="bold")
+    # a folded fabric is drawn half as wide: the grainline arrow goes next to it, not into empty space
+    R = W / 2 if folded and not pl.get("single_section") else W
+    ax.annotate("", xy=(R + 40, H * 0.8), xytext=(R + 40, H * 0.2),
+                arrowprops=dict(arrowstyle="<->", lw=0.8))
+    ax.text(R + 55, H / 2, T("grainline / selvage"), rotation=90, fontsize=fs_small, va="center")
+    if fab == "Rib knit":
+        # rib: the ribs run along the grain, the bands must stretch along their length (across the fabric)
+        ax.annotate("", xy=(R * 0.85, H + 18), xytext=(R * 0.15, H + 18),
+                    arrowprops=dict(arrowstyle="<->", lw=1.0, color="#2e7d32"))
+        ax.text(R / 2, H + 24, T("stretch: along the bands"), fontsize=fs_small, ha="center", va="top",
+                color="#2e7d32")
+    ax.set_xlim(-30, R + 90)
+    ax.set_ylim(H + (55 if fab == "Rib knit" else 30), -60)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    how = T("folded (double layer)") if folded else T("single layer")
+    if compact:
+        ax.set_title(f"{T(fab)} · {U.fabric_width(W, units)} · {how}", fontsize=6.5)
+    else:
+        ax.set_title(f"{T(fab)}: " + T(f"{U.fabric_width(W, units)} wide") + f", {how}\n"
+                     + T("needed") + f" ≈ {U.fabric_length(pl['need_mm'], units)}",
+                     fontsize=8)
 
 
 def layout_text(pl, units: str = "metric") -> str:
@@ -250,10 +277,10 @@ def sewing_steps(pattern):
     return ["Sew the pieces right sides together, matching the notches."]
 
 
-def all_steps(pattern) -> list[str]:
+def all_steps(pattern, plans=None) -> list[str]:
     """Every step as one line of text (preparation included), numbered like the booklet."""
     import steps as ST
-    return ST.as_texts(ST.assembly(pattern), pattern.options)
+    return ST.as_texts(ST.assembly(pattern, plans), pattern.options)
 
 
 def instructions_pdf(pattern, md: str, path: str, plans, steps, images=None) -> str:
@@ -342,7 +369,7 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
               (T("Seam allowance is included in the pattern (see table).") + " " if A.has_allowance(pattern) else
                T("**The pattern has NO seam allowance.** Add the allowances from the table when you cut.") + " ")
               + (T("Use a jersey/stretch needle for jersey and sweat.") if knit else ""), ""]
-    for i, s in enumerate(all_steps(pattern), 1):
+    for i, s in enumerate(all_steps(pattern, plans), 1):
         lines.append(f"{i}. {s}")
         if step_images and i in step_images:
             lines.append(f"   ![{T('Step')} {i}]({step_images[i]})")
@@ -414,6 +441,9 @@ def markdown_to_pdf(md: str, path: str, images: list[str] | None = None, base_di
         t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
         t = re.sub(r"\*(.+?)\*", r"<i>\1</i>", t)
         t = re.sub(r"`(.+?)`", r"<font name='Courier'>\1</font>", t)
+        # colour emoji are not in the embedded font: plain symbols in colour instead of empty boxes
+        t = (t.replace("✅", "<font color='#2e7d32'>✓</font>").replace("❌", "<font color='#c62828'>✗</font>")
+             .replace("⚠️", "<font color='#b8860b'>⚠</font>").replace("\ufe0f", ""))
         return t.replace("<b>", f"<font name='{R.FONT_B}'>").replace("</b>", "</font>")
 
     story, table = [], []

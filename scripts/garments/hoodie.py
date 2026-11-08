@@ -53,6 +53,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         if pat.piece("sleeve").edges[-1].name == "neck":
             refs.append(("sleeve", "neck", 1))
         half_neck = sum(pat.piece(k).edge(e).length * n for k, e, n in refs)
+        for k, e, _n in refs:          # the hood is sewn straight on: the same allowance on both edges
+            pat.piece(k).edge(e).sa = sa
         Hh = 0.58 * m["head"] + 25
         Wh = 0.44 * m["head"] + 15
         # neck edge: curved slightly down, length = half the neckline

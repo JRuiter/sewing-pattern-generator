@@ -792,7 +792,8 @@ def draw_attach(ax, pattern, step):
     ax.text(0.0, -0.85, T(target), fontsize=7, ha="center", va="bottom", zorder=9,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     hands = step.stretch and step.data.get("hands") == "stretch"
-    ax.text(1.12, 0.62 if hands else 0.3, T("band folded,\nraw edges down"), fontsize=6.5, ha="left",
+    lab = "waistband folded,\nraw edges down" if "waist" in band.key else "band folded,\nraw edges down"
+    ax.text(1.12, 0.62 if hands else 0.3, T(lab), fontsize=6.5, ha="left",
             va="bottom" if hands else "center", color="#444")
     if step.stretch:
         _arrow(ax, [-1.1, -0.15], [-1.55, -0.15], lw=1.6)
@@ -855,7 +856,8 @@ def _detail(ax, kind, amount_txt):
     iax.axis("off")
     iax.add_patch(Circle((1.75, 0.05), 1.5, fc="white", ec="#9e9e9e", lw=1.4, zorder=1))
     _xsection(iax, (0.35, -0.15), 0.85, kind, amount_txt)
-    caption = {"edge": "Cross-section of the edge", "press": "Cross-section: pressed edge"}.get(
+    caption = {"edge": "Cross-section of the edge", "press": "Cross-section: pressed edge",
+               "topstitch_fold": "Cross-section: topstitched"}.get(
         kind, "Cross-section of the hem")
     iax.text(1.75, 1.62, T(caption), ha="center", va="bottom", fontsize=5.8, color="#555", zorder=12,
              clip_on=False)
@@ -917,6 +919,10 @@ def draw_edge(ax, pattern, step, kind="edge"):
     x0, y0 = view.min(0)
     x1, y1 = view.max(0)
     w = x1 - x0
+    if kind == "edge" and step.stitch == "baste":
+        # a basting line needs no cross-section (the "edge" detail shows a finished edge)
+        _finish_axes(ax, [view], pad=0.04)
+        return
     _finish_axes(ax, [view, [[x1 + 0.55 * w, y0]]], pad=0.04)
     _detail(ax, xs_kind, S.cm(step.amount) if step.amount else "")
 
@@ -1072,6 +1078,8 @@ def draw_icon(ax, pattern, step):
         ax.plot([1.3, 2.7], [1.85, 1.85], color=INK, lw=1)
         ax.add_patch(Circle((2.5, 2.0), 0.06, fc=INK))
         ax.text(3.1, 1.1, T("30–40°"), fontsize=8, va="center")
+    elif pic == "cut" and step.data.get("plans"):
+        draw_plans(ax, pattern, step.data["plans"])
     elif pic == "cut":
         _pic_fabric(ax, 0.4, 0.4, 3.2, 1.8)
         outline = np.array([[0.9, 0.7], [2.2, 0.7], [2.5, 1.9], [1.0, 1.9]])
@@ -1114,6 +1122,24 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Rectangle((1.75, 0.6), 0.2, 1.4, fc="#90a4ae", ec=INK, lw=1, zorder=4))
         ax.add_patch(Rectangle((2.05, 0.6), 0.2, 1.4, fc="#cfd8dc", ec=INK, lw=1, zorder=4, hatch="xx"))
         _arrow(ax, [2.6, 1.3], [2.3, 1.3], lw=1.2)
+    elif pic == "hand" and not _CTX.get("hand") and step.stitch:
+        # closed by machine: a straight stitch close to the fold over the opening
+        _pic_fabric(ax, 0.4, 0.7, 3.2, 1.2)
+        ax.plot([0.4, 3.6], [1.9, 1.9], color=INK, lw=2.2, zorder=4)
+        ax.plot([0.55, 3.45], [1.72, 1.72], color=STITCH, lw=1.8, zorder=5)
+        ax.add_patch(Rectangle((1.5, 1.45), 1.0, 0.45, fc="none", ec=INK, lw=0.8, ls=(0, (2, 2)), zorder=4))
+        ax.text(2.0, 1.3, T("opening"), fontsize=6.5, ha="center", va="top")
+        ax.text(2.0, 0.45, T("stitch close to the fold, over the opening"), fontsize=7, ha="center")
+    elif pic == "elastic_on":
+        # elastic sewn onto the allowance with a zigzag, stretched between the pins
+        ax.add_patch(Rectangle((0.3, 0.9), 3.4, 0.8, fc=RIGHT_SIDE, ec=INK, lw=1.3))
+        ax.add_patch(Rectangle((0.3, 1.15), 3.4, 0.3, fc="#e0e0e0", ec=INK, lw=0.9, zorder=3))
+        xs = np.linspace(0.4, 3.6, 25)
+        ax.plot(xs, np.where(np.arange(25) % 2, 1.42, 1.18), color=STITCH, lw=1.0, zorder=4)
+        _arrow(ax, [0.9, 2.1], [0.2, 2.1], lw=1.3)
+        _arrow(ax, [3.1, 2.1], [3.8, 2.1], lw=1.3)
+        ax.text(2.0, 2.15, T("stretch the elastic"), fontsize=7, ha="center", va="center")
+        ax.text(2.0, 0.6, T("elastic on the seam allowance, zigzag"), fontsize=7, ha="center", va="top")
     elif pic == "hand":
         _pic_fabric(ax, 0.4, 1.35, 3.2, 0.6)
         _pic_fabric(ax, 0.4, 0.55, 3.2, 0.6)
@@ -1141,6 +1167,22 @@ def draw_icon(ax, pattern, step):
                                    zorder=5))
     else:
         _pic_fabric(ax, 0.8, 0.5, 2.4, 1.6)
+
+
+def draw_plans(ax, pattern, plans) -> None:
+    """The real cutting layout inside ax, every fabric in its own row (full width, so a wide fabric
+    stays readable): the cutting step shows exactly how the pieces lie on the fabric."""
+    import instructions as I
+    hs = [(pl["length"] + 140.0) / (pl["width"] + 120.0) for pl in plans.values()]
+    title = 0.07                            # room for each fabric's title line
+    free = 1.0 - title * len(hs)
+    tot = sum(hs)
+    y = 1.0
+    for (fab, pl), h in zip(plans.items(), hs):
+        y -= title + h / tot * free
+        iax = ax.inset_axes((0.0, y, 1.0, h / tot * free))
+        I.draw_plan(iax, pattern, fab, pl, compact=True)
+    ax.axis("off")
 
 
 # --------------------------------------------------------------------------- machines

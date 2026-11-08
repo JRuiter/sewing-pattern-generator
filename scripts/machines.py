@@ -322,10 +322,30 @@ MACHINE_NAMES = {"sewing": "Sewing machine", "overlocker": "Overlocker", "covers
 
 OVERLOCKER_HINTS = [
     "Pull pins out before they reach the knife (clips are safer at the overlocker).",
-    "Sew curves (crotch, pocket bag) slowly and guide only the fabric just in front of the presser foot.",
+    "CURVES",
     "Leave a thread chain of 5 cm at the end of every seam; thread it back under the stitches with a "
     "darning needle or secure it with a drop of seam sealant.",
 ]
+
+
+def curved_parts(pattern) -> str:
+    """The curved seams of this garment, for the overlocker hints: "crotch, pocket bag", "armhole,
+    neckline" or "" (no typical curves)."""
+    keys = {pc.key for pc in pattern.pieces}
+    names = " ".join(sm["name"].lower() for sm in getattr(pattern, "seams", []))
+    if "crotch" in names or pattern.garment.startswith("pants"):
+        return "crotch, pocket bag" if "pocket bag" in names or "pocket_bag" in keys else "crotch"
+    if "armhole" in names or "raglan" in names or "sleeve" in keys:
+        return "armhole, neckline"
+    if "neck" in names:
+        return "neckline"
+    return ""
+
+
+def curves_hint(pattern) -> str:
+    c = curved_parts(pattern)
+    return (f"Sew curves ({c}) slowly and guide only the fabric just in front of the presser foot." if c else
+            "Sew curves slowly and guide only the fabric just in front of the presser foot.")
 
 
 def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
@@ -381,7 +401,8 @@ def markdown(pattern) -> str | None:
         lines += ["", T("Seam allowance 15 mm so every seam can be sewn as a French seam (6 mm + 9 mm).")]
     tips = [T(x) for x in missing_tips(m, knit)]
     if "overlocker" in m:
-        tips += [T("At the overlocker:") + " " + T(h) for h in OVERLOCKER_HINTS]
+        tips += [T("At the overlocker:") + " " + T(curves_hint(pattern) if h == "CURVES" else h)
+                 for h in OVERLOCKER_HINTS]
     if tips:
         lines += [""] + [f"- {x}" for x in tips]
     lines += ["", T("Test the stitch on a scrap of your fabric first (two layers, same direction as the seam).")]
