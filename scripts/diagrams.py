@@ -348,6 +348,10 @@ def draw_seam(ax, pattern, step, sms=None):
     sms = sms if sms is not None else S.resolve_seams(pattern, step)
     if not sms:
         return draw_icon(ax, pattern, step)
+    prior = _joined_before(pattern, step, sms)
+    if prior is not None:
+        draw_opened_fold(ax, pattern, step, sms[0], prior)
+        return
     simple = [overlay_parts(pattern, sm) for sm in sms]
     if all(simple) and len(sms) <= 3:
         _draw_overlays(ax, pattern, step, sms, simple)
@@ -356,6 +360,133 @@ def draw_seam(ax, pattern, step, sms=None):
         draw_pair(ax, pattern, step, sms[0])
     else:
         draw_join(ax, pattern, step, sms)
+
+
+DONE_LS = (0, (3.5, 2.0))       # grey dashed: already sewn
+
+
+def _done_line(ax, pts, z=5.5, lw=1.4):
+    pts = np.asarray(pts, float)
+    ax.plot(pts[:, 0], pts[:, 1], color=DONE_STITCH, lw=lw, ls=DONE_LS, zorder=z, solid_capstyle="butt")
+
+
+def _joined_before(pattern, step, sms):
+    """The seam of the seam graph, sewn in an earlier step, that already joins the two pieces of this
+    step's seam (side seam before the inseam): then the pieces are no longer separate. None otherwise."""
+    if len(sms) != 1:
+        return None
+    sm = sms[0]
+    pick = _main_edges(sm)
+    pa, _ea, _ = pick(sm["a"], pattern)
+    pb, _eb, _ = pick(sm["b"], pattern)
+    if pa == pb:
+        return None
+    for name in (step.data.get("done") or {}).get("joined", []):
+        old = next((x for x in pattern.seams if x["name"] == name), None)
+        if old is None or old.get("type") not in (None, "equal", "ease"):
+            continue
+        sa_, sb_ = {p for p, _e, _n in old["a"]}, {p for p, _e, _n in old["b"]}
+        if (pa in sa_ and pb in sb_) or (pa in sb_ and pb in sa_):
+            return old
+    return None
+
+
+def _flat_group(pattern, key, others):
+    """A piece with the pieces already sewn into it that share its coordinates (side panel in the
+    pocket opening of the front): [(pc, ring)]."""
+    out = [(pattern.piece(key), np.asarray(pattern.piece(key).seam_ring(), float))]
+    for p in others:
+        if p != key:
+            out.append((pattern.piece(p), np.asarray(pattern.piece(p).seam_ring(), float)))
+    return out
+
+
+def draw_opened_fold(ax, pattern, step, sm, old):
+    """Two pieces already joined by an earlier seam (old): left the pieces opened out flat at that seam
+    (grey dashed = already sewn), the edges of this step's seam red; right the pieces folded right sides
+    together at the old seam, the top piece wrong side up, the seam to sew in red with pins."""
+    from shapely.geometry import Polygon
+    pick = _main_edges(sm)
+    pa, ea, _ = pick(sm["a"], pattern)
+    pb, eb, _ = pick(sm["b"], pattern)
+    A, B = pattern.piece(pa), pattern.piece(pb)
+    a_old = [(p, e) for p, e, _n in old["a"] + old["b"] if p != pb]
+    b_old = [(p, e) for p, e, _n in old["a"] + old["b"] if p == pb]
+    # the old seam on the A side: the edges of A and of pieces sewn into A (same coordinates)
+    a_line = [pattern.piece(p).edge(e).pts for p, e in a_old]
+    a_line.sort(key=lambda e: e[:, 1].min())
+    group_a = _flat_group(pattern, pa, [p for p, _e in a_old])
+    ring_a = np.asarray(Polygon(np.vstack([r for _pc, r in group_a])).convex_hull.exterior.coords, float) \
+        if len(group_a) > 1 else group_a[0][1]
+    poly_a = Polygon(group_a[0][1]).buffer(0)
+    for _pc, r in group_a[1:]:
+        poly_a = poly_a.union(Polygon(r).buffer(0.5))
+    ring_a = np.asarray(poly_a.buffer(-0.5).exterior.coords, float) if poly_a.geom_type == "Polygon" else ring_a
+    src = B.edge(b_old[0][1]).pts
+    dst = np.vstack(a_line)
+    # put B's old-seam edge onto A's, B outside A (opened out, both right side up)
+    best = None
+    rb0 = np.asarray(B.seam_ring(), float)
+    for flip in (False, True):
+        m = np.array([-1.0, 1.0]) if flip else np.array([1.0, 1.0])
+        for cand in (src * m, (src * m)[::-1]):
+            if np.dot(cand[-1] - cand[0], dst[-1] - dst[0]) < 0:
+                continue
+            R, t, rms = _fit(_resample(cand), _resample(dst))
+            poly = Polygon((rb0 * m) @ R.T + t).buffer(0)
+            over = poly.intersection(poly_a).area / max(min(poly.area, poly_a.area), 1e-9)
+            score = rms + 1e4 * max(over - 0.03, 0)
+            if best is None or score < best[0]:
+                best = (score, (R, t, flip))
+    Tb = best[1]
+    rb = _apply(Tb, rb0)
+    size = max(np.ptp(np.vstack([ring_a, rb]), 0))
+    # left: opened out
+    for pc, r in group_a:
+        _fill(ax, r, z=1 if pc is A else 1.1, pc=pc)
+    _fill(ax, rb, z=1, pc=B)
+    for e in a_line:
+        _done_line(ax, e, z=6)
+    ea_pts, eb_pts = A.edge(ea).pts, _apply(Tb, B.edge(eb).pts)
+    for e in (ea_pts, eb_pts):
+        ax.plot(e[:, 0], e[:, 1], color=STITCH, lw=2.6, zorder=6, solid_capstyle="round")
+    _notches(ax, A, ea, ID, size)
+    _notches(ax, B, eb, Tb, size)
+    _piece_label(ax, pattern, A, group_a[0][1], ID, size=8)
+    _piece_label(ax, pattern, B, rb0, Tb, size=8)
+    top = dst[np.argmax(dst[:, 1])]
+    ax.text(top[0], top[1] + size * 0.025, T("sewn"), fontsize=6.5, ha="center", va="bottom", color="#555",
+            zorder=10)
+    ca, cb = G.point_at(ea_pts, G.length(ea_pts) * 0.8), G.point_at(eb_pts, G.length(eb_pts) * 0.8)
+    _arrow(ax, cb + (ca - cb) * 0.12, ca - (ca - cb) * 0.12, color=INK, lw=1.4, rad=0.35)
+    ax.text(*((ca + cb) / 2 - np.array([0, size * 0.03])), T("fold over"), fontsize=7, fontweight="bold",
+            ha="center", va="top", zorder=10,
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
+    left = np.vstack([ring_a, rb])
+    # right: folded at the old seam, B on top, wrong side up
+    a0, a1 = dst[0], dst[-1]
+    shift = np.array([np.ptp(left[:, 0]) + size * 0.22, 0.0])
+    fa = [r + shift for _pc, r in group_a]
+    fb = G.mirror_line(rb, a0, a1) + shift
+    for (pc, _r), r in zip(group_a, fa):
+        _fill(ax, r, z=1 if pc is A else 1.1, pc=pc)
+    _fill(ax, fb, wrong=True, z=2, alpha=0.93, pc=B)
+    fold = dst + shift
+    ax.plot(fold[:, 0], fold[:, 1], color=INK, lw=2.0, zorder=5)
+    # the seam to sew: on the edge of the top piece (the edge of the piece below lies under it)
+    seam_pts = G.mirror_line(eb_pts, a0, a1) + shift
+    _stitch(ax, seam_pts, z=7)
+    ccw = G.signed_area(G.mirror_line(rb, a0, a1)) > 0
+    _pins(ax, seam_pts, size, count=3, inward=ccw)
+    _direction(ax, seam_pts, size, offset=(B.edge(eb).sa + size * 0.05) * (1 if ccw else -1))
+    ftop = fold[np.argmax(fold[:, 1])]
+    ax.text(ftop[0], ftop[1] + size * 0.025, T("fold = sewn seam"), fontsize=6.5, ha="center", va="bottom",
+            color="#555", zorder=10)
+    _piece_label(ax, pattern, B, G.mirror_line(rb, a0, a1), (np.eye(2), shift, False), size=8)
+    lm = np.array([left[:, 0].max() + size * 0.03, left[:, 1].mean()])
+    _arrow(ax, lm, lm + [size * 0.1, 0], lw=1.6)
+    hi = max(left[:, 1].max(), fb[:, 1].max()) + size * 0.07
+    _finish_axes(ax, [left, fb, *fa, [[lm[0], hi]], [[ftop[0] + size * 0.12, hi]]], pad=0.03)
 
 
 def _continuations(pattern, main_pc, main_edge, others):
@@ -1197,6 +1328,8 @@ def render_steps(pattern, steps: list, out_dir: str, sub: str | None = None) -> 
     sub = sub or i18n.fname("steps")
     os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
     res = {}
+    if steps and isinstance(steps[-1], S.Step) and "done" not in steps[-1].data:
+        S.annotate_progress(pattern, steps)
     for i, st in enumerate(steps, 1):
         if not isinstance(st, S.Step) or st.diagram == "icon":
             continue
