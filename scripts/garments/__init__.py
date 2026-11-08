@@ -8,6 +8,9 @@ GARMENTS = {
     "hoodie": "Hoodie / sweatshirt",
     "skirt": "Skirt (elastic waist: gathered, A-line, circle)",
     "dress": "Dress (T-shirt bodice + skirt, or A-line T-shirt dress)",
+    "fitted_dress": "Fitted woven dress (bust and waist darts, invisible zip, bias-bound neckline)",
+    "wrap": "Wrap top / wrap dress (knit, band along the wrap edge, ties)",
+    "pinafore": "Pinafore / strap dress (lined bib bodice, crossed straps, gathered skirt)",
     "beanie": "Beanie",
     "loop": "Loop scarf",
     "scarf": "Scarf (tube or flat, optional fringe)",
@@ -24,6 +27,9 @@ GARMENTS = {
     "polo": "Polo shirt (half placket, knit collar)",
     "cardigan": "Cardigan (knit, continuous button band, V or round neck)",
     "vest": "Vest / gilet (sleeveless; zip, snaps or pullover; armhole binding)",
+    "jacket": "Lined woven jacket (button front, facings, stand collar, welt/jetted/flap pockets)",
+    "coat": "Coat (lined, knee length, flap pockets)",
+    "softshell": "Softshell / outdoor jacket (zip, hood, zip pockets, Velcro sleeve tabs, drawcord hem)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 

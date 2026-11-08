@@ -666,7 +666,8 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
                             "This gives a flat, professional neckline.", section=sec),
             ]
         del nb
-    if o["sleeve_style"] != "raglan":
+    has_sl = pat.has("sleeve")               # sleeveless derivatives (vest, sleeveless dress) drop the sleeve
+    if o["sleeve_style"] != "raglan" and has_sl:
         out.append(S.seam("Set in the sleeves", ["Armhole"],
                           "Open the body out flat, right side up. "
                           "Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, "
@@ -707,7 +708,7 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
                           hint="One hand in front of the presser foot, one behind it: both stretch evenly.",
                           data={"hands": "stretch"}),
         ]
-    else:
+    elif has_sl:
         hs = pat.piece("sleeve").edge("hem").sa
         out.append(S.hem("Hem the sleeves", [("sleeve", "hem")], hs,
                          f"Fold the sleeve hem {S.cm(hs)} to the wrong side and press. "

@@ -16,6 +16,7 @@ FABRICS = {
     "rib": ("Rib knit", 80, True),
     "corduroy": ("Corduroy", 0, False),
     "velvet": ("Velvet", 0, False),
+    "softshell": ("Softshell", 10, False),
 }
 
 # fabrics with a nap or pile: all pieces must point the same way on the fabric

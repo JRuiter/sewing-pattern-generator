@@ -276,6 +276,25 @@ def _top_view(pattern, view):
         seams.append(np.array(pc.edge("center").pts, float))
     elif "front_edge" in names:
         seams.append(np.array(pc.edge("front_edge").pts, float))
+    strap = _pc(pattern, "strap")
+    if strap is not None and "top" in names and pattern.garment in ("pinafore", "dungarees", "romper", "jumpsuit"):
+        sw = DG._band_dims(strap)[1] / 2
+        top = np.asarray(pc.edge("top").pts, float)
+        ytop = float(top[:, 1].max())
+        xs = [float(m.pts[:, 0].mean()) for m in pc.marks if m.label in ("Button", "Strap (crossed)")]
+        x0 = xs[0] if xs else float(np.ptp(top[:, 0])) * 0.55
+        h = 0.42 * DG._band_dims(strap)[0]
+        for xx in (cx + abs(x0 - cx), cx - abs(x0 - cx)):
+            yb = float(np.interp(cx + abs(xx - cx), *top[np.argsort(top[:, 0])].T))
+            if view == "back":        # crossed straps
+                xe = cx - (xx - cx) * 0.9
+                layers.append((np.array([[xx - sw / 2, yb - 5], [xx + sw / 2, yb - 5], [xe + sw / 2, yb + h],
+                                         [xe - sw / 2, yb + h]]), strap, 2))
+            else:
+                layers.append((np.array([[xx - sw / 2, yb - 5], [xx + sw / 2, yb - 5], [xx + sw / 2, yb + h],
+                                         [xx - sw / 2, yb + h]]), strap, 2))
+    if "wrap" in names:                   # wrap top: the edge of the outer front crosses the body
+        seams.append(np.array(pc.edge("wrap").pts, float))
     seams += part_seams
     for p in parts:
         marks += _unfold_marks(p, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in p.marks

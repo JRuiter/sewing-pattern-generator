@@ -294,8 +294,12 @@ def split_piece(piece: Piece, cut, keys: tuple[str, str], names: tuple[str, str]
             else:
                 c = np.array(pg.representative_point().coords[0])
                 d = G.unit(g1 - g0)
-                half = min(G.length(np.vstack([g0, g1])) / 2, 0.3 * math.sqrt(pg.area))
-                pc.grain = (c - d * half, c + d * half)
+                chord = pg.intersection(LineString([c - d * 5000, c + d * 5000]))
+                segs = list(chord.geoms) if hasattr(chord, "geoms") else [chord]
+                seg = next((sg for sg in segs if sg.distance(Point(c)) < 1e-6), segs[0])
+                a_, b_ = np.asarray(seg.coords[0], float), np.asarray(seg.coords[-1], float)
+                mid_, half = (a_ + b_) / 2, min(G.length(np.vstack([g0, g1])) / 2, 0.35 * float(np.linalg.norm(b_ - a_)))
+                pc.grain = (mid_ - d * half, mid_ + d * half)
         for mk in piece.marks:
             c = mk.pts.mean(axis=0)
             if pg.buffer(0.5).contains(Point(c)):
