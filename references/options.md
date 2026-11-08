@@ -33,6 +33,10 @@ commas and "Gr. 122". All texts go through one string table (`scripts/i18n.py`, 
 Fabrics: woven, corduroy, velvet, jersey, jersey_elastane, interlock, sweat, fleece, rib. Corduroy and
 velvet have a nap (option `nap`, also `nap: true` for any other fabric): every main-fabric piece is
 cut with the top towards the same fabric end, and the pressing note says to press from the wrong side.
+Print of the main fabric (all modules): `fabric_print` plain (default), one_way (directional print,
+cut like a nap), stripes or plaid with `print_repeat_cm` (number, or `[across, along]` for checks);
+CLI `--fabric-print`, `--print-repeat 4` or `--print-repeat 6,8`. Stripes and checks are matched at
+the seams in the cutting layout (see `references/print_specs.md`).
 All modules: `title` (e.g. "Kordhose") replaces the garment name on the pieces, in the instructions and
 in the file names.
 Fits: slim, normal, wide, oversized, harem.

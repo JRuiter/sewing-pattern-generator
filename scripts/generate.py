@@ -164,6 +164,7 @@ def _run(spec: dict, verbose: bool = True) -> dict:
     out = spec.get("out", "out")
     os.makedirs(out, exist_ok=True)
     spec, _ = PR.apply(spec)          # profile defaults (fit, output format) before drafting
+    L.fabric_print(spec.get("options"))  # fail early on a wrong fabric_print / print_repeat_cm
     sizes = [None] if DOLL.is_doll(spec) else NE.parse_sizes(spec.get("size"))
     drafts = []                       # nested sizes: (label, pattern) per size
     if len(sizes) > 1:
@@ -358,6 +359,10 @@ def main(argv=None):
                          "(comma-separated)")
     ap.add_argument("--fabric-layout", choices=L.FABRIC_LAYOUTS,
                     help="cutting layout: folded (double layer), single or auto (shorter one; default)")
+    ap.add_argument("--fabric-print", choices=L.PRINTS,
+                    help="print of the main fabric: plain, one_way (directional print, like a nap), "
+                         "stripes or plaid (matched at the seams in the cutting layout)")
+    ap.add_argument("--print-repeat", help="repeat of the stripes/checks in cm (plaid: across,along, e.g. 6,8)")
     ap.add_argument("--seam-allowance", help="seam allowance in mm for all seams, or 'none' (pattern without allowances)")
     ap.add_argument("--hem-allowance", type=float, help="allowance in mm for turned-up hems")
     ap.add_argument("--units", choices=["metric", "imperial"],
@@ -383,6 +388,11 @@ def main(argv=None):
                 opts[k] = getattr(a, k)
         if a.notch_style:
             opts["notch_style"] = a.notch_style
+        if a.fabric_print:
+            opts["fabric_print"] = a.fabric_print
+        if a.print_repeat:
+            rp = [float(x) for x in a.print_repeat.replace(";", ",").split(",") if x.strip()]
+            opts["print_repeat_cm"] = rp[0] if len(rp) == 1 else rp
         if a.seam_allowance is not None:
             if a.seam_allowance.strip().lower() == "none":
                 opts["seam_allowance"] = "none"

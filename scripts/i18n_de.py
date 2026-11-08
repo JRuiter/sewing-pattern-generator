@@ -141,6 +141,44 @@ TABLE: dict[str, str] = {
         "Webkante auf Webkante gefaltet, Bruchteile am Stoffbruch",
     "; nap: all pieces with the waist towards the same end, none turned round":
         "; Strich: alle Teile mit dem Bund zum selben Ende, keins gedreht",
+    "; one-way print: all pieces with the top end towards the same end, none turned round":
+        "; Motiv mit Richtung: alle Teile mit dem oberen Ende zum selben Stoffende, keins gedreht",
+    "; stripes: all pieces top end up, matched at the seams":
+        "; Streifen: alle Teile oben nach oben, an den Nähten passend gelegt",
+    "; checks: all pieces top end up, matched along and across":
+        "; Karo: alle Teile oben nach oben, längs und quer passend gelegt",
+    "One-way print ↓, all pieces top end up": "Motiv mit Richtung ↓, alle Teile oben nach oben",
+    "Stripes: every ▲ on the same stripe, all pieces top end up":
+        "Streifen: jedes ▲ auf denselben Streifen, alle Teile oben nach oben",
+    "Checks: every ▲ on the same line, all pieces top end up":
+        "Karo: jedes ▲ auf dieselbe Linie, alle Teile oben nach oben",
+    "Matching stripes and checks": "Streifen und Karos passend zuschneiden",
+    "(repeat {n} cm): ": "(Rapport {n} cm): ",
+    "(repeat {s}): ": "(Rapport {s}): ",
+    "lay the fabric out flat in a single layer, right side up, and straighten the cut end along one stripe. "
+    "Every main piece has a red ▲ in the cutting layout: the hem corner at the side seam, the underarm point of "
+    "the sleeve, the bottom of the hood seam. Place each ▲ exactly on the same dominant stripe (as shown, a whole "
+    "number of repeats apart); then the stripes continue across the side seams, the inside leg seams and from the "
+    "body into the sleeves.":
+        "den Stoff einlagig und flach mit der rechten Seite nach oben auslegen und die Schnittkante entlang eines "
+        "Streifens gerade schneiden. Jedes Hauptteil hat im Zuschnittplan ein rotes ▲: die Saumecke an der "
+        "Seitennaht, den Unterarmpunkt am Ärmel, das untere Ende der Kapuzennaht. Jedes ▲ genau auf denselben "
+        "markanten Streifen legen (wie gezeigt, um ganze Rapporte versetzt); dann laufen die Streifen über die "
+        "Seitennähte, die inneren Beinnähte und vom Rumpf in die Ärmel weiter.",
+    "For checks, also put the centre line of each piece (centre front/back, the grainline of legs and sleeves) "
+    "on the same dominant vertical line.":
+        "Bei Karos zusätzlich die Mittellinie jedes Teils (vordere/hintere Mitte, Fadenlauf von Beinen und Ärmeln) "
+        "auf dieselbe markante Längslinie legen.",
+    "Folded: before cutting, pin both layers together stripe on stripe.":
+        "Im Bruch: vor dem Zuschneiden beide Lagen Streifen auf Streifen zusammenstecken.",
+    "Pockets, bands and facings are not matched; cut patch pockets after placing them on the garment piece, or "
+    "on the bias as a contrast. One repeat extra is included in the amount.":
+        "Taschen, Bündchen und Belege werden nicht angepasst; aufgesetzte Taschen erst nach dem Anlegen auf das "
+        "Teil zuschneiden oder als Kontrast schräg. Ein Rapport extra ist in der Menge enthalten.",
+    "Print repeat not given: {n} cm assumed. Measure one repeat of the stripes/checks and pass it "
+    "(print_repeat_cm) for an exact layout.":
+        "Rapport nicht angegeben: {n} cm angenommen. Einen Rapport der Streifen/Karos messen und angeben "
+        "(print_repeat_cm), dann stimmt der Plan genau.",
     ", incl. {n} % for shrinkage": ", inkl. {n} % für Einlaufen",
     "would need {n} m": "bräuchte {n} m", "would need {s}": "bräuchte {s}",
     "about {n} m at {n} cm width": "etwa {n} m bei {n} cm Breite", "{n} m at {n} cm width": "{n} m bei {n} cm Breite",

@@ -4,6 +4,12 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Stripes, checks and one-way prints in the cutting layout**: option `fabric_print` (`one_way`, `stripes`, `plaid`) with `print_repeat_cm`, CLI `--fabric-print` / `--print-repeat`. Stripes are matched at the side seams, inside leg seams and from the body into the sleeves (match points ▲ on the same stripe, stripes drawn in the layout, how-to in the instructions, one repeat extra in the amount); checks also align the centre lines and are cut single layer; one-way prints are cut like a nap.
+
+### Changed
+- **Fabric-saving cutting layout** (`scripts/nesting.py`): new packer for the fabric with a search over the order and the orientation of the pieces (heads to toes, either side up for pairs cut through both layers), a finer 2.5 mm raster and an exact final compaction to the 5 mm gap. Main fabric over 27 test garments (kids 98/140, women's 38): 9 % less fabric in total and up to 28 % per garment, with stricter clearances than before (10 mm from the selvages, exact 5 mm gaps), e.g. women's trousers 38 1.93 → 1.38 m, A-line skirt 38 0.91 → 0.71 m, hoodie 140 1.03 → 0.89 m. Pieces that are not cut on the fold keep 5 mm from the fold; "(flipped)" is only shown where it matters (single layer); the picture is sized to the fabric.
+
 ## [1.4.0] - 2026-11-08
 
 ### Changed
