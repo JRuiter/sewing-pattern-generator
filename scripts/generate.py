@@ -274,7 +274,7 @@ def _run(spec: dict, verbose: bool = True) -> dict:
     for f in (x.lower() for x in formats):
         if f in ("dxf", "dxf14"):
             for lab, sp in (drafts or [("", pat)]):      # nested: one DXF per size
-                dxf_lay = L.layout_roll(sp, 1600.0)      # pieces side by side, no page limits
+                dxf_lay = L.layout_roll(sp, 1600.0, quick=True)   # pieces side by side, no page limits
                 tag = f"_{lab}" if lab else ""
                 p = os.path.join(out, f"{base}{tag}_aama{'_14' if f == 'dxf14' else ''}.dxf")
                 D.write_dxf(sp, p, dxf_lay, seam_layer="14" if f == "dxf14" else "8")

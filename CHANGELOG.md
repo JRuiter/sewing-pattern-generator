@@ -4,6 +4,13 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-08
+
+### Changed
+- **Leaner SKILL.md** (193 instead of 299 lines, about 40 % fewer tokens on every use): the workflow stays in SKILL.md; the option and format reference, machines, doll clothes and the photo mode B internals moved to `references/options.md`, `references/machines.md`, `references/doll_clothes.md` and `references/photo_guide.md`, loaded only when needed. SKILL.md no longer claims all output is English (`--lang de`).
+- **Faster layouts and photo fits, same results**: the layout packer only searches the filled band of the page instead of the whole, mostly empty canvas (roll, A4, A0/A1, cutting layout about 2× faster); the DXF sheet uses the quick packing strategies; the top contour in the flat-lay model is computed for all positions at once (photo mode B for tops about 2× faster). Layouts and fitted values are identical.
+- **CI in about 4 instead of 13 minutes**: tests run in parallel on all cores (`pytest-xdist`), the full suite with coverage runs once on Python 3.12, Python 3.10 runs the quick tests, and a new push to a PR cancels the older run.
+
 ## [1.3.0] - 2026-11-07
 
 ### Added
