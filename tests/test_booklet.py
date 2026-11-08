@@ -166,3 +166,17 @@ def test_booklet_check_is_clean_and_reported(tmp_path, garment, options, size):
 def test_kord_booklet_check_is_clean(kord):
     import booklet_qa as QA
     assert QA.ISSUES == []
+
+
+def test_inseam_after_side_seam_keeps_the_leg_together():
+    """Side seam sewn first: the inseam picture shows the leg opened out at the side seam and folded,
+    not front and back as loose pieces turned against each other."""
+    import diagrams as DG
+    import generate as GN
+    import steps as S
+    pat = GN.draft_from_spec(dict(garment="pants_basic", size=122, options={"style": "jogger"}))[0]
+    steps = S.assembly(pat)
+    inseam = next(s for s in steps if s.seams == ["Inseam"])
+    assert "Side seam front ↔ back" in inseam.data["done"]["joined"]
+    old = DG._joined_before(pat, inseam, S.resolve_seams(pat, inseam))
+    assert old is not None and old["name"].startswith("Side seam")

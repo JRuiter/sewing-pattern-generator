@@ -551,7 +551,7 @@ TABLE: dict[str, str] = {
     "{s}: {n} at {n} width": "{s}: {n} bei {n} Breite", "{n} m at {n}\" width": "{n} m bei {n}\" Breite",
 
     # ------------------------------------------------------------------ diagrams
-    "fold line": "Bruchlinie", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten",
+    "fold line": "Bruchlinie", "sewn": "genäht", "fold over": "umklappen", "fold = sewn seam": "Bruch = genähte Naht", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten",
     "stretch": "dehnen", "pull": "ziehen", "grain": "Fadenlauf", "inside out": "links gewendet",
     "right side out": "rechts gewendet", "elastic, with a safety pin": "Gummi, mit Sicherheitsnadel",
     "ladder stitch: the stitches disappear": "Matratzenstich: die Stiche verschwinden", "pants top edge": "Hosenoberkante",

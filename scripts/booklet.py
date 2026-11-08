@@ -919,6 +919,8 @@ def build(pattern, path: str, plans=None, steps: list[S.Step] | None = None) -> 
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     steps = steps if steps is not None else S.assembly(pattern)
+    if steps and "done" not in steps[-1].data:
+        S.annotate_progress(pattern, steps)
     DG._CTX["pattern"] = pattern
     QA.reset()
     with plt.rc_context({"font.family": "DejaVu Sans", "pdf.fonttype": 42}):

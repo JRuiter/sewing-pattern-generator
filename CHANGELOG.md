@@ -4,6 +4,9 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Fixed
+- **Inseam picture of all pants**: the back leg was laid onto the front along the inseam alone and ended up turned against it, although the side seam already joins the two. The booklet now shows the leg opened out at the sewn side seam (grey dashed = already sewn) and folded right sides together, with the inseam in red on the top layer. Every booklet step now knows what earlier steps sewed (`steps.annotate_progress`).
+
 ## [1.4.0] - 2026-11-08
 
 ### Changed
