@@ -9,7 +9,7 @@ Hood, kangaroo pocket, set-in sleeves, rib cuffs and hem band. The sewing bookle
 ## At a glance
 
 - **Pieces:** 7
-- **Fabric to buy:** main fabric 1.15 m at 150 cm width, rib knit 0.30 m at 70 cm width
+- **Fabric to buy:** main fabric 1.00 m at 150 cm width, rib knit 0.25 m at 70 cm width
 - **Sewing steps:** 22
 - **Sewability checks:** 47 of 47 OK
 

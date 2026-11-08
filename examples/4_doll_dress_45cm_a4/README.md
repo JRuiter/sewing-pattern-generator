@@ -9,7 +9,7 @@ A gathered dress drafted from the doll's own measurements: 6 mm seam allowances,
 ## At a glance
 
 - **Pieces:** 6
-- **Fabric to buy:** main fabric 0.25 m at 150 cm width
+- **Fabric to buy:** main fabric 0.20 m at 150 cm width
 - **Sewing steps:** 24
 - **Sewability checks:** 45 of 45 OK
 

@@ -881,12 +881,12 @@
   "fabric_mm": {
     "Main fabric": {
       "width": 1500.0,
-      "need": 1150.0,
+      "need": 1000.0,
       "layout": "single"
     },
     "Rib knit": {
       "width": 700.0,
-      "need": 300.0,
+      "need": 250.0,
       "layout": "single"
     }
   }
