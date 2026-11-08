@@ -589,7 +589,7 @@ TABLE: dict[str, str] = {
     "{s}: {n} at {n} width": "{s}: {n} bei {n} Breite", "{n} m at {n}\" width": "{n} m bei {n}\" Breite",
 
     # ------------------------------------------------------------------ diagrams
-    "fold line": "Bruchlinie", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten",
+    "fold line": "Bruchlinie", "sewn": "genäht", "fold over": "umklappen", "fold = sewn seam": "Bruch = genähte Naht", "raw edges": "offene Kanten", "band folded,\nraw edges down": "Bündchen gefaltet,\noffene Kanten unten",
     "stretch": "dehnen", "pull": "ziehen", "grain": "Fadenlauf", "inside out": "links gewendet",
     "right side out": "rechts gewendet", "elastic, with a safety pin": "Gummi, mit Sicherheitsnadel",
     "ladder stitch: the stitches disappear": "Matratzenstich: die Stiche verschwinden", "pants top edge": "Hosenoberkante",
@@ -1317,4 +1317,107 @@ TABLE.update({
         "Die Zugabe der Quernaht vorher auseinanderbügeln: der Bruch liegt flacher.",
     "The waistband is shorter than the top edge: the quarter marks meet, the lengths do not.":
         "Der Bund ist kürzer als die Oberkante: die Viertelmarken treffen sich, die Längen nicht.",
+    # step pictures that keep what is already sewn (assembled views, alternatives, precise step texts)
+    'Already sewn':
+        'Schon genäht',
+    'Alternative':
+        'Alternative',
+    'Alternative:':
+        'Alternative:',
+    'centre front':
+        'vordere Mitte',
+    'centre back':
+        'hintere Mitte',
+    'top of the cap → shoulder seam':
+        'Kugelmitte → Schulternaht',
+    'centre seam → centre back':
+        'Mittelnaht → hintere Mitte',
+    'armhole seams meet':
+        'Armlochnähte treffen sich',
+    'fold (shoulder)':
+        'Bruch (Schulter)',
+    'allowances down, towards the body':
+        'Zugaben nach unten, zum Körper',
+    'Try the test garment on the child: length, chest width, sleeve length and the neckline. Adjust the measurements or options and print the pattern again before you cut the good fabric.':
+        'Probiere das Probeteil am Kind an: Länge, Brustweite, Ärmellänge und Halsausschnitt. Passe Maße oder Optionen an und drucke den Schnitt neu, bevor du den guten Stoff zuschneidest.',
+    'Try the test garment on the doll: does it go over the head, does the opening close, is the length right? Adjust the measurements and print the pattern again before you cut the good fabric.':
+        'Probiere das Probeteil an der Puppe an: Geht es über den Kopf, schließt die Öffnung, stimmt die Länge? Passe die Maße an und drucke den Schnitt neu, bevor du den guten Stoff zuschneidest.',
+    'Lay front and back right sides together, shoulder edges level, and pin. Sew with {s} seam allowance from the neckline to the armhole. Press the allowances towards the back.':
+        'Vorder- und Rückenteil rechts auf rechts legen, Schulterkanten bündig, und stecken. Mit {s} Nahtzugabe vom Halsausschnitt zum Armloch nähen. Die Zugaben nach hinten bügeln.',
+    'Knit stretches at the shoulder: sew a strip of clear elastic or twill tape into the seam.':
+        'Jersey dehnt sich an der Schulter: ein Stück Framilon oder Nahtband mitfassen.',
+    'Open the body out flat, right side up. Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, single notch on the front, double notch on the back. Pin from the middle to both ends, easing in the extra length of the cap. Sew with {s} seam allowance, sleeve underneath; press the allowances towards the sleeve.':
+        'Den Körper flach aufklappen, rechte Seite oben. Den Ärmel rechts auf rechts auf das Armloch legen: Kugelmitte auf die Schulternaht, einfacher Knips vorne, doppelter Knips hinten. Von der Mitte zu beiden Enden stecken und die Mehrweite der Kugel einhalten. Mit {s} Nahtzugabe nähen, Ärmel unten; die Zugaben zum Ärmel bügeln.',
+    'Sleeve on the bottom: the feed dogs ease the cap in without pleats.':
+        'Ärmel unten: der Transporteur hält die Kugel ohne Fältchen ein.',
+    'Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. Pin side and sleeve seam so that the armhole seams meet exactly at the underarm. Sew in one go with {s} seam allowance, from the hem over the underarm to the sleeve hem. Press the allowances towards the back.':
+        'Das Teil an den Schultern rechts auf rechts falten, die Ärmel längs gefaltet. Seiten- und Ärmelnaht so stecken, dass sich die Armlochnähte unter dem Arm genau treffen. In einem Zug mit {s} Nahtzugabe vom Saum über die Achsel bis zum Ärmelsaum nähen. Die Zugaben nach hinten bügeln.',
+    'Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. Pin side and sleeve seam so that the raglan seams meet exactly at the underarm. Sew in one go with {s} seam allowance, from the hem over the underarm to the sleeve hem. Press the allowances towards the back.':
+        'Das Teil an den Schultern rechts auf rechts falten, die Ärmel längs gefaltet. Seiten- und Ärmelnaht so stecken, dass sich die Raglannähte unter dem Arm genau treffen. In einem Zug mit {s} Nahtzugabe vom Saum über die Achsel bis zum Ärmelsaum nähen. Die Zugaben nach hinten bügeln.',
+    'Cuffs first: sew the cuffs on while the sleeve is still flat, then sew side, sleeve and cuff seam in one go. Easier on small sizes.':
+        'Bündchen zuerst: die Bündchen annähen, solange der Ärmel noch flach ist, dann Seiten-, Ärmel- und Bündchennaht in einem Zug nähen. Leichter bei kleinen Größen.',
+    'Fold each cuff crosswise right sides together, short edges level. Sew with {s} seam allowance; finger-press the allowances open.':
+        'Jedes Bündchen quer rechts auf rechts falten, kurze Kanten bündig. Mit {s} Nahtzugabe nähen; die Zugaben mit dem Finger auseinanderstreichen.',
+    'Fold the ring lengthwise wrong sides together, raw edges level. The seam allowance is now inside; the right side shows all round.':
+        'Den Ring längs links auf links falten, offene Kanten bündig. Die Nahtzugabe liegt jetzt innen; rundherum ist die rechte Seite zu sehen.',
+    'Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, cuff seam on the sleeve seam. Pin at the quarters. Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the sleeve between two pins.':
+        'Den Ärmel auf rechts wenden. Das Bündchen über das Ärmelende schieben, offene Kanten bündig, Bündchennaht auf die Ärmelnaht. An den Vierteln stecken. Mit dem Bündchen oben nähen und dabei das Bündchen (nicht den Ärmel) zwischen zwei Nadeln auf die Länge des Ärmels dehnen.',
+    'One hand in front of the presser foot, one behind it: both stretch evenly.':
+        'Eine Hand vor dem Nähfuß, eine dahinter: beide dehnen gleichmäßig.',
+    'Fold the band crosswise right sides together, short edges level. Sew with {s} seam allowance; finger-press the allowances open.':
+        'Das Bündchen quer rechts auf rechts falten, kurze Kanten bündig. Mit {s} Nahtzugabe nähen; die Zugaben mit dem Finger auseinanderstreichen.',
+    'Fold lengthwise wrong sides together, raw edges level; press lightly.':
+        'Längs links auf links falten, offene Kanten bündig; leicht bügeln.',
+    'Band: put a pin at the cross seam and fold the band flat to find the opposite point; fold again for the two quarter points. Garment: pins at centre front, centre back and both side seams.':
+        'Bündchen: eine Nadel an die Quernaht stecken und das Bündchen flach legen, um den gegenüberliegenden Punkt zu finden; noch einmal falten für die beiden Viertelpunkte. Teil: Nadeln an vorderer Mitte, hinterer Mitte und beiden Seitennähten.',
+    'Garment right side out: slide the band over it, raw edges level, cross seam on a side seam; match the quarter pins. Sew with {s} seam allowance, band on top, stretching only the band. Press the allowances towards the garment.':
+        'Das Teil rechts herum: das Bündchen darüberschieben, offene Kanten bündig, Quernaht auf eine Seitennaht; die Viertelnadeln aufeinander. Mit {s} Nahtzugabe nähen, Bündchen oben, nur das Bündchen dehnen. Die Zugaben zum Teil hin bügeln.',
+    'Garment right side out: slide the band over it, raw edges level; band ends flush with the front edges. Sew with {s} seam allowance, band on top, stretching only the band. Press the allowances towards the garment.':
+        'Das Teil rechts herum: das Bündchen darüberlegen, offene Kanten bündig; die Bündchenenden bündig mit den vorderen Kanten. Mit {s} Nahtzugabe nähen, Bündchen oben, nur das Bündchen dehnen. Die Zugaben zum Teil hin bügeln.',
+    'Sew a little slower over the side seams: four layers.':
+        'Über den Seitennähten etwas langsamer nähen: vier Lagen.',
+    'Fold each slanted opening edge 1.5 cm to the wrong side and press. Topstitch 1.2 cm from the fold, right side up, so the stitching catches the raw edge.':
+        'Jede schräge Eingriffskante 1,5 cm nach links umschlagen und bügeln. Mit der rechten Seite oben 1,2 cm vom Bruch absteppen, so dass die Naht die offene Kante fasst.',
+    'Press the top edge and both short sides 1 cm to the wrong side. Trim the allowance at the corners at an angle so they lie flat.':
+        'Oberkante und beide kurzen Seiten 1 cm nach links bügeln. Die Zugabe an den Ecken schräg abschneiden, damit sie flach liegen.',
+    'Lay the front right side up. Place the pocket right side up on the marking, bottom raw edges level with the hem, and pin. Topstitch 3 mm from the pressed edges: up one side, across the top, down the other side. Baste the bottom edge within the seam allowance; the hem band catches it later.':
+        'Das Vorderteil mit der rechten Seite nach oben legen. Die Tasche rechte Seite oben auf die Markierung legen, untere Kanten bündig mit dem Saum, und stecken. 3 mm neben den gebügelten Kanten absteppen: eine Seite hoch, oben quer, die andere Seite hinunter. Die Unterkante innerhalb der Nahtzugabe heften; das Saumbündchen fasst sie später.',
+    'Backstitch or bar tack at the top of each opening: these corners take the strain.':
+        'Oben an jedem Eingriff verriegeln oder einen Riegel nähen: diese Ecken tragen die Belastung.',
+    'Pin first, then try on or hold against the child: the pocket may sit 1–2 cm higher or lower than the marking.':
+        'Erst stecken, dann anprobieren oder ans Kind halten: die Tasche darf 1–2 cm höher oder tiefer sitzen als die Markierung.',
+    'Lay the two hood pieces right sides together, curved back edges level, and pin from the neck edge upwards. Sew with {s} seam allowance. Press the allowances to one side.':
+        'Die beiden Kapuzenteile rechts auf rechts legen, gerundete hintere Kanten bündig, und vom Halsrand aufwärts stecken. Mit {s} Nahtzugabe nähen. Die Zugaben zu einer Seite bügeln.',
+    'Topstitch 6 mm beside the seam through the allowances: the seam stays flat.':
+        '6 mm neben der Naht durch die Zugaben absteppen: die Naht bleibt flach.',
+    'Fold the front edge {s} to the wrong side along the fold line and press. Topstitch {s} from the fold, close to the raw edge; leave the ends open for a drawstring.':
+        'Die vordere Kante {s} an der Umbruchlinie nach links umschlagen und bügeln. {s} vom Bruch absteppen, nahe der offenen Kante; die Enden für eine Kordel offen lassen.',
+    'Lined hood (option hood_lining): no hem, the lining finishes the front edge and the hood is warmer.':
+        'Gefütterte Kapuze (Option hood_lining): kein Saum, das Futter versäubert die vordere Kante und die Kapuze ist wärmer.',
+    'Body opened out flat, right side up. Lay the hood right side down onto the neckline, neck edges level. Hood centre seam on centre back, hood notches on the shoulder seams; front edges meet at centre front (overlap 1 cm). Sew all round with {s} seam allowance.':
+        'Den Körper flach aufgeklappt, rechte Seite oben. Die Kapuze rechts auf rechts auf den Halsausschnitt legen, Kanten bündig. Kapuzenmittelnaht auf die hintere Mitte, Kapuzenknipse auf die Schulternähte; die vorderen Kanten treffen sich in der vorderen Mitte (1 cm Überlappung). Rundherum mit {s} Nahtzugabe nähen.',
+    'Body opened out flat, right side up. Lay the hood right side down onto the neckline, neck edges level. Hood centre seam on centre back, hood notches on the shoulder seams; front edges end exactly at the centre front edges. Sew all round with {s} seam allowance.':
+        'Den Körper flach aufgeklappt, rechte Seite oben. Die Kapuze rechts auf rechts auf den Halsausschnitt legen, Kanten bündig. Kapuzenmittelnaht auf die hintere Mitte, Kapuzenknipse auf die Schulternähte; die vorderen Kanten enden genau an den vorderen Mittelkanten. Rundherum mit {s} Nahtzugabe nähen.',
+    'Finish both allowances together. Press them down towards the body.':
+        'Beide Zugaben zusammen versäubern. Nach unten zum Körper bügeln.',
+    'Neatest finish: cover the allowance with a strip of jersey or cotton tape from shoulder to shoulder over the back neck and stitch it down on both edges.':
+        'Am saubersten: die Zugabe hinten von Schulter zu Schulter mit einem Jersey- oder Baumwollband abdecken und an beiden Kanten feststeppen.',
+    'Sew the raglan seams':
+        'Raglannähte nähen',
+    'Sleeve right sides together to front and back; single notches at the front, double at the back.':
+        'Ärmel rechts auf rechts an Vorder- und Rückenteil; einfache Knipse vorne, doppelte hinten.',
+    'Long-sleeve shirt':
+        'Langarmshirt',
+    'In-seam pocket bag':
+        'Nahttaschenbeutel',
+    'Sew on the pocket bags':
+        'Taschenbeutel annähen',
+    'Side seam (opening)':
+        'Seitennaht (Eingriff)',
+    'One bag right sides together on each skirt side seam between the notches, 7 mm from the edge; press the bags outwards.':
+        'Je einen Beutel rechts auf rechts an jede Rockseitennaht zwischen den Knipsen, 7 mm von der Kante; die Beutel nach außen bügeln.',
+    'Skirt front and back right sides together, pivoting around the pocket bags.':
+        'Rockvorder- und -rückenteil rechts auf rechts, um die Taschenbeutel herum nähen.',
+    'In-seam pockets: opening {n} cm starting {n} cm below the waist seam (between the notches on the skirt side seams).':
+        'Nahttaschen: Eingriff {n} cm, beginnend {n} cm unter der Taillennaht (zwischen den Knipsen an den Rockseitennähten).',
 })

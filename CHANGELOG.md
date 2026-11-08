@@ -6,9 +6,18 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ### Added
 - **Stripes, checks and one-way prints in the cutting layout**: option `fabric_print` (`one_way`, `stripes`, `plaid`) with `print_repeat_cm`, CLI `--fabric-print` / `--print-repeat`. Stripes are matched at the side seams, inside leg seams and from the body into the sleeves (match points ▲ on the same stripe, stripes drawn in the layout, how-to in the instructions, one repeat extra in the amount); checks also align the centre lines and are cut single layer; one-way prints are cut like a nap.
+- **Step pictures keep what is already sewn**: seams, hems, topstitching and pockets from earlier steps stay visible as grey dashed lines ("Already sewn" in the legend), so every picture can be checked against the garment on the table.
+- **Assembled views** for tops: hood and sleeves are set in on the body opened out at the shoulder seam (the neckline and the armhole as one curve), side and sleeve seams are sewn on the garment folded at the shoulders, and the neck seam is finished with the hood on. Built from the real pieces, so they fit every size; T-shirt and dress use them too.
+- **Hands** where the hands matter (stretching a band while sewing it on, folding a band).
+- **Alternative box** (blue) for a second way to do a step, e.g. sewing the cuffs on flat before the side seams.
 
 ### Changed
 - **Fabric-saving cutting layout** (`scripts/nesting.py`): new packer for the fabric with a search over the order and the orientation of the pieces (heads to toes, either side up for pairs cut through both layers), a finer 2.5 mm raster and an exact final compaction to the 5 mm gap. Main fabric over 27 test garments (kids 98/140, women's 38): 9 % less fabric in total and up to 28 % per garment, with stricter clearances than before (10 mm from the selvages, exact 5 mm gaps), e.g. women's trousers 38 1.93 → 1.38 m, A-line skirt 38 0.91 → 0.71 m, hoodie 140 1.03 → 0.89 m. Pieces that are not cut on the fold keep 5 mm from the fold; "(flipped)" is only shown where it matters (single layer); the picture is sized to the fabric.
+- **Precise step texts** for hoodie, T-shirt and dress, as in printed sewing instructions: one sentence per action, with how the pieces lie, which notches meet, the seam allowance in cm and how to press. German texts included.
+- The "Done!" panel says what to check on the test garment for this kind of garment (tops: chest, sleeve length, neckline; doll clothes: over the head).
+
+### Fixed
+- **Inseam picture of all pants**: the back leg was laid onto the front along the inseam alone and ended up turned against it, although the side seam already joins the two. The booklet now shows the leg opened out at the sewn side seam (grey dashed = already sewn) and folded right sides together, with the inseam in red on the top layer. Every booklet step now knows what earlier steps sewed (`steps.annotate_progress`).
 
 ## [1.4.0] - 2026-11-08
 

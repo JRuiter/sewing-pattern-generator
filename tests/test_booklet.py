@@ -166,3 +166,48 @@ def test_booklet_check_is_clean_and_reported(tmp_path, garment, options, size):
 def test_kord_booklet_check_is_clean(kord):
     import booklet_qa as QA
     assert QA.ISSUES == []
+
+
+def test_inseam_after_side_seam_keeps_the_leg_together():
+    """Side seam sewn first: the inseam picture shows the leg opened out at the side seam and folded,
+    not front and back as loose pieces turned against each other."""
+    import diagrams as DG
+    import generate as GN
+    import steps as S
+    pat = GN.draft_from_spec(dict(garment="pants_basic", size=122, options={"style": "jogger"}))[0]
+    steps = S.assembly(pat)
+    inseam = next(s for s in steps if s.seams == ["Inseam"])
+    assert "Side seam front ↔ back" in inseam.data["done"]["joined"]
+    old = DG._joined_before(pat, inseam, S.resolve_seams(pat, inseam))
+    assert old is not None and old["name"].startswith("Side seam")
+
+
+def test_hoodie_pictures_keep_what_is_sewn():
+    """Every step knows what earlier steps sewed; the hoodie uses the assembled views and they draw without
+    falling back to the pictogram."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    import diagrams as DG
+    import generate as GN
+    import steps as S
+    pat = GN.draft_from_spec(dict(garment="hoodie", size=140, options={"kangaroo": True}))[0]
+    steps = S.assembly(pat)
+    side = next(s for s in steps if s.title == "Sew side and sleeve seams")
+    done = side.data["done"]
+    assert ("front", "shoulder") in done["seams"] and ("sleeve", "cap_front") in done["seams"]
+    assert any(p == "kangaroo_pocket" for p, _h, _m in done["placed"])
+    views = {s.data.get("view") for s in steps} - {None}
+    assert {"flat_hood", "flat_sleeve", "folded", "flat_neck"} <= views
+    old, DG.STRICT = DG.STRICT, True
+    try:
+        for s in steps:
+            if s.data.get("view"):
+                fig, ax = plt.subplots()
+                DG.draw(ax, pat, s)
+                plt.close(fig)
+    finally:
+        DG.STRICT = old
+    assert any(s.alt for s in steps)
+    assert "Alternative:" in side.as_text(pat.options)

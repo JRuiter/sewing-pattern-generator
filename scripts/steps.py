@@ -42,6 +42,7 @@ class Step:
     repeat: int = 1                             # ×2: do it on both legs / sleeves
     tip: str = ""                               # warning: the yellow "Important" box
     hint: str = ""                              # helpful hint: the green "Tip" box
+    alt: str = ""                               # another way to do it: the blue "Alternative" box
     section: str = ""                           # group heading (Pockets, Waistband, …)
     amount: float = 0.0                         # mm: hem depth, fold distance, opening …
     stretch: bool = False                       # stretch the band while sewing
@@ -63,6 +64,8 @@ class Step:
             parts.append(t("Tip:") + " " + t(self.tip))
         if self.hint:
             parts.append(t(self.hint))
+        if self.alt:
+            parts.append(t("Alternative:") + " " + t(self.alt))
         return " ".join(parts)
 
 
@@ -351,6 +354,44 @@ def resolve_seams(pattern, step: Step) -> list[dict]:
     return [sm for sm in pattern.seams if any(sm["name"].startswith(p) for p in step.seams)]
 
 
+# --------------------------------------------------------------------------- progress
+# What is already sewn when a step starts. The pictures draw it (grey dashed seams, pockets
+# already on the front, pieces joined), so every picture can be checked against the garment
+# on the table.
+
+def annotate_progress(pattern, steps: list[Step]) -> list[Step]:
+    """Store in every step what the earlier steps sewed (``step.data["done"]``):
+
+    * ``seams``   ``[(piece, edge)]`` sewn to another piece (seam line = the edge)
+    * ``lines``   ``[(piece, edge, mm)]`` stitched along the edge at a distance (hems, topstitching)
+    * ``placed``  ``[(pocket, host, mark)]`` pieces stitched onto a placement mark
+    * ``joined``  names of the seams of the seam graph sewn so far
+    * ``rings``   band pieces closed into a ring
+    """
+    seams: list = []
+    lines: list = []
+    placed: list = []
+    joined: list = []
+    rings: list = []
+    for s in steps:
+        s.data["done"] = {"seams": list(seams), "lines": list(lines), "placed": list(placed),
+                          "joined": list(joined), "rings": list(rings)}
+        for sm in resolve_seams(pattern, s) if s.seams else []:
+            joined.append(sm["name"])
+            for p, e, _n in sm["a"] + sm["b"]:
+                if (p, e) not in seams:
+                    seams.append((p, e))
+        if s.diagram in ("hem", "topstitch") and s.amount > 0:
+            for p, e in s.edges:
+                d = max(s.amount - 5.0, s.amount * 0.6) if s.diagram == "hem" else s.amount
+                lines.append((p, e, d))
+        if s.diagram == "place" and len(s.pieces) >= 2:
+            placed.append((s.pieces[0], s.pieces[1], s.data.get("mark", "")))
+        if s.diagram == "ring" and s.pieces:
+            rings.append(s.pieces[0])
+    return steps
+
+
 def number(steps: list[Step]) -> list[tuple[int, Step]]:
     return list(enumerate(steps, 1))
 
@@ -382,4 +423,4 @@ def assembly(pattern) -> list[Step]:
                     s.hint = text
         if s.data.get("picture") == "done" and s.text == "Press all seams.":
             s.text = "Press all seams" + E.press_note(pattern.options.get("fabric"))
-    return prepare(pattern) + body
+    return annotate_progress(pattern, prepare(pattern) + body)

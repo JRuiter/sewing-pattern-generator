@@ -81,39 +81,39 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
 4. **Set up the machine**. Jersey/stretch needle 75–80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
-5. **Hem the pocket openings**. Press 1.5 cm under and topstitch. (sewing machine: twin needle 4 mm, stitch 3 mm)
+5. **Hem the pocket openings**. Fold each slanted opening edge 1.5 cm to the wrong side and press. Topstitch 1.2 cm from the fold, right side up, so the stitching catches the raw edge. (sewing machine: twin needle 4 mm, stitch 3 mm)
    ![Step 5](steps/step_05.png)
-6. **Press the top edge under**. 1 cm to the wrong side.
+6. **Press the top edge under**. Press the top edge and both short sides 1 cm to the wrong side. Trim the allowance at the corners at an angle so they lie flat.
    ![Step 6](steps/step_06.png)
-7. **Stitch the pocket on**. On the marking; stitch top edge and sides. The bottom edge is caught by the hem band. (sewing machine: twin needle 4 mm, stitch 3 mm)
+7. **Stitch the pocket on**. Lay the front right side up. Place the pocket right side up on the marking, bottom raw edges level with the hem, and pin. Topstitch 3 mm from the pressed edges: up one side, across the top, down the other side. Baste the bottom edge within the seam allowance; the hem band catches it later. (sewing machine: twin needle 4 mm, stitch 3 mm) Tip: Backstitch or bar tack at the top of each opening: these corners take the strain. Alternative: Pin first, then try on or hold against the child: the pocket may sit 1–2 cm higher or lower than the marking.
    ![Step 7](steps/step_07.png)
-8. **Sew the shoulder seams**. Front and back right sides together. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+8. **Sew the shoulder seams**. Lay front and back right sides together, shoulder edges level, and pin. Sew with 10 mm seam allowance from the neckline to the armhole. Press the allowances towards the back. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Knit stretches at the shoulder: sew a strip of clear elastic or twill tape into the seam.
    ![Step 8](steps/step_08.png)
-9. **Sew the hood centre seam**. Hood pieces right sides together. (an overlocker or a narrow zigzag/stretch stitch)
+9. **Sew the hood centre seam**. Lay the two hood pieces right sides together, curved back edges level, and pin from the neck edge upwards. Sew with 10 mm seam allowance. Press the allowances to one side. (an overlocker or a narrow zigzag/stretch stitch) Topstitch 6 mm beside the seam through the allowances: the seam stays flat.
    ![Step 9](steps/step_09.png)
-10. **Hem the hood front edge**. Press to the inside along the fold line and topstitch (room for a drawstring). (sewing machine: twin needle 4 mm, stitch 3 mm)
+10. **Hem the hood front edge**. Fold the front edge 2.5 cm to the wrong side along the fold line and press. Topstitch 2 cm from the fold, close to the raw edge; leave the ends open for a drawstring. (sewing machine: twin needle 4 mm, stitch 3 mm) Alternative: Lined hood (option hood_lining): no hem, the lining finishes the front edge and the hood is warmer.
    ![Step 10](steps/step_10.png)
-11. **Sew the hood on**. Hood right sides together to the neckline: centre seam at centre back, front edges meet at centre front (overlap 1 cm if needed). (an overlocker or a narrow zigzag/stretch stitch)
+11. **Sew the hood on**. Body opened out flat, right side up. Lay the hood right side down onto the neckline, neck edges level. Hood centre seam on centre back, hood notches on the shoulder seams; front edges meet at centre front (overlap 1 cm). Sew all round with 7 mm seam allowance. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 11](steps/step_11.png)
-12. **Finish the neck seam**. Cover the seam allowance with jersey binding or finish it. (sewing machine: wide zigzag 4 × 1.5 mm over the edge)
+12. **Finish the neck seam**. Finish both allowances together. Press them down towards the body. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Alternative: Neatest finish: cover the allowance with a strip of jersey or cotton tape from shoulder to shoulder over the back neck and stitch it down on both edges.
    ![Step 12](steps/step_12.png)
-13. **Set in the sleeves**. Top notch of the sleeve cap on the shoulder seam, front/back notches meet; sew the sleeve in flat. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Sleeve on the bottom: the machine eases the cap in.
+13. **Set in the sleeves**. Open the body out flat, right side up. Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, single notch on the front, double notch on the back. Pin from the middle to both ends, easing in the extra length of the cap. Sew with 10 mm seam allowance, sleeve underneath; press the allowances towards the sleeve. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Tip: Sleeve on the bottom: the feed dogs ease the cap in without pleats.
    ![Step 13](steps/step_13.png)
-14. **Sew side and sleeve seams**. In one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+14. **Sew side and sleeve seams**. Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. Pin side and sleeve seam so that the armhole seams meet exactly at the underarm. Sew in one go with 10 mm seam allowance, from the hem over the underarm to the sleeve hem. Press the allowances towards the back. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. Alternative: Cuffs first: sew the cuffs on while the sleeve is still flat, then sew side, sleeve and cuff seam in one go. Easier on small sizes.
    ![Step 14](steps/step_14.png)
-15. **Close the cuffs into rings**. Right sides together across the short ends. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+15. **Close the cuffs into rings**. Fold each cuff crosswise right sides together, short edges level. Sew with 10 mm seam allowance; finger-press the allowances open. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
    ![Step 15](steps/step_15.png)
-16. **Fold the cuffs in half**. Lengthwise, wrong sides together. Do this twice.
+16. **Fold the cuffs in half**. Fold the ring lengthwise wrong sides together, raw edges level. The seam allowance is now inside; the right side shows all round. Do this twice.
    ![Step 16](steps/step_16.png)
-17. **Sew the cuffs on**. Cuff seam at the sleeve seam; quarter cuff and sleeve hem with pins. (an overlocker or a narrow zigzag/stretch stitch) Do this twice.
+17. **Sew the cuffs on**. Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, cuff seam on the sleeve seam. Pin at the quarters. Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the sleeve between two pins. (an overlocker or a narrow zigzag/stretch stitch) Do this twice. One hand in front of the presser foot, one behind it: both stretch evenly.
    ![Step 17](steps/step_17.png)
-18. **Close the hem band into a ring**. Right sides together across the short ends. (an overlocker or a narrow zigzag/stretch stitch)
+18. **Close the hem band into a ring**. Fold the band crosswise right sides together, short edges level. Sew with 10 mm seam allowance; finger-press the allowances open. (an overlocker or a narrow zigzag/stretch stitch)
    ![Step 18](steps/step_18.png)
-19. **Fold the hem band in half**. Lengthwise, wrong sides together.
+19. **Fold the hem band in half**. Fold lengthwise wrong sides together, raw edges level; press lightly.
    ![Step 19](steps/step_19.png)
-20. **Mark quarters**. Band: cross seam at a side seam.
+20. **Mark quarters**. Band: put a pin at the cross seam and fold the band flat to find the opposite point; fold again for the two quarter points. Garment: pins at centre front, centre back and both side seams.
    ![Step 20](steps/step_20.png)
-21. **Sew the hem band on**. Right sides together, raw edges meet. (an overlocker or a narrow zigzag/stretch stitch)
+21. **Sew the hem band on**. Garment right side out: slide the band over it, raw edges level, cross seam on a side seam; match the quarter pins. Sew with 10 mm seam allowance, band on top, stretching only the band. Press the allowances towards the garment. (an overlocker or a narrow zigzag/stretch stitch) Sew a little slower over the side seams: four layers.
    ![Step 21](steps/step_21.png)
 22. **Final pressing**. Press all seams with steam; do not press down hard on sweat.
 
