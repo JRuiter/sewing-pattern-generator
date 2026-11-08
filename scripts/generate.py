@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import adjust as ADJ  # noqa: E402
 import construction as K  # noqa: E402
+import design as DS  # noqa: E402
 import diagrams as DG  # noqa: E402
 import doll as DOLL  # noqa: E402
 import export_dxf as D  # noqa: E402
@@ -99,9 +100,16 @@ def draft_from_spec(spec: dict):
         spec = spec_from_project(spec["project"], spec)
     spec, prof_warn = PR.apply(spec)
     mod = get(spec["garment"])
+    design = DS.load(spec.get("design") or (spec.get("options") or {}).get("design"))
+    design_notes: list[str] = []
+    if design:
+        o2, design_notes = DS.prepare(spec["garment"], {k: v for k, v in (spec.get("options") or {}).items()
+                                                        if k != "design"}, design)
+        spec = {**spec, "options": o2}
     if spec.get("_doll_scale"):
         pat = DOLL.draft_project(mod, spec["garment"], spec["size"], spec.get("options") or {},
                                  spec["_doll_scale"], spec.get("adjustments"))
+        DS.apply(pat, design, design_notes)
         pat.options["units"] = U.check(spec.get("units"))
         pat.size_label = spec["size_label"]
         _custom_title(pat, spec)
@@ -133,6 +141,7 @@ def draft_from_spec(spec: dict):
         pat = DOLL.draft(mod, spec["garment"], measures, DOLL.defaults(spec["garment"], opts, measures))
     else:
         pat = ADJ.draft(mod, spec["garment"], measures, opts)
+    DS.apply(pat, design, design_notes)
     pat.options["units"] = units
     pat.size_label = spec.get("size_label") or (DOLL.size_label(measures) if doll
                                                 else size_label(spec.get("size"), given or None))
@@ -372,6 +381,8 @@ def main(argv=None):
     ap.add_argument("--machines", help="the sewist's machines, comma-separated: "
                     "sewing, straight_only, stretch_stitch, twin_needle, overlocker, coverstitch "
                     "(adapts seam allowances, seam/hem methods and the instructions; see machines.py)")
+    ap.add_argument("--design", help="creative silhouette: preset name (starfish, balloon, bell_sleeves, "
+                    "zigzag_hem, elf, dino_spikes …), a JSON file or JSON string (see design.py)")
     ap.add_argument("--lang", help="language of all generated texts and file names: en (default) or de")
     ap.add_argument("--out", default="out")
     a = ap.parse_args(argv)
@@ -422,6 +433,8 @@ def main(argv=None):
         spec["units"] = a.units
     if a.machines:
         spec["machines"] = MC.to_list(a.machines)
+    if a.design:
+        spec["design"] = a.design
     if a.lang:
         spec["language"] = i18n.check(a.lang)
     res = run(spec)

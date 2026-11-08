@@ -63,9 +63,11 @@ def language(lang: str | None):
 def _load(code: str):
     if code not in _tables:
         import i18n_de
+        import i18n_de_design
         exact, templ = {}, {}
         pats = []
-        for k, v in i18n_de.TABLE.items():
+        table = {**i18n_de_design.TABLE, **i18n_de.TABLE}
+        for k, v in table.items():
             if "{s}" in k:
                 rx = "^" + re.escape(k).replace(r"\{s\}", "(.+?)").replace(r"\{n\}", r"([-−+]?\d+(?:[.,]\d+)?)") + "$"
                 pats.append((re.compile(rx, re.S), k, v))
@@ -75,7 +77,7 @@ def _load(code: str):
                 exact[k] = v
         pats.sort(key=lambda p: -len(p[1]))       # most specific first
         _tables[code] = (exact, templ, pats)
-        _values[code] = set(i18n_de.TABLE.values())
+        _values[code] = set(table.values())
     return _tables[code]
 
 

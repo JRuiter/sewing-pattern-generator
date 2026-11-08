@@ -316,9 +316,14 @@ def check_folds(pat: Pattern):
     return res
 
 
+def check_design(pat: Pattern):
+    """Rows of a creative design (design.py): intended deviations, room to move, sewability."""
+    return [Check(**c) for c in getattr(pat, "design_checks", None) or []]
+
+
 def validate(pat: Pattern, raise_on_error: bool = False):
     report = (check_seams(pat) + check_corners(pat) + check_values(pat) + check_geometry(pat)
-              + check_turned(pat) + check_folds(pat) + check_notches(pat))
+              + check_turned(pat) + check_folds(pat) + check_notches(pat) + check_design(pat))
     if raise_on_error and any(c.status == "ERROR" for c in report):
         raise ValidationError(report)
     return report

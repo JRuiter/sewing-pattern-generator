@@ -4,6 +4,9 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Creative silhouettes for every garment** (`--design`, spec/option `design`, `scripts/design.py`): explicit design features on top of the practice-correct base block: profiles, bulges, flares and tapers along seams, pointed tips (hood, crown), hem shapes (points, zigzag, scallops, waves, curve) across the unfolded panel, and appendages (spikes, ears, round tabs, fins) sewn into a seam with notches and their own booklet steps. Presets: starfish, balloon, bell_sleeves, zigzag_hem, petal_hem, tulip_skirt, elf, cat_ears, dino_spikes, balloon_legs, flared_legs, wavy_loop. `design.py describe` writes the feature list to confirm (including options the shape needs, e.g. no hem band under a pointed hem). The validation report lists every feature as an intended deviation and re-checks freedom of movement (girth ≥ body + minimum ease, openings) and sewability (tip angles, inner corners, steepness, appendage sizes); seams stay matched, attached ends do not move. Title-page views show the reshaped garment (also a pointed hood). See `references/creative_designs.md`.
+
 ## [1.6.0] - 2026-11-08
 
 ### Added

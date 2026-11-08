@@ -173,6 +173,9 @@ Then: `python scripts/generate.py --garment headband --size 122 --format a4 --ou
 - [ ] `scripts/photo_analyze.py`: map the garment type and features to the module so photo mode A
       offers it; remove it from the "not covered" texts.
 - [ ] `SKILL.md`: module table, trigger words in the description, limits section.
+- [ ] `scripts/design.py`: add the module's design zones to `ZONES` (seam edges with their free end,
+      hem edges, girth ring and body reference) and list it in at least one preset's `garments`, so
+      creative silhouettes work for it (`tests/test_design.py` checks that every module has both).
 - [ ] `docs/DEEP_DIVE.md`: garments table (and the garment list in `README.md` if it is a new kind of garment).
 - [ ] Generate a validation report and preview for three sizes into `test-results/`
       (`python scripts/generate.py … --format roll610 --out <folder>`; keep `validation_report.md` and the
