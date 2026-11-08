@@ -188,6 +188,8 @@ class Pattern:
     finished: dict[str, float] = field(default_factory=dict)  # finished measurements (virtually sewn)
     notes: list[str] = field(default_factory=list)
     construction: list[dict] = field(default_factory=list)  # named draft values (construction.py)
+    design: dict = field(default_factory=dict)            # creative silhouette (design.py), {} = base block
+    design_checks: list[dict] = field(default_factory=list)  # report rows of the design (design.py)
 
     def piece(self, key: str) -> Piece:
         for p in self.pieces:
@@ -220,6 +222,7 @@ class Pattern:
             "finished_mm": {k: round(v, 1) for k, v in self.finished.items()},
             "pieces": [p.to_json() for p in self.pieces],
             "construction": self.construction,
+            **({"design": self.design} if self.design else {}),
         }
 
     def save_json(self, path: str) -> None:

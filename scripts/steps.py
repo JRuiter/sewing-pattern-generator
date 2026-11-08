@@ -466,6 +466,9 @@ def assembly(pattern, plans: dict | None = None) -> list[Step]:
         body = [Step("Sew the pieces together", "Right sides together, matching the notches.", stitch="seam")]
     from garments import _style_lines as SL
     body = SL.repoint(pattern, SL.adjust_steps(pattern, body))
+    if getattr(pattern, "design", None):
+        import design as DS
+        body = DS.adjust_steps(pattern, body)
     knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
     own = owned_machines(pattern.options)
     out: list[Step] = []
