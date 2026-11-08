@@ -160,7 +160,7 @@ def check_geometry(pat: Pattern):
                 errs.append("cutting line does not enclose the seam line")
             boundary = LineString(np.vstack([cut, cut[:1]]))
             for e in pc.edges:
-                if e.fold:
+                if e.fold or e.raw:
                     continue
                 if e.sa <= 0:
                     if e.sa_hint <= 0:   # sa_hint > 0: pattern deliberately without allowances

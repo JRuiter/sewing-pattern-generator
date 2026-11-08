@@ -10,6 +10,17 @@ GARMENTS = {
     "dress": "Dress (T-shirt bodice + skirt, or A-line T-shirt dress)",
     "beanie": "Beanie",
     "loop": "Loop scarf",
+    "scarf": "Scarf (tube or flat, optional fringe)",
+    "headband": "Headband / ear warmer (plain or twist)",
+    "neckwear": "Neck gaiter or triangle neckerchief",
+    "bib": "Baby bib (classic with snap, or bandana)",
+    "mittens": "Mittens (thumb in profile, optional rib cuff; thumbless for babies)",
+    "gloves": "Five-finger gloves (outline style, or with fourchettes and a set-in thumb)",
+    "socks": "Socks (profile with shaped heel, or house socks with a sole)",
+    "earflap_hat": "Hat with ear flaps (lined, optional ties)",
+    "bucket_hat": "Bucket hat / sun hat (lined or reversible)",
+    "cap": "Baseball cap (six panels, stiffened peak, adjustable strap)",
+    "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 
 

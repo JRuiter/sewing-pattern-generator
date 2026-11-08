@@ -362,9 +362,18 @@ def offset_outline(edges: Sequence[np.ndarray], allowances: Sequence[float],
     are mirrored (see `mirror_corner`) instead of mitred, so the folded allowance matches
     the tapered neighbouring seam.
     """
+    turned = list(turned) if turned is not None else [False] * len(edges)
+    if len(edges) < 3:      # two edges meet at both ends: split them so every corner joins two neighbours
+        e2, a2, t2 = [], [], []
+        for e, sa, tu in zip(edges, allowances, turned):
+            e = as_pts(e)
+            k = max(1, len(e) // 2)
+            e2 += [e[:k + 1], e[k:]]
+            a2 += [sa, sa]
+            t2 += [tu, tu]
+        edges, allowances, turned = e2, a2, t2
     offs = [offset_polyline(e, sa) for e, sa in zip(edges, allowances)]
     n = len(offs)
-    turned = list(turned) if turned is not None else [False] * n
     limit = 4 * max(max(allowances), 5.0)
     for i in range(n):
         j = (i + 1) % n

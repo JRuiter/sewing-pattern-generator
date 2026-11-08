@@ -74,12 +74,22 @@ def _load(code: str):
             else:
                 exact[k] = v
         pats.sort(key=lambda p: -len(p[1]))       # most specific first
+        for k, v in list(templ.items()):           # "{n} mm" and "{n} cm" share one entry
+            ku, vu = _UNIT_RX.sub("{n} <u>", k), _UNIT_RX.sub("{n} <u>", v)
+            if ku != k and ku.count("<u>") == vu.count("<u>"):
+                _units[code].setdefault(ku, vu)
         _tables[code] = (exact, templ, pats)
         _values[code] = set(i18n_de.TABLE.values())
+        _tvalues[code] = {re.sub(r"\{n\d*\}", "{n}", v).replace(",", ".") for v in i18n_de.TABLE.values()
+                          if "{n" in v}
     return _tables[code]
 
 
 _values: dict[str, set] = {}
+_tvalues: dict[str, set] = {}
+_units: dict[str, dict] = {"de": {}}
+_UNIT_RX = re.compile(r"\{n\d*\} (?:mm|cm)\b")
+_UNIT_TXT = re.compile(r"(?<![\w.])([-−+]?\d+(?:[.,]\d+)?) (mm|cm)\b")
 
 
 def num(x: float | str, decimals: int | None = None) -> str:
@@ -124,6 +134,13 @@ def t(text: str) -> str:
         key = _NUM.sub("{n}", text)
         if key in templ:
             return _fill(templ[key], numbers)
+        ku = _UNIT_RX.sub("{n} <u>", key)
+        if ku in _units.get(_state["lang"], {}):
+            units = [u for _n, u in _UNIT_TXT.findall(text)]
+            v = _units[_state["lang"]][ku]
+            for u in units:
+                v = v.replace("<u>", u, 1)
+            return _fill(v, numbers)
     for rx, _k, v in pats:
         m = rx.match(text)
         if m:
@@ -142,6 +159,8 @@ def t(text: str) -> str:
     joined = _by_sentence(text)
     if joined is not None:
         return joined
+    if numbers and _NUM.sub("{n}", text).replace(",", ".") in _tvalues.get(_state["lang"], ()):
+        return text                               # already translated (a German number template)
     if _wordy(text):
         if text not in MISSING:
             _LAST.append(text)

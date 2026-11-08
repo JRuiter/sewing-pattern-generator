@@ -325,10 +325,9 @@ def prepare(pattern, plans: dict | None = None) -> list[Step]:
              tip=("Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction."
                   if E.has_nap(pattern.options) else ""),
              hint=hint, data={"plans": plans} if plans else {}),
-        icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
-             section="Prepare", tip="Never deeper than half the seam allowance."),
-        _setup_step(pattern, knit),
-    ]
+    ] + ([icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
+               section="Prepare", tip="Never deeper than half the seam allowance.")]
+         if any(pc.notches for pc in pattern.pieces) else []) + [_setup_step(pattern, knit)]
 
 
 def L_group(pc) -> str:

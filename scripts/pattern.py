@@ -26,6 +26,7 @@ class Edge:
     turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
     sa_hint: float = 0.0        # pattern without allowances: the allowance to add when cutting
     pointed: bool = False       # meets a fold edge at an intended point (V-neck), not at 90°
+    raw: bool = False           # left as a raw cut edge on purpose (fleece, felt): no allowance needed
 
     @property
     def length(self) -> float:

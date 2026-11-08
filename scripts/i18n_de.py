@@ -576,7 +576,7 @@ TABLE: dict[str, str] = {
     "To thread the elastic.": "Zum Gummi-Einziehen.", "Steam.": "Mit Dampf.",
     "Parts": "Teile", "Fabric and notions": "Stoff und Zubehör", "Machines and tools": "Maschinen und Werkzeug",
     "Polyester sewing thread to match": "Passendes Polyester-Nähgarn", "cut on fold": "im Bruch",
-    "{n} parts · {n} steps": "{n} Teile · {n} Schritte",
+    "{n} parts · {n} steps": "{n} Teile · {n} Schritte", "{n} part · {n} steps": "{n} Teil · {n} Schritte",
     "Read the steps once before you start. Every picture is drawn from your pattern pieces.":
         "Lies die Schritte einmal durch, bevor du anfängst. Jedes Bild ist aus deinen Schnittteilen gezeichnet.",
     "right side": "rechte Stoffseite", "wrong side": "linke Stoffseite", "stitch": "nähen", "pin": "Stecknadel",
@@ -1774,3 +1774,9 @@ TABLE.update({
     "{n} × neck_width_half − {n} cm + {n} cm (V-neck)": "{n} × neck_width_half − {n} cm + {n} cm (V-Ausschnitt)",
     "back length + {n} % of height, − {n} % (boxy)": "Rückenlänge + {n} % der Körpergröße, − {n} % (Kastenform)",
 })
+
+# garment modules added in 1.7 (own file, it is long)
+from i18n_de_garments import TABLE as _GARMENTS  # noqa: E402
+
+for _k, _v in _GARMENTS.items():
+    TABLE.setdefault(_k, _v)

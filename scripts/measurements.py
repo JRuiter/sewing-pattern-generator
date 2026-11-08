@@ -35,6 +35,13 @@ import numpy as np
 KIDS_COLS = ["chest", "waist", "hip", "head", "neck", "inseam", "side_length", "arm",
              "back_length", "shoulder"]
 KIDS_TABLE = {
+    # babies (size = body length); plain 62–80 are baby sizes, 50 and 56 need "b50"/"baby 56"
+    50:  [37.0, 37.0, 37.0, 35.0, 21.0, 15.5, 25.5, 16.0, 15.0, 5.0],
+    56:  [40.0, 40.0, 40.0, 37.5, 21.5, 18.0, 29.0, 18.0, 16.0, 5.5],
+    62:  [42.5, 42.0, 42.5, 40.0, 22.0, 20.5, 32.5, 20.5, 17.0, 5.8],
+    68:  [45.0, 44.0, 45.0, 42.5, 22.5, 23.0, 36.5, 23.0, 18.5, 6.2],
+    74:  [47.0, 46.0, 47.5, 44.5, 23.5, 25.5, 40.0, 25.0, 20.0, 6.6],
+    80:  [49.5, 48.0, 50.0, 46.5, 24.5, 28.5, 44.0, 27.5, 21.5, 7.0],
     86:  [52.0, 50.0, 53.0, 48.5, 25.5, 32.0, 49.0, 30.0, 23.0, 7.5],
     92:  [53.0, 51.0, 55.0, 49.5, 26.0, 36.0, 53.0, 33.0, 24.5, 8.0],
     98:  [55.0, 52.0, 57.0, 50.0, 26.5, 40.0, 57.0, 35.5, 25.5, 8.5],
@@ -129,7 +136,7 @@ def parse_size(size) -> tuple[str, float]:
     """
     if isinstance(size, (int, float)):
         n = float(size)
-        return ("kids" if n >= 80 else "women"), n
+        return ("kids" if n >= 62 else "women"), n
     s = str(size).lower().replace("gr.", "").replace("größe", "").replace("size", "").strip()
     m = re.search(r"(\d+(?:[.,]\d+)?)", s)
     if not m:
@@ -157,10 +164,10 @@ def parse_size(size) -> tuple[str, float]:
         system = "women"
     elif s.startswith(("m", "h")):        # men / Herren
         system = "men"
-    elif s.startswith("k"):               # kids
+    elif s.startswith(("k", "b")):        # kids, baby
         system = "kids"
     if system is None:
-        system = "kids" if n >= 80 else "women"
+        system = "kids" if n >= 62 else "women"
     return system, n
 
 
@@ -272,18 +279,19 @@ def validate_measures(m_mm: dict) -> list[str]:
     h = m_mm.get("height", 0)
     if h <= 0:
         return ["Body height missing"]
-    if not 0.35 <= m_mm["inseam"] / h <= 0.50:
+    baby = h < 930          # babies and toddlers have short legs and arms
+    if not (0.28 if baby else 0.35) <= m_mm["inseam"] / h <= 0.50:
         w.append(f"Inseam {m_mm['inseam'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     if not 0.50 <= m_mm["side_length"] / h <= 0.66:
         w.append(f"Side length {m_mm['side_length'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     cd = m_mm["side_length"] - m_mm["inseam"]
-    if not 0.10 <= cd / h <= 0.20:
+    if not 0.10 <= cd / h <= (0.22 if baby else 0.20):
         w.append(f"Rise {cd / 10:.1f} cm (side length − inseam) looks implausible")
     if m_mm["waist"] > m_mm["hip"] * 1.15:
         w.append("Waist much larger than hip, please measure again")
     if m_mm["hip"] < m_mm["waist"] * 0.85:
         w.append("Hip much smaller than waist, please measure again")
-    if not 0.36 <= m_mm["arm"] / h <= 0.62 and "arm" in m_mm:
+    if not (0.30 if baby else 0.36) <= m_mm["arm"] / h <= 0.62 and "arm" in m_mm:
         w.append(f"Arm length {m_mm['arm'] / 10:.0f} cm looks unusual for a body height of {h / 10:.0f} cm")
     return w
 
