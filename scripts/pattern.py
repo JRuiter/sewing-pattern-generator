@@ -63,6 +63,7 @@ class Piece:
     marks: list[Mark] = field(default_factory=list)
     info: list[str] = field(default_factory=list)   # additional labels
     stretch_dir: str = ""                # note on the stretch direction
+    part_of: str = ""                    # part of the front/back view (yoke, side panel, colour block)
 
     # ----------------------------------------------------------------- geometry
     def edge(self, name: str) -> Edge:
@@ -233,7 +234,9 @@ def rect_piece(key: str, name: str, w: float, h: float, *, sa: float = 10.0,
         Edge(names[3], G.line(c[3], c[0]), 0.0 if fold_left else sas[3], fold_left, labels[3]),
     ]
     if grain_vertical:
-        grain = (G.P(w * 0.5, h * 0.2), G.P(w * 0.5, h * 0.8)) if h > 60 else (G.P(w * 0.3, h * 0.5), G.P(w * 0.3, h * 0.5 + max(20, h * 0.4)))
+        grain = (G.P(w * 0.5, h * 0.2), G.P(w * 0.5, h * 0.8)) if h > 60 else \
+            (G.P(w * 0.3, h * 0.5), G.P(w * 0.3, h * 0.5 + max(20, h * 0.4))) if h > 45 else \
+            (G.P(w * 0.3, h * 0.12), G.P(w * 0.3, h * 0.88))
     else:
         grain = (G.P(w * 0.2, h * 0.5), G.P(w * 0.8, h * 0.5))
     return Piece(key, name, edges, cut_count=cut_count, mirror=mirror, fabric=fabric, grain=grain)

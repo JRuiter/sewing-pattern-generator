@@ -171,7 +171,8 @@ def _unfold_marks(pc, cx):
         pts = np.asarray(m.pts, float)
         if m.style == "placement" and len(pts) >= 3:
             u = _poly(pts).union(_poly(DG._mirror_x(pts, cx)).buffer(0.01)).buffer(0)
-            marks.append((m.style, _ring(u)))
+            for g in (u.geoms if hasattr(u, "geoms") else [u]):
+                marks.append((m.style, _ring(g)))
         else:
             marks += [(m.style, pts), (m.style, DG._mirror_x(pts, cx))]
     return marks
@@ -224,26 +225,61 @@ def _sleeve(pattern, body_pc, cx, side):
     return out
 
 
+def _cf_mark_x(pc):
+    """x of the 'Centre front' mark of a front with a button stand (None if there is none)."""
+    for m in pc.marks:
+        if m.label == "Centre front":
+            return float(np.mean(np.asarray(m.pts, float)[:, 0]))
+    return None
+
+
 def _top_view(pattern, view):
     pc = pattern.piece(view)
     ring = np.asarray(pc.seam_ring(), float)
     names = [e.name for e in pc.edges]
-    halved = pc.on_fold or "center" in names        # half a body: on the fold, or a centre seam/opening
+    parts = [p for p in pattern.pieces if p.part_of == view]
+    cfx = _cf_mark_x(pc)
+    # half a body: on the fold, a centre seam/opening, or a button stand with a centre-front mark
+    halved = pc.on_fold or "center" in names or cfx is not None
     if pc.on_fold:
         cx = _fold_x(pc)
         body = _poly(DG._unfolded(pc, ring))
     elif "center" in names:
         cx = float(np.mean(pc.edge("center").pts[:, 0]))
         body = _poly(ring).union(_poly(DG._mirror_x(ring, cx)).buffer(0.01)).buffer(0)
+    elif cfx is not None:
+        cx = cfx
+        body = _poly(ring).union(_poly(DG._mirror_x(ring, cx)).buffer(0.01)).buffer(0)
     else:
         cx = float(np.mean(ring[:, 0]))
         body = _poly(ring)
+    part_seams = []
+    for p in parts:                       # yoke, side panels, colour blocks: drawn with the main piece
+        pr = np.asarray(p.seam_ring(), float)
+        pp = _poly(DG._unfolded(p, pr)) if p.on_fold else _poly(pr)
+        if halved and not p.on_fold:
+            pp = pp.union(_poly(DG._mirror_x(pr, cx)).buffer(0.01)).buffer(0)
+        body = body.union(pp.buffer(0.3)).buffer(-0.3)
+        for e in p.edges:
+            if e.name.startswith("split"):
+                part_seams += [np.asarray(e.pts, float), DG._mirror_x(np.asarray(e.pts, float), cx)]
+    if body.geom_type != "Polygon":
+        body = max(body.geoms, key=lambda g: g.area)
+    allnames = names + [e.name for p in parts for e in p.edges]
+    arm_pc = next((p for p in [pc] + parts if any(e.name in ("armhole", "raglan") for e in p.edges)), pc)
+    neck_pc = next((p for p in [pc] + parts if any(e.name == "neckline" for e in p.edges)), pc)
     height = np.ptp(ring[:, 1])
     layers, gathers, seams = [], [], []
     marks = _unfold_marks(pc, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in pc.marks
                                                   if m.style != "fold"]
-    if halved and not pc.on_fold:
+    if halved and not pc.on_fold and "center" in names:
         seams.append(np.array(pc.edge("center").pts, float))
+    elif "front_edge" in names:
+        seams.append(np.array(pc.edge("front_edge").pts, float))
+    seams += part_seams
+    for p in parts:
+        marks += _unfold_marks(p, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in p.marks
+                                                      if m.style != "fold"]
     # dress: the skirt hangs from the bodice and is gathered onto it
     skirt = _pc(pattern, "skirt_" + view)
     if skirt is not None and "hem" in names:
@@ -286,10 +322,10 @@ def _top_view(pattern, view):
                 if full and ends[-1][1] - ends[0][0] < 0.9 * (full[-1][1] - full[0][0]):
                     gathers += _gathers(ends[0][0], ends[-1][1], hy, 0.03 * height)
     layers.insert(0, (_ring(body), pc, 1))
-    if "armhole" in names or "raglan" in names:
-        layers += _sleeve(pattern, pc, cx, "drafted") + _sleeve(pattern, pc, cx, "mirror")
-    if "neckline" in names:
-        neck = pc.edge("neckline").pts
+    if "armhole" in allnames or "raglan" in allnames:
+        layers += _sleeve(pattern, arm_pc, cx, "drafted") + _sleeve(pattern, arm_pc, cx, "mirror")
+    if "neckline" in allnames:
+        neck = neck_pc.edge("neckline").pts
         both = np.vstack([neck, DG._mirror_x(neck, cx)[::-1]]) if halved else neck
         both = both[np.argsort(both[:, 0])]
         hood = _pc(pattern, "hood")
@@ -299,6 +335,38 @@ def _top_view(pattern, view):
         elif nb is not None:
             g = LineString(both).buffer(DG._band_dims(nb)[1] / 4, cap_style=2)
             layers.append((_ring(g), nb, 2.5))
+        bb = _pc(pattern, "button_band")
+        if bb is not None and "center" in names and view == "front":   # cardigan: band from hem to hem
+            ce = np.asarray(pc.edge("center").pts, float)
+            ce = ce[np.argsort(ce[:, 1])]                                 # bottom → top
+            fn = np.asarray(pc.edge("neckline").pts, float)[::-1]           # CF → neck point
+            half = np.vstack([ce, fn])
+            path = np.vstack([half, DG._mirror_x(half, cx)[::-1]])
+            g = LineString(path).buffer(DG._band_dims(bb)[1] / 4, cap_style=2, join_style=2)
+            layers.append((_ring(g), bb, 2.5))
+        col = _pc(pattern, "collar") or _pc(pattern, "collar_stand")
+        if col is not None and hood is None:
+            cr = np.asarray(col.seam_ring(), float)
+            ch = float(min(np.ptp(cr[:, 0]), np.ptp(cr[:, 1])))
+            if any(m.style == "fold" for m in col.marks):
+                ch /= 2                                   # folded lengthwise
+            if col.name == "Peter Pan collar":           # lies flat on the body round the neck
+                g = LineString(both).buffer(ch, cap_style=2).intersection(body.buffer(-0.5))
+                if not g.is_empty:
+                    g = max(g.geoms, key=lambda q: q.area) if hasattr(g, "geoms") else g
+                    layers.append((_ring(g), col, 2.5))
+            else:                                         # stands up from the neckline
+                up = both + np.array([0.0, ch * 0.8])
+                layers.append((np.vstack([both, up[::-1]]), col, 2.5))
+                fall = _pc(pattern, "collar") if col.key == "collar_stand" else None
+                if fall is not None and view == "front":  # shirt collar: the points fold down over the stand
+                    for sgn in (-1, 1):
+                        x0 = cx + sgn * 0.08 * np.ptp(both[:, 0])
+                        y0 = float(both[:, 1].min())
+                        tip = np.array([cx + sgn * 0.42 * np.ptp(both[:, 0]), y0 - ch * 0.9])
+                        top = np.array([cx + sgn * 0.55 * np.ptp(both[:, 0]), float(both[:, 1].max()) + ch * 0.8])
+                        layers.append((np.array([[x0, y0 + ch * 0.3], tip, top,
+                                                 [cx + sgn * 0.2 * np.ptp(both[:, 0]), top[1]]]), fall, 2.7))
     return dict(layers=layers, seams=seams, marks=_clip_marks(marks, body), gathers=gathers)
 
 

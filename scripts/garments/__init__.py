@@ -20,6 +20,10 @@ GARMENTS = {
     "earflap_hat": "Hat with ear flaps (lined, optional ties)",
     "bucket_hat": "Bucket hat / sun hat (lined or reversible)",
     "cap": "Baseball cap (six panels, stiffened peak, adjustable strap)",
+    "shirt": "Shirt / blouse (woven: button stand, collar, yoke, cuffs, bust dart)",
+    "polo": "Polo shirt (half placket, knit collar)",
+    "cardigan": "Cardigan (knit, continuous button band, V or round neck)",
+    "vest": "Vest / gilet (sleeveless; zip, snaps or pullover; armhole binding)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 

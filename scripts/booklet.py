@@ -225,7 +225,8 @@ def _materials(pattern, plans, steps) -> list[tuple[str, str, str]]:
                     T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")))
     for en, n in zip(getattr(pattern, "notes_en", pattern.notes), pattern.notes):
         low = en.lower()
-        word = next((w for w in NOTION_WORDS if w in low), None)
+        hits = sorted((low.index(w), w) for w in NOTION_WORDS if w in low)    # the word the note starts with
+        word = hits[0][1] if hits else None
         if word:
             out.append(("safety_pin" if word in ("elastic", "drawstring", "cord") else "pins",
                         T(NOTION_WORDS[word]), T(n)))

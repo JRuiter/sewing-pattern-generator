@@ -1191,6 +1191,13 @@ def draw_icon(ax, pattern, step):
         iax = ax.inset_axes((0.3, 0.5, 0.42, 0.48), transform=ax.transAxes)
         draw_machine(iax, "iron")
         ax.text(2.0, 0.15, T("glue side on the wrong side, press without steam"), fontsize=7, ha="center")
+    elif pic == "dart":                       # dart folded right sides together, sewn to the point
+        _pic_fabric(ax, 0.5, 0.4, 3.0, 1.8, wrong=True)
+        ax.plot([0.5, 2.9, 0.5], [1.75, 1.3, 0.85], color=INK, lw=1.2, ls=(0, (3, 2)), zorder=4)
+        ax.plot([0.5, 2.9], [1.3, 1.3], color=INK, lw=0.8, zorder=4)
+        ax.plot([0.55, 2.85], [1.72, 1.32], color=STITCH, lw=1.6, zorder=5)
+        ax.add_patch(Circle((2.9, 1.3), 0.06, fc=INK, zorder=6))
+        ax.text(2.0, 0.15, T("fold on the centre line, sew from the edge to the point"), fontsize=7, ha="center")
     elif pic == "zip":
         _pic_fabric(ax, 0.4, 0.3, 1.5, 2.0)
         _pic_fabric(ax, 2.1, 0.3, 1.5, 2.0)
