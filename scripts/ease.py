@@ -29,17 +29,18 @@ PRESS_NOTES = {
 }
 
 FIT_LABELS = {"slim": "slim / close-fitting", "normal": "normal", "wide": "wide",
-              "oversized": "oversized", "harem": "harem (wide, dropped crotch)"}
+              "oversized": "oversized", "boxy": "boxy",
+              "harem": "harem (wide, dropped crotch)"}
 
 # Base ease table as a fraction of the body circumference at 0 % stretch (woven) and
 # for typical knits (≈ 30 % stretch)
 _BODY = {  # tops: chest
     "slim": (0.06, 0.00), "normal": (0.14, 0.09), "wide": (0.22, 0.17),
-    "oversized": (0.32, 0.27), "harem": (0.22, 0.17),
+    "oversized": (0.40, 0.35), "boxy": (0.44, 0.40), "harem": (0.22, 0.17),
 }
 _HIP = {  # pants/skirts: hip
     "slim": (0.06, 0.00), "normal": (0.14, 0.10), "wide": (0.22, 0.18),
-    "oversized": (0.30, 0.26), "harem": (0.34, 0.30),
+    "oversized": (0.30, 0.26), "boxy": (0.30, 0.26), "harem": (0.34, 0.30),
 }
 
 
@@ -97,7 +98,7 @@ def rise_ease_mm(fit: str, adult: bool) -> float:
     """Rise ease (sitting room) in mm."""
     base = 20.0 if adult else 15.0
     return {"slim": base * 0.25, "normal": base, "wide": base * 1.3,
-            "oversized": base * 1.6, "harem": base * 1.3}[fit]
+            "oversized": base * 1.6, "boxy": base * 1.6, "harem": base * 1.3}[fit]
 
 
 def band_ratio(band_fabric: str, stretch: float | None = None, use: str = "neck") -> float:

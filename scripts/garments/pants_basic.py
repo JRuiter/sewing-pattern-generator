@@ -19,6 +19,7 @@ from scipy.interpolate import CubicSpline
 
 import ease as E
 import geometry as G
+import practice as P
 from construction import Construction
 from pattern import Edge, Mark, Notch, Pattern, Piece, rect_piece
 
@@ -225,7 +226,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
             hem_c = o["opening_total"]
         else:
             hem_c = {"slim": m["ankle"] * (1.08 if stretch < 50 else 1.0), "normal": 0.46 * Hc,
-                     "wide": 0.62 * Hc, "oversized": 0.66 * Hc, "harem": 0.40 * Hc}[fit]
+                     "wide": 0.62 * Hc, "oversized": 0.66 * Hc, "boxy": 0.66 * Hc,
+                     "harem": 0.40 * Hc}[fit]
             if length == "knee":
                 hem_c = max(hem_c, m["knee"] * (1.0 + max(he, 0.05)) * 1.05)
             if length == "short":
@@ -551,6 +553,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         corners.append(dict(name="Side seam ↔ waistband at the side panel", piece="side_panel",
                             a="side_upper", b="waist_outer", target=90))
 
+    if not o["hip_total"] and "hip_width" not in (o.get("construction") or {}):
+        checks += P.hip_checks(o, m, Hc, E.fabric_info(fabric, stretch)[2])
     pat = Pattern("pants_basic", TITLES.get(o["style"], "Pants"), "", pieces, dict(m), o,
                   seams=seams, corners=corners, checks=checks, notes=notes)
 

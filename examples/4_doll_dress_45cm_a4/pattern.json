@@ -35,7 +35,7 @@
       "Ct": 366.0,
       "q": 91.5,
       "nw": 35.375261297841945,
-      "fnd": 40.452184374765025,
+      "fnd": 31.914190540642156,
       "bnd": 5.0769230769230775,
       "sx": 70.3539467947976,
       "sy": -11.182687617968694,
@@ -51,7 +51,9 @@
       "SL": 41.92305297333961,
       "cuff_h": 0.0,
       "cuff_len": 0.0,
-      "op": 124.98064516129033
+      "op": 124.98064516129033,
+      "CH": 29.923052973339605,
+      "ch_max": 32.49705160243549
     },
     "_hem_band_h": 0.0,
     "_nb_h": 3.5999999999999996,
@@ -93,7 +95,7 @@
     "sleeve_len": 41.9,
     "sleeve_opening": 125.0,
     "bicep_circ": 125.0,
-    "neckline": 204.4,
+    "neckline": 190.2,
     "waist_seam": 380.6,
     "skirt_top": 609.0,
     "skirt_length": 113.9
@@ -111,7 +113,7 @@
           "label": "Centre (fold)",
           "sa": 0.0,
           "fold": true,
-          "length_mm": 52.9
+          "length_mm": 61.5
         },
         {
           "name": "hem",
@@ -146,7 +148,7 @@
           "label": "Neckline",
           "sa": 4.2,
           "fold": false,
-          "length_mm": 61.0
+          "length_mm": 53.9
         }
       ]
     },
@@ -257,7 +259,7 @@
           "label": "Seam edge",
           "sa": 4.2,
           "fold": false,
-          "length_mm": 204.4
+          "length_mm": 190.2
         },
         {
           "name": "right",
@@ -271,7 +273,7 @@
           "label": "Seam edge",
           "sa": 4.2,
           "fold": false,
-          "length_mm": 204.4
+          "length_mm": 190.2
         },
         {
           "name": "left",
@@ -383,8 +385,8 @@
     },
     {
       "name": "front_neck_depth",
-      "value": 40.452184374765025,
-      "formula": "neck_width_half + 1.5 cm",
+      "value": 31.914190540642156,
+      "formula": "0.95 × neck_width_half − 0.5 cm",
       "unit": "mm",
       "overridden": false,
       "computed": null
@@ -471,8 +473,8 @@
       "group": "Seam pairs",
       "name": "Neck binding ↔ neckline",
       "status": "OK",
-      "target": "20.4 cm",
-      "actual": "20.4 cm",
+      "target": "19.0 cm",
+      "actual": "19.0 cm",
       "delta": "+0.0 mm",
       "note": ""
     },
@@ -553,8 +555,8 @@
       "name": "Shoulder ↔ neckline (front + back)",
       "status": "OK",
       "target": "180°",
-      "actual": "180.9°",
-      "delta": "+0.9°",
+      "actual": "181.1°",
+      "delta": "+1.1°",
       "note": ""
     },
     {
@@ -562,8 +564,8 @@
       "name": "Neckline at centre front",
       "status": "OK",
       "target": "90°",
-      "actual": "90.4°",
-      "delta": "+0.4°",
+      "actual": "90.3°",
+      "delta": "+0.3°",
       "note": ""
     },
     {
@@ -634,9 +636,45 @@
       "name": "Head fits through the back opening",
       "status": "OK",
       "target": "≥ 33.6 cm",
-      "actual": "38.1 cm",
-      "delta": "+45.0 mm",
+      "actual": "36.7 cm",
+      "delta": "+30.8 mm",
       "note": "neckline + both edges of the back opening ≥ head circumference + 5 %"
+    },
+    {
+      "group": "Common practice",
+      "name": "Chest ease for fit 'wide'",
+      "status": "OK",
+      "target": "20 – 34 %",
+      "actual": "22 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
+    },
+    {
+      "group": "Common practice",
+      "name": "Crew neck depth (front)",
+      "status": "OK",
+      "target": "2.8 cm – 3.9 cm",
+      "actual": "3.2 cm",
+      "delta": "+0.0 mm",
+      "note": "about as deep as the half neck width"
+    },
+    {
+      "group": "Common practice",
+      "name": "Neck width (half)",
+      "status": "OK",
+      "target": "3.2 cm – 4.0 cm",
+      "actual": "3.5 cm",
+      "delta": "+0.0 mm",
+      "note": "neck / 5 + 0.5 to 1.0 cm"
+    },
+    {
+      "group": "Common practice",
+      "name": "Sleeve cap height for this shoulder",
+      "status": "OK",
+      "target": "1.8 cm – 3.4 cm",
+      "actual": "3.0 cm",
+      "delta": "+0.0 mm",
+      "note": "lower cap for a dropped shoulder"
     },
     {
       "group": "Measurements",
@@ -787,7 +825,7 @@
       "name": "Front: cut-on-fold edge",
       "status": "OK",
       "target": "straight, no SA, 90° corners, on grain",
-      "actual": "ok, corners ≤ 0.4° off 90°",
+      "actual": "ok, corners ≤ 0.3° off 90°",
       "delta": "",
       "note": "Centre (fold)"
     },

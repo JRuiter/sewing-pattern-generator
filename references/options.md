@@ -39,7 +39,7 @@ CLI `--fabric-print`, `--print-repeat 4` or `--print-repeat 6,8`. Stripes and ch
 the seams in the cutting layout (see `references/print_specs.md`).
 All modules: `title` (e.g. "Kordhose") replaces the garment name on the pieces, in the instructions and
 in the file names.
-Fits: slim, normal, wide, oversized, harem.
+Fits: slim, normal, wide, oversized, boxy (tops: wide and straight, dropped shoulder, low cap, slightly cropped, hem band barely drawn in), harem.
 
 Seam allowance (all modules): `--seam-allowance 7.5` (mm, all seams), `--hem-allowance 30`
 (turned-up hems), `--seam-allowance none` (pattern without allowances: only the seam line is

@@ -4,6 +4,15 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Common practice checks** (`scripts/practice.py`): defaults are compared with guide ranges from pattern-making practice and ready-to-wear (chest/hip ease per fit, crew-neck depth and width, sleeve-cap height for the shoulder); the validation report lists them under "Common practice" and warns when a default drifts outside. Special values come only from options and skip the matching check.
+- **Fit `boxy`** for tops: wide and straight, dropped shoulder, low cap and wide sleeve, slightly cropped, hem band barely drawn in (95 %).
+
+### Changed
+- **Crew neck** as in current ready-to-wear: front drop about as deep as the half neck width (children ≈ 6–7 cm, adults ≈ 9–10 cm, before: 9–12 cm); a neckline widened to fit over the head gets wider, not deeper. The automatic widening now also makes the stretched neckband fit over the head.
+- **Sleeve cap follows the shoulder**: a dropped shoulder (wide, oversized, boxy) lowers the cap and widens the sleeve (cap ≤ 0.56 × armhole depth − 0.8 × shoulder extension), instead of a high cap that pulls when the arm is raised.
+- **Oversized** tops get more ease (knits +35 % instead of +27 %, woven +40 %).
+
 ## [1.6.0] - 2026-11-08
 
 ### Added

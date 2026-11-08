@@ -134,6 +134,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.2° | +0.2° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband (front + back) | 180° | 180.1° | +0.1° | ✅ OK |  |
+| Common practice | Hip ease for fit 'harem' | 25 – 45 % | 30 % | +0 % | ✅ OK | guide value for this fit |
 | Measurements | Hip circumference pattern = body + ease | 85.8 cm | 85.8 cm | +0.0 % | ✅ OK | body 66.0 cm + +30 % ease |
 | Measurements | Top edge fits over the hip | ≥ 67.3 cm | 95.4 cm | +281.1 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 14.6 cm – 31.4 cm | 27.3 cm | +0.0 mm | ✅ OK | body rise 18.0 cm, harem drop 7.3 cm |
@@ -151,7 +152,7 @@ Seam allowance is included in the pattern (see table). Use a jersey/stretch need
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 31 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 32 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

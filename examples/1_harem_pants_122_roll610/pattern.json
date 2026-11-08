@@ -466,6 +466,15 @@
       "note": ""
     },
     {
+      "group": "Common practice",
+      "name": "Hip ease for fit 'harem'",
+      "status": "OK",
+      "target": "25 – 45 %",
+      "actual": "30 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
+    },
+    {
       "group": "Measurements",
       "name": "Hip circumference pattern = body + ease",
       "status": "OK",

@@ -35,7 +35,7 @@ Ask for the missing points together in one short message, each with a default
 - Size (kids 86–176, women 34–56, men 44–60) **or** body measurements
   (height, chest, waist, hip, inseam, side length, arm length, head)
 - Fabric (woven / jersey / jersey with elastane / interlock / sweat / fleece) and stretch in %
-- Fit (slim / normal / wide / oversized; for pants also harem)
+- Fit (slim / normal / wide / oversized / boxy; for pants also harem)
 - Output: roll (width in mm, default 610), A0, A1, A4 or US Letter to tape together
 - **Machines:** which machines they sew with: sewing machine (zigzag? stretch stitch? or straight
   stitch only), twin needle, overlocker/serger, coverstitch. Skip the question when the workshop
