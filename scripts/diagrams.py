@@ -1496,6 +1496,26 @@ def _attach_T(src, dst, ring, avoid, reverse=False, penalty=None):
     return best[1]
 
 
+def _attach_ends(src, dst, ring, avoid):
+    """Like _attach_T, but the start points meet exactly (the underarm) and the end points lie in one
+    direction (the eased cap is longer than the armhole)."""
+    from shapely.geometry import Polygon
+    poly_avoid = Polygon(avoid).buffer(0)
+    best = None
+    for flip in (False, True):
+        m = np.array([-1.0, 1.0]) if flip else np.array([1.0, 1.0])
+        p0, p1 = src[0] * m, src[-1] * m
+        q0, q1 = dst[0], dst[-1]
+        ang = math.atan2(*(q1 - q0)[::-1]) - math.atan2(*(p1 - p0)[::-1])
+        R = np.array([[math.cos(ang), -math.sin(ang)], [math.sin(ang), math.cos(ang)]])
+        t = q0 - R @ p0
+        poly = Polygon((ring * m) @ R.T + t).buffer(0)
+        over = poly.intersection(poly_avoid).area / max(min(poly.area, poly_avoid.area), 1e-9)
+        if best is None or over < best[0]:
+            best = (over, (R, t, flip))
+    return best[1]
+
+
 def body_flat(pattern):
     """One side of the body opened out at the shoulder seam, right side up: the front half as drafted
     and the back half folded out above it. {piece: (pc, T, ring)} with ring already transformed."""
@@ -1642,10 +1662,7 @@ def draw_folded_body(ax, pattern, step):
     from shapely.geometry import Point
     half = min(parts.geoms, key=lambda g: g.distance(Point(cf_mid)))
     rh = np.asarray(half.exterior.coords, float)
-    shoulder_y = F.edge("shoulder").pts[:, 1].max()
-    Ts = _attach_T(SL.edge("cap_front").pts, F.edge("armhole").pts, rh, rf,
-                   penalty=lambda r: 1e3 * max(r[:, 1].min() - shoulder_y + 1.0, 0) if False else
-                   1e3 * float(np.mean(r[:, 1]) > shoulder_y))
+    Ts = _attach_ends(SL.edge("cap_front").pts, F.edge("armhole").pts, rh, rf)
     rs = _apply(Ts, rh)
     size = max(np.ptp(np.vstack([rf, rs]), 0))
     # the back peeks out below the front
