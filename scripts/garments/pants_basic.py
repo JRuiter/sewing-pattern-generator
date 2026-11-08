@@ -746,6 +746,7 @@ def assembly(pat: Pattern) -> list:
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
     out: list = []
+    sa = S.cm(pat.piece("front").edge("side").sa)
     n_bp = o.get("back_pockets") or 2
     if o.get("_fly") or ("back_patch" in o["pockets"] and n_bp == 1):
         out.append(S.Step("Label the pieces", "Lay the four leg pieces right side up, waist up. Stick a strip of "
@@ -765,20 +766,24 @@ def assembly(pat: Pattern) -> list:
         sec = "Side pockets"
         out += [
             S.seam("Sew the pocket bag to the opening", ["Pocket opening"],
-                   "Inner pocket bag right sides together on the pocket opening of the front leg.",
+                   "Lay the inner pocket bag right sides together on the pocket opening of the front leg, "
+                   f"edges level, and pin. Sew along the opening with {sa} seam allowance.",
                    repeat=2, section=sec, tip="The opening is on the bias: do not stretch it.",
                    hint="A strip of stay tape ironed onto the opening keeps it in shape."),
-            S.Step("Clip and turn the bag inside", "Clip the curved allowance, turn the bag to the inside "
-                   "and press the edge.", "press", edges=[("front", "pocket_opening")], stitch="press",
+            S.Step("Clip and turn the bag inside", "Clip the curved allowance every 1 cm, close to the "
+                   "stitching. Turn the bag to the inside and press the edge.", "press", edges=[("front", "pocket_opening")], stitch="press",
                    repeat=2, section=sec,
                    tip="Roll the edge 1–2 mm to the inside: no pocket bag may show from the outside."),
-            S.topstitch("Topstitch the pocket edge", [("front", "pocket_opening")], 5.0, repeat=2, section=sec),
+            S.topstitch("Topstitch the pocket edge", [("front", "pocket_opening")], 5.0,
+                        "Right side up, topstitch 5 mm from the edge through all layers.", repeat=2, section=sec),
             S.seam("Sew the pocket bag seam", ["Pocket bag seam", "Pocket bag ↔ side panel"],
-                   "Side panel right sides together under the pocket bag; the \"pocket opening\" mark meets "
-                   "the opening edge.", repeat=2, section=sec,
+                   "Lay the side panel right sides together under the pocket bag so that the \"pocket opening\" "
+                   "mark meets the opening edge. Pin the two pocket bag layers and sew them together along the "
+                   f"curve with {sa} seam allowance.", repeat=2, section=sec,
                    tip="Fold the front leg out of the way: sew only the two pocket bag layers.",
                    hint="Turn it over afterwards and check from the outside that the opening lies flat."),
-            S.Step("Baste the side panel to the leg", "Top edge and side seam, inside the seam allowance.",
+            S.Step("Baste the side panel to the leg", "Lay the leg flat on the side panel. Baste the top edge and "
+                   "the side edge together, inside the seam allowance.",
                    "edge", edges=[("side_panel", "waist_outer"), ("side_panel", "side_upper")],
                    stitch="baste", repeat=2, section=sec, tip="The pocket opening lies flat, not pulled.",
                    hint="Baste 4 mm from the edge, inside the seam allowance."),
@@ -786,52 +791,67 @@ def assembly(pat: Pattern) -> list:
     if "cargo" in o["pockets"]:
         sec = "Cargo pockets"
         out.append(S.hem("Hem the pocket top edge", [("cargo_pocket", "top")], 25.0,
-                         "Press 2.5 cm to the inside and topstitch.", stitch="topstitch", repeat=2, section=sec))
+                         "Fold the top edge 2.5 cm to the wrong side and press. Topstitch 2 cm from the fold.",
+                         stitch="topstitch", repeat=2, section=sec))
         if o.get("cargo_pleat", True):
             out.append(S.press("Fold the box pleat", [("cargo_pocket", "top")],
-                               "Bring both \"pleat fold\" lines to the pleat centre on the wrong side, press, "
-                               "baste across top and bottom.", repeat=2, section=sec))
+                               "On the wrong side, bring both \"pleat fold\" lines to the pleat centre and press. "
+                               "Baste across the top and the bottom inside the seam allowance.", repeat=2,
+                               section=sec))
         out += [S.press("Press the edges under", [("cargo_pocket", "left"), ("cargo_pocket", "bottom"),
-                                                   ("cargo_pocket", "right")], "1 cm on the other three sides.",
+                                                   ("cargo_pocket", "right")],
+                        "Press the other three sides 1 cm to the wrong side. Fold the corners in first, then the "
+                        "sides.",
                         amount=10.0, repeat=2, section=sec),
                 S.place("Stitch the pocket on", "cargo_pocket", "front", "Cargo pocket",
-                        "Edgestitch on the \"Cargo pocket\" marking; reinforce the top corners.", repeat=2,
+                        "Place the pocket right side up on the \"Cargo pocket\" marking and pin. Edgestitch 2 mm "
+                        "from the folded edges along the sides and the bottom. Reinforce the top corners with a "
+                        "small triangle of stitches.", repeat=2,
                         section=sec)]
         if o.get("cargo_flap", True):
             out += [
                     S.topstitch("Sew, turn and topstitch the flap", [("cargo_flap", "bottom")], 5.0,
-                                "Outer flap and facing right sides together along sides and flap edge, trim, "
-                                "turn, press.", repeat=2, section=sec),
-                    S.Step("Sew the flap on", "Open edge on the \"Flap\" line, upside down; fold it down and "
-                           "topstitch 7 mm from the fold.", "place", pieces=["cargo_flap", "front"],
+                                "Lay outer flap and facing right sides together and sew along the sides and the "
+                                "flap edge. Trim the allowance at the corners, turn and press. Topstitch 5 mm from "
+                                "the edge.", repeat=2, section=sec),
+                    S.Step("Sew the flap on", "Lay the flap upside down with its open edge on the \"Flap\" "
+                           "line and sew it on. Fold it down and topstitch 7 mm from the fold.", "place", pieces=["cargo_flap", "front"],
                            stitch="topstitch", data={"mark": "Flap"}, repeat=2, section=sec)]
     if "back_patch" in o["pockets"]:
         sec = "Back pockets"
-        sa = pat.piece("back_pocket").edge("left").sa
+        psa = pat.piece("back_pocket").edge("left").sa
         where = f" ({o.get('back_pocket_side', 'right')} back leg only)" if n_bp == 1 else ""
         out += [S.hem("Hem the pocket top edge", [("back_pocket", "top")], 25.0,
-                      "Press 2.5 cm to the inside and topstitch.", stitch="topstitch", repeat=n_bp, section=sec,
+                      "Fold the top edge 2.5 cm to the wrong side and press. Topstitch 2 cm from the fold.",
+                      stitch="topstitch", repeat=n_bp, section=sec,
                       hint="A piece of cardboard in the finished pocket size makes pressing the edges easy."),
                 S.press("Press the edges under", [("back_pocket", "left"), ("back_pocket", "bottom"),
                                                    ("back_pocket", "right")],
-                        f"{_cm_text(sa)} on the other three sides.", amount=sa, repeat=n_bp, section=sec,
+                        f"Press the other three sides {_cm_text(psa)} to the wrong side.", amount=psa, repeat=n_bp,
+                        section=sec,
                         hint="Fold the corners in first, then the sides: the corners stay flat."),
                 S.place("Stitch the pocket on" + where, "back_pocket", "back",
                         "Back pocket",
-                        ("Only ONE pocket: on the " + o.get("back_pocket_side", "right") + " back leg (as worn), "
-                         "on the marking; " if n_bp == 1 else "Edgestitch on the marking of the back leg; ")
-                        + "reinforce the top corners and leave the top open.", repeat=n_bp, section=sec,
+                        ("Only ONE pocket: on the " + o.get("back_pocket_side", "right") + " back leg (as worn). "
+                         if n_bp == 1 else "")
+                        + "Place the pocket right side up on the marking of the back leg and pin. Edgestitch 2 mm "
+                        "from the folded edges along the sides and the bottom. Reinforce the top corners with a "
+                        "small triangle of stitches.", repeat=n_bp, section=sec,
                         tip=("Only ONE pocket. The top edge stays open." if n_bp == 1 else
                              "The top edge stays open."),
                         data={"only": o.get("back_pocket_side", "right")} if n_bp == 1 else {})]
     sec = "Legs"
     out.append(S.seam("Sew the side seams", ["Side seam"],
-                      "Front and back leg right sides together; single notches = front, double = back.",
+                      "Lay front and back of the same leg right sides together, side edges level: single notches "
+                      "= front, double notches = back. Pin, then sew with "
+                      f"{sa} seam allowance from the top edge to the hem.",
                       repeat=2, section=sec, tip="Always the front and back of the SAME leg (FL + BL, FR + BR)."))
     finished("Finish the side seams", [("front", "side"), ("back", "side")])
-    out.append(S.seam("Sew the inseams", ["Inseam"], "The notches on the inseam meet.", repeat=2, section=sec,
-                      tip="Start exactly at the crotch point and sew towards the hem.",
-                      hint="Pin the notches first, then the ends."))
+    out.append(S.seam("Sew the inseams", ["Inseam"],
+                      "Open the leg out at the side seam and fold it right sides together, inseam edges level. "
+                      "Pin the notches first, then the ends. "
+                      f"Sew with {sa} seam allowance from the crotch point to the hem.", repeat=2, section=sec,
+                      tip="Start exactly at the crotch point: the four seams meet there later."))
     finished("Finish the inseams", [("front", "inseam"), ("back", "inseam")])
     out.append(S.icon("Put one leg inside the other", "turn",
                       "Turn leg 2 right side out. Leg 1 stays wrong side out. Push leg 2 into leg 1 until the "
@@ -843,11 +863,13 @@ def assembly(pat: Pattern) -> list:
     on_ov = bool(seam_m and seam_m["machine"] == "overlocker")
     no_machine = not MC.has_sewing_machine(MC.of(o)) if MC.of(o) is not None else False
     out.append(S.seam("Sew the crotch seam", ["Front crotch seam", "Back crotch seam"],
-                      "In one go from the front to the back top edge; the inseams meet exactly.",
+                      "Pin the crotch curves together, starting at the inseams: they lie exactly on top of each "
+                      "other. Sew with "
+                      f"{sa} seam allowance in one go from the front top edge to the back top edge.",
                       tip=("Sew the curve slowly, clips off before the knife." if on_ov
                            else "Sew the crotch curve a second time for strength."), section="Crotch",
-                      hint="The inseams lie exactly on top of each other; press their allowances in opposite "
-                           "directions. Pull the inner leg out afterwards."))
+                      hint="Press the inseam allowances in opposite directions: the crossing lies flat. Pull the "
+                           "inner leg out afterwards."))
     finished("Finish the crotch seam", [("front", "crotch"), ("back", "crotch")])
     fly = o.get("_fly")
     if fly:
@@ -868,16 +890,18 @@ def assembly(pat: Pattern) -> list:
     if wb == "casing":
         out += [
             S.ring("Close the waistband into a ring", "waistband",
-                   f"Right sides together across the short ends (centre back); leave {_cm_text(gap)} open "
-                   "for the elastic.", section=sec, amount=gap),
-            S.fold_band("Fold the waistband in half", "waistband", "Lengthwise, wrong sides together, along "
-                        "the fold line.", section=sec),
+                   "Fold the waistband crosswise right sides together and sew the short ends (centre back) with "
+                   f"{sa} seam allowance; leave {_cm_text(gap)} open for the elastic.", section=sec, amount=gap),
+            S.fold_band("Fold the waistband in half", "waistband",
+                        "Fold lengthwise wrong sides together along the fold line and press.", section=sec,
+                        data={"hands": "fold"}),
             S.quarter("Mark quarters", "waistband", "pants top edge",
-                      "On waistband and pants top edge: centre front, centre back, sides.", section=sec,
-                      data={"quarters": "waist"}),
+                      "Mark centre front, centre back and both sides with pins, on the waistband and on the pants "
+                      "top edge.", section=sec, data={"quarters": "waist"}),
             S.attach_band("Sew the waistband on", "waistband", ["Waistband"], "pants top edge",
-                          "Raw edges together, opening at the back on the inside; quarter marks meet.",
-                          stretch=False, section=sec),
+                          "Pants right side out: slide the waistband over them, raw edges level, the opening at "
+                          "the back on the inside. Match the quarter pins. "
+                          f"Sew all round with {sa} seam allowance.", stretch=False, section=sec),
             S.icon("Thread the elastic", "elastic",
                    f"With a safety pin through the opening; overlap the ends by {_cm_text(gap * 2 / 3)} and "
                    "sew them together.", stitch="elastic", section=sec),
@@ -886,49 +910,64 @@ def assembly(pat: Pattern) -> list:
         ]
     elif wb in ("rib", "yoga"):
         out += [
-            S.ring("Close the waistband into a ring", "waistband", "Right sides together across the short "
-                   "ends (centre back).", section=sec, hint="Pull it over the child's hip to test it."),
-            S.fold_band("Fold the waistband in half", "waistband", "Lengthwise, wrong sides together.",
-                        section=sec, hint="Press the cross seam allowance open first: the fold lies flatter."),
+            S.ring("Close the waistband into a ring", "waistband",
+                   "Fold the waistband crosswise right sides together, short ends level. Sew them (centre back) "
+                   f"with {sa} seam allowance.", section=sec, hint="Pull it over the child's hip to test it."),
+            S.fold_band("Fold the waistband in half", "waistband", "Fold lengthwise wrong sides together, raw edges "
+                        "level.", section=sec, data={"hands": "fold"},
+                        hint="Press the cross seam allowance open first: the fold lies flatter."),
             S.quarter("Mark quarters", "waistband", "pants top edge",
-                      "On waistband and pants top edge: centre front, centre back, sides.", section=sec,
+                      "Mark centre front, centre back and both sides with pins, on the waistband and on the pants "
+                      "top edge.", section=sec,
                       data={"quarters": "waist"},
                       tip="The waistband is shorter than the top edge: the quarter marks meet, the lengths do not."),
             S.attach_band("Sew the waistband on", "waistband", ["Waistband"], "pants top edge",
-                          "Right sides together, cross seam at centre back.",
-                          tip="Stretch only the waistband, not the pants.", section=sec),
+                          "Pants right side out: slide the waistband over them, raw edges level, cross seam at "
+                          "centre back. Match the quarter pins. "
+                          f"Sew all round with {sa} seam allowance, waistband on top.",
+                          tip="Stretch only the waistband, not the pants.", section=sec,
+                          data={"hands": "stretch"}),
         ]
     else:
         turn = o.get("_casing_turn", 7.0)
         out += [
             S.press("Press the top edge under", [("front", "waistband"), ("back", "waistband")],
-                    f"{turn:.0f} mm to the wrong side.", amount=turn, section=sec),
+                    f"Press the top edge {turn:.0f} mm to the wrong side.", amount=turn, section=sec),
             S.hem("Sew the elastic casing", [("front", "waistband"), ("back", "waistband")],
                   max(o.get("elastic_width") or 25.0, 20.0) + 5.0,
-                  f"Fold along the \"fold casing\" line and edgestitch; leave {_cm_text(gap)} open.",
+                  "Fold to the inside along the \"fold casing\" line and press. Edgestitch close to the lower "
+                  f"fold; leave {_cm_text(gap)} open at the back.",
                   stitch="topstitch", section=sec),
-            S.icon("Thread the elastic", "elastic", "With a safety pin; sew the ends together with an overlap "
-                   "and close the opening.", stitch="elastic", section=sec),
+            S.icon("Thread the elastic", "elastic", "Thread the elastic with a safety pin. Overlap the ends 2 cm "
+                   "and sew them together, then close the opening.", stitch="elastic", section=sec),
         ]
     sec = "Hems"
     if o["cuffs"]:
         out += [
-            S.ring("Close the cuffs into rings", "leg_cuff", "Right sides together across the short ends.",
-                   repeat=2, section=sec),
-            S.fold_band("Fold the cuffs in half", "leg_cuff", "Lengthwise, wrong sides together.", repeat=2,
-                        section=sec),
-            S.quarter("Mark quarters", "leg_cuff", "leg opening", "On cuff and leg opening.", repeat=2,
-                      section=sec),
+            S.ring("Close the cuffs into rings", "leg_cuff",
+                   f"Fold each cuff crosswise right sides together, short edges level. Sew with {sa} seam "
+                   "allowance; finger-press the allowances open.", repeat=2, section=sec),
+            S.fold_band("Fold the cuffs in half", "leg_cuff",
+                        "Fold the ring lengthwise wrong sides together, raw edges level. "
+                        "The seam allowance is now inside; the right side shows all round.", repeat=2,
+                        section=sec, data={"hands": "fold"}),
+            S.quarter("Mark quarters", "leg_cuff", "leg opening",
+                      "Mark quarters with pins on the cuff and on the leg opening; the cuff seam is one of them.",
+                      repeat=2, section=sec),
             S.attach_band("Sew the cuffs on", "leg_cuff", ["Leg cuff"], "leg opening",
-                          "Slip the cuff over the right-side-out leg, cuff seam at the inseam.", repeat=2,
-                          section=sec),
+                          "Turn the leg right side out. Slide the cuff over the leg end, raw edges level, cuff seam "
+                          "on the inseam. Match the quarter pins. "
+                          f"Sew with {sa} seam allowance, cuff on top, stretching only the cuff.", repeat=2,
+                          section=sec, hint="One hand in front of the presser foot, one behind it: both stretch "
+                                            "evenly.", data={"hands": "stretch"}),
             S.press("Press the allowance up", [("front", "hem"), ("back", "hem")],
-                    "Seam allowance towards the pants.", repeat=2, section=sec),
+                    "Press the seam allowance up towards the pants.", repeat=2, section=sec),
         ]
     elif o.get("turn_up"):
         out += [
             S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], o["hem_sa"],
-                  f"Press {o['hem_sa'] / 10:.1f} cm under and sew it down.", repeat=2, section=sec),
+                  f"Fold the hem allowance {_cm_text(o['hem_sa'])} to the wrong side and press. Sew it down close "
+                  "to the raw edge.", repeat=2, section=sec),
             S.press("Fold the turn-up", [("front", "hem"), ("back", "hem")],
                     "Fold the leg to the inside along the \"Hem edge\", then fold the turn-up back out along "
                     "the \"Turn-up fold\"; tack it at the side seam and inseam.", amount=o["turn_up"] * 10,
@@ -956,7 +995,8 @@ def assembly(pat: Pattern) -> list:
     else:
         hs = pat.piece("front").edge("hem").sa
         out.append(S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
-                         f"Press {hs / 10:.1f} cm to the inside.", repeat=2, section=sec))
+                         f"Fold the hem allowance {_cm_text(hs)} to the wrong side and press. Sew it down "
+                         f"{_cm_text(max(hs - 5.0, hs * 0.6))} from the fold.", repeat=2, section=sec))
     out.append(S.done("Press all seams" + E.press_note(o.get("fabric", "woven")),
                       data={"press_check": E.has_nap(o)}))
     return out

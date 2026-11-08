@@ -249,55 +249,82 @@ def assembly(pat):
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
     if o.get("style") == "shirt_dress":
+        bsa = ST.cm(pat.piece("front").edge("side").sa)
         out = []
         if o.get("back_opening"):
             out.append(ST.seam("Sew the centre back seam", ["Centre back seam"],
-                              "Back pieces right sides together from the hem up to the notch; above the notch "
-                              "the seam stays open (back opening).", section="Back"))
+                              "Lay the back pieces right sides together, centre back edges level, and pin. "
+                              f"Sew with {bsa} seam allowance from the hem up to the notch. "
+                              "Above the notch the seam stays open (back opening).", section="Back",
+                              tip="Backstitch firmly at the notch: the opening pulls there."))
         out += T.assembly(pat, hem=False, done=False)
         hs = pat.piece("front").edge("hem").sa
         out += [ST.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
-                      f"Press {ST.cm(hs)} to the inside; ease a curved hem in with steam.", section="Hem"),
+                      f"Fold the hem allowance {ST.cm(hs)} to the wrong side and press; ease a curved hem in "
+                      f"with steam. Sew it down {ST.cm(max(hs - 5.0, hs * 0.6))} from the fold.", section="Hem"),
                 ST.done()]
         return out
     out = T.assembly(pat, hem=False, done=False)
     sec = "Skirt"
+    sa = ST.cm(pat.piece("skirt_front").edge("side").sa)
     if o.get("back_opening"):
         out.append(ST.seam("Sew the skirt centre back seam", ["Skirt centre back seam"],
-                          "From the hem up to the notch; above the notch it stays open (continues the back "
-                          "opening).", section=sec))
+                          "Lay the skirt back pieces right sides together, centre back edges level. "
+                          f"Sew with {sa} seam allowance from the hem up to the notch. "
+                          "Above the notch the seam stays open and continues the back opening.", section=sec,
+                          tip="Backstitch firmly at the notch: the opening pulls there."))
     if o.get("pockets") and pat.has("pocket_bag"):
         out += [
-            ST.Step("Sew on the pocket bags", "One bag right sides together on each skirt side seam between the "
-                   "notches, 7 mm from the edge; press the bags outwards.", "edge",
-                   edges=[("pocket_bag", "side")], stitch="seam", repeat=4, section=sec),
+            ST.Step("Sew on the pocket bags", "Lay a pocket bag right side down on the skirt side edge, edges "
+                   "level, notches on the notches. Sew 7 mm from the edge, just inside the seam allowance. "
+                   "Press the bag outwards, away from the skirt.", "edge",
+                   edges=[("pocket_bag", "side")], stitch="seam", repeat=4, section=sec,
+                   hint="Sewing inside the allowance keeps the seam out of sight later."),
         ]
     out.append(ST.seam("Sew the skirt side seams", ["Skirt side seam"],
-                      "Skirt front and back right sides together" +
-                      (", pivoting around the pocket bags." if o.get("pockets") else "."), repeat=2, section=sec))
+                      "Lay skirt front and back right sides together, side edges level" +
+                      (" and the pocket bags on top of each other. " if o.get("pockets") else ". ") +
+                      f"Sew with {sa} seam allowance from the waist to the hem" +
+                      (", pivoting round the pocket bags at the notches. " if o.get("pockets") else ". ") +
+                      "Press the allowances towards the back" +
+                      (" and the pocket bags towards the front." if o.get("pockets") else "."),
+                      repeat=2, section=sec))
     if ST.needs_finish(o, knit):
         out.append(ST.finish("Finish the skirt side seams", [("skirt_front", "side"), ("skirt_back", "side")],
                             repeat=2, section=sec))
     if o.get("skirt") == "gathered":
         out.append(ST.gather("Gather the skirt top edge", [("skirt_front", "waistband")],
-                            f"Two rows of long stitches; pull them up to the bodice waist (gather ratio "
-                            f"{o.get('gather', 1.6):g}), spread the gathers evenly.", section=sec))
+                            "Sew two rows of the longest stitch inside the seam allowance, 5 mm apart; leave long "
+                            "thread ends. Pull the bobbin threads until the edge matches the bodice waist "
+                            f"(gather ratio {o.get('gather', 1.6):g}). Spread the gathers evenly and knot the "
+                            "threads.", section=sec,
+                            hint="Pull from both ends towards the middle: the threads break less easily."))
     out.append(ST.seam("Sew skirt and bodice together", ["Waist seam"],
-                      "Skirt right sides together to the bodice: side seams meet, centre front/back meet.",
-                      section="Waist"))
+                      "Turn the skirt wrong side out and slip the bodice into it, right side out, so the right "
+                      "sides lie together and the waist edges are level. Match the side seams and the centre front "
+                      "and back, and pin. "
+                      f"Sew with {sa} seam allowance, skirt on top. Press the allowances towards the bodice.",
+                      section="Waist",
+                      hint="Sew over the gathers slowly and keep them straight with a pin tip."))
     if o.get("waist_elastic"):
         out.append(ST.icon("Sew in the elastic", "elastic",
-                          f"Elastic {o.get('_elastic', 0) / 10:.0f} cm, joined into a ring, onto the waist seam "
-                          "allowance, stretching it evenly; press the seam up.", stitch="elastic", section="Waist"))
+                          f"Overlap the ends of the elastic ({o.get('_elastic', 0) / 10:.0f} cm) and sew them into "
+                          "a ring. Pin it to the waist seam allowance at the quarters. "
+                          "Sew it on with a zigzag, stretching it between the pins. "
+                          "Press the allowances towards the bodice.", stitch="elastic", section="Waist",
+                          data={"hands": "stretch"}))
     hs = pat.piece("skirt_front").edge("hem").sa
     if o.get("skirt") == "circle":
-        out += [ST.icon("Let the dress hang for 24 h", "level", "Then level the hem: the bias stretches.",
-                       section="Hem"),
+        out += [ST.icon("Let the dress hang for 24 h", "level",
+                       "Hang the dress on a hanger. The bias parts stretch, so measure the length from the floor "
+                       "all round and trim the hem level.", section="Hem"),
                 ST.hem("Sew a narrow hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs / 2,
-                      f"Press under twice by {ST.cm(hs / 2)}.", section="Hem")]
+                      f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again by the same "
+                      "amount. Sew it down close to the inner fold.", section="Hem")]
     else:
         out.append(ST.hem("Sew the hem", [("skirt_front", "hem"), ("skirt_back", "hem")], hs,
-                         "Press the allowance under twice and stitch.", section="Hem"))
+                         f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again "
+                         "by the same amount. Sew it down close to the inner fold.", section="Hem"))
     out.append(ST.done())
     return out
 

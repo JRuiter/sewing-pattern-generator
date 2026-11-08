@@ -514,13 +514,15 @@ def back_opening_steps(pat, edge: str | None = None) -> list:
     edge = edge or ("center_open" if any(e.name == "center_open" for e in b.edges) else "center")
     sec = "Back opening"
     return [
-        S.finish("Finish the opening edges", [("back", edge)], "Both centre back edges.", repeat=2,
-                 section=sec),
+        S.finish("Finish the opening edges", [("back", edge)], "Finish both centre back edges separately.",
+                 repeat=2, section=sec),
         S.hem("Turn in the opening edges", [("back", edge)], osa,
-              f"Press {S.cm(osa)} to the inside and stitch it down.", stitch="topstitch", repeat=2, section=sec),
+              f"Fold the opening edge {S.cm(osa)} to the wrong side and press. "
+              "Stitch it down close to the finished edge.", stitch="topstitch", repeat=2, section=sec),
         S.icon("Sew on the Velcro", "velcro",
-               "The edges overlap at the centre back: soft side on the left back, hook side on the right back "
-               "(or 2–3 snaps).", stitch="topstitch", section=sec,
+               "Lay the right back over the left back so the edges overlap at the centre back. "
+               "Sew the soft side to the right side of the left back and the hook side to the inside of the right "
+               "back, stitching round each strip (or sew on 2–3 snaps).", stitch="topstitch", section=sec,
                tip="The garment opens completely: easy dressing."),
     ]
 
@@ -538,13 +540,17 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
 
     def finished(title, edges):
         if S.needs_finish(o, knit):
-            out.append(S.finish(title, edges, "Both allowances together; press them towards the back.",
+            out.append(S.finish(title, edges, "Finish both allowances together, from the right side of the "
+                                "upper layer. Press them towards the back.",
                                 repeat=2, section=out[-1].section))
 
     if o["sleeve_style"] == "raglan":
         out.append(S.seam("Sew the raglan seams", ["Raglan seam"],
-                          "Sleeve right sides together to front and back; single notches at the front, double at "
-                          "the back.", repeat=2, section="Sleeves"))
+                          "Lay the sleeve right sides together on the front, raglan edges level, single notches "
+                          f"on each other, and pin. Sew with {sa} seam allowance from the neckline to the underarm. "
+                          "Sew the back raglan seam in the same way, double notches on each other. "
+                          "Press the allowances towards the sleeve.", repeat=2, section="Sleeves",
+                          tip="Front and back raglan edges differ: the notches show which is which."))
         finished("Finish the raglan seams", [("sleeve", "raglan_front"), ("sleeve", "raglan_back")])
     else:
         out.append(S.seam("Sew the shoulder seams", ["Shoulder seam"],
@@ -561,37 +567,53 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         nb = pat.piece("neckband")
         if o.get("neck_finish") == "bias":
             out += [
-                S.fold_band("Fold the binding in half", "neckband", "Lengthwise, wrong sides together; press.",
-                            section=sec),
+                S.fold_band("Fold the binding in half", "neckband",
+                            "Fold the bias strip lengthwise wrong sides together, raw edges level, and press. "
+                            "Shape it into a curve with the iron.", section=sec, data={"hands": "fold"}),
                 S.seam("Sew the neck binding on", ["Neck binding"],
-                       "Raw edges to the neckline, right sides together; let each end stick out past the opening "
-                       "edge by the allowance.", section=sec),
+                       "Lay the binding on the right side of the neckline, raw edges level; let each end stick out "
+                       "past the opening edge by the allowance. Pin without stretching. "
+                       f"Sew with {sa} seam allowance. Trim the allowance to half and clip it in the curves.",
+                       section=sec),
                 S.topstitch("Stitch the binding down", [("front", "neckline"), ("back", "neckline")], 2.0,
-                            "Fold the ends in, turn the binding to the inside over the allowance and stitch close "
-                            "to the fold.", section=sec),
+                            "Fold the ends in. Turn the binding to the inside over the allowance and press. "
+                            "Stitch it down close to the fold.", section=sec,
+                            hint="Press first: the binding then rolls inside by itself."),
             ]
         elif o.get("back_opening") or open_bands:
             out += [
-                S.fold_band("Fold the neckband in half", "neckband", "Lengthwise, wrong sides together.",
-                            section=sec),
+                S.fold_band("Fold the neckband in half", "neckband",
+                            "Fold the band lengthwise wrong sides together, raw edges level; press lightly.",
+                            section=sec, data={"hands": "fold"}),
                 S.attach_band("Sew the neckband on", "neckband", ["Neckband"], "neckline",
-                              "Right sides together, stretching it slightly, from one front/opening edge to the "
-                              "other; fold the ends in.", section=sec),
+                              "Lay the band on the right side of the neckline, raw edges level, from one front "
+                              "(opening) edge to the other; fold the band ends in. "
+                              f"Sew with {sa} seam allowance, band on top, stretching it slightly.", section=sec,
+                              data={"hands": "stretch"},
+                              hint="Stretch only the band, never the neckline."),
             ]
         else:
             out += [
-                S.ring("Close the neckband into a ring", "neckband", "Right sides together across the short ends.",
-                       section=sec),
-                S.fold_band("Fold the neckband in half", "neckband", "Lengthwise, wrong sides together.",
-                            section=sec),
+                S.ring("Close the neckband into a ring", "neckband",
+                       "Fold the band crosswise right sides together, short edges level. "
+                       f"Sew with {sa} seam allowance; finger-press the allowances open.", section=sec),
+                S.fold_band("Fold the neckband in half", "neckband",
+                            "Fold the ring lengthwise wrong sides together, raw edges level. "
+                            "The seam allowance is now inside.", section=sec, data={"hands": "fold"}),
                 S.quarter("Mark quarters", "neckband", "neckline",
-                          "Band: cross seam = centre back. Neckline: centre front, centre back, shoulders.",
+                          "Band: pins at the cross seam (centre back), opposite it and halfway between. "
+                          "Neckline: pins at centre front, centre back and both shoulder seams.",
                           section=sec, data={"quarters": "neck"}),
                 S.attach_band("Sew the neckband on", "neckband", ["Neckband"], "neckline",
-                              "Right sides together, raw edges meet; stretch the band, not the neckline.",
-                              section=sec),
+                              "Garment right side out: lay the band on the neckline, raw edges level, cross seam at "
+                              "the centre back. Match the quarter pins. "
+                              f"Sew with {sa} seam allowance, band on top, stretching only the band between the "
+                              "pins. Press the allowances towards the garment.", section=sec,
+                              data={"hands": "stretch"},
+                              hint="One hand in front of the presser foot, one behind it: both stretch evenly."),
                 S.topstitch("Press the allowance down and topstitch", [("front", "neckline"), ("back", "neckline")],
-                            6.0, "Optional, gives a flat, professional neckline.", section=sec),
+                            6.0, "Optional: topstitch the allowance down from the right side, 6 mm from the seam. "
+                            "This gives a flat, professional neckline.", section=sec),
             ]
         del nb
     if o["sleeve_style"] != "raglan":
@@ -637,8 +659,11 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         ]
     else:
         hs = pat.piece("sleeve").edge("hem").sa
-        out.append(S.hem("Hem the sleeves", [("sleeve", "hem")], hs, f"Press {S.cm(hs)} to the inside.",
-                         repeat=2, section="Sleeve hems"))
+        out.append(S.hem("Hem the sleeves", [("sleeve", "hem")], hs,
+                         f"Fold the sleeve hem {S.cm(hs)} to the wrong side and press. "
+                         f"Sew it down {S.cm(max(hs - 5.0, hs * 0.6))} from the fold, from the right side.",
+                         repeat=2, section="Sleeve hems",
+                         hint="Slide the sleeve over the free arm of the machine."))
     if hem:
         sec = "Hem"
         if o["hem_band"] and pat.has("hem_band"):
@@ -666,7 +691,9 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         else:
             hs = pat.piece("front").edge("hem").sa
             out.append(S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
-                             f"Press {S.cm(hs)} to the inside.", section=sec))
+                             f"Fold the hem {S.cm(hs)} to the wrong side and press. "
+                             f"Sew it down {S.cm(max(hs - 5.0, hs * 0.6))} from the fold, from the right side.",
+                             section=sec))
     if done:
         out.append(S.done())
     return out

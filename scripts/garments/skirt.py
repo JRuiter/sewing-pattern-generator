@@ -123,38 +123,60 @@ def assembly(pat):
     st = o["style"]
     knit = E.fabric_info(o["fabric"])[2]
     gap = o.get("_gap", 30.0)
-    out = [ST.seam("Sew the side seams", ["Side seam"], "Front and back skirt right sides together.", repeat=2,
-                   section="Skirt")]
+    sa = ST.cm(pat.piece("front").edge("side").sa)
+    out = [ST.seam("Sew the side seams", ["Side seam"],
+                   "Lay front and back skirt right sides together, side edges level, and pin. "
+                   f"Sew with {sa} seam allowance from the waist to the hem. "
+                   "Press the allowances towards the back.", repeat=2, section="Skirt",
+                   tip="Start at the waist: any difference in length then ends up at the hem, where it is levelled.")]
     if ST.needs_finish(o, knit):
         out.append(ST.finish("Finish the side seams", [("front", "side"), ("back", "side")], repeat=2,
                              section="Skirt"))
     if st == "gathered":
         out.append(ST.gather("Gather the top edge", [("front", "waistband")],
-                             "Two rows of the longest stitch; pull them up to the waistband length, spread the "
-                             "gathers evenly.", section="Skirt"))
+                             "Sew two rows of the longest stitch inside the seam allowance, 5 mm apart; leave long "
+                             "thread ends. Pull the bobbin threads until the edge matches the waistband. "
+                             "Spread the gathers evenly and knot the threads.", section="Skirt",
+                             hint="Pull from both ends towards the middle: the threads break less easily."))
     sec = "Waistband"
     out += [
         ST.ring("Close the waistband into a ring", "waistband",
-                f"Right sides together across the short ends (centre back); leave {_cm_text(gap)} open.",
-                section=sec),
-        ST.fold_band("Fold the waistband in half", "waistband", "Lengthwise, wrong sides together.", section=sec),
-        ST.quarter("Mark quarters", "waistband", "skirt top edge", "Centre front, centre back, sides.",
+                "Fold the band crosswise right sides together, short edges level (this is the centre back). "
+                f"Sew with {sa} seam allowance, leaving {_cm_text(gap)} open for the elastic; "
+                "press the allowances open.", section=sec),
+        ST.fold_band("Fold the waistband in half", "waistband",
+                     "Fold the ring lengthwise wrong sides together, raw edges level, and press. "
+                     "The opening is now on the inside.", section=sec, data={"hands": "fold"}),
+        ST.quarter("Mark quarters", "waistband", "skirt top edge",
+                   "Band: pins at the cross seam, opposite it and halfway between. "
+                   "Skirt: pins at centre front, centre back and both side seams.",
                    section=sec, data={"quarters": "waist"}),
         ST.attach_band("Sew the waistband on", "waistband", ["Waistband"], "skirt top edge",
-                       "Right sides together, raw edges meet, opening on the inside.", stretch=False, section=sec),
-        ST.icon("Thread the elastic", "elastic", "With a safety pin; join the ends with an overlap.",
-                stitch="elastic", section=sec),
-        ST.icon("Close the opening", "hand", "Stitch the opening closed.", stitch="topstitch", section=sec),
+                       "Skirt right side out: slide the band over it, raw edges level, cross seam on the centre "
+                       "back and the opening facing the skirt. Match the quarter pins. "
+                       f"Sew with {sa} seam allowance, band on top. "
+                       "Press the allowances towards the skirt.", stretch=False, section=sec,
+                       tip="Leave the opening in the band free: sew only through the band edges and the skirt."),
+        ST.icon("Thread the elastic", "elastic",
+                "Fasten a safety pin to one end of the elastic and push it through the opening once round the "
+                "band. Keep the other end outside. Overlap the ends by 2 cm and sew them together with a "
+                "zigzag box.", stitch="elastic", section=sec,
+                hint="Pin the trailing end to the band so it does not slip in."),
+        ST.icon("Close the opening", "hand", "Spread the gathers evenly. Stitch the opening closed close to the "
+                "fold.", stitch="topstitch", section=sec),
     ]
     hs = pat.piece("front").edge("hem").sa
     if st == "circle":
-        out += [ST.icon("Let the skirt hang for 24 h", "level", "Then level the hem: the bias stretches.",
-                        section="Hem"),
+        out += [ST.icon("Let the skirt hang for 24 h", "level",
+                        "Hang the skirt by the waistband. The bias parts stretch, so measure the length from the "
+                        "floor all round and trim the hem level.", section="Hem"),
                 ST.hem("Sew a narrow hem", [("front", "hem"), ("back", "hem")], hs / 2,
-                       f"Press under twice by {round(hs / 20, 2):g} cm.", section="Hem")]
+                       f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again by the same "
+                       "amount. Sew it down close to the inner fold.", section="Hem")]
     else:
         out.append(ST.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
-                          "Press the allowance under twice and stitch.", section="Hem"))
+                          f"Fold the hem {ST.cm(hs / 2)} to the wrong side and press, then fold it again "
+                          "by the same amount. Sew it down close to the inner fold.", section="Hem"))
     out.append(ST.done())
     return out
 
