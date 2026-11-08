@@ -899,9 +899,22 @@ def _done_panel(fig, pattern, steps, rect):
     _box(fig, x, y, w, h, "none", LIGHT, lw=0.9)
     fig.text(x + w * 0.36, y + h - 0.018, T("Done!"), fontsize=24, fontweight="bold", ha="center", va="top")
     _views(fig, pattern, (x + 0.02, y + 0.012, w * 0.68, h - 0.075))
-    _important(fig, x + w * 0.73, y + h * 0.62, w * 0.25, T("Try the test garment on the child: length, width at "
-               "the hip and the waistband. Adjust the measurements or options and print the pattern again before "
-               "you cut the good fabric."), 7.2, label="After the test garment", colors=TIP, icon="")
+    _important(fig, x + w * 0.73, y + h * 0.62, w * 0.25, T(_fit_check(pattern)), 7.2,
+               label="After the test garment", colors=TIP, icon="")
+
+
+def _fit_check(pattern) -> str:
+    """What to check on the test garment, for this kind of garment."""
+    keys = {pc.key for pc in pattern.pieces}
+    doll = bool(pattern.options.get("doll"))
+    if doll:
+        return ("Try the test garment on the doll: does it go over the head, does the opening close, is the "
+                "length right? Adjust the measurements and print the pattern again before you cut the good fabric.")
+    if "sleeve" in keys or "hood" in keys:
+        return ("Try the test garment on the child: length, chest width, sleeve length and the neckline. Adjust "
+                "the measurements or options and print the pattern again before you cut the good fabric.")
+    return ("Try the test garment on the child: length, width at the hip and the waistband. Adjust the measurements or "
+            "options and print the pattern again before you cut the good fabric.")
 
 
 def done_page(pdf, pattern, steps, page_no: int) -> int:

@@ -4,6 +4,16 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+### Added
+- **Step pictures keep what is already sewn**: seams, hems, topstitching and pockets from earlier steps stay visible as grey dashed lines ("Already sewn" in the legend), so every picture can be checked against the garment on the table.
+- **Assembled views** for tops: hood and sleeves are set in on the body opened out at the shoulder seam (the neckline and the armhole as one curve), side and sleeve seams are sewn on the garment folded at the shoulders, and the neck seam is finished with the hood on. Built from the real pieces, so they fit every size; T-shirt and dress use them too.
+- **Hands** where the hands matter (stretching a band while sewing it on, folding a band).
+- **Alternative box** (blue) for a second way to do a step, e.g. sewing the cuffs on flat before the side seams.
+
+### Changed
+- **Precise step texts** for hoodie, T-shirt and dress, as in printed sewing instructions: one sentence per action, with how the pieces lie, which notches meet, the seam allowance in cm and how to press. German texts included.
+- The "Done!" panel says what to check on the test garment for this kind of garment (tops: chest, sleeve length, neckline; doll clothes: over the head).
+
 ### Fixed
 - **Inseam picture of all pants**: the back leg was laid onto the front along the inseam alone and ended up turned against it, although the side seam already joins the two. The booklet now shows the leg opened out at the sewn side seam (grey dashed = already sewn) and folded right sides together, with the inseam in red on the top layer. Every booklet step now knows what earlier steps sewed (`steps.annotate_progress`).
 

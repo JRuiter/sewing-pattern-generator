@@ -958,6 +958,8 @@ def draw_place(ax, pattern, step):
                 mp = np.asarray(u.exterior.coords, float)[:-1]
                 mp = mp[[i for i in range(len(mp)) if np.hypot(*(mp[i] - mp[i - 1])) > 1.0]]
         _fill(ax, mp, z=3, pc=pocket)
+        for seg in _pocket_opening_hems(pocket, mp):
+            _done_line(ax, seg, z=4, lw=1.1)
         top_y, bot_y = mp[:, 1].max(), mp[:, 1].min()
         hem_y = full[:, 1].min()
         slanted_open = any(e.name == "opening" for e in pocket.edges)
@@ -1401,6 +1403,29 @@ def _pocket_poly(base, mark_key: str, unfold=True):
     return mp
 
 
+def _pocket_opening_hems(pocket, mp):
+    """The topstitched hems of the slanted openings of a placed pocket (hemmed before it is placed)."""
+    try:
+        op = pocket.edge("opening")
+    except (KeyError, ValueError, StopIteration):
+        return []
+    if op is None:
+        return []
+    d = max(op.sa - 3.0, op.sa * 0.6) if op.sa else 12.0
+    c = mp.mean(0)
+    out = []
+    for i in range(len(mp)):
+        a, b = mp[i], mp[(i + 1) % len(mp)]
+        u = G.unit(b - a)
+        if not 0.2 < abs(u[0]) < 0.98:
+            continue
+        n = np.array([-u[1], u[0]])
+        if np.dot(c - (a + b) / 2, n) < 0:
+            n = -n
+        out.append(np.array([a + n * d, b + n * d]))
+    return out
+
+
 def _pocket_stitched_sides(pocket, base, mp):
     """The sides of a placed pocket that are stitched (openings and the hem-band edge stay open)."""
     full = _unfolded(base, _outline(base))
@@ -1457,6 +1482,8 @@ def draw_done(ax, pattern, step, pc, T=ID, skip=(), z=5.5, pockets=True, wrong=F
                 if not wrong:
                     _fill(ax, _apply(T, mp), z=z - 0.4, pc=pocket, lw=0.9)
                 for seg in _pocket_stitched_sides(pocket, pc, mp):
+                    _done_line(ax, _apply(T, seg), z=z, lw=1.1)
+                for seg in _pocket_opening_hems(pocket, mp):
                     _done_line(ax, _apply(T, seg), z=z, lw=1.1)
     except (KeyError, ValueError, IndexError):          # pragma: no cover - a missing edge: draw nothing
         return
@@ -1705,10 +1732,51 @@ def draw_folded_body(ax, pattern, step):
     _finish_axes(ax, allp, pad=0.04)
 
 
+def draw_flat_neck(ax, pattern, step):
+    """Finish the neck seam: the body opened out at the shoulder with the hood sewn on; the seam
+    allowances of the neck seam are finished together (zigzag or overlocker) and pressed down."""
+    body = body_flat(pattern)
+    F, B, H = pattern.piece("front"), pattern.piece("back"), pattern.piece("hood")
+    _f, Tb, _rb = body["back"]
+    _f, Tf, _rf = body["front"]
+    allp = _draw_body(ax, pattern, step, body, skip=("neckline",))
+    dst = G.join(_apply(Tf, F.edge("neckline").pts)[::-1], _apply(Tb, B.edge("neckline").pts))
+    ring = np.asarray(H.seam_ring(), float)
+    Th = _attach_T(H.edge("neck").pts, dst, ring, np.vstack(allp))
+    rh = _apply(Th, ring)
+    _fill(ax, rh, z=1, pc=H)
+    draw_done(ax, pattern, step, H, Th, skip=("neck",))
+    _piece_label(ax, pattern, H, ring, Th, size=8)
+    _done_line(ax, dst, z=6, lw=1.5)
+    # the finish: zigzag over both allowances, beside the seam on the body side
+    size = max(np.ptp(np.vstack(allp + [rh]), 0))
+    n = _inward(dst)
+    probe = dst[len(dst) // 2] + n[len(dst) // 2] * 5
+    from shapely.geometry import Point, Polygon
+    sign = 1.0 if any(Polygon(r).buffer(0).contains(Point(probe)) for r in allp) else -1.0
+    edge = dst + n * sign * F.edge("neckline").sa
+    L = G.length(edge)
+    k = max(int(L / 6.0), 8)
+    zz = []
+    for j, sj in enumerate(np.linspace(0, L, k)):
+        p = G.point_at(edge, sj)
+        i = int(np.argmin(np.abs(G.cumlen(edge) - sj)))
+        zz.append(p - n[i] * sign * (F.edge("neckline").sa * (0.85 if j % 2 else 0.15)))
+    zz_arr = np.array(zz)
+    ax.plot(zz_arr[:, 0], zz_arr[:, 1], color=STITCH, lw=1.2, zorder=7)
+    m = G.point_at(dst, L * 0.5)
+    ax.annotate(T("allowances down, towards the body"), (m[0], m[1]), xytext=(40, 6), textcoords="offset points",
+                fontsize=6.8, fontweight="bold", color=INK, ha="left", va="bottom", zorder=10,
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85),
+                arrowprops=dict(arrowstyle="-|>", color=INK, lw=0.9))
+    _finish_axes(ax, allp + [rh, [[m[0] + size * 0.45, m[1]]]], pad=0.04)
+
+
 ASSEMBLED = {
     "flat_sleeve": (draw_flat_sleeve, lambda p: _body_pieces_ok(p) and p.has("sleeve")),
     "flat_hood": (draw_flat_hood, lambda p: _body_pieces_ok(p) and p.has("hood")),
     "folded": (draw_folded_body, lambda p: _body_pieces_ok(p) and p.has("sleeve")),
+    "flat_neck": (draw_flat_neck, lambda p: _body_pieces_ok(p) and p.has("hood")),
 }
 
 

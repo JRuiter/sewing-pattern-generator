@@ -238,7 +238,7 @@ def assembly(pat):
                     section=sec, data={"view": "flat_hood"}),
             ST.finish("Finish the neck seam", [("front", "neckline"), ("back", "neckline")],
                       "Finish both allowances together. Press them down towards the body.",
-                      section=sec,
+                      section=sec, data={"view": "flat_neck"},
                       alt="Neatest finish: cover the allowance with a strip of jersey or cotton tape "
                           "from shoulder to shoulder over the back neck and stitch it down on both edges."),
         ]
