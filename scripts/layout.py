@@ -470,33 +470,131 @@ def _nap_angles(angles: list[float]) -> list[float]:
     return keep or [max(angles, key=up_y)]
 
 
-def _single_items(pattern, ids, nap=False):
+FOLD_CLEARANCE = 5.0    # folded layout: distance of normal pieces from the fold (never cut into the fold)
+
+PRINTS = ("plain", "one_way", "stripes", "plaid")
+DEFAULT_REPEAT_CM = 5.0
+
+
+def fabric_print(options: dict | None):
+    """Print of the main fabric: (kind, (across_mm, along_mm) or None, note or None).
+
+    kind: plain | one_way (directional print: like a nap) | stripes (stripes across the
+    fabric, matched at the seams) | plaid (checks: matched along and across)."""
+    o = options or {}
+    kind = (o.get("fabric_print") or "plain").lower().replace("-", "_")
+    if kind not in PRINTS:
+        raise ValueError(f"fabric_print must be one of {', '.join(PRINTS)}")
+    if kind not in ("stripes", "plaid"):
+        return kind, None, None
+    rep = o.get("print_repeat_cm")
+    note = None
+    if rep is None:
+        rep = DEFAULT_REPEAT_CM
+        note = (f"Print repeat not given: {DEFAULT_REPEAT_CM:.0f} cm assumed. Measure one repeat of the "
+                "stripes/checks and pass it (print_repeat_cm) for an exact layout.")
+    if isinstance(rep, (list, tuple)):
+        across, along = float(rep[0]), float(rep[-1])
+    else:
+        across = along = float(rep)
+    if min(across, along) <= 0:
+        raise ValueError("print_repeat_cm must be > 0")
+    return kind, (across * 10.0, along * 10.0), note
+
+
+def _end_near(edge, other):
+    """Endpoint of `edge` that touches `other` (a shared corner of the outline)."""
+    ends = [edge.pts[0], edge.pts[-1]]
+    oth = [other.pts[0], other.pts[-1]]
+    return min(ends, key=lambda p: min(float(np.linalg.norm(p - q)) for q in oth))
+
+
+def _edges(piece):
+    return {e.name: e for e in piece.edges}
+
+
+def match_points(pattern, ids, plaid=False):
+    """Where stripes have to meet, per piece index: dict i → (match_y, match_x).
+
+    match_y = (point, phase): the point (piece coordinates, on the seam line) lies on the
+    same phase of the repeat for all pieces. Pieces with a hem and a side seam (bodice,
+    trousers, skirt) use the hem corner at the side seam, so the stripes continue across
+    side seams and inside leg seams; sleeves use the underarm point, shifted by the side
+    seam of the front, so the stripes of sleeve and body meet under the arm; hood halves
+    the bottom of the centre seam. Small pieces (bands, pockets, bags) are not matched.
+    match_x (plaid only): the centre line (centre edge, or the grainline) on a vertical line
+    of the checks."""
+    out = {}
+    side_len = None
+    for i in ids:
+        ed = _edges(pattern.pieces[i])
+        if pattern.pieces[i].key == "front" and "side" in ed and "hem" in ed:
+            s = ed["side"]
+            bottom = _end_near(s, ed["hem"])
+            top = s.pts[0] if bottom is s.pts[-1] else s.pts[-1]
+            side_len = float(top[1] - bottom[1])
+    for i in ids:
+        p = pattern.pieces[i]
+        ed = _edges(p)
+        my = None
+        if "hem" in ed and "side" in ed:
+            my = (_end_near(ed["side"], ed["hem"]), 0.0)
+        elif "seam_front" in ed and ("cap_front" in ed or "raglan_front" in ed) and side_len is not None:
+            cap = ed.get("cap_front") or ed["raglan_front"]
+            my = (_end_near(ed["seam_front"], cap), -side_len)
+        elif "center" in ed and "neck" in ed and p.key == "hood":
+            my = (_end_near(ed["center"], ed["neck"]), 0.0)
+        if my is None:
+            continue
+        mx = None
+        if plaid:
+            if "center" in ed and p.key != "hood":
+                c = ed["center"].pts
+                mx = (c[len(c) // 2], 0.0)
+            elif p.grain is not None:
+                mx = (np.asarray(p.grain[0], dtype=float), 0.0)
+        out[i] = (my, mx)
+    return out
+
+
+def _orients(angles, mirrored, both_sides=False):
+    out = [(a, mirrored) for a in angles]
+    if both_sides:
+        out += [(a, not mirrored) for a in angles]
+    return out
+
+
+def _single_items(pattern, ids, nap=False, matches=None):
     """Single layer: fold pieces unfolded, every copy placed separately."""
+    matches = matches or {}
     items = []
     for i in ids:
         p = pattern.pieces[i]
         ring = unfolded_ring(p)
         ga = grain_angle(p)
+        my, mx = matches.get(i, (None, None))
         for k in range(p.cut_count):
             m = bool(p.mirror and p.cut_count % 2 == 0 and k % 2 == 1)
             a = ga if not m else 180 - ga
             angles = [a % 360, (a + 180) % 360]
             items.append(dict(ring=ring, meta=(i, k), angles=_nap_angles(angles) if nap else angles, mirrored=m,
-                              pinned=False, layers=1))
+                              pinned=False, layers=1, both=False, match_y=my, match_x=mx))
     return items
 
 
-def _folded_items(pattern, ids, half, nap=False):
+def _folded_items(pattern, ids, half, nap=False, matches=None):
     """Double layer folded selvage to selvage (fold at x = 0).
 
     Fold pieces lie with their fold edge on the fabric fold; every other placement cuts
-    a mirrored pair through both layers. Pieces wider than the folded width go to a
-    single-layer section. Returns (items, single_ids, notes).
+    a mirrored pair through both layers (so it may lie either side up). Pieces wider than
+    the folded width go to a single-layer section. Returns (items, single_ids, notes).
     """
+    matches = matches or {}
     items, single, notes = [], [], []
     avail = half - FABRIC_MARGIN
     for i in ids:
         p = pattern.pieces[i]
+        my, _mx = matches.get(i, (None, None))
         fe = _fold_edge(p)
         if fe is not None:
             ring = unfolded_ring(p, keep=fe.name)
@@ -510,48 +608,41 @@ def _folded_items(pattern, ids, half, nap=False):
                 single.append(i)
                 continue
             for k in range(p.cut_count):
-                items.append(dict(ring=ring, meta=(i, k), angles=[a], mirrored=mirrored, pinned=True, layers=1))
+                items.append(dict(ring=ring, meta=(i, k), angles=[a], mirrored=mirrored, pinned=True, layers=1,
+                                  both=False, match_y=my, match_x=None))
             continue
         ring = p.fabric_ring()
         ga = grain_angle(p)
         w = min(float(np.ptp(_oriented(ring, ga)[:, 0])), float(np.ptp(_oriented(ring, ga + 180)[:, 0])))
-        if w > avail - 5.0:
+        if w > avail - FOLD_CLEARANCE:
             single.append(i)
             continue
         n = p.cut_count
         angles = [ga % 360, (ga + 180) % 360]
         for k in range(0, n, 2):
+            pair = k + 1 < n
             items.append(dict(ring=ring, meta=(i, k), angles=_nap_angles(angles) if nap else angles, mirrored=False,
-                              pinned=False, layers=2 if k + 1 < n else 1))
+                              pinned=False, layers=2 if pair else 1, both=pair, match_y=my, match_x=None))
         if n % 2:
             notes.append(f"{p.name}: the last copy is cut through the top layer only.")
     return items, single, notes
 
 
-def _pack_items(items, width, gap, margin):
-    """Pack cutting-layout items; tries several orders/strategies, the shortest wins."""
-    rings = [it["ring"] for it in items]
-    n = len(rings)
-    area = sorted(range(n), key=lambda i: (not items[i]["pinned"], -Polygon(rings[i]).area))
-
-    def longest(i):
-        pts = _oriented(rings[i], items[i]["angles"][0])
-        return (not items[i]["pinned"], -float(np.ptp(pts[:, 1])))
-    best = None
-    for order in (area, sorted(range(n), key=longest)):
-        for mode in ("bottom", "total", "blf"):
-            res = pack(rings, width, angles=[it["angles"] for it in items], gap=gap, res=5.0,
-                       mirrored=[it["mirrored"] for it in items], pinned=[it["pinned"] for it in items],
-                       margin=margin, order=order, mode=mode)
-            score = (len(res[1]), res[2])
-            if best is None or score < best[0]:
-                best = (score, res)
-    return best[1]
+def _pack_items(items, width, gap, left, right, repeat=None):
+    """Pack cutting-layout items with the nesting engine (see nesting.py)."""
+    import nesting as NS
+    nitems = [NS.Item(ring=it["ring"], orients=_orients(it["angles"], it["mirrored"], it.get("both", False)),
+                      pinned=it["pinned"], match_y=it.get("match_y") if repeat else None,
+                      match_x=it.get("match_x") if repeat else None) for it in items]
+    spots, unplaced, used = NS.nest(nitems, width, gap=gap, left=left, right=right, top=FABRIC_MARGIN,
+                                    repeat=repeat)
+    pls = [Placement(sp.item, sp.angle, sp.dx, sp.dy, mirrored=sp.mirrored) for sp in spots]
+    return pls, unplaced, used
 
 
-def _plan_single(pattern, ids, width, gap, nap=False):
-    items = _single_items(pattern, ids, nap)
-    pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN)
+def _plan_single(pattern, ids, width, gap, nap=False, matches=None, repeat=None):
+    items = _single_items(pattern, ids, nap, matches)
+    pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN, FABRIC_MARGIN, repeat)
     note = None
     if unplaced:
         # piece longer than the fabric width (e.g. a hem band from tubular rib):
@@ -561,7 +652,7 @@ def _plan_single(pattern, ids, width, gap, nap=False):
         note = (f"At least one piece is wider than {width / 10:.0f} cm: an open width ≥ "
                 f"{need / 10:.0f} cm is needed, or cut the piece in two with a cross seam.")
         width = math.ceil(need / 50.0) * 50.0
-        pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN)
+        pls, unplaced, used = _pack_items(items, width, gap, FABRIC_MARGIN, FABRIC_MARGIN, repeat)
         if unplaced:
             raise ValueError(f"piece does not fit on {width / 10:.0f} cm fabric width")
     return items, pls, used, width, note
@@ -575,33 +666,40 @@ def _finish(items, pls, mode, width, length, notes, fold_length=0.0, single_sect
     return dict(mode=mode, width=width, length=length, placements=pls,
                 rings=[it["ring"] for it in items], meta=[it["meta"] for it in items],
                 note=" ".join(n for n in notes if n) or None, fold_length=fold_length,
-                single_section=single_section)
+                single_section=single_section,
+                match=[it.get("match_y") is not None for it in items],
+                match_pts=[(it.get("match_y"), it.get("match_x")) for it in items])
 
 
-def plan_single(pattern, ids, width, gap=5.0, nap=False):
-    items, pls, used, width, note = _plan_single(pattern, ids, width, gap, nap)
-    return _finish(items, pls, "single", width, used + FABRIC_MARGIN, [note])
+def plan_single(pattern, ids, width, gap=5.0, nap=False, matches=None, repeat=None):
+    items, pls, used, width, note = _plan_single(pattern, ids, width, gap, nap, matches, repeat)
+    # stripes/checks: the first matched piece can start anywhere in the repeat → one repeat extra
+    extra = repeat[1] if repeat and matches else 0.0
+    return _finish(items, pls, "single", width, used + FABRIC_MARGIN + extra, [note])
 
 
-def plan_folded(pattern, ids, width, gap=5.0, nap=False):
+def plan_folded(pattern, ids, width, gap=5.0, nap=False, matches=None, repeat=None):
     """Folded layout; returns None if no piece can be cut double-layered."""
     half = width / 2.0
-    items, single, notes = _folded_items(pattern, ids, half, nap)
+    items, single, notes = _folded_items(pattern, ids, half, nap, matches)
     if not items:
         return None
-    pls, unplaced, used = _pack_items(items, half - FABRIC_MARGIN, gap, 0.0)
+    pls, unplaced, used = _pack_items(items, half, gap, FOLD_CLEARANCE, FABRIC_MARGIN, repeat)
     for k in unplaced:
         single.append(items[k]["meta"][0])
     if unplaced:
         keep = [k for k in range(len(items)) if k not in unplaced]
         items = [items[k] for k in keep]
-        pls, unplaced, used = _pack_items(items, half - FABRIC_MARGIN, gap, 0.0)
-    fold_len = used + gap
+        pls, unplaced, used = _pack_items(items, half, gap, FOLD_CLEARANCE, FABRIC_MARGIN, repeat)
+    fold_len = used + (gap if single else 0.0)   # the gap only separates a following single-layer part
+    if repeat and matches:
+        # the single-layer section continues the print phase: start it on a whole repeat
+        fold_len = math.ceil(fold_len / repeat[1]) * repeat[1]
     if single:
         single = sorted(set(single))
         names = ", ".join(pattern.pieces[i].name for i in single)
         notes.append(f"Unfold the rest of the fabric for: {names} (single layer, wider than the folded fabric).")
-        s_items, s_pls, s_used, s_width, s_note = _plan_single(pattern, single, width, gap, nap)
+        s_items, s_pls, s_used, s_width, s_note = _plan_single(pattern, single, width, gap, nap, matches, repeat)
         notes.append(s_note)
         off = len(items)
         for p in s_pls:
@@ -613,6 +711,8 @@ def plan_folded(pattern, ids, width, gap=5.0, nap=False):
         length = fold_len + s_used + FABRIC_MARGIN
     else:
         length = fold_len + FABRIC_MARGIN
+    if repeat and matches:
+        length += repeat[1]
     return _finish(items, pls, "folded", width, length, notes, fold_length=fold_len,
                    single_section=bool(single))
 
@@ -622,8 +722,10 @@ def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0, 
 
     mode: "single" (single layer, all copies), "folded" (double layer folded selvage to
     selvage, fold pieces on the fold) or "auto" (both from a width of 130 cm, the shorter
-    one wins; ties go to folded).
-    Returns dict fabric → dict(mode, width, length, placements, rings, meta, note, fold_length)
+    one wins; ties go to folded). Main fabric with a nap or a one-way print: every piece
+    with its top towards the same end. Stripes / plaid (option fabric_print): also
+    matched at the seams (see match_points); plaid is cut single layer in auto mode.
+    Returns dict fabric → dict(mode, width, length, placements, rings, meta, note, fold_length, ...)
     """
     if mode not in FABRIC_LAYOUTS:
         raise ValueError(f"fabric layout must be one of {', '.join(FABRIC_LAYOUTS)}")
@@ -633,18 +735,23 @@ def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0, 
         groups.setdefault(fabric_group(p), []).append(i)
     plans = {}
     nap_main = E.has_nap(pattern.options)
+    kind, repeat, rep_note = fabric_print(pattern.options)
     for fab, ids in groups.items():
         width = fabric_widths.get(fab, 700.0 if fab == "Rib knit" else 1500.0)
-        nap = nap_main and fab == "Main fabric"
+        main = fab == "Main fabric"
+        pr = kind if main else "plain"
+        nap = main and (nap_main or pr != "plain")
+        rep = repeat if main and pr in ("stripes", "plaid") else None
+        matches = match_points(pattern, ids, plaid=pr == "plaid") if rep else None
         try:
-            single = plan_single(pattern, ids, width, gap, nap) if mode != "folded" else None
+            single = plan_single(pattern, ids, width, gap, nap, matches, rep) if mode != "folded" else None
         except ValueError as ex:
             raise ValueError(f"{fab}: {ex}") from None
         folded = None
-        if mode == "folded" or (mode == "auto" and width >= FOLDED_MIN_WIDTH):
-            folded = plan_folded(pattern, ids, width, gap, nap)
+        if mode == "folded" or (mode == "auto" and width >= FOLDED_MIN_WIDTH and pr != "plaid"):
+            folded = plan_folded(pattern, ids, width, gap, nap, matches, rep)
         if folded is None:
-            plan = single if single is not None else plan_single(pattern, ids, width, gap, nap)
+            plan = single if single is not None else plan_single(pattern, ids, width, gap, nap, matches, rep)
         elif single is None or folded["length"] <= single["length"]:
             plan = folded
         else:
@@ -653,5 +760,8 @@ def layout_fabric(pattern, fabric_widths: dict | None = None, gap: float = 5.0, 
             plan["alternative"] = dict(mode="single" if plan is folded else "folded",
                                        length=(single if plan is folded else folded)["length"])
         plan["nap"] = nap
+        plan["print"] = pr
+        plan["repeat"] = rep
+        plan["print_note"] = rep_note if rep else None
         plans[fab] = plan
     return plans

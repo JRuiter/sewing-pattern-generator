@@ -4,6 +4,8 @@ from __future__ import annotations
 import math
 import os
 
+import numpy as np
+
 import adjust as ADJ
 import allowance as A
 import ease as E
@@ -39,7 +41,14 @@ def render_fabric_png(pattern, plans, path):
     import matplotlib.pyplot as plt
 
     n = len(plans)
-    fig, axs = plt.subplots(1, n, figsize=(4.2 * n, 7), squeeze=False)
+    # figure sized to the fabrics (equal scale for all panels), so the plan fills the picture
+    spans = [(pl["width"] + 140.0, pl["length"] + 110.0) for pl in plans.values()]
+    tot_w = sum(w for w, _ in spans)
+    max_h = max(h for _, h in spans)
+    fig_w = min(11.0, max(4.5, 3.2 * n + tot_w / 600.0))
+    fig_h = min(13.0, max(3.6, fig_w * max_h / tot_w + 0.8))
+    fig, axs = plt.subplots(1, n, figsize=(fig_w, fig_h), squeeze=False,
+                            gridspec_kw=dict(width_ratios=[w for w, _ in spans]))
     units = U.of(pattern)
     palette = ["#cfe2f3", "#fce5cd", "#d9ead3", "#ead1dc", "#fff2cc", "#d0e0e3", "#f4cccc"]
     for ax, (fab, pl) in zip(axs[0], plans.items()):
@@ -58,10 +67,27 @@ def render_fabric_png(pattern, plans, path):
                         style="italic")
         else:
             ax.add_patch(plt.Rectangle((0, 0), W, H, fc="#fafafa", ec="#555", lw=1))
+        rep = pl.get("repeat")
+        if rep:
+            # stripes (and the vertical lines of checks) drawn lightly over the fabric
+            sections = [(0.0, fl, W / 2)] if folded else [(0.0, H, W)]
+            if folded and pl.get("single_section"):
+                sections.append((fl, H, W))
+            for y0, y1, w in sections:
+                y = y0
+                while y <= y1 + 1e-6:
+                    ax.plot([0, w], [y, y], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
+                    y += rep[1]
+                if pl.get("print") == "plaid":
+                    x = 0.0
+                    while x <= w + 1e-6:
+                        ax.plot([x, x], [y0, y1], color="#3d6fb4", lw=0.4, alpha=0.6, zorder=3)
+                        x += rep[0]
         for p in pl["placements"]:
             ring = L.placed_ring(pl["rings"][p.index], p)
             pi, k = pl["meta"][p.index]
-            ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6)
+            ax.fill(ring[:, 0], ring[:, 1], fc=palette[pi % len(palette)], ec="k", lw=0.6,
+                    alpha=0.85 if rep else 1.0)
             c = ring.mean(axis=0)
             nm = T(pattern.pieces[pi].name).split(" (")[0]
             if p.layers == 2:
@@ -70,13 +96,25 @@ def render_fabric_png(pattern, plans, path):
                 nm += " " + T("(on fold)")
             elif pattern.pieces[pi].on_fold:
                 nm += " " + T("(unfolded)")
-            ax.text(c[0], c[1], nm + (" " + T("(flipped)") if p.mirrored else ""), fontsize=6, ha="center",
-                    va="center")
+            # "flipped" only matters for a single layer: through both layers it is a mirrored pair anyway
+            if p.mirrored and p.layers == 1 and not p.pinned:
+                nm += " " + T("(flipped)")
+            w_piece = float(np.ptp(ring[:, 0]))
+            fs = 6 if w_piece > 0.12 * W else 4.5
+            ax.text(c[0], c[1], nm, fontsize=fs, ha="center", va="center", wrap=True)
+            mp = (pl.get("match_pts") or [None] * len(pl["rings"]))[p.index]
+            if rep and mp and mp[0] is not None:
+                q = p.apply(np.array([mp[0][0]]))[0]
+                ax.plot([q[0]], [q[1]], marker="^", color="#c00", ms=4.5, zorder=5)
         if pl.get("nap"):
             ax.annotate("", xy=(W + 22, H * 0.45), xytext=(W + 22, H * 0.15),
                         arrowprops=dict(arrowstyle="-|>", lw=1.4, color="#7a4a1e"))
-            ax.text(W / 2, -22, T("Nap ↓, all pieces waist up"), fontsize=7, ha="center", va="bottom",
-                    color="#7a4a1e", fontweight="bold")
+            label = {"one_way": "One-way print ↓, all pieces top end up",
+                     "stripes": "Stripes: every ▲ on the same stripe, all pieces top end up",
+                     "plaid": "Checks: every ▲ on the same line, all pieces top end up"}.get(
+                pl.get("print"), "Nap ↓, all pieces waist up")
+            ax.text(W / 2, -22, T(label), fontsize=7, ha="center", va="bottom", color="#7a4a1e",
+                    fontweight="bold")
         ax.annotate("", xy=(W + 40, H * 0.8), xytext=(W + 40, H * 0.2),
                     arrowprops=dict(arrowstyle="<->", lw=0.8))
         ax.text(W + 55, H / 2, T("grainline / selvage"), rotation=90, fontsize=6, va="center")
@@ -100,13 +138,42 @@ def layout_text(pl, units: str = "metric") -> str:
         t = T("folded selvage to selvage, cut on fold pieces at the fold")
     else:
         t = T("single layer")
-    if pl.get("nap"):
+    pr = pl.get("print")
+    if pr in ("one_way", "stripes", "plaid"):
+        t += T({"one_way": "; one-way print: all pieces with the top end towards the same end, none turned round",
+                "stripes": "; stripes: all pieces top end up, matched at the seams",
+                "plaid": "; checks: all pieces top end up, matched along and across"}[pr])
+    elif pl.get("nap"):
         t += T("; nap: all pieces with the waist towards the same end, none turned round")
     alt = pl.get("alternative")
     t += T(", incl. 10 % for shrinkage")
     if alt:
         other = T("folded") if alt["mode"] == "folded" else T("single layer")
         t += "; " + other + " " + T(f"would need {U.fabric_length(alt['need_mm'], units)}")
+    return t
+
+
+def print_text(plans, units: str = "metric") -> str | None:
+    """How to lay out stripes and checks so they meet at the seams."""
+    pl = next((p for p in plans.values() if p.get("repeat")), None)
+    if pl is None:
+        return None
+    rep = pl["repeat"]
+    plaid = pl.get("print") == "plaid"
+    t = (f"**{T('Matching stripes and checks')}** "
+         + T(f"(repeat {U.length(rep[1], units)}): ") +
+         T("lay the fabric out flat in a single layer, right side up, and straighten the cut end along one "
+           "stripe. Every main piece has a red ▲ in the cutting layout: the hem corner at the side seam, the "
+           "underarm point of the sleeve, the bottom of the hood seam. Place each ▲ exactly on the same "
+           "dominant stripe (as shown, a whole number of repeats apart); then the stripes continue across "
+           "the side seams, the inside leg seams and from the body into the sleeves."))
+    if plaid:
+        t += " " + T("For checks, also put the centre line of each piece (centre front/back, the grainline of "
+                     "legs and sleeves) on the same dominant vertical line.")
+    if pl.get("mode") == "folded":
+        t += " " + T("Folded: before cutting, pin both layers together stripe on stripe.")
+    t += " " + T("Pockets, bands and facings are not matched; cut patch pockets after placing them on the "
+                 "garment piece, or on the bias as a contrast. One repeat extra is included in the amount.")
     return t
 
 
@@ -253,6 +320,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
                      f"{U.fabric_width(pl['width'], u)} width") + f" ({layout_text(pl, u)})")
         if pl.get("note"):
             lines.append(f"  - ⚠️ {T(pl['note'])}")
+        if pl.get("print_note"):
+            lines.append(f"  - ⚠️ {T(pl['print_note'])}")
     for n in pattern.notes:
         lines.append(f"- {T(n)}")
     lines += ["", T("Cutting layout: see `cutting_layout.png` (grainline arrow parallel to the selvage, "
@@ -261,6 +330,9 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
     ft = fold_text(pattern, plans)
     if ft:
         lines += [ft, ""]
+    pt = print_text(plans, u)
+    if pt:
+        lines += [pt, ""]
     mach = MC.markdown(pattern)
     if mach:
         lines += ["## " + T("Your machines"), "", mach, ""]

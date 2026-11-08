@@ -123,3 +123,22 @@ For projector sewing (projecting the pattern straight onto the fabric):
     by 180°, so all tops point to the same end ("Nap ↓, all pieces waist up"); in the folded
     layout a cut-on-fold piece that would lie upside down is mirrored instead. The fabric
     consumption is computed with that restriction.
+  - Directional prints (`fabric_print: "one_way"`, `--fabric-print one_way`): cut like a nap.
+  - Stripes and checks (`fabric_print: "stripes"` / `"plaid"`, `print_repeat_cm`: one repeat
+    in cm, for uneven checks `[across, along]`; CLI `--fabric-print stripes --print-repeat 4`):
+    all pieces top end up, and each main piece has a match point (red ▲) that lies on the
+    same phase of the repeat: the hem corner at the side seam (bodice, skirt, trousers: the
+    stripes continue across side and inside leg seams), the sleeve's underarm point shifted
+    by the front side seam (stripes run on from the body into the sleeve), the bottom of the
+    hood's centre seam. Checks also put each centre line (centre edge or grainline) on a
+    vertical line of the checks and are cut single layer in `auto` mode. Bands, pockets and
+    bags are not matched. One repeat is added to the length (the first piece can start
+    anywhere in the repeat); the stripes are drawn in the layout and the instructions explain
+    how to lay the ▲ points.
+  - Packing (`scripts/nesting.py`): the pieces are rasterised at 2.5 mm, placed greedily with
+    FFT collision checks, and the order and orientation of the pieces (turned by 180° where the
+    grain allows it, and either side up for a pair cut through both layers) are searched:
+    heuristic orders, seeded random restarts and a local search on a 5 mm raster, the best
+    candidates again at 2.5 mm, then every piece is slid up and left with exact geometry. Hard
+    rules: 5 mm between pieces, 10 mm from the selvages and the cut end, 5 mm from the fold
+    for pieces that are not cut on the fold. Deterministic (same input → same layout).
