@@ -84,7 +84,7 @@ Seam allowance is included in the pattern (see table).
 2. **Cut out all pieces**. Follow the cutting layout; grainline arrows parallel to the selvage. Cut both layers at once with long strokes; keep the fabric flat on the table.
 3. **Snip the notches**. Cut 3–4 mm into the seam allowance at every notch. Tip: Never deeper than half the seam allowance.
 4. **Set up the machine**. Universal needle 80, polyester thread. Sew a test seam on a scrap first. See the basics page at the front of the booklet.
-5. **Sew the shoulder seams**. Front and back right sides together. (a straight stitch, then finish the edges) Do this twice.
+5. **Sew the shoulder seams**. Lay front and back right sides together, shoulder edges level, and pin. Sew with 6 mm seam allowance from the neckline to the armhole. Press the allowances towards the back. (a straight stitch, then finish the edges) Do this twice.
    ![Step 5](steps/step_05.png)
 6. **Finish the shoulder seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
    ![Step 6](steps/step_06.png)
@@ -99,11 +99,11 @@ Seam allowance is included in the pattern (see table).
    ![Step 11](steps/step_11.png)
 12. **Stitch the binding down**. Fold the ends in, turn the binding to the inside over the allowance and stitch close to the fold. (sewing machine: straight stitch 3 mm)
    ![Step 12](steps/step_12.png)
-13. **Set in the sleeves**. Top notch of the sleeve cap on the shoulder seam, front/back notches meet; sew the sleeve in flat. (a straight stitch, then finish the edges) Do this twice. Tip: Sleeve on the bottom: the machine eases the cap in.
+13. **Set in the sleeves**. Open the body out flat, right side up. Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, single notch on the front, double notch on the back. Pin from the middle to both ends, easing in the extra length of the cap. Sew with 6 mm seam allowance, sleeve underneath; press the allowances towards the sleeve. (a straight stitch, then finish the edges) Do this twice. Tip: Sleeve on the bottom: the feed dogs ease the cap in without pleats.
    ![Step 13](steps/step_13.png)
 14. **Finish the armhole seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
    ![Step 14](steps/step_14.png)
-15. **Sew side and sleeve seams**. In one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly. (a straight stitch, then finish the edges) Do this twice.
+15. **Sew side and sleeve seams**. Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. Pin side and sleeve seam so that the armhole seams meet exactly at the underarm. Sew in one go with 6 mm seam allowance, from the hem over the underarm to the sleeve hem. Press the allowances towards the back. (a straight stitch, then finish the edges) Do this twice.
    ![Step 15](steps/step_15.png)
 16. **Finish the side seams**. Both allowances together; press them towards the back. (sewing machine: wide zigzag 4 × 1.5 mm over the edge) Do this twice.
    ![Step 16](steps/step_16.png)

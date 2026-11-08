@@ -81,9 +81,10 @@ together, plus an overview page.
 A title page with the finished garment from the front and back (waistband, cuffs, sleeves and hood
 drawn on) and what it is sewn with; all parts large and at the same scale with their counts, the
 material with fabric amounts, notions and tools; the basics for your machines; then two steps per
-page with numbered actions, tips and warnings, and a "Done!" panel at the end. Every picture is drawn from your
-actual pattern pieces: right side shaded, wrong side hatched, pins, stitch line, sewing direction,
-and the stitch setting for your machine.
+page with numbered actions, tips, warnings and alternatives, and a "Done!" panel at the end. Every picture is drawn
+from your actual pattern pieces: right side shaded, wrong side hatched, pins, stitch line, sewing direction,
+and the stitch setting for your machine. Seams sewn in earlier steps stay visible (grey dashed), and pieces that
+are already joined are shown together, so you can check your work against every picture.
 
 <table><tr>
 <td><img src="docs/images/booklet_cover.png" alt="Booklet title page"></td>

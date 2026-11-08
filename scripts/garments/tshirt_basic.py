@@ -534,6 +534,7 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
     o = pat.options
     knit = E.fabric_info(o["fabric"])[2]
     out: list = []
+    sa = S.cm(pat.piece("front").edge("side").sa)
 
     def finished(title, edges):
         if S.needs_finish(o, knit):
@@ -547,7 +548,11 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         finished("Finish the raglan seams", [("sleeve", "raglan_front"), ("sleeve", "raglan_back")])
     else:
         out.append(S.seam("Sew the shoulder seams", ["Shoulder seam"],
-                          "Front and back right sides together.", repeat=2, section="Shoulders"))
+                          "Lay front and back right sides together, shoulder edges level, and pin. "
+                          f"Sew with {sa} seam allowance from the neckline to the armhole. "
+                          "Press the allowances towards the back.", repeat=2, section="Shoulders",
+                          hint=("Knit stretches at the shoulder: sew a strip of clear elastic or twill tape "
+                                "into the seam." if knit else "")))
         finished("Finish the shoulder seams", [("front", "shoulder"), ("back", "shoulder")])
     if o.get("back_opening"):
         out += back_opening_steps(pat)
@@ -591,24 +596,44 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         del nb
     if o["sleeve_style"] != "raglan":
         out.append(S.seam("Set in the sleeves", ["Armhole"],
-                          "Top notch of the sleeve cap on the shoulder seam, front/back notches meet; sew the "
-                          "sleeve in flat.", repeat=2, section="Sleeves",
-                          tip="Sleeve on the bottom: the machine eases the cap in."))
+                          "Open the body out flat, right side up. "
+                          "Lay the sleeve right side down on the armhole: top of the cap on the shoulder seam, "
+                          "single notch on the front, double notch on the back. "
+                          "Pin from the middle to both ends, easing in the extra length of the cap. "
+                          f"Sew with {sa} seam allowance, sleeve underneath; press the allowances towards the "
+                          "sleeve.", repeat=2, section="Sleeves",
+                          tip="Sleeve on the bottom: the feed dogs ease the cap in without pleats.",
+                          data={"view": "flat_sleeve"}))
         finished("Finish the armhole seams", [("sleeve", "cap_front"), ("sleeve", "cap_back")])
     out.append(S.seam("Sew side and sleeve seams", ["Side seam", "Sleeve seam"],
-                      "In one go from the hem over the underarm to the sleeve hem; the underarm seams meet exactly.",
-                      repeat=2, section="Sides"))
+                      "Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. "
+                      "Pin side and sleeve seam so that the " +
+                      ("raglan" if o["sleeve_style"] == "raglan" else "armhole") +
+                      " seams meet exactly at the underarm. "
+                      f"Sew in one go with {sa} seam allowance, from the hem over the underarm to the sleeve hem. "
+                      "Press the allowances towards the back.",
+                      repeat=2, section="Sides", data={"view": "folded"} if o["sleeve_style"] != "raglan" else {},
+                      alt=("Cuffs first: sew the cuffs on while the sleeve is still flat, then sew side, sleeve "
+                           "and cuff seam in one go. Easier on small sizes." if o["sleeve_cuffs"] and
+                           pat.has("sleeve_cuff") else "")))
     finished("Finish the side seams", [("front", "side"), ("back", "side")])
     if o["sleeve_cuffs"] and pat.has("sleeve_cuff"):
         sec = "Cuffs"
         out += [
-            S.ring("Close the cuffs into rings", "sleeve_cuff", "Right sides together across the short ends.",
-                   repeat=2, section=sec),
-            S.fold_band("Fold the cuffs in half", "sleeve_cuff", "Lengthwise, wrong sides together.", repeat=2,
-                        section=sec),
+            S.ring("Close the cuffs into rings", "sleeve_cuff",
+                   f"Fold each cuff crosswise right sides together, short edges level. Sew with {sa} seam "
+                   "allowance; finger-press the allowances open.", repeat=2, section=sec),
+            S.fold_band("Fold the cuffs in half", "sleeve_cuff",
+                        "Fold the ring lengthwise wrong sides together, raw edges level. "
+                        "The seam allowance is now inside; the right side shows all round.", repeat=2,
+                        section=sec, data={"hands": "fold"}),
             S.attach_band("Sew the cuffs on", "sleeve_cuff", ["Sleeve cuff"], "sleeve hem",
-                          "Cuff seam at the sleeve seam; quarter cuff and sleeve hem with pins.", repeat=2,
-                          section=sec),
+                          "Turn the sleeve right side out. Slide the cuff over the sleeve end, raw edges level, "
+                          "cuff seam on the sleeve seam. Pin at the quarters. "
+                          "Sew with the cuff on top, stretching the cuff (not the sleeve) to the length of the "
+                          "sleeve between two pins.", repeat=2, section=sec,
+                          hint="One hand in front of the presser foot, one behind it: both stretch evenly.",
+                          data={"hands": "stretch"}),
         ]
     else:
         hs = pat.piece("sleeve").edge("hem").sa
@@ -619,16 +644,25 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
         if o["hem_band"] and pat.has("hem_band"):
             if not open_bands:
                 out.append(S.ring("Close the hem band into a ring", "hem_band",
-                                  "Right sides together across the short ends.", section=sec))
-            out.append(S.fold_band("Fold the hem band in half", "hem_band", "Lengthwise, wrong sides together.",
-                                   section=sec))
+                                  "Fold the band crosswise right sides together, short edges level. "
+                                  f"Sew with {sa} seam allowance; finger-press the allowances open.", section=sec))
+            out.append(S.fold_band("Fold the hem band in half", "hem_band",
+                                   "Fold lengthwise wrong sides together, raw edges level; press lightly.",
+                                   section=sec, data={"hands": "fold"}))
             if not open_bands:
-                out.append(S.quarter("Mark quarters", "hem_band", "hem", "Band: cross seam at a side seam.",
+                out.append(S.quarter("Mark quarters", "hem_band", "hem",
+                                     "Band: put a pin at the cross seam and fold the band flat to find the "
+                                     "opposite point; fold again for the two quarter points. "
+                                     "Garment: pins at centre front, centre back and both side seams.",
                                      section=sec, data={"quarters": "hem"}))
             out.append(S.attach_band("Sew the hem band on", "hem_band", ["Hem band"], "hem",
-                                     "Right sides together, raw edges meet" +
-                                     ("; band ends flush with the front edges." if open_bands else "."),
-                                     section=sec))
+                                     "Garment right side out: slide the band over it, raw edges level"
+                                     + ("; band ends flush with the front edges." if open_bands else
+                                        ", cross seam on a side seam; match the quarter pins.")
+                                     + f" Sew with {sa} seam allowance, band on top, stretching only the band. "
+                                     "Press the allowances towards the garment.",
+                                     section=sec, data={"hands": "stretch"},
+                                     hint="Sew a little slower over the side seams: four layers."))
         else:
             hs = pat.piece("front").edge("hem").sa
             out.append(S.hem("Sew the hem", [("front", "hem"), ("back", "hem")], hs,
