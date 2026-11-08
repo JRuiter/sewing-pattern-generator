@@ -4,6 +4,8 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-08
+
 ### Added
 - **Coverstitch basics** in the booklet (stitch picture, how to end the seam) when the coverstitch machine is used; the sewing-machine basics only appear when a sewing machine is used, and the hand-stitch basics only list the stitches the steps really use.
 - **Cutting step shows the real cutting layout** (all fabrics, rib stretch direction "along the bands"), and the text says whether to cut on the fold or single layer (turn the paper piece over for the second piece).
