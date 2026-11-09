@@ -198,7 +198,10 @@ class Pattern:
     @property
     def is_pants(self) -> bool:
         """Pants and their derivatives (jeans, shorts, dungarees …): a front leg with a crotch edge."""
-        return self.has("front") and any(e.name == "crotch" for e in self.piece("front").edges)
+        if not self.has("front"):
+            return False
+        names = {e.name for e in self.piece("front").edges}
+        return "crotch" in names and "armhole" not in names
 
     def has(self, key: str) -> bool:
         return any(p.key == key for p in self.pieces)

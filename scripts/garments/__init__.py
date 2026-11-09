@@ -32,6 +32,7 @@ GARMENTS = {
     "jacket": "Lined woven jacket (button front, facings, stand collar, welt/jetted/flap pockets)",
     "coat": "Coat (lined, knee length, flap pockets)",
     "softshell": "Softshell / outdoor jacket (zip, hood, zip pockets, Velcro sleeve tabs, drawcord hem)",
+    "bodysuit": "Bodysuit / swimsuit / baby wrap body (knit, snap crotch or crotch seam, leg bands or elastic)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 
