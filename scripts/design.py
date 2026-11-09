@@ -713,7 +713,7 @@ def _apply_seam(pat, z: dict, fns, seam_edges) -> dict | None:
         ed.pts = old + nrm * dv[:, None]
         offsets[(p, e)] = (old, nrm, dv)
         moved.setdefault(p, []).append((e, old))
-        extremes.append((float(dv.min()), float(dv.max())))
+        extremes.append((float(np.min(dv)), float(np.max(dv))))
     _equalize(pat, offsets)
     for p, lst in moved.items():
         _follow(pat.piece(p), lst, seam_edges, pat)
@@ -869,7 +869,7 @@ def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
                 if abs(ang - 90.0) > 2.0:
                     ed.pointed = True
         moved.setdefault(p, []).append((e, old))
-        ext.append((float(dv.min()), float(dv.max())))
+        ext.append((float(np.min(dv)), float(np.max(dv))))
     for p, lst in moved.items():
         _follow(pat.piece(p), lst, seam_edges, pat)
         _rescale_notches(pat.piece(p), lst)
