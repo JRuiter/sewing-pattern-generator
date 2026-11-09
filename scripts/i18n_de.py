@@ -600,8 +600,21 @@ TABLE: dict[str, str] = {
     "Prepare": "Vorbereiten", "Finish": "Fertigstellen", "Done!": "Fertig!",
     "Pre-wash the fabric": "Stoff vorwaschen",
     "Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.":
-        "So waschen und trocknen, wie du das Kleidungsstück später wäschst, damit er jetzt einläuft und nicht "
-        "nach dem Nähen.",
+        "So waschen und trocknen, wie du das Kleidungsstück später wäschst, damit der Stoff jetzt einläuft und "
+        "nicht erst nach dem Nähen.",
+    "Wash and dry it the way you will wash the finished piece later, so it shrinks now, not after sewing.":
+        "So waschen und trocknen, wie du das fertige Stück später wäschst, damit der Stoff jetzt einläuft und "
+        "nicht erst nach dem Nähen.",
+    "Right/wrong side of the fabric = the side of the fabric.": "Rechte/linke Stoffseite = die Seite des Stoffs.",
+    "Final check": "Zum Schluss prüfen",
+    "Original parametric draft.": "Eigene parametrische Konstruktion.",
+    "There is no sewing machine, so every step that needs a straight stitch is done **by hand**:":
+        "Es gibt keine Nähmaschine, deshalb wird jeder Schritt, der einen Geradstich braucht, **von Hand** genäht:",
+    "topstitching with a back stitch": "Absteppen mit Rückstich",
+    "hems and casings with a blind stitch": "Säume und Tunnel mit Blindstich",
+    "basting with a tacking stitch": "Heften mit Heftstich",
+    "bar tacks by hand": "Riegel von Hand",
+    "elastic ends with a box of hand stitches": "Gummienden mit einem Kästchen aus Handstichen",
     "Cut out all pieces": "Alle Teile zuschneiden",
     "Follow the cutting layout; grainline arrows parallel to the selvage.":
         "Nach dem Zuschnittplan; Fadenlaufpfeile parallel zur Webkante.",

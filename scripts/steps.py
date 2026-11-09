@@ -58,7 +58,7 @@ class Step:
         if self.text:
             parts.append(t(self.text))
         tool = tool_for(options or {}, self.stitch, self.data.get("knit")) if self.stitch else None
-        if tool and tool.get("phrase"):
+        if tool and tool.get("phrase") and not self.data.get("no_phrase"):   # no_phrase: the text says how
             parts.append(f"({t(tool['phrase'])})")
         if self.repeat > 1:
             parts.append(t(f"Do this {_times(self.repeat)}."))
@@ -236,7 +236,7 @@ def cm(mm: float) -> str:
 def seam(title: str, seams: list[str], text: str = "", **kw) -> Step:
     """Pin two pieces right sides together and sew one or more seams of the seam graph."""
     kw.setdefault("stitch", "seam")
-    return Step(title, text, "seam", seams=list(seams), **kw)
+    return Step(title, text, kw.pop("diagram", "seam"), seams=list(seams), **kw)
 
 
 def finish(title: str, edges: list[tuple[str, str]], text: str = "", **kw) -> Step:
@@ -302,6 +302,14 @@ def icon(title: str, picture: str, text: str = "", **kw) -> Step:
 
 # --------------------------------------------------------------------------- common steps
 
+def is_object(pattern) -> bool:
+    """Bags and other things that are not worn (garment module with ``NO_MEASURES``): no body
+    measurements, no fit, no test garment, no "as worn" in the texts."""
+    import garments as GM
+    mod = GM.GARMENTS.get(pattern.garment) and GM.get(pattern.garment)
+    return bool(getattr(mod, "NO_MEASURES", False))
+
+
 def prepare(pattern, plans: dict | None = None) -> list[Step]:
     """Steps before sewing (same for all garments). With the cutting layout (``plans``) the cutting
     step shows the real layout and says how to cut (folded or single layer, mirrored pairs)."""
@@ -313,13 +321,15 @@ def prepare(pattern, plans: dict | None = None) -> list[Step]:
     modes = {pl.get("mode") for pl in (plans or {}).values()}
     if modes == {"single"}:
         hint = ("Single layer: cut the second piece of a pair with the paper piece turned over (printed side "
-                "down).") if any(pc.cut_count >= 2 and not pc.on_fold for pc in pattern.pieces) else \
+                "down).") if any(pc.cut_count >= 2 and pc.mirror and not pc.on_fold for pc in pattern.pieces) else \
             "Cut with long strokes; keep the fabric flat on the table."
     else:
         hint = "Cut both layers at once with long strokes; keep the fabric flat on the table."
     return [
         icon("Pre-wash the fabric", "wash",
-             "Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing.",
+             ("Wash and dry it the way you will wash the finished piece later, so it shrinks now, not after sewing."
+              if is_object(pattern) else
+              "Wash and dry it the way you will wash the garment later, so it shrinks now, not after sewing."),
              section="Prepare"),
         icon("Cut out all pieces", "cut", cut_text, section="Prepare",
              tip=("Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction."

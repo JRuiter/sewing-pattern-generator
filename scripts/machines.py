@@ -364,8 +364,15 @@ def missing_tips(m: frozenset[str], knit: bool) -> list[str]:
     return tips
 
 
-def markdown(pattern) -> str | None:
-    """'Your machines' section for the sewing instructions (None if the machines are unknown)."""
+HAND_PARTS = (("topstitch", "topstitching with a back stitch"), ("hem", "hems and casings with a blind stitch"),
+              ("baste", "basting with a tacking stitch"), ("bartack", "bar tacks by hand"),
+              ("elastic", "elastic ends with a box of hand stitches"))
+
+
+def markdown(pattern, kinds: set[str] | None = None) -> str | None:
+    """'Your machines' section for the sewing instructions (None if the machines are unknown).
+    ``kinds``: the stitch kinds the steps use; the table and the hand-sewing note then list only
+    those (no "cuffs, bands, waistband" row for a bag)."""
     import ease as E
     from i18n import num
     from i18n import t as T
@@ -377,11 +384,18 @@ def markdown(pattern) -> str | None:
     have = [k for k in KEYS if k in m and not (k == "sewing" and "straight_only" in m)]
     lines = [T("You told me you sew with:") + " " + ", ".join(T(LABELS[k]) for k in have) + ".", ""]
     if not has_sewing_machine(m):
-        lines += [T("There is no sewing machine, so every step that needs a straight stitch is done **by hand**: "
-                    "topstitching with a back stitch, hems and casings with a blind stitch, basting with a tacking "
-                    "stitch, bar tacks by hand, elastic ends with a box of hand stitches."), ""]
+        parts = [p for k, p in HAND_PARTS if kinds is None or k in kinds]
+        if kinds is None or len(parts) == len(HAND_PARTS):
+            lines += [T("There is no sewing machine, so every step that needs a straight stitch is done **by hand**: "
+                        "topstitching with a back stitch, hems and casings with a blind stitch, basting with a "
+                        "tacking stitch, bar tacks by hand, elastic ends with a box of hand stitches."), ""]
+        elif parts:
+            lines += [T("There is no sewing machine, so every step that needs a straight stitch is done **by hand**:")
+                      + " " + ", ".join(T(p) for p in parts) + ".", ""]
     lines += ["| " + " | ".join(T(h) for h in ("Step", "Machine", "Stitch", "Settings")) + " |", "|---|---|---|---|"]
     for kind in KINDS:
+        if kinds is not None and kind not in kinds:
+            continue
         d = method(o, kind, knit)
         assert d is not None
         st = []

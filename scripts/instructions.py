@@ -316,15 +316,18 @@ def _without_section(md: str, heading: str) -> str:
 
 
 def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_images=None):
+    import steps as ST
     o = pattern.options
     fab_label, stretch, knit = E.fabric_info(o.get("fabric", "jersey"), o.get("stretch"))
     u = U.of(pattern)
+    obj = ST.is_object(pattern)       # a bag: no body, no fit, no test garment
     lines = [f"# {T(pattern.title)} · {T(pattern.size_label)}", "",
-             f"*{E.describe(o.get('fit', 'normal'), o.get('fabric', 'jersey'), o.get('stretch'))}* · "
-             + T("original parametric draft. The pattern is yours to use."), "",
-             "> " + T("**Important:** With a new pattern, first sew a **test garment** from inexpensive fabric "
-                      "with similar stretch and check the fit."), "",
-             "## " + T("Files"), ""]
+             f"*{E.describe(None if obj else o.get('fit', 'normal'), o.get('fabric', 'jersey'), o.get('stretch'))}* · "
+             + T("original parametric draft. The pattern is yours to use."), ""]
+    if not obj:
+        lines += ["> " + T("**Important:** With a new pattern, first sew a **test garment** from inexpensive "
+                           "fabric with similar stretch and check the fit."), ""]
+    lines += ["## " + T("Files"), ""]
     for k, v in files.items():
         lines.append(f"- {T(k)}: `{os.path.basename(v)}`")
     lines += ["", "## " + T("Printing"), "",
@@ -333,8 +336,10 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
                       if u == "imperial" else T("Measure the **5 × 5 cm** control square before you cut.")),
               "- " + T("Plotter (610 mm roll): the page is 600 mm wide in portrait. In the print dialog choose "
                        "a custom paper size with exactly this width and length, and turn rotation/scaling off."),
-              "", "## " + T("Body measurements"), "", measures_table(pattern, sources), "",
-              "## " + T("Finished measurements (virtually sewn)"), "", finished_table(pattern), ""]
+              ""]
+    if not obj:
+        lines += ["## " + T("Body measurements"), "", measures_table(pattern, sources), ""]
+    lines += ["## " + T("Finished measurements (virtually sewn)"), "", finished_table(pattern), ""]
     adj = ADJ.markdown(pattern)
     if adj:
         lines += ["## " + T("Fit adjustments (from the test garment)"), "", adj, "",
@@ -360,7 +365,8 @@ def build_markdown(pattern, report_md, plans, files: dict, sources=None, step_im
     pt = print_text(plans, u)
     if pt:
         lines += [pt, ""]
-    mach = MC.markdown(pattern)
+    steps = ST.assembly(pattern, plans)
+    mach = MC.markdown(pattern, kinds={s.stitch for s in steps if s.stitch})
     if mach:
         lines += ["## " + T("Your machines"), "", mach, ""]
     lines += ["## " + T("Sewing instructions"), "",

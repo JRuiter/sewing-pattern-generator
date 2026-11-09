@@ -594,10 +594,37 @@ TABLE.update({
     "Sew the corners of the lining like those of the bag, with {n} mm seam allowance.":
         "Nähe die Ecken des Futters wie die der Tasche, mit {n} mm Nahtzugabe.",
     "Baste the handles on": "Henkel anheften",
-    "Bag right side out: pin the handle ends at the marks, raw ends level with the top edge, the handle hanging down "
+    "Pin the handle ends at the marks, raw ends level with the top edge, the handle hanging down "
     "(not twisted). Baste {n} mm from the edge.":
-        "Tasche rechts herum: stecke die Henkelenden an den Markierungen fest, offene Enden bündig mit der oberen "
+        "Stecke die Henkelenden an den Markierungen fest, offene Enden bündig mit der oberen "
         "Kante, der Henkel hängt nach unten (nicht verdreht). Hefte {n} mm von der Kante.",
+    "Turn the bag": "Tasche wenden",
+    "Side seam on bottom seam": "Seitennaht auf Bodennaht",
+    "Finish the top edge": "Obere Kante versäubern",
+    "Turn the outer bag right side out and push the corners out.":
+        "Wende die Außentasche auf rechts und forme die Ecken aus. Das Futter bleibt links herum.",
+    "Turn the bag right side out and push the corners out.": "Wende die Tasche auf rechts und forme die Ecken aus.",
+    "The handles carry the load: sew a square with a cross through all layers over every handle end, between the two "
+    "stitching lines.":
+        "Die Henkel tragen das Gewicht: Nähe über jedes Henkelende ein Kästchen mit Kreuz durch alle Lagen, "
+        "zwischen den beiden Steppnähten.",
+    "Overlock the top edge all round, just skimming it with the knife.":
+        "Versäubere die obere Kante rundherum mit der Overlock; das Messer streift die Kante nur.",
+    "Fold the top edge {n} cm to the wrong side and press. Slip the handle ends under the fold at the marks, the "
+    "handles hanging down (not twisted), and sew close to the overlocked edge.":
+        "Bügle die obere Kante {n} cm nach links um. Schiebe die Henkelenden an den Markierungen unter den "
+        "Umschlag, die Henkel hängen nach unten (nicht verdreht), und steppe knapp an der versäuberten Kante.",
+    "Fold the top edge {n} cm, then {n} cm to the wrong side. Slip the handle ends under the fold at the marks, the "
+    "handles hanging down (not twisted), and sew close to the lower fold.":
+        "Bügle die obere Kante {n} cm und dann {n} cm nach links um. Schiebe die Henkelenden an den Markierungen "
+        "unter den Umschlag, die Henkel hängen nach unten (nicht verdreht), und steppe knapp an der unteren "
+        "Bruchkante.",
+    "sturdy woven fabric such as canvas, denim or cotton twill (from about {n} g/m²)":
+        "fester Webstoff wie Canvas, Jeans oder Baumwollköper (ab etwa {n} g/m²)",
+    "Optional: medium iron-on interfacing for the bag pieces if the fabric is soft":
+        "Optional: mittelstarke Bügeleinlage für die Taschenteile, wenn der Stoff weich ist",
+    "Is the size right, and do the handles sit comfortably on the shoulder?":
+        "Stimmt die Größe, und liegen die Henkel angenehm auf der Schulter?",
     "Sew the top edge": "Obere Kante nähen",
     "Put the bag (right side out) into the lining (wrong side out), right sides together. Match the side seams and "
     "sew round the top edge with {n} mm seam allowance.":
@@ -611,10 +638,6 @@ TABLE.update({
     "Topstitch the top edge": "Obere Kante absteppen",
     "Push the lining into the bag, press the top edge and topstitch {n} mm from it.":
         "Schiebe das Futter in die Tasche, bügle die obere Kante und steppe {n} mm daneben ab.",
-    "Fold the top edge {n} cm, then {n} cm to the wrong side. Slip the handle ends under the fold at the marks and "
-    "sew close to the lower fold.":
-        "Bügle die obere Kante {n} cm und dann {n} cm nach links um. Schiebe die Henkelenden an den Markierungen "
-        "unter den Umschlag und steppe knapp an der unteren Bruchkante.",
     "Secure the handles": "Henkel sichern",
     "Fold the handles up and topstitch close to the top edge, catching them.":
         "Klappe die Henkel nach oben und steppe knapp an der oberen Kante ab, dabei die Henkel mitfassen.",

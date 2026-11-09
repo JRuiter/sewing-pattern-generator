@@ -75,7 +75,9 @@ def _basename(pat) -> str:
     import re
     lab = pat.size_label.split(" (")[0].replace("'s", "")
     lab = re.sub(r"^(size|gr\.?)\s*", i18n.fname("size"), lab, flags=re.I)
-    return f"{_slug(pat.title)}_{lab.replace(' ', '_').lower()}"
+    lab = re.sub(r"\s*×\s*", "x", lab)                 # bags: "45 × 42 × 14 cm" → "45x42x14_cm"
+    lab = re.sub(r"[^\w.-]+", "_", lab, flags=re.UNICODE).strip("_")
+    return f"{_slug(pat.title)}_{lab.lower()}"
 
 
 def spec_from_project(path: str, spec: dict | None = None) -> dict:
