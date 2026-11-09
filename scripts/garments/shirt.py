@@ -122,6 +122,22 @@ def add_collar(pat, kind: str, m, sa: float, ext: float):
     return info
 
 
+def neck_binding(pat, sa: float):
+    """Collarless neckline: a bias strip from front edge to front edge, turned to the inside."""
+    f, b = pat.piece("front"), pat.piece("back") if not pat.has("yoke") else pat.piece("yoke")
+    nl = 2 * (f.edge("neckline").length + b.edge("neckline").length)
+    h = max(4.0, 0.6 * sa)
+    band = rect_piece("neckband", "Neck binding (bias)", nl + 2 * sa, 2 * h, sa=sa * 0.7, cut_count=1,
+                      labels=("Seam edge", "End", "Seam edge", "End"), grain_vertical=False)
+    band.grain = (G.P(nl * 0.3, h * 0.2), G.P(nl * 0.3 + h * 1.6, h * 1.8))
+    band.info.append("cut on the bias (45°)")
+    band.marks.append(Mark(G.line(G.P(0, h), G.P(nl + 2 * sa, h)), "fold", "Fold line"))
+    pat.pieces.append(band)
+    pat.seams.append(dict(name="Neck binding ↔ neckline", a=[("front", "neckline", 2), (b.key, "neckline", 2)],
+                          b=[("neckband", "bottom", 1)], type="ratio", lo=1.0, hi=1.0 + 2 * sa / nl + 0.02,
+                          note="the ends are folded in at the front edges"))
+
+
 def add_buttons(pat, m, n: int | None, y_top: float | None = None, y_bot: float | None = None) -> int:
     f = pat.piece("front")
     fe = f.edge("front_edge").pts
@@ -200,13 +216,15 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         add_yoke(pat, clamp(0.075 * m["height"], 70, 135))
     if o["collar"] != "none":
         add_collar(pat, o["collar"], m, sa, ext)
+    else:
+        neck_binding(pat, sa)
     if cuff_h:
         add_cuffs(pat, m, sa, cuff_h, ext)
     if o["pocket"]:
         chest_pocket(pat, m, sa)
     add_buttons(pat, m, o["buttons"])
-    pat.notes.append("Interfacing: light iron-on for the collar, the stand" + (", the cuffs" if cuff_h else "")
-                     + " and the button stand (strip 2 × the stand width)")
+    pat.notes.append("Interfacing: light iron-on for " + ("the collar, the stand, " if o["collar"] != "none" else "")
+                     + ("the cuffs, " if cuff_h else "") + "the button stand (strip 2 × the stand width)")
     pat.title = {"shirt": "Shirt", "blouse": "Blouse"}[o["style"]] + ("" if o["sleeve_length"] == "long"
                                                                        else " (short sleeves)")
     pat.options.update({k: o[k] for k in ("style", "collar", "yoke", "bust_dart", "pocket", "cuffs")})
@@ -223,10 +241,12 @@ def finished_measures(pat):
 def front_steps(pat, sec="Front") -> list:
     import steps as ST
     o = pat.options
+    has_col = pat.has("collar") or pat.has("collar_stand")
     out = [ST.icon("Interface the facings", "interfacing",
-                   "Iron light interfacing onto the wrong side of the outer collar pieces"
+                   "Iron light interfacing onto " + ("the wrong side of the outer collar pieces" if has_col else "")
                    + (", one half of each cuff" if pat.has("cuff") else "")
-                   + " and a strip along the front edges (button stand).", section="Prepare")]
+                   + (" and " if has_col or pat.has("cuff") else "") + "a strip along the front edges (button stand).",
+                   section="Prepare")]
     if any(mk.label == "Bust dart" for mk in pat.piece("front").marks):
         out.append(PT.dart_steps("Front", "Fold each front right sides together on the middle of the dart, the dart "
                                  "lines on top of each other. Sew from the side edge to the point and run off the "
@@ -269,6 +289,17 @@ def collar_steps(pat, sec="Collar") -> list:
         out.append(ST.seam("Sew the stand collar", ["Stand collar round"],
                            "Lay both stand pieces right sides together and sew the top edge and the ends. Trim, "
                            "turn and press.", section=sec))
+    if pat.has("neckband") and not (pat.has("collar") or pat.has("collar_stand")):
+        out += [ST.fold_band("Fold the binding in half", "neckband",
+                             "Fold the bias strip lengthwise wrong sides together and press; shape it into a curve "
+                             "with the iron.", section="Neckline", data={"hands": "fold"}),
+                ST.seam("Sew the neck binding on", ["Neck binding"],
+                        "Lay the binding on the right side of the neckline, raw edges level, from one front edge to "
+                        f"the other; let the ends stick out 1 cm. Sew with {sa} seam allowance, trim and clip the "
+                        "allowance.", section="Neckline"),
+                ST.topstitch("Stitch the binding down", [("front", "neckline")], 2.0,
+                             "Fold the ends in, turn the binding to the inside and stitch it down close to the fold.",
+                             section="Neckline")]
     if pat.has("collar") or pat.has("collar_stand"):
         out.append(ST.seam("Sew the collar on", ["Collar ↔ neckline"],
                            "Pin the outer layer of the collar right sides together onto the neckline, centre back "

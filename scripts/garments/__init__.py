@@ -14,6 +14,7 @@ GARMENTS = {
     "wrap": "Wrap top / wrap dress (knit, band along the wrap edge, ties)",
     "jumpsuit": "Jumpsuit / playsuit / boiler suit (bodice + pants, buttons or zip, back waist elastic, belt)",
     "pinafore": "Pinafore / strap dress (lined bib bodice, crossed straps, gathered skirt)",
+    "pyjama": "Pyjama set (top + pants in one booklet and one cutting layout; long or shorty)",
     "beanie": "Beanie",
     "loop": "Loop scarf",
     "scarf": "Scarf (tube or flat, optional fringe)",

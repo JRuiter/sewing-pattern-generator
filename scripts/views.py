@@ -215,7 +215,11 @@ def _unfold_marks(pc, cx):
         if m.style == "fold":
             continue
         pts = np.asarray(m.pts, float)
-        if m.style == "placement" and len(pts) >= 3:
+        pat = DG._CTX.get("pattern")
+        single = pat is not None and any(p.name == m.label and p.cut_count == 1 for p in pat.pieces)
+        if m.style == "placement" and single:           # one chest pocket: on one side only
+            marks.append((m.style, pts))
+        elif m.style == "placement" and len(pts) >= 3:
             u = _poly(pts).union(_poly(DG._mirror_x(pts, cx)).buffer(0.01)).buffer(0)
             for g in (u.geoms if hasattr(u, "geoms") else [u]):
                 marks.append((m.style, _ring(g)))
@@ -485,7 +489,30 @@ def garment_views(pattern) -> dict:
         except (KeyError, ValueError, IndexError, StopIteration):   # pragma: no cover - defensive
             ring = DG._unfolded(pc, np.asarray(pc.seam_ring(), float))
             views[view] = dict(layers=[(ring, pc, 1)], seams=[], marks=[], gathers=[])
+    keys_p = pattern.options.get("_pants_keys") if isinstance(pattern.options, dict) else None
+    if keys_p and pattern.has(keys_p.get("front", "")) and not pattern.piece(keys_p["front"]).part_of:
+        _add_pants(pattern, views, keys_p)
     return views
+
+
+def _add_pants(pattern, views, keys_p):
+    """Pyjama set: the pants drawn below the top in the same view."""
+    from garments._parts import SubView
+    sub = SubView(pattern, keys_p, pattern.options.get("_pants_opts", {}), "pants_basic", "Pants: ")
+    for view in ("front", "back"):
+        if view not in views or not sub.has(view):
+            continue
+        pv = _pants_view(sub, view)
+        top = views[view]
+        y_top = min(float(np.asarray(r, float)[:, 1].min()) for r, _pc0, _z in top["layers"])
+        tops = [float(np.asarray(r, float)[:, 0].mean()) for r, _p, _z in top["layers"][:1]]
+        y_p = max(float(np.asarray(r, float)[:, 1].max()) for r, _pc0, _z in pv["layers"])
+        x_p = float(np.asarray(pv["layers"][0][0], float)[:, 0].mean())
+        off = np.array([tops[0] - x_p, y_top - y_p - 60.0])
+        top["layers"] += [(np.asarray(r, float) + off, p, z) for r, p, z in pv["layers"]]
+        for k in ("seams", "gathers"):
+            top[k] = list(top.get(k, [])) + [np.asarray(x, float) + off for x in pv.get(k, [])]
+        top["marks"] = list(top.get("marks", [])) + [(st, np.asarray(x, float) + off) for st, x in pv.get("marks", [])]
 
 
 def draw_view(ax, pattern, view: dict, back: bool = False):
