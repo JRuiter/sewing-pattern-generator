@@ -421,7 +421,9 @@ def fabric_group(piece) -> str:
     fab = getattr(piece, "fabric_key", None) or piece.fabric
     if fab.startswith("Rib knit"):
         return "Rib knit"
-    return "Lining" if "Lining" in fab else "Main fabric"
+    if fab.startswith("Mesh"):
+        return "Mesh"
+    return "Lining" if "Lining" in fab or fab.startswith("Swim lining") else "Main fabric"
 
 
 def _fold_edge(piece):

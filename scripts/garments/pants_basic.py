@@ -61,7 +61,7 @@ FAKE_FLY = dict(offset_mm=30.0, length_frac_R=0.62, radius_mm=25.0, side="left",
                 underlay=False)
 HEM_FINISHES = ("plain", "elastic_casing")
 POCKET_BAG_FABRICS = {"cotton": "Lining: thin cotton", "lining": "Lining", "main": "Main fabric",
-                      "jersey": "Lining: cotton jersey"}
+                      "jersey": "Lining: cotton jersey", "mesh": "Mesh"}
 
 TITLES = {"jogger": "Joggers", "harem": "Harem pants", "leggings": "Leggings",
           "trousers": "Pull-on trousers"}

@@ -34,6 +34,7 @@ GARMENTS = {
     "softshell": "Softshell / outdoor jacket (zip, hood, zip pockets, Velcro sleeve tabs, drawcord hem)",
     "bodysuit": "Bodysuit / swimsuit / baby wrap body (knit, snap crotch or crotch seam, leg bands or elastic)",
     "underwear": "Underwear: briefs with lined gusset, or boxer briefs (knit, elastic finishes)",
+    "swim_trunks": "Swim trunks (quick-dry fabric, drawcord waistband, mesh pockets and brief liner)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 

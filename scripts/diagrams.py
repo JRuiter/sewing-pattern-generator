@@ -156,6 +156,7 @@ PALETTES = {
     "velvet": ("#7e5a86", "#efe6f0", "pile"),
     "lining": ("#90caf9", "#e3f2fd", ""),
     "rib": ("#a5d6a7", "#eef7ee", "rib"),
+    "mesh": ("#b0bec5", "#eceff1", ""),
 }
 HAND_STITCH = (0, (0.6, 1.8))       # red dotted: by hand
 DONE_STITCH = "#7a7a7a"             # grey dashed: already sewn
@@ -169,7 +170,9 @@ def palette_key(pc=None, pattern=None) -> str:
     fab = (getattr(pc, "fabric_key", None) or getattr(pc, "fabric", "") or "").lower() if pc is not None else ""
     if "rib" in fab:
         return "rib"
-    if fab.startswith("lining"):
+    if fab.startswith("mesh"):
+        return "mesh"
+    if fab.startswith("lining") or fab.startswith("swim lining"):
         return "lining"
     main = (pattern.options.get("fabric", "") if pattern is not None and isinstance(pattern.options, dict)
             else "")
@@ -1159,6 +1162,15 @@ def draw_icon(ax, pattern, step):
         _pic_fabric(ax, 0.5, 0.35, 3.0, 0.9)
         iax = ax.inset_axes((0.28, 0.42, 0.44, 0.5), transform=ax.transAxes)
         draw_machine(iax, "iron")
+    elif pic == "eyelet":                     # two eyelets in a band, a cord through them
+        _pic_fabric(ax, 0.4, 0.7, 3.2, 1.1)
+        for x in (1.6, 2.4):
+            ax.add_patch(Circle((x, 1.25), 0.2, fc="#cfd8dc", ec=INK, lw=1.2, zorder=4))
+            ax.add_patch(Circle((x, 1.25), 0.1, fc="white", ec=INK, lw=0.9, zorder=5))
+        ax.plot([1.6, 1.45, 1.2], [1.25, 0.8, 0.4], color=INK, lw=2.0, zorder=6)
+        ax.plot([2.4, 2.55, 2.8], [1.25, 0.8, 0.4], color=INK, lw=2.0, zorder=6)
+        ax.text(2.0, 0.15, T(step.data.get("label", "eyelets on the marks, cord through them")), fontsize=7,
+                ha="center")
     elif pic == "snap":                       # press stud: cap and socket, pressed together
         _pic_fabric(ax, 0.4, 0.5, 1.5, 1.5)
         _pic_fabric(ax, 2.1, 0.5, 1.5, 1.5, wrong=True)

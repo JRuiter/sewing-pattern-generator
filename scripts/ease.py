@@ -17,6 +17,8 @@ FABRICS = {
     "corduroy": ("Corduroy", 0, False),
     "velvet": ("Velvet", 0, False),
     "softshell": ("Softshell", 10, False),
+    "swim_woven": ("Quick-dry swim fabric (polyester)", 5, False),
+    "swim_lycra": ("Swim lycra", 70, True),
 }
 
 # fabrics with a nap or pile: all pieces must point the same way on the fabric
