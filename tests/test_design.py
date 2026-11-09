@@ -37,11 +37,48 @@ def test_presets_are_sewable(garment, preset):
     assert all(c.status == "OK" for c in rep if c.group == "Design (intended)")
 
 
+# accessories without a seam or hem a shape could go on (flat pieces, tubes, fingers)
+NO_ZONES = {"scarf", "headband", "neckwear", "bib", "mittens", "gloves", "socks", "bucket_hat", "cap", "bag"}
+
+
 def test_every_garment_has_zones_and_a_preset():
     from garments import GARMENTS
     for g in GARMENTS:
-        assert g in DS.ZONES, g
-        assert any(g in p["garments"] for p in DS.PRESETS.values()), g
+        if g in NO_ZONES:
+            assert not DS.zones_for(g), g
+            continue
+        assert DS.zones_for(g), g
+        assert any(DS.preset_applies(p, g) for p in DS.PRESETS), g
+
+
+# modules whose zones are read from the drafted pattern
+INFERRED = [("jeans", "flared_legs"), ("jumpsuit", "starfish"), ("shirt", "zigzag_hem"), ("jacket", "balloon"),
+            ("softshell", "elf"), ("earflap_hat", "cat_ears"), ("swim_trunks", "balloon_legs"),
+            ("fitted_dress", "tulip_skirt"), ("cardigan", "bell_sleeves")]
+
+
+@pytest.mark.parametrize("garment,preset", INFERRED)
+def test_presets_on_inferred_zones(garment, preset):
+    pat = draft(garment, preset)
+    errs = [f"{c.group}/{c.name}: {c.actual}" for c in V.validate(pat) if c.status == "ERROR"]
+    assert not errs, errs
+    assert pat.design["features"]
+
+
+def test_presets_only_for_their_kind_of_garment():
+    assert not DS.preset_applies("balloon_legs", "hoodie")
+    assert not DS.preset_applies("starfish", "skirt")
+    assert DS.preset_applies("flared_legs", "jeans")
+    with pytest.raises(DS.DesignError, match="not meant for"):
+        draft("hoodie", "balloon_legs")
+
+
+def test_faced_hem_keeps_its_shape():
+    pat = draft("jacket", "starfish")          # lined jacket: the points at the hem are left out
+    assert all("shape" not in f for f in pat.design["features"])
+    assert any("faced hem" in s for s in pat.design["skipped"])
+    with pytest.raises(DS.DesignError):
+        draft("coat", "zigzag_hem")
 
 
 def test_seam_partners_stay_equal_and_shape_changes():

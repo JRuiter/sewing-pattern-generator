@@ -56,7 +56,8 @@ Beschreib einfach, was du möchtest:
   Lieblingsteil flach neben die druckbare [Referenzkarte](assets/reference-card.pdf), fotografier es
   von oben, und Claude baut den Schnitt daraus nach.
 - **Kreative Formen:** ein Sweatshirt als Seestern, Ballonbeine, Glockenärmel, Zickzack- oder
-  Blütensaum, Wichtelkapuze, Katzenohren oder Dino-Zacken, für jedes Kleidungsstück. Claude zeigt dir
+  Blütensaum, Wichtelkapuze, Katzenohren oder Dino-Zacken, für Oberteile, Kleider, Röcke, Hosen, Jacken
+  und Mützen. Claude zeigt dir
   die Form erst als Liste zum Bestätigen; sie kommt auf einen normalen Schnitt und wird erneut auf
   Bewegungsfreiheit und Nähbarkeit geprüft.
 - **Anpassen:** nach dem Probeteil sagen, was nicht passt (*„Hüfte 2 cm zu eng, Schritt 1,5 cm zu
@@ -228,11 +229,12 @@ nicht passt.
 
 > *„Ein Sweatshirt in Seesternform für meinen Sohn, Größe 128.“*
 
-Jedes Kleidungsstück kann eine eigene Form bekommen: runder, weiter, spitz, mit Bögen, mit Zacken oder
-Ohren in einer Naht. Claude macht aus deiner Beschreibung, Skizze oder deinem Foto eine kurze Liste von
+Oberteile, Kleider, Röcke, Hosen, Jacken und Mützen können eine eigene Form bekommen: runder, weiter,
+spitz, mit Bögen, mit Zacken oder Ohren in einer Naht. Claude macht aus deiner Beschreibung, Skizze oder deinem Foto eine kurze Liste von
 Merkmalen, die du bestätigst, formt den normalen Schnitt um und prüft ihn erneut: Die Nähte passen
 weiter zusammen, es bleibt genug Bewegungsfreiheit, und die Spitzen lassen sich nähen und wenden. Der
-Prüfbericht markiert jede Änderung als gewollt.
+Prüfbericht markiert jede Änderung als gewollt. Flache Accessoires (Schal, Stirnband, Lätzchen, Tasche,
+Handschuhe, Socken, Cap) haben keine Naht, die man so umformen könnte.
 
 <img src="docs/images/creative_starfish.png" alt="Seestern-Hoodie: Vorder- und Rückansicht auf dem Titel des Nähhefts" width="400">
 

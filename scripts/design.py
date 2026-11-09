@@ -52,6 +52,7 @@ import sys
 from typing import Any
 
 import numpy as np
+from shapely.geometry import Polygon
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -99,6 +100,105 @@ ZONES: dict[str, dict[str, dict]] = {
     "loop": {"long_edges": dict(edges=[("loop", "bottom", "start"), ("loop", "top", "end")],
                                 label="Long edges", fixed_free=True)},
 }
+_INFERRED: dict[str, dict[str, dict]] = {}
+
+
+def _group(key: str) -> tuple[str, str] | None:
+    """Front/back family of a piece key: ("", "front") for front, ("pants_", "back") for pants_back,
+    ("skirt_", …), linings ("front_lining") join their shell family. None for other pieces."""
+    k = key.removesuffix("_lining")
+    for side in ("front", "back"):
+        if k == side or k.endswith("_" + side):
+            return k[: len(k) - len(side)], side
+    return None
+
+
+def infer_zones(pat) -> dict[str, dict]:
+    """Design zones read from a drafted pattern (modules without an entry in ZONES): side seams,
+    inseams and hems of every front/back family, sleeves, hood and crown."""
+    seam_edges = _seam_edges(pat)
+    zones: dict[str, dict] = {}
+    fams: dict[str, list] = {}
+    for pc in pat.pieces:
+        g = _group(pc.key)
+        if g is not None:
+            fams.setdefault(g[0], []).append(pc)
+
+    def free_end(pc, name):
+        prev, nxt = _neighbours(pc, name)
+        if _free(pat, pc, prev, seam_edges) or prev.name == "hem":
+            return "start"
+        if _free(pat, pc, nxt, seam_edges) or nxt.name == "hem":
+            return "end"
+        return None
+    for prefix, pcs in fams.items():
+        names = {e.name for pc in pcs for e in pc.edges}
+        legs = "crotch" in names and "inseam" in names
+        pre = prefix if prefix else ""
+        lab = {"pants_": "Pants ", "skirt_": "Skirt ", "liner_": "Liner "}.get(prefix, "")
+        main = [pc for pc in pcs if not pc.key.endswith("_lining")]
+        if "side" in names:
+            refs = [(pc.key, "side", free_end(pc, "side")) for pc in pcs if "side" in {e.name for e in pc.edges}]
+            body = "leg" if legs else ("hip" if prefix == "skirt_" else "torso")
+            zones[pre + "side"] = dict(edges=refs, label=f"{lab}side seam".capitalize() if lab else "Side seam",
+                                       ring=[(pc.key, 1 if legs else 2) for pc in main], body=body)
+        if legs:
+            refs = [(pc.key, "inseam", free_end(pc, "inseam")) for pc in pcs if "inseam" in {e.name for e in pc.edges}]
+            zones[pre + "inseam"] = dict(edges=refs, label=f"{lab}inseam".capitalize() if lab else "Inseam",
+                                         ring=[(pc.key, 1) for pc in main], body="leg")
+        if "hem" in names:
+            hz = pre + ("leg_hem" if legs else "hem")
+            hem_refs = [(pc.key, "hem") for pc in main if "hem" in {e.name for e in pc.edges}]
+            if _faced_hem(pat):
+                blocked = "a lined or faced hem cannot be reshaped"
+            elif not any(_free(pat, pat.piece(k), pat.piece(k).edge(e), seam_edges) for k, e in hem_refs):
+                blocked = "the hem is sewn to a band or another piece"
+            else:
+                blocked = ""
+            zones[hz] = dict(blocked=blocked, hem=hem_refs,
+                             label="Leg opening" if legs else f"{lab}hem".capitalize() if lab else "Hem",
+                             ring=[(pc.key, 1 if legs else 2) for pc in main],
+                             body="foot" if legs else ("stride" if prefix == "skirt_" else "hip_pass"))
+    if pat.has("sleeve"):
+        en = {e.name for e in pat.piece("sleeve").edges}
+        if {"seam_front", "seam_back"} <= en:
+            pc = pat.piece("sleeve")
+            zones["sleeve"] = dict(edges=[("sleeve", "seam_front", free_end(pc, "seam_front")),
+                                          ("sleeve", "seam_back", free_end(pc, "seam_back"))],
+                                   label="Sleeve seam", ring=[("sleeve", 1)], body="arm")
+        if "hem" in en:
+            zones["sleeve_hem"] = dict(hem=[("sleeve", "hem")], label="Sleeve hem", ring=[("sleeve", 1)],
+                                       body="hand")
+    if pat.has("hood") and "center" in {e.name for e in pat.piece("hood").edges}:
+        zones["hood"] = dict(edges=[("hood", "center", free_end(pat.piece("hood"), "center"))],
+                             label="Hood centre seam")
+    for pc in pat.pieces:
+        if "crown" in {e.name for e in pc.edges} and "crown" not in zones and not pc.key.endswith("_lining"):
+            zones["crown"] = dict(edges=[(pc.key, "crown", None)], label="Crown seam")
+    return zones
+
+
+def zones_for(garment: str, pat=None) -> dict[str, dict]:
+    """The design zones of a module: the table above, or read from a drafted pattern."""
+    if garment in ZONES:
+        return ZONES[garment]
+    if pat is not None:
+        return infer_zones(pat)
+    if garment not in _INFERRED:
+        _INFERRED[garment] = {}
+        import measurements as M
+        from garments import get
+        mod = get(garment)
+        for size in (122, 86, 62, "w38"):
+            try:
+                m, _ = M.complete_measures(None, size)
+                _INFERRED[garment] = infer_zones(mod.draft(m, {}))
+                break
+            except Exception:            # noqa: BLE001 - some modules only draft some sizes
+                continue
+    return _INFERRED[garment]
+
+
 # what users (and Claude) call the zones
 ALIASES = {"side_seam": "side", "sides_seam": "side", "body": "side", "body_side": "side", "torso": "side",
            "sleeves": "sleeve", "arm": "sleeve", "arms": "sleeve", "cuff": "sleeve_hem", "wrist": "sleeve_hem",
@@ -159,6 +259,40 @@ PRESETS: dict[str, dict] = {
     "wavy_loop": dict(name="Wavy loop", text="loop scarf with wavy edges", garments=("loop",),
                       features=[{"zone": "long_edges", "shape": "waves", "count": 4, "depth_cm": 3.0}]),
 }
+# what kind of garment a preset is meant for (also for modules without a hand-written zone table)
+PRESET_KINDS: dict[str, tuple[str, ...]] = {
+    "starfish": ("top",), "balloon": ("top",), "bell_sleeves": ("top",), "zigzag_hem": ("top", "skirt"),
+    "petal_hem": ("top", "skirt"), "tulip_skirt": ("skirt",), "elf": ("top", "hat"), "cat_ears": ("hat",),
+    "dino_spikes": ("top", "hat"), "balloon_legs": ("legs",), "flared_legs": ("legs",),
+    "wavy_loop": ("edges",),
+}
+
+
+def kinds(garment: str) -> set[str]:
+    """Garment kinds read from the zones: top (torso side seam, sleeve or hood), skirt, legs, hat, edges."""
+    z = zones_for(garment)
+    out = set()
+    if "inseam" in z:
+        out.add("legs")
+    if "sleeve" in z or "hood" in z or z.get("side", {}).get("body") == "torso" or garment in ("tshirt_basic",
+                                                                                                 "hoodie", "dress"):
+        out.add("top")
+    if garment in ("skirt", "dress") or any(v.get("body") in ("hip", "stride") for v in z.values()):
+        out.add("skirt")
+    if "crown" in z:
+        out.add("hat")
+    if "long_edges" in z:
+        out.add("edges")
+    return out
+
+
+def preset_applies(preset: str, garment: str) -> bool:
+    """The preset is meant for this kind of garment and at least one of its zones exists."""
+    if not set(PRESET_KINDS.get(preset, ())) & kinds(garment):
+        return False
+    z = zones_for(garment)
+    return any((zn := zone_name(garment, f["zone"])) and not z[zn].get("blocked")
+               for f in PRESETS[preset]["features"])
 
 
 class DesignError(ValueError):
@@ -196,8 +330,10 @@ def load(design: Any) -> dict | None:
 
 
 def zone_name(garment: str, zone: str) -> str | None:
-    z = ZONES.get(garment, {})
+    z = zones_for(garment)
     zone = str(zone).strip().lower()
+    if zone == "hem" and z.get("hem", {}).get("blocked") and "skirt_hem" in z and not z["skirt_hem"].get("blocked"):
+        return "skirt_hem"              # bodice sewn to a skirt: the hem is the skirt hem
     if zone in z:
         return zone
     alias = ALIASES.get(zone)
@@ -212,10 +348,14 @@ def _features(garment: str, design: dict, strict: bool) -> tuple[list[dict], lis
     """Features that apply to this garment (preset features for other garments are skipped)."""
     out, skipped = [], []
     preset = bool(design.get("preset"))
+    if preset and design["preset"] in PRESET_KINDS and not preset_applies(design["preset"], garment):
+        ok = [p for p in PRESETS if preset_applies(p, garment)]
+        raise DesignError(f"preset '{design['preset']}' is not meant for {garment} (presets that fit: "
+                          f"{', '.join(ok) or 'none'})")
     for f in design.get("features", []):
         zn = zone_name(garment, f.get("zone", ""))
         if zn is None:
-            msg = f"zone '{f.get('zone')}' does not exist for {garment} (zones: {', '.join(ZONES.get(garment, {}))})"
+            msg = f"zone '{f.get('zone')}' does not exist for {garment} (zones: {', '.join(zones_for(garment))})"
             if strict and not preset:
                 raise DesignError(msg)
             skipped.append(msg)
@@ -299,11 +439,15 @@ def _shape(f: dict, u: np.ndarray) -> np.ndarray:
         return d * np.sin(np.pi * np.clip(u, 0, 1))
     loc = (u * n) % 1.0
     loc[u >= 1.0] = 1.0
-    if kind in ("points", "zigzag"):
-        return d * (1 - np.abs(2 * loc - 1))
-    if kind == "scallops":
-        return d * np.sin(np.pi * loc)
-    return d * 0.5 * (1 - np.cos(2 * np.pi * loc))           # waves
+    waves = 0.5 * (1 - np.cos(2 * np.pi * loc))
+    edge = np.minimum(loc, 1 - loc)                 # distance to the next valley
+    if kind == "waves":
+        return d * waves
+    sharp = (1 - np.abs(2 * loc - 1)) if kind in ("points", "zigzag") else np.sin(np.pi * loc)
+    # rounded valleys (no cusp: easier to clip and the seam allowance stays whole)
+    width = max(0.08 if kind in ("points", "zigzag") else 0.2, min(0.3, float(f.get("valley", 0.0))))
+    w = np.exp(-(edge / width) ** 2)
+    return d * ((1 - w) * sharp + w * waves)
 
 
 def _feature_fn(f: dict):
@@ -435,12 +579,12 @@ def apply(pat, design: Any, notes: list[str] | None = None):
     if not d:
         return pat
     garment = pat.garment
-    if garment not in ZONES:
+    if not zones_for(garment, pat):
         raise DesignError(f"designs are not available for {garment}")
     feats, skipped = _features(garment, d, strict=True)
     base = copy.deepcopy(pat)
     seam_edges = _seam_edges(pat)
-    zones = ZONES[garment]
+    zones = zones_for(garment, pat)
     rows: list[dict] = []
     applied: list[dict] = []
     # 1. seam zones (profiles, peaks, shapes on seams), then 2. hem zones, then 3. appendages
@@ -452,14 +596,29 @@ def apply(pat, design: Any, notes: list[str] | None = None):
         by_zone.setdefault(f["zone"], []).append(f)
     for zn, fs in sorted(by_zone.items(), key=lambda kv: 1 if "hem" in zones[kv[0]] else 0):
         z = zones[zn]
+        why = z.get("blocked") or ("a lined or faced hem cannot be reshaped" if "hem" in z and _faced_hem(pat)
+                                   else "")
+        if why:
+            for f in fs:
+                skipped.append(f"{describe_feature(f)}: {why}")
+            continue
         fns = [(f, _feature_fn(f)) for f in fs]
         if any(fn is None for _, fn in fns):
             raise DesignError(f"feature without profile/bulge/flare/taper/peak/shape: {fs}")
+        keep = copy.deepcopy(pat.pieces)
         if "hem" in z:
             info = _apply_hem(pat, z, fns, seam_edges)
         else:
             info = _apply_seam(pat, z, fns, seam_edges)
+        if info is not None and not all(_valid(pc) for pc in pat.pieces):
+            # too short for the shape (a tiny cap sleeve): the outline would cross itself
+            pat.pieces[:] = keep
+            for f in fs:
+                skipped.append(f"{describe_feature(f)}: the seam is too short for this shape")
+            continue
         if info is None:
+            for f in fs:
+                skipped.append(f"{describe_feature(f)}: the edge is sewn to a band or another piece")
             continue
         for f, _fn in fns:
             applied.append(dict(zone=zn, feature=f, **info))
@@ -468,6 +627,8 @@ def apply(pat, design: Any, notes: list[str] | None = None):
             info = _add_appendage(pat, zones[f["zone"]], f)
             if info:
                 applied.append(dict(zone=f["zone"], feature=f, **info))
+    if not applied:
+        raise DesignError(f"none of the design features fits {garment}: " + "; ".join(skipped))
     _retarget_corners(pat, base, applied)
     _update_finished(pat, applied)
     rows += _intended_rows(pat, d, applied)
@@ -518,50 +679,114 @@ def _apply_seam(pat, z: dict, fns, seam_edges) -> dict | None:
         t = 1.0 - np.clip(s / S, 0.0, 1.0)            # t = 0 attached end, 1 free end
         if not any(fr for _, _, fr in refs) or z.get("fixed_free"):
             t = np.clip(s / S, 0.0, 1.0)              # both ends attached: plain arc parameter
-        v = sum(fn(t) for _, fn in fns)
+        v = sum(fn(t) * (1.0 if "peak" in f else scale[0]) for f, fn in fns)
         v = np.where(s > S, 0.0, v)
         if not end_free:
-            # an attached free end (cuff, band): fade to 0 over the last 15 % with zero slope
-            k = np.clip((1.0 - t) / 0.15, 0.0, 1.0)
+            # an attached free end (cuff, band): fade to 0 over the last 20 % with zero slope
+            k = np.clip((1.0 - t) / 0.2, 0.0, 1.0)
             v = v * (0.5 - 0.5 * np.cos(np.pi * k))
         # attached end: always 0 with zero slope
-        k0 = np.clip(t / 0.12, 0.0, 1.0)
+        k0 = np.clip(t / 0.2, 0.0, 1.0)
         v = v * (0.5 - 0.5 * np.cos(np.pi * k0))
         return v
 
     # gentle shapes only on short seams (a short sleeve cannot take a 3 cm bulge): limit the
-    # steepness of profiles to 0.8 (≈ 39°); peaks are pointed on purpose and keep their height
-    scale = 1.0
-    both_attached = not any(fr for _, _, fr in refs) or z.get("fixed_free")
-    ss = np.linspace(0, S, 201)
-    smooth_fns = [fn for f, fn in fns if "peak" not in f]
-    if smooth_fns:
-        tt_ = np.clip(ss / S, 0, 1) if both_attached else 1.0 - np.clip(ss / S, 0, 1)
-        prof0 = sum(fn(tt_) for fn in smooth_fns)
-        steep0 = float(np.abs(np.diff(prof0)).max() / (S / 200)) if S > 0 else 0.0
-        if steep0 > 0.8:
-            scale = 0.8 / steep0
-            fns = [(f, (lambda fn_: (lambda t: fn_(t) * scale))(fn)) if "peak" not in f else (f, fn)
-                   for f, fn in fns]
-
+    # steepness of the final profile to 0.8 (≈ 39°); peaks are pointed on purpose and keep their height
+    scale = [1.0]
+    if any("peak" not in f for f, _ in fns) and S > 0:
+        ss = np.linspace(0, S, 401)
+        for _ in range(6):
+            steep = float(np.abs(np.diff(delta(ss))).max() / (S / 400))
+            if steep <= 0.82:
+                break
+            scale[0] *= 0.8 / steep
     moved: dict[str, list] = {}
     extremes = []
+    offsets: dict[tuple[str, str], tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
     for p, e, fr in refs:
         pc = pat.piece(p)
         ed = pc.edge(e)
         old = ed.pts.copy()
         s = _arc_param(ed, fr if fr else "start")
         dv = delta(s)
-        ed.pts = old + _normals(old) * dv[:, None]
+        nrm = _normals(old)
+        ed.pts = old + nrm * dv[:, None]
+        offsets[(p, e)] = (old, nrm, dv)
         moved.setdefault(p, []).append((e, old))
         extremes.append((float(dv.min()), float(dv.max())))
+    _equalize(pat, offsets)
     for p, lst in moved.items():
         _follow(pat.piece(p), lst, seam_edges, pat)
         _rescale_notches(pat.piece(p), lst)
     tt = np.linspace(0, 1, 101)
     prof = delta((1 - tt) * S) if any(fr for _, _, fr in refs) and not z.get("fixed_free") else delta(tt * S)
     return dict(min_mm=min(a for a, _ in extremes), max_mm=max(b for _, b in extremes), length=S,
-                profile=prof, end_free=end_free, hem=False, label=z["label"], scale=scale)
+                profile=prof, end_free=end_free, hem=False, label=z["label"], scale=scale[0])
+
+
+def _equalize(pat, offsets) -> None:
+    """Partner edges with a different curvature grow by different amounts under the same offset
+    (a curved back side seam more than a straight front one). Scale the offset of the side that
+    grew more until both sides of every equal seam have the same length again."""
+    for sm in pat.seams:
+        if sm.get("type", "equal") != "equal":
+            continue
+        sides = []
+        for side in ("a", "b"):
+            refs = [(p, e, n) for p, e, n in sm[side]]
+            sides.append(refs)
+        keys = [{(p, e) for p, e, _n in r} for r in sides]
+        if keys[0] == keys[1] or not any((p, e) in offsets for r in sides for p, e, _n in r):
+            continue
+
+        def total(r):
+            return sum(pat.piece(p).edge(e).length * n for p, e, n in r)
+        diff = total(sides[1]) - total(sides[0])
+        if abs(diff) <= 0.5:
+            continue
+        # adjust the longer side's reshaped edges
+        r = sides[1] if diff > 0 else sides[0]
+        target = total(sides[0] if diff > 0 else sides[1])
+        mv = [(p, e) for p, e, _n in r if (p, e) in offsets]
+        if not mv:
+            continue
+
+        def set_f(f, mv=mv, r=r):
+            for p, e in mv:
+                old, nrm, dv = offsets[(p, e)]
+                pat.piece(p).edge(e).pts = old + nrm * (dv * f)[:, None]
+            return total(r)
+        lo, hi = 0.0, 1.0
+        if set_f(lo) > target:          # even without the shape it is longer: leave it as it was
+            set_f(1.0)
+            continue
+        for _ in range(40):
+            mid = (lo + hi) / 2
+            if set_f(mid) > target:
+                hi = mid
+            else:
+                lo = mid
+        set_f((lo + hi) / 2)
+
+
+def _valid(pc) -> bool:
+    try:
+        ring = pc.seam_ring()
+        return len(ring) < 4 or Polygon(ring).is_valid
+    except Exception:            # noqa: BLE001 - a broken outline is invalid
+        return False
+
+
+def _faced_hem(pat) -> bool:
+    """A facing or lining ends at the hem too (jacket, coat, sleeping bag): its hem would have to
+    follow the shape, which these modules do not draft."""
+    return any(("facing" in pc.key or pc.key.endswith(("_lining", "_wadding"))) and
+               any(e.name == "hem" for e in pc.edges) for pc in pat.pieces)
+
+
+def _is_opening(ed) -> bool:
+    """A turned front edge (facing or button band folded back), the centre of a split front."""
+    return bool(ed.turned and not ed.fold and ed.sa > 0)
 
 
 def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
@@ -582,7 +807,8 @@ def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
         for p, e in refs:
             pc = pat.piece(p)
             prev, nxt = _neighbours(pc, e)
-            panel = pc.edge(e).length * (2 if _is_centre(prev) or _is_centre(nxt) else 1)
+            half = _is_centre(prev) or _is_centre(nxt) or _is_opening(prev) or _is_opening(nxt)
+            panel = pc.edge(e).length * (2 if half else 1)
             depth = abs(float(f.get("depth_cm", 3.0))) * 10
             lim = 0.25 * panel if f["shape"] == "curve" else 0.45 * panel / max(1, int(f.get("count", 3)))
             if depth > lim:
@@ -598,9 +824,9 @@ def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
         old = ed.pts.copy()
         s = G.cumlen(old)
         L = s[-1]
-        if _is_centre(prev):
+        if _is_centre(prev) or _is_opening(prev):
             u = 0.5 + 0.5 * s / L
-        elif _is_centre(nxt):
+        elif _is_centre(nxt) or _is_opening(nxt):
             u = 0.5 * s / L
         else:
             u = s / L
@@ -608,7 +834,25 @@ def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
         for f, fn in fns:
             if pieces_filter and p not in set(f.get("pieces") or pieces_filter):
                 continue
-            dv = dv + fn(u)
+            if f.get("shape", "curve") != "curve":
+                # valleys at least as round as the narrow hem allowance (it must lie flat when turned)
+                half = _is_centre(prev) or _is_centre(nxt) or _is_opening(prev) or _is_opening(nxt)
+                lobe = L * (2 if half else 1) / max(1, int(f.get("count", 3)))
+                sa_hem = min(ed.sa, 10.0) if ed.sa > 0 else 10.0
+                dv = dv + scale * _shape({**f, "valley": 1.5 * sa_hem / max(lobe, 1.0)}, u)
+            else:
+                dv = dv + fn(u)
+        # a turned front edge (facing, button band) folds back over the hem: keep the hem level there,
+        # so the folded part mirrors a straight line
+        for fe, at_start in ((prev, True), (nxt, False)):
+            if _is_opening(fe):
+                w = min(fe.sa * 1.5 + 5.0, 0.3 * L)
+                if at_start:
+                    k = int(np.searchsorted(s, w))
+                    dv[:k] = dv[min(k, len(dv) - 1)]
+                else:
+                    k = int(np.searchsorted(s, L - w))
+                    dv[k:] = dv[max(k - 1, 0)]
         ed.pts = old + _normals(old) * dv[:, None]
         # shaped hem: narrow hem instead of a deep turned one
         if np.abs(dv).max() > 2.0:
@@ -617,12 +861,12 @@ def _apply_hem(pat, z: dict, fns, seam_edges) -> dict | None:
                 narrow = min([10.0] + ([float(np.median(seam_sa))] if seam_sa else []))
                 ed.sa = min(ed.sa, narrow) if ed.sa > 0 else ed.sa
                 ed.turned = False
-            if prev.fold or nxt.fold:
+            for fe, at_start in ((prev, True), (nxt, False)):
+                if not fe.fold:
+                    continue
                 # a point or a dip at the fold is intended (V at the centre)
-                h = 1e-3
-                f0 = sum(fn(np.array([0.5]))[0] for f, fn in fns)
-                fr = sum(fn(np.array([0.5 + h]))[0] for f, fn in fns)
-                if abs(fr - f0) / (h * 2 * L) > 0.02:
+                ang = G.corner_angle(fe.pts, ed.pts) if at_start else G.corner_angle(ed.pts, fe.pts)
+                if abs(ang - 90.0) > 2.0:
                     ed.pointed = True
         moved.setdefault(p, []).append((e, old))
         ext.append((float(dv.min()), float(dv.max())))
@@ -751,7 +995,7 @@ def _tip_angle(outline: np.ndarray) -> float:
 def _update_finished(pat, applied) -> None:
     """Finished measurements the design changed (hem width of a shaped/flared hem)."""
     if "hem_circ" in pat.finished and not pat.has("hem_band"):
-        z = ZONES[pat.garment].get("hem")
+        z = zones_for(pat.garment, pat).get("hem")
         if z:
             refs = [r for r in _present(pat, z["hem"]) if r[0] in dict(z.get("ring") or [])]
             ring = dict(z.get("ring") or [])
@@ -766,7 +1010,7 @@ def adjust_steps(pat, body: list) -> list:
     the seam step says where they go; a shaped hem gets the clipping/pressing tip."""
     import steps as ST
     feats = (pat.design or {}).get("features") or []
-    zones = ZONES.get(pat.garment, {})
+    zones = zones_for(pat.garment, pat)
     out = list(body)
     for f in feats:
         z = zones.get(f.get("zone"), {})
@@ -947,7 +1191,7 @@ def _movement_rows(pat, base, applied) -> list[dict]:
     """Freedom of movement after the reshaping: girth along each zone ≥ body + minimum ease,
     and never unintentionally tighter than the base block."""
     rows = []
-    zones = ZONES[pat.garment]
+    zones = zones_for(pat.garment, pat)
     done = set()
     me = _min_ease(pat)
     for a in applied:
@@ -1046,7 +1290,7 @@ def _sewability_rows(pat, applied) -> list[dict]:
                              f"{ap['base'] / 10:.1f} cm", "", "base width"))
             continue
         # tips and inner corners of the reshaped edges
-        zones = ZONES[pat.garment]
+        zones = zones_for(pat.garment, pat)
         z = zones[a["zone"]]
         refs = [(p, e) for p, e in _present(pat, z["hem"])] if a["hem"] else \
             [(p, e) for p, e, _ in _present(pat, z["edges"])]
@@ -1082,7 +1326,11 @@ def describe(garment: str, design: Any, options: dict | None = None) -> str:
     if not d:
         return "No design: the base block as drafted."
     feats, skipped = _features(garment, d, strict=False)
-    zones = ZONES.get(garment, {})
+    zones = zones_for(garment)
+    trial = _trial(garment, d, options)
+    if trial is not None:               # what the engine really applies (a faced hem, a tiny sleeve …)
+        feats = [{**f, "zone": zone_name(garment, f["zone"])} for f in trial.design["features"]]
+        skipped = list(trial.design.get("skipped", []))
     lines = [f"Design '{d.get('name', 'Design')}' for {garment}" + (f" ({d['text']})" if d.get("text") else ""), ""]
     for i, f in enumerate(feats, 1):
         z = zones[f["zone"]]
@@ -1098,11 +1346,34 @@ def describe(garment: str, design: Any, options: dict | None = None) -> str:
     return "\n".join(lines)
 
 
+def _trial(garment: str, d: dict, options: dict | None):
+    """The design drafted once in a sample size (None if the module cannot be drafted here)."""
+    import generate as GN
+    for size in (122, 86, 62, "w38"):
+        try:
+            pat, _, _ = GN.draft_from_spec(dict(garment=garment, size=size, options=dict(options or {}), design=d))
+            return pat
+        except DesignError:
+            raise
+        except Exception:            # noqa: BLE001 - some modules only draft some sizes
+            continue
+    return None
+
+
 def zones_text() -> str:
+    from garments import GARMENTS
     out = []
-    for g, zs in ZONES.items():
-        out.append(f"{g}: " + ", ".join(f"{k} ({v['label']})" for k, v in zs.items()))
+    for g in GARMENTS:
+        zs = zones_for(g)
+        out.append(f"{g}: " + (", ".join(f"{k} ({v['label']}{'; ' + v['blocked'] if v.get('blocked') else ''})"
+                                         for k, v in zs.items()) or "no zones"))
     return "\n".join(out)
+
+
+def presets_text() -> str:
+    from garments import GARMENTS
+    return "\n".join(f"{k}: {v['text']} [{', '.join(g for g in GARMENTS if preset_applies(k, g))}]"
+                     for k, v in PRESETS.items())
 
 
 def main(argv=None):
@@ -1116,8 +1387,7 @@ def main(argv=None):
     dsc.add_argument("--options", help="module options as JSON")
     a = ap.parse_args(argv)
     if a.cmd == "presets":
-        for k, v in PRESETS.items():
-            print(f"{k}: {v['text']} [{', '.join(v['garments'])}]")
+        print(presets_text())
     elif a.cmd == "zones":
         print(zones_text())
     else:

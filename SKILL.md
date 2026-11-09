@@ -103,8 +103,8 @@ the flat-lay fit and the `tape={"chest_flat": …}` scale fix: `references/photo
 ### 3b. Creative shapes (optional, only when asked)
 Special silhouettes ("a sweatshirt shaped like a starfish", balloon legs, bell sleeves, zigzag hem,
 elf hood, cat ears, dino spikes) go on top of the normal base block as explicit design features,
-for every module. Turn the description, sketch or photo into a preset or feature list, show it
-with `python scripts/design.py describe <preset|design.json> --garment <module>` and let the user
+for tops, dresses, skirts, trousers, jackets and hats (flat accessories have no zones). Turn the
+description, sketch or photo into a preset or feature list, show it with `python scripts/design.py describe <preset|design.json> --garment <module>` and let the user
 confirm it, then generate with `--design`. The report lists every feature as an intended deviation
 and re-checks room to move and sewability. Characters/brands: an own shape only, never their
 artwork. Presets, zones, feature JSON and rules: `references/creative_designs.md`.

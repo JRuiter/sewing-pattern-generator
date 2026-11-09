@@ -56,7 +56,7 @@ then upload the new zip as in step 3.
   favourite garment flat next to the printable [reference card](assets/reference-card.pdf), take a
   photo from above, and Claude rebuilds the pattern from it.
 - **Creative shapes:** a starfish sweatshirt, balloon legs, bell sleeves, a zigzag or petal hem, an
-  elf hood, cat ears or dino spikes, for every garment. Claude shows you the shape as a list of
+  elf hood, cat ears or dino spikes, for tops, dresses, skirts, trousers, jackets and hats. Claude shows you the shape as a list of
   features first; the shape goes on top of a normal pattern and is checked again for room to move.
 - **Fitting:** after a test garment, say what was off (*"hips 2 cm too tight, crotch 1.5 cm too
   low"*) and get a corrected pattern.
@@ -144,10 +144,11 @@ through.
 
 > *"A sweatshirt shaped like a starfish for my son, size 128."*
 
-Any garment can get a shape of its own: rounder, wider, pointed, scalloped, with spikes or ears sewn
+Tops, dresses, skirts, trousers, jackets and hats can get a shape of their own: rounder, wider, pointed, scalloped, with spikes or ears sewn
 into a seam. Claude turns your description, sketch or photo into a short list of features for you to
 confirm, reshapes the normal pattern and checks it again: the seams still match, there is enough room
-to move, and the points can be sewn and turned. The check report marks every change as intended.
+to move, and the points can be sewn and turned. The check report marks every change as intended. Flat accessories (scarf, headband, bib, bag,
+gloves, socks, cap) have no seam that could be reshaped like this.
 
 <img src="docs/images/creative_starfish.png" alt="Starfish hoodie: front and back view on the booklet cover" width="400">
 

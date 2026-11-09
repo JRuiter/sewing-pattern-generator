@@ -44,18 +44,22 @@ logo, colours as a costume or other protected artwork, and say so in one line.
 
 `python scripts/design.py presets`
 
-| Preset | Shape | Garments |
+| Preset | Shape | For |
 |---|---|---|
-| `starfish` | five-point star: round body, arms tapering to points, two pointed "legs" at the hem, pointed hood | hoodie, tshirt_basic, dress |
-| `balloon` | rounded balloon body, narrow again at the hem | hoodie, tshirt_basic, dress |
-| `bell_sleeves` | sleeves widening towards the hand (cuffs are switched off) | hoodie, tshirt_basic, dress |
-| `zigzag_hem` / `petal_hem` | pointed zigzag / rounded scallop hem | tshirt_basic, hoodie, dress, skirt |
-| `tulip_skirt` | rounded skirt with a curved hem | skirt, dress |
-| `elf` | long pointed tip | hoodie (hood), beanie (crown) |
-| `cat_ears` | two pointed ears on the crown | beanie |
-| `dino_spikes` | a row of soft spikes in the hood or crown seam | hoodie, beanie |
-| `balloon_legs` / `flared_legs` | wide rounded legs / legs widening to the hem | pants_basic |
+| `starfish` | five-point star: round body, arms tapering to points, two pointed "legs" at the hem, pointed hood | tops, dresses, jackets |
+| `balloon` | rounded balloon body, narrow again at the hem | tops, dresses, jackets |
+| `bell_sleeves` | sleeves widening towards the hand (cuffs are switched off) | everything with a sleeve seam |
+| `zigzag_hem` / `petal_hem` | pointed zigzag / rounded scallop hem | tops and skirts with a free hem |
+| `tulip_skirt` | rounded skirt with a curved hem | skirt, dress, fitted_dress, pinafore |
+| `elf` | long pointed tip | hoods (hoodie, softshell), crowns (beanie, earflap_hat) |
+| `cat_ears` | two pointed ears on the crown | beanie, earflap_hat |
+| `dino_spikes` | a row of soft spikes in the hood or crown seam | hoodie, softshell, beanie, earflap_hat |
+| `balloon_legs` / `flared_legs` | wide rounded legs / legs widening to the hem | pants_basic, jeans, dungarees, swim_trunks |
 | `wavy_loop` | wavy edges | loop |
+
+`python scripts/design.py presets` lists the exact modules for every preset. A preset is only
+used on the kind of garment it is meant for (no balloon legs on a hoodie); features whose zone the
+garment does not have are left out and listed in `describe` ("Not used for this garment").
 
 Presets can be combined or changed: copy the features from `PRESETS` in `scripts/design.py`.
 
@@ -71,6 +75,14 @@ waist, crotch, neck) to **t = 1** (the free end: hem, wrist, front edge of the h
 | pants_basic | `side`, `inseam`, `leg_hem` |
 | beanie | `crown` (seam over the top), `sides`, `bottom` |
 | loop | `long_edges` |
+| all other modules | read from the drafted pattern: `side`, `inseam`, `hem`/`leg_hem` of every front/back pair (with a prefix for a second pair: `skirt_side`, `skirt_hem`, `pants_side`, `pants_inseam`, …), `sleeve`, `sleeve_hem`, `hood`, `crown` |
+
+A hem that is sewn to a band (cardigan, romper) or that has a facing or lining (jacket, coat,
+pinafore, sleeping bag) is listed but cannot be reshaped; shape the sides and sleeves instead.
+When the bodice hem is sewn to a skirt (fitted_dress), `hem` means the skirt hem.
+No zones (flat pieces, tubes, fingers): scarf, headband, neckwear, bib, mittens, gloves, socks,
+bucket_hat, cap, bag. Offer an appendage-free alternative (e.g. a printed or appliquéd motif) and
+say so in one line.
 
 Aliases such as `sleeves`, `legs`, `body`, `cuff` are understood.
 
@@ -108,6 +120,8 @@ Values are **cm per seam edge** (outwards +, inwards −); a side seam bulge of 
 - Shapes are kept in proportion: a profile steeper than 0.8 (short sleeve, doll clothes) and hem
   points deeper than 0.45 × their width are scaled down; the report says by how much.
 - A design never makes a garment tighter than body + minimum ease without an ❌.
+- A zone whose outline would cross itself after the shape (a tiny cap sleeve) is left as drafted
+  and listed under "Not used".
 - Options the shape cannot have are switched off before drafting and listed in `describe`:
   hem band and kangaroo pocket under a shaped hem, cuffs under a bell sleeve or shaped sleeve hem,
   leg cuffs under a flared or shaped leg hem, the beanie brim under a shaped lower edge.
