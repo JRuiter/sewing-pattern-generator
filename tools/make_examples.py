@@ -128,8 +128,18 @@ def make_examples():
     GN.run(dict(garment="pants_basic", size="98,110,122", options={"style": "jogger"},
                 formats=["roll610"], out=os.path.join(ex, "6_joggers_nested_98_110_122_roll610"),
                 basename="joggers_98_110_122"), verbose=False)
+    make_design_example()
     make_images()
     make_readmes()
+
+
+# 7: creative silhouette: a starfish-shaped hoodie (design.py preset "starfish")
+def make_design_example():
+    d = os.path.join(ROOT, "examples", "7_starfish_hoodie_128_a4")
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    GN.run(dict(garment="hoodie", size=128, design="starfish", options={"title": "Starfish hoodie"},
+                formats=["a4"], out=d, basename="starfish_hoodie_size128"), verbose=False)
 
 
 # One README.md per example folder: the prompt, pictures, key facts and what every file is.
@@ -154,6 +164,11 @@ EXAMPLES = [
      "Joggers in sizes 98, 110 and 122 on one pattern, for the 24\" roll.",
      "Three sizes nested on one roll page. Each size has its own colour, line style and PDF layer "
      "(switch sizes off before printing), and every size is checked on its own."),
+    ("7_starfish_hoodie_128_a4", "Starfish hoodie, size 128 (creative silhouette)",
+     "A sweatshirt shaped like a starfish for my son, size 128.",
+     "The normal hoodie block reshaped with the `starfish` design: a rounder body, sleeves that taper "
+     "to points, two pointed 'legs' at the hem and a pointed hood as the fifth point. The validation "
+     "report lists every feature as an intended deviation and re-checks room to move and sewability."),
 ]
 
 
@@ -289,6 +304,8 @@ def make_images():
         (os.path.join(e3, "photo_flat_with_reference_card.jpg"), "photo_input.jpg"),
         (os.path.join(e3, "project", "overlay_measurement.png"), "photo_overlay.jpg"),
     ]
+    e7 = os.path.join(ex, "7_starfish_hoodie_128_a4")
+    _pdf_page(os.path.join(e7, "sewing_instructions.pdf"), 1, os.path.join(IMAGES, "creative_starfish.png"))
     for src, name in jobs:
         _shrink(src, os.path.join(IMAGES, name))
     booklet = os.path.join(e5, "sewing_instructions.pdf")
@@ -315,6 +332,8 @@ if __name__ == "__main__":
         make_examples()
     if "doll" in what:
         make_doll_example()
+    if "design" in what:
+        make_design_example()
     if "images" in what and "examples" not in what:
         make_images()
         make_readmes()
