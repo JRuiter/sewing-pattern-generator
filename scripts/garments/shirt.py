@@ -243,9 +243,11 @@ def front_steps(pat, sec="Front") -> list:
     o = pat.options
     has_col = pat.has("collar") or pat.has("collar_stand")
     out = [ST.icon("Interface the facings", "interfacing",
-                   "Iron light interfacing onto " + ("the wrong side of the outer collar pieces" if has_col else "")
-                   + (", one half of each cuff" if pat.has("cuff") else "")
-                   + (" and " if has_col or pat.has("cuff") else "") + "a strip along the front edges (button stand).",
+                   "Iron light interfacing onto " + ", ".join(
+                       [x for x, on in (("the wrong side of the outer collar pieces", has_col),
+                                        ("one half of each cuff", pat.has("cuff"))) if on]
+                       + ["a strip along the front edges (button stand)"]).replace(", a strip", " and a strip", 1)
+                   + ".",
                    section="Prepare")]
     if any(mk.label == "Bust dart" for mk in pat.piece("front").marks):
         out.append(PT.dart_steps("Front", "Fold each front right sides together on the middle of the dart, the dart "
