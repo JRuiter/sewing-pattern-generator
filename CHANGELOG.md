@@ -4,6 +4,8 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-08
+
 ### Added
 - **New garments:** `bodysuit` (body with snap crotch, swimsuit, baby wrap body), `underwear` (briefs with a burrito gusset, boxer briefs), `swim_trunks` (mesh liner, drawcord with eyelets, mesh pocket bags), `jumpsuit` (jumpsuit, playsuit, boiler suit), `pyjama` (T-shirt or shirt top with pants, one booklet and one cutting layout), `romper` (baby romper with snaps along the inner legs, rib cuffs or feet), `sleeping_bag` (sleeping bag and swaddle sack, TOG 0.5/1.0/2.5 with lining and wadding).
 - **Style lines** (`style_lines`: princess, yoke, color_block) on T-shirt, hoodie, sweater and dress: the fit stays the same, the panels are separate pieces (contrast fabric for colour blocking), the style seams are sewn first.
