@@ -11,7 +11,7 @@ Wide harem pants with an elastic waistband and rib cuffs, printed on one long pa
 - **Pieces:** 4
 - **Fabric to buy:** main fabric 0.90 m at 150 cm width, rib knit 0.20 m at 70 cm width
 - **Sewing steps:** 20
-- **Sewability checks:** 31 of 31 OK
+- **Sewability checks:** 32 of 32 OK
 
 ## Cutting layout
 

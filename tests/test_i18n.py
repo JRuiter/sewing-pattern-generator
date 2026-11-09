@@ -98,3 +98,32 @@ def test_english_default_unchanged(tmp_path):
     names = {p.name for p in tmp_path.iterdir()}
     assert "sewing_instructions.md" in names and "validation_report.md" in names
     assert i18n.lang() == "en"
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("garment,size,opts", [
+    ("jumpsuit", "m52", {"style": "boiler"}),
+    ("pyjama", 128, {}),
+    ("romper", 74, {"feet": True}),
+    ("swim_trunks", "m52", {}),
+    ("tshirt_basic", "w38", {"style_lines": "princess"}),
+])
+def test_new_garments_fully_german(tmp_path, garment, size, opts):
+    """Every text of the newer garments (combined patterns, prefixes, style lines) has a German entry."""
+    i18n.MISSING.clear()
+    GN.run(dict(garment=garment, size=size, options=opts, formats=["a4"], language="de", out=str(tmp_path)),
+           verbose=False)
+    assert not i18n.MISSING, sorted(i18n.MISSING)[:10]
+
+
+def test_translated_text_is_not_reported_again():
+    with i18n.language("de"):
+        i18n.MISSING.clear()
+        for x in ("Hose: Gummiband 20 mm breit, Länge 51 cm (+2 cm Überlappung zum Zusammennähen)",
+                  "Nahtzugabe 1,0 cm enthalten; Saum: 2,0 cm; Halsausschnitt: 0,7 cm",
+                  "Saum, Vorderkante (Knopfleiste)"):
+            assert i18n.t(x) == x
+        assert not i18n.MISSING
+        i18n.t("Saum, Frobnicate edge")
+        assert i18n.MISSING
+        i18n.MISSING.clear()

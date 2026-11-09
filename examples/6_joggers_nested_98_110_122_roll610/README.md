@@ -11,7 +11,7 @@ Three sizes nested on one roll page. Each size has its own colour, line style an
 - **Pieces:** 6
 - **Fabric to buy:** main fabric 0.90 m at 150 cm width, rib knit 0.20 m at 70 cm width
 - **Sewing steps:** 25
-- **Sewability checks:** 114 of 114 OK
+- **Sewability checks:** 117 of 117 OK
 
 ## Cutting layout
 

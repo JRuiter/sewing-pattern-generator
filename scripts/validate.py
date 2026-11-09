@@ -133,8 +133,13 @@ def check_values(pat: Pattern):
         elif k == "range":
             st = "OK" if c["lo"] <= v <= c["hi"] else c.get("fail", "WARNING")
             d = 0.0 if st == "OK" else (v - c["lo"] if v < c["lo"] else v - c["hi"])
-            res.append(Check("Measurements", c["name"], st, f"{_cm(c['lo'])} – {_cm(c['hi'])}", _cm(v),
-                             _mm(d), c.get("note", "")))
+            if c.get("unit") == "%":
+                res.append(Check(c.get("group", "Measurements"), c["name"], st,
+                                 f"{c['lo'] * 100:.0f} – {c['hi'] * 100:.0f} %", f"{v * 100:.0f} %",
+                                 f"{d * 100:+.0f} %", c.get("note", "")))
+            else:
+                res.append(Check(c.get("group", "Measurements"), c["name"], st,
+                                 f"{_cm(c['lo'])} – {_cm(c['hi'])}", _cm(v), _mm(d), c.get("note", "")))
     return res
 
 
@@ -155,7 +160,7 @@ def check_geometry(pat: Pattern):
                 errs.append("cutting line does not enclose the seam line")
             boundary = LineString(np.vstack([cut, cut[:1]]))
             for e in pc.edges:
-                if e.fold:
+                if e.fold or e.raw:
                     continue
                 if e.sa <= 0:
                     if e.sa_hint <= 0:   # sa_hint > 0: pattern deliberately without allowances

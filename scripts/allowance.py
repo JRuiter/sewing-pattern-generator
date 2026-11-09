@@ -73,6 +73,9 @@ def draft(mod, measures: dict, options: dict | None):
         if extra:
             o = module_options({**(options or {}), **extra, "_sa_from_machines": extra["seam_allowance_mm"]})
             pat = mod.draft(measures, o)
+    if o.get("style_lines") not in (None, "", "none"):
+        from garments import _style_lines as SL
+        SL.apply(pat, o["style_lines"])
     for k in ("machines", "_sa_from_machines"):      # some modules pass only their own keys on
         if o.get(k) is not None:
             pat.options[k] = o[k]

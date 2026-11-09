@@ -325,10 +325,9 @@ def prepare(pattern, plans: dict | None = None) -> list[Step]:
              tip=("Nap: no piece turned round, all with the waist up. Stroke the fabric to check the direction."
                   if E.has_nap(pattern.options) else ""),
              hint=hint, data={"plans": plans} if plans else {}),
-        icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
-             section="Prepare", tip="Never deeper than half the seam allowance."),
-        _setup_step(pattern, knit),
-    ]
+    ] + ([icon("Snip the notches", "notch", "Cut 3–4 mm into the seam allowance at every notch.",
+               section="Prepare", tip="Never deeper than half the seam allowance.")]
+         if any(pc.notches for pc in pattern.pieces) else []) + [_setup_step(pattern, knit)]
 
 
 def L_group(pc) -> str:
@@ -455,12 +454,18 @@ def assembly(pattern, plans: dict | None = None) -> list[Step]:
     from garments import get
     mod = get(pattern.garment)
     if hasattr(mod, "assembly"):
-        body = mod.assembly(pattern)
+        if pattern.options.get("style_lines"):
+            from garments import _style_lines as SL
+            body = mod.assembly(SL.PanelView(pattern))
+        else:
+            body = mod.assembly(pattern)
     elif hasattr(mod, "sewing_steps"):                    # legacy text-only module
         body = [Step(t.split("**")[1].rstrip(":") if t.startswith("**") else t,
                      t.split("**", 2)[2].strip() if t.startswith("**") else "") for t in mod.sewing_steps(pattern)]
     else:
         body = [Step("Sew the pieces together", "Right sides together, matching the notches.", stitch="seam")]
+    from garments import _style_lines as SL
+    body = SL.repoint(pattern, SL.adjust_steps(pattern, body))
     knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
     own = owned_machines(pattern.options)
     out: list[Step] = []

@@ -252,14 +252,17 @@ def test_construction_values_tops():
 # ---------------------------------------------------------------- size tables
 
 def test_kids_size_table_is_smooth():
-    """Every measurement grows with the size and no step is an outlier (> 2.5 × median step)."""
+    """Every measurement grows with the size and no step is an outlier (> 2.5 × median step). Babies
+    (up to 86) grow differently (the head fastest), so their sizes are checked as their own range."""
     keys = sorted(M.KIDS_TABLE)
     arr = np.array([M.KIDS_TABLE[k] for k in keys])
-    for j, col in enumerate(M.KIDS_COLS):
-        steps = np.diff(arr[:, j])
-        assert (steps >= 0).all(), col
-        med = float(np.median(steps))
-        assert steps.max() <= 2.5 * med + 0.5, (col, steps)
+    assert (np.diff(arr, axis=0) >= 0).all()
+    for part in ([k for k in keys if k <= 86], [k for k in keys if k >= 86]):
+        sub = np.array([M.KIDS_TABLE[k] for k in part])
+        for j, col in enumerate(M.KIDS_COLS):
+            steps = np.diff(sub[:, j])
+            med = float(np.median(steps))
+            assert steps.max() <= 2.5 * med + 0.5, (col, part[0], steps)
 
 
 # ---------------------------------------------------------------- end to end

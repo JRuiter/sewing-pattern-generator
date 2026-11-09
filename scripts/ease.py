@@ -16,6 +16,9 @@ FABRICS = {
     "rib": ("Rib knit", 80, True),
     "corduroy": ("Corduroy", 0, False),
     "velvet": ("Velvet", 0, False),
+    "softshell": ("Softshell", 10, False),
+    "swim_woven": ("Quick-dry swim fabric (polyester)", 5, False),
+    "swim_lycra": ("Swim lycra", 70, True),
 }
 
 # fabrics with a nap or pile: all pieces must point the same way on the fabric
@@ -29,17 +32,18 @@ PRESS_NOTES = {
 }
 
 FIT_LABELS = {"slim": "slim / close-fitting", "normal": "normal", "wide": "wide",
-              "oversized": "oversized", "harem": "harem (wide, dropped crotch)"}
+              "oversized": "oversized", "boxy": "boxy",
+              "harem": "harem (wide, dropped crotch)"}
 
 # Base ease table as a fraction of the body circumference at 0 % stretch (woven) and
 # for typical knits (≈ 30 % stretch)
 _BODY = {  # tops: chest
     "slim": (0.06, 0.00), "normal": (0.14, 0.09), "wide": (0.22, 0.17),
-    "oversized": (0.32, 0.27), "harem": (0.22, 0.17),
+    "oversized": (0.40, 0.35), "boxy": (0.44, 0.40), "harem": (0.22, 0.17),
 }
 _HIP = {  # pants/skirts: hip
     "slim": (0.06, 0.00), "normal": (0.14, 0.10), "wide": (0.22, 0.18),
-    "oversized": (0.30, 0.26), "harem": (0.34, 0.30),
+    "oversized": (0.30, 0.26), "boxy": (0.30, 0.26), "harem": (0.34, 0.30),
 }
 
 
@@ -97,7 +101,7 @@ def rise_ease_mm(fit: str, adult: bool) -> float:
     """Rise ease (sitting room) in mm."""
     base = 20.0 if adult else 15.0
     return {"slim": base * 0.25, "normal": base, "wide": base * 1.3,
-            "oversized": base * 1.6, "harem": base * 1.3}[fit]
+            "oversized": base * 1.6, "boxy": base * 1.6, "harem": base * 1.3}[fit]
 
 
 def band_ratio(band_fabric: str, stretch: float | None = None, use: str = "neck") -> float:
@@ -139,4 +143,7 @@ def cap_ease_target_mm(fabric: str) -> float:
 def describe(fit: str, fabric: str, stretch: float | None = None) -> str:
     from i18n import t
     label, s, _ = fabric_info(fabric, stretch)
-    return t(f"{FIT_LABELS.get(fit, fit)} fit") + f", {t(label)} (" + t(f"{s:.0f} % stretch") + ")"
+    fabric_txt = f"{t(label)} (" + t(f"{s:.0f} % stretch") + ")"
+    if fit is None:                                  # accessories: no fit
+        return fabric_txt
+    return t(f"{FIT_LABELS.get(fit, fit)} fit") + ", " + fabric_txt

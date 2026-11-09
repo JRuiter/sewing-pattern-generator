@@ -118,6 +118,9 @@ def draft_from_spec(spec: dict):
         file_warn += fw
     given = {**(spec.get("_profile_measures_cm") or {}), **M.normalize_keys(from_file), **explicit}
     doll = DOLL.is_doll(spec)
+    no_body = getattr(mod, "NO_MEASURES", False) and not given and not spec.get("size")
+    if no_body:                       # bags: no body measurements, the size comes from the options
+        spec = {**spec, "size": "w38"}
     if doll:
         measures, sources = DOLL.complete_measures(given)
     else:
@@ -125,7 +128,10 @@ def draft_from_spec(spec: dict):
     for k in spec.get("_profile_measures_cm") or {}:
         if k not in explicit and k not in from_file and sources.get(k) == "user":
             sources[k] = "profile"
-    warn = file_warn + (DOLL.validate_measures(measures) if doll else M.validate_measures(measures))
+    warn = file_warn + (DOLL.validate_measures(measures) if doll else [] if no_body
+                        else M.validate_measures(measures))
+    if no_body:
+        sources = {}
     opts = dict(spec.get("options") or {})
     if spec.get("adjustments"):
         opts["adjustments"] = {**(opts.get("adjustments") or {}), **spec["adjustments"]}
@@ -135,6 +141,7 @@ def draft_from_spec(spec: dict):
         pat = ADJ.draft(mod, spec["garment"], measures, opts)
     pat.options["units"] = units
     pat.size_label = spec.get("size_label") or (DOLL.size_label(measures) if doll
+                                                else pat.size_label if no_body and pat.size_label
                                                 else size_label(spec.get("size"), given or None))
     _custom_title(pat, spec)
     i18n.localize_pattern(pat)

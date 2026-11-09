@@ -576,7 +576,7 @@ TABLE: dict[str, str] = {
     "To thread the elastic.": "Zum Gummi-Einziehen.", "Steam.": "Mit Dampf.",
     "Parts": "Teile", "Fabric and notions": "Stoff und Zubehör", "Machines and tools": "Maschinen und Werkzeug",
     "Polyester sewing thread to match": "Passendes Polyester-Nähgarn", "cut on fold": "im Bruch",
-    "{n} parts · {n} steps": "{n} Teile · {n} Schritte",
+    "{n} parts · {n} steps": "{n} Teile · {n} Schritte", "{n} part · {n} steps": "{n} Teil · {n} Schritte",
     "Read the steps once before you start. Every picture is drawn from your pattern pieces.":
         "Lies die Schritte einmal durch, bevor du anfängst. Jedes Bild ist aus deinen Schnittteilen gezeichnet.",
     "right side": "rechte Stoffseite", "wrong side": "linke Stoffseite", "stitch": "nähen", "pin": "Stecknadel",
@@ -1741,3 +1741,42 @@ TABLE.update({
         "{n} cm über den Anfang nähen, Nadeln hochstellen, den Stoff nach hinten ziehen und abschneiden; die "
         "Nadelfäden auf der linken Seite verknoten.",
 })
+
+# common practice checks (practice.py), boxy fit, crew neck formula
+TABLE.update({
+    "Common practice": "Gängige Praxis",
+    "Chest ease for fit 'slim'": "Mehrweite Brust bei Passform „schmal“",
+    "Chest ease for fit 'normal'": "Mehrweite Brust bei Passform „normal“",
+    "Chest ease for fit 'wide'": "Mehrweite Brust bei Passform „weit“",
+    "Chest ease for fit 'oversized'": "Mehrweite Brust bei Passform „oversized“",
+    "Chest ease for fit 'boxy'": "Mehrweite Brust bei Passform „Kastenform“",
+    "Chest ease for fit 'harem'": "Mehrweite Brust bei Passform „Harem“",
+    "Hip ease for fit 'slim'": "Mehrweite Hüfte bei Passform „schmal“",
+    "Hip ease for fit 'normal'": "Mehrweite Hüfte bei Passform „normal“",
+    "Hip ease for fit 'wide'": "Mehrweite Hüfte bei Passform „weit“",
+    "Hip ease for fit 'oversized'": "Mehrweite Hüfte bei Passform „oversized“",
+    "Hip ease for fit 'boxy'": "Mehrweite Hüfte bei Passform „Kastenform“",
+    "Hip ease for fit 'harem'": "Mehrweite Hüfte bei Passform „Harem“",
+    "guide value for this fit": "Richtwert für diese Passform",
+    "Crew neck depth (front)": "Rundhals-Tiefe vorne",
+    "about as deep as the half neck width": "etwa so tief wie die halbe Halsbreite",
+    "Neck width (half)": "Halsbreite (halbe)",
+    "neck / 5 + 0.5 to 3 cm": "Hals / 5 + 0,5 bis 3 cm",
+    "Sleeve cap height for this shoulder": "Kugelhöhe passend zur Schulter",
+    "lower cap for a dropped shoulder": "flachere Kugel bei überschnittener Schulter",
+    "boxy fit": "Kastenform",
+    "boxy (wide, straight, dropped shoulder) fit": "Kastenform (weit, gerade, überschnittene Schulter)",
+    "boxy (wide, straight, dropped shoulder)": "Kastenform (weit, gerade, überschnittene Schulter)",
+    "shoulder + allowance for fit 'boxy'": "Schulter + Zugabe für Passform „Kastenform“",
+    "{n} × neck_width_half + {n} cm": "{n} × neck_width_half + {n} cm",
+    "{n} × neck_width_half − {n} cm": "{n} × neck_width_half − {n} cm",
+    "{n} × neck_width_half + {n} cm + {n} cm (V-neck)": "{n} × neck_width_half + {n} cm + {n} cm (V-Ausschnitt)",
+    "{n} × neck_width_half − {n} cm + {n} cm (V-neck)": "{n} × neck_width_half − {n} cm + {n} cm (V-Ausschnitt)",
+    "back length + {n} % of height, − {n} % (boxy)": "Rückenlänge + {n} % der Körpergröße, − {n} % (Kastenform)",
+})
+
+# garment modules added in 1.7 (own file, it is long)
+from i18n_de_garments import TABLE as _GARMENTS  # noqa: E402
+
+for _k, _v in _GARMENTS.items():
+    TABLE.setdefault(_k, _v)

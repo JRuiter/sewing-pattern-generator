@@ -74,12 +74,22 @@ def _load(code: str):
             else:
                 exact[k] = v
         pats.sort(key=lambda p: -len(p[1]))       # most specific first
+        for k, v in list(templ.items()):           # "{n} mm" and "{n} cm" share one entry
+            ku, vu = _UNIT_RX.sub("{n} <u>", k), _UNIT_RX.sub("{n} <u>", v)
+            if ku != k and ku.count("<u>") == vu.count("<u>"):
+                _units[code].setdefault(ku, vu)
         _tables[code] = (exact, templ, pats)
         _values[code] = set(i18n_de.TABLE.values())
+        _tvalues[code] = {re.sub(r"\{n\d*\}", "{n}", v).replace(",", ".") for v in i18n_de.TABLE.values()
+                          if "{n" in v}
     return _tables[code]
 
 
 _values: dict[str, set] = {}
+_tvalues: dict[str, set] = {}
+_units: dict[str, dict] = {"de": {}}
+_UNIT_RX = re.compile(r"\{n\d*\} (?:mm|cm)\b")
+_UNIT_TXT = re.compile(r"(?<![\w.])([-−+]?\d+(?:[.,]\d+)?) (mm|cm)\b")
 
 
 def num(x: float | str, decimals: int | None = None) -> str:
@@ -124,6 +134,13 @@ def t(text: str) -> str:
         key = _NUM.sub("{n}", text)
         if key in templ:
             return _fill(templ[key], numbers)
+        ku = _UNIT_RX.sub("{n} <u>", key)
+        if ku in _units.get(_state["lang"], {}):
+            units = [u for _n, u in _UNIT_TXT.findall(text)]
+            v = _units[_state["lang"]][ku]
+            for u in units:
+                v = v.replace("<u>", u, 1)
+            return _fill(v, numbers)
     for rx, _k, v in pats:
         m = rx.match(text)
         if m:
@@ -142,11 +159,64 @@ def t(text: str) -> str:
     joined = _by_sentence(text)
     if joined is not None:
         return joined
+    if numbers and _NUM.sub("{n}", text).replace(",", ".") in _tvalues.get(_state["lang"], ()):
+        return text                               # already translated (a German number template)
+    if _done(text) or ("; " in text and all(_done(p) for p in text.split("; "))):
+        return text                               # already translated (joined parts, labels, prefixes)
     if _wordy(text):
         if text not in MISSING:
             _LAST.append(text)
         MISSING.add(text)
     return _DEC.sub(",", text)          # numbers without a table entry still get the decimal comma
+
+
+def _done(part: str, depth: int = 0) -> bool:
+    """A text that is already in the target language: a table value, a number template value,
+    "<translated label>: <number> <unit>", a list of translated labels, or a translated {s}
+    pattern (e.g. "Hose: …") whose slot is itself translated."""
+    lang = _state["lang"]
+    if part in _values[lang] or _NUM.sub("{n}", part).replace(",", ".") in _tvalues.get(lang, ()):
+        return True
+    m = re.fullmatch(r"(.+): [-−+]?[\d.,]+ ?(?:cm|mm|in|″)?", part)
+    if m:
+        return _done(m.group(1), depth)
+    items = _top_level_split(part)
+    if len(items) > 1 and all(_done(x, depth) for x in items):
+        return True
+    if depth < 2:
+        for rx in _rev_pats(lang):
+            mm = rx.match(part)
+            if mm and all(_done(g, depth + 1) for g in mm.groups()):
+                return True
+    return False
+
+
+def _top_level_split(text: str) -> list[str]:
+    """Split at ", " outside parentheses."""
+    out, buf, depth = [], "", 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        depth += (c == "(") - (c == ")")
+        if depth == 0 and text.startswith(", ", i):
+            out.append(buf)
+            buf = ""
+            i += 2
+            continue
+        buf += c
+        i += 1
+    return out + [buf]
+
+
+_REV: dict[str, list] = {}
+
+
+def _rev_pats(lang: str) -> list:
+    """The {s} patterns matched against their translations (only those with {s} slots and no {n})."""
+    if lang not in _REV:
+        _REV[lang] = [re.compile("^" + re.escape(v).replace(r"\{s\}", "(.+?)") + "$", re.S)
+                      for _rx, k, v in _load(lang)[2] if "{n" not in v and v.count("{s}") >= 1 and v != "{s}"]
+    return _REV[lang]
 
 
 _SENT = (re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9„\"(])"),           # sentences first,

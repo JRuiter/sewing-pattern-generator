@@ -26,6 +26,7 @@ class Edge:
     turned: bool = False        # allowance is folded back (hem, casing): corners are mirrored
     sa_hint: float = 0.0        # pattern without allowances: the allowance to add when cutting
     pointed: bool = False       # meets a fold edge at an intended point (V-neck), not at 90°
+    raw: bool = False           # left as a raw cut edge on purpose (fleece, felt): no allowance needed
 
     @property
     def length(self) -> float:
@@ -62,6 +63,7 @@ class Piece:
     marks: list[Mark] = field(default_factory=list)
     info: list[str] = field(default_factory=list)   # additional labels
     stretch_dir: str = ""                # note on the stretch direction
+    part_of: str = ""                    # part of the front/back view (yoke, side panel, colour block)
 
     # ----------------------------------------------------------------- geometry
     def edge(self, name: str) -> Edge:
@@ -193,6 +195,14 @@ class Pattern:
                 return p
         raise KeyError(key)
 
+    @property
+    def is_pants(self) -> bool:
+        """Pants and their derivatives (jeans, shorts, dungarees …): a front leg with a crotch edge."""
+        if not self.has("front"):
+            return False
+        names = {e.name for e in self.piece("front").edges}
+        return "crotch" in names and "armhole" not in names
+
     def has(self, key: str) -> bool:
         return any(p.key == key for p in self.pieces)
 
@@ -232,7 +242,9 @@ def rect_piece(key: str, name: str, w: float, h: float, *, sa: float = 10.0,
         Edge(names[3], G.line(c[3], c[0]), 0.0 if fold_left else sas[3], fold_left, labels[3]),
     ]
     if grain_vertical:
-        grain = (G.P(w * 0.5, h * 0.2), G.P(w * 0.5, h * 0.8)) if h > 60 else (G.P(w * 0.3, h * 0.5), G.P(w * 0.3, h * 0.5 + max(20, h * 0.4)))
+        grain = (G.P(w * 0.5, h * 0.2), G.P(w * 0.5, h * 0.8)) if h > 60 else \
+            (G.P(w * 0.3, h * 0.5), G.P(w * 0.3, h * 0.5 + max(20, h * 0.4))) if h > 45 else \
+            (G.P(w * 0.3, h * 0.12), G.P(w * 0.3, h * 0.88))
     else:
         grain = (G.P(w * 0.2, h * 0.5), G.P(w * 0.8, h * 0.5))
     return Piece(key, name, edges, cut_count=cut_count, mirror=mirror, fabric=fabric, grain=grain)

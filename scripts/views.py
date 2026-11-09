@@ -95,10 +95,23 @@ def _clip_marks(marks, poly):
 
 def _pants_view(pattern, view):
     pc = pattern.piece(view)
+    parts = [p for p in pattern.pieces if p.part_of == view]     # back yoke of jeans …
+    allp = [pc] + parts
+
+    def edge_pts(name):
+        return np.vstack([p.edge(e.name).pts for p in allp for e in p.edges
+                          if e.name == name or e.name.startswith(name + "_") and e.name[len(name) + 1:].isdigit()])
     ring = np.asarray(pc.seam_ring(), float)
-    cr = pc.edge("crotch").pts
-    top = cr[0] if cr[0][1] >= cr[-1][1] else cr[-1]
+    cr = edge_pts("crotch")
+    cr = cr[np.argsort(-cr[:, 1])]
+    top = cr[0]
     ax_x = float(top[0])
+    one = _poly(ring)
+    for p in parts:
+        one = one.union(_poly(np.asarray(p.seam_ring(), float)).buffer(0.3)).buffer(-0.3)
+    if one.geom_type != "Polygon":
+        one = max(one.geoms, key=lambda g: g.area)
+    ring = _ring(one)
     sil = _poly(ring).union(_poly(DG._mirror_x(ring, ax_x)))
     height = np.ptp(ring[:, 1])
     layers, lines, gathers = [], [], []
@@ -113,7 +126,7 @@ def _pants_view(pattern, view):
     sil = sil.union(top_part.intersection(box(-BIG, crotch_y + 0.02 * height, BIG, BIG))).buffer(0)
     sil = sil.difference(Polygon([(ax_x, tip), (ax_x - gh, hy - 0.5 * height), (ax_x + gh, hy - 0.5 * height)]))
     # waist: the band on top, as wide as the waist (elastic: gathered inside the band)
-    waist = pc.edge("waistband").pts
+    waist = edge_pts("waistband")
     w_lo, w_hi = float(waist[:, 1].min()), float(waist[:, 1].max())
     band = _pc(pattern, "waistband")
     y_cut = w_lo - 0.02 * height
@@ -122,7 +135,7 @@ def _pants_view(pattern, view):
         x0, x1 = ends[0][0], ends[-1][1]
         bh = DG._band_dims(band)[1] / 2
         layers.append((_band_rect(x0, x1, w_hi, bh), band, 2))
-        if DG.palette_key(band, pattern) != "rib":
+        if DG.palette_key(band, pattern) != "rib" and not any(mk.label == "Buttonhole" for mk in band.marks):
             gathers += _gathers(x0, x1, w_hi + bh * 0.2, bh * 0.6, n=int((x1 - x0) / 12))
     # hem: leg cuffs
     cuff = _pc(pattern, "leg_cuff")
@@ -137,10 +150,43 @@ def _pants_view(pattern, view):
             if x1 - x0 < 0.9 * (s1 - s0):
                 gathers += _gathers(x0, x1, hy, 0.03 * height)
     layers.insert(0, (_ring(sil), pc, 1))
+    bib = _pc(pattern, "bib")
+    if bib is not None:                       # dungarees: bib on the front band, straps over the shoulders
+        br = DG._unfolded(bib, np.asarray(bib.seam_ring(), float))
+        cxb = float(np.mean(br[:, 0]))
+        bh0 = (DG._band_dims(band)[1] / 2 if band is not None else 0.0)
+        bpts = br - np.array([cxb - ax_x, float(br[:, 1].min()) - w_hi - bh0 * 0.5])
+        st = _pc(pattern, "strap")
+        if st is not None:
+            sw = DG._band_dims(st)[1] / 2
+            ytop = float(bpts[:, 1].max())
+            for sg in (-1, 1):
+                xx = ax_x + sg * (np.ptp(bpts[:, 0]) / 2 - sw * 0.7)
+                if view == "front":
+                    layers.append((np.array([[xx - sw / 2, ytop - 20], [xx + sw / 2, ytop - 20],
+                                             [xx + sw / 2 + sg * 10, ytop + 0.25 * DG._band_dims(st)[0]],
+                                             [xx - sw / 2 + sg * 10, ytop + 0.25 * DG._band_dims(st)[0]]]), st, 2.6))
+                else:
+                    x0 = ax_x + sg * 30
+                    x1 = ax_x - sg * np.ptp(bpts[:, 0]) * 0.6
+                    yh = w_hi + 0.5 * DG._band_dims(st)[0]
+                    layers.append((np.array([[x0 - sw / 2, w_hi], [x0 + sw / 2, w_hi], [x1 + sw / 2, yh],
+                                             [x1 - sw / 2, yh]]), st, 2.6))
+        if view == "front":
+            layers.append((bpts, bib, 2.5))
+            for m in bib.marks:
+                if m.style == "placement":
+                    pp = np.asarray(m.pts, float) - np.array([cxb - ax_x, float(br[:, 1].min()) - w_hi - bh0 * 0.5])
+                    marks_extra = [(m.style, np.vstack([pp, DG._mirror_x(pp, ax_x)[::-1]]))]
+                    lines.append(marks_extra[0][1])
     lines.append(np.array([[ax_x, w_hi], [ax_x, tip]]))      # centre seam
+    for p in parts:
+        for e in p.edges:
+            if e.name.startswith("split"):
+                lines += [np.asarray(e.pts, float), DG._mirror_x(np.asarray(e.pts, float), ax_x)]
     # marks: drafted front = left front (seen from the front: on the right); drafted back = right back
     marks = []
-    for m in pc.marks:
+    for m in [mk for p in allp for mk in p.marks]:
         if m.style == "fold":
             continue
         lab = getattr(m, "key", None) or m.label
@@ -169,9 +215,14 @@ def _unfold_marks(pc, cx):
         if m.style == "fold":
             continue
         pts = np.asarray(m.pts, float)
-        if m.style == "placement" and len(pts) >= 3:
+        pat = DG._CTX.get("pattern")
+        single = pat is not None and any(p.name == m.label and p.cut_count == 1 for p in pat.pieces)
+        if m.style == "placement" and single:           # one chest pocket: on one side only
+            marks.append((m.style, pts))
+        elif m.style == "placement" and len(pts) >= 3:
             u = _poly(pts).union(_poly(DG._mirror_x(pts, cx)).buffer(0.01)).buffer(0)
-            marks.append((m.style, _ring(u)))
+            for g in (u.geoms if hasattr(u, "geoms") else [u]):
+                marks.append((m.style, _ring(g)))
         else:
             marks += [(m.style, pts), (m.style, DG._mirror_x(pts, cx))]
     return marks
@@ -224,26 +275,100 @@ def _sleeve(pattern, body_pc, cx, side):
     return out
 
 
+def _cf_mark_x(pc):
+    """x of the 'Centre front' mark of a front with a button stand (None if there is none)."""
+    for m in pc.marks:
+        if m.label == "Centre front":
+            return float(np.mean(np.asarray(m.pts, float)[:, 0]))
+    return None
+
+
 def _top_view(pattern, view):
+    from garments._style_lines import _PieceView
+    parts = [p for p in pattern.pieces if p.part_of == view]
     pc = pattern.piece(view)
+    if parts and pattern.options.get("style_lines"):
+        pc = _PieceView(pattern, pc)          # front/back answer for the edges of their panels
     ring = np.asarray(pc.seam_ring(), float)
     names = [e.name for e in pc.edges]
-    halved = pc.on_fold or "center" in names        # half a body: on the fold, or a centre seam/opening
+    cfx = _cf_mark_x(pc)
+    # half a body: on the fold, a centre seam/opening, or a button stand with a centre-front mark
+    halved = pc.on_fold or "center" in names or cfx is not None
     if pc.on_fold:
         cx = _fold_x(pc)
         body = _poly(DG._unfolded(pc, ring))
     elif "center" in names:
         cx = float(np.mean(pc.edge("center").pts[:, 0]))
         body = _poly(ring).union(_poly(DG._mirror_x(ring, cx)).buffer(0.01)).buffer(0)
+    elif cfx is not None:
+        cx = cfx
+        body = _poly(ring).union(_poly(DG._mirror_x(ring, cx)).buffer(0.01)).buffer(0)
     else:
         cx = float(np.mean(ring[:, 0]))
         body = _poly(ring)
+    part_seams = []
+    for p in parts:                       # yoke, side panels, colour blocks: drawn with the main piece
+        pr = np.asarray(p.seam_ring(), float)
+        pp = _poly(DG._unfolded(p, pr)) if p.on_fold else _poly(pr)
+        if halved and not p.on_fold:
+            pp = pp.union(_poly(DG._mirror_x(pr, cx)).buffer(0.01)).buffer(0)
+        body = body.union(pp.buffer(0.3)).buffer(-0.3)
+        for e in p.edges:
+            if e.name.startswith("split"):
+                part_seams += [np.asarray(e.pts, float), DG._mirror_x(np.asarray(e.pts, float), cx)]
+    legs = next((p for p in parts if any(e.name == "crotch" for e in p.edges)), None)
+    if legs is not None:                  # jumpsuit: the pants below the waist seam, two legs
+        cr = np.asarray(legs.edge("crotch").pts, float)
+        hy = float(np.asarray(legs.edge("hem").pts, float)[:, 1].mean())
+        crotch_y = float(cr[:, 1].min())
+        hgt = float(body.bounds[3] - body.bounds[1])
+        gh = 0.09 * (crotch_y - hy)
+        body = body.difference(Polygon([(cx, crotch_y - 0.01 * hgt), (cx - gh, hy - 0.5 * hgt),
+                                        (cx + gh, hy - 0.5 * hgt)])).buffer(0)
+        for p in parts:
+            for e in p.edges:
+                if e.name in ("waistband", "waist_outer"):
+                    pts = np.asarray(e.pts, float)
+                    part_seams += [pts, DG._mirror_x(pts, cx)]
+    if body.geom_type != "Polygon":
+        body = max(body.geoms, key=lambda g: g.area)
+    allnames = names + [e.name for p in parts for e in p.edges]
+    arm_pc = next((p for p in [pc] + parts if any(e.name in ("armhole", "raglan") for e in p.edges)), pc)
+    neck_pc = next((p for p in [pc] + parts if any(e.name == "neckline" for e in p.edges)), pc)
     height = np.ptp(ring[:, 1])
     layers, gathers, seams = [], [], []
     marks = _unfold_marks(pc, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in pc.marks
                                                   if m.style != "fold"]
-    if halved and not pc.on_fold:
+    if pattern.options.get("style_lines"):              # pocket marks on the panels
+        for p in parts:
+            marks += _unfold_marks(p, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in p.marks
+                                                         if m.style != "fold"]
+    if halved and not pc.on_fold and "center" in names:
         seams.append(np.array(pc.edge("center").pts, float))
+    elif "front_edge" in names:
+        seams.append(np.array(pc.edge("front_edge").pts, float))
+    strap = _pc(pattern, "strap")
+    if strap is not None and "top" in names and pattern.garment in ("pinafore", "dungarees", "romper", "jumpsuit"):
+        sw = DG._band_dims(strap)[1] / 2
+        top = np.asarray(pc.edge("top").pts, float)
+        xs = [float(m.pts[:, 0].mean()) for m in pc.marks if m.label in ("Button", "Strap (crossed)")]
+        x0 = xs[0] if xs else float(np.ptp(top[:, 0])) * 0.55
+        h = 0.42 * DG._band_dims(strap)[0]
+        for xx in (cx + abs(x0 - cx), cx - abs(x0 - cx)):
+            yb = float(np.interp(cx + abs(xx - cx), *top[np.argsort(top[:, 0])].T))
+            if view == "back":        # crossed straps
+                xe = cx - (xx - cx) * 0.9
+                layers.append((np.array([[xx - sw / 2, yb - 5], [xx + sw / 2, yb - 5], [xe + sw / 2, yb + h],
+                                         [xe - sw / 2, yb + h]]), strap, 2))
+            else:
+                layers.append((np.array([[xx - sw / 2, yb - 5], [xx + sw / 2, yb - 5], [xx + sw / 2, yb + h],
+                                         [xx - sw / 2, yb + h]]), strap, 2))
+    if "wrap" in names:                   # wrap top: the edge of the outer front crosses the body
+        seams.append(np.array(pc.edge("wrap").pts, float))
+    seams += part_seams
+    for p in parts:
+        marks += _unfold_marks(p, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in p.marks
+                                                      if m.style != "fold"]
     # dress: the skirt hangs from the bodice and is gathered onto it
     skirt = _pc(pattern, "skirt_" + view)
     if skirt is not None and "hem" in names:
@@ -286,10 +411,20 @@ def _top_view(pattern, view):
                 if full and ends[-1][1] - ends[0][0] < 0.9 * (full[-1][1] - full[0][0]):
                     gathers += _gathers(ends[0][0], ends[-1][1], hy, 0.03 * height)
     layers.insert(0, (_ring(body), pc, 1))
-    if "armhole" in names or "raglan" in names:
-        layers += _sleeve(pattern, pc, cx, "drafted") + _sleeve(pattern, pc, cx, "mirror")
-    if "neckline" in names:
-        neck = pc.edge("neckline").pts
+    for p in parts:                       # colour blocking: panels in another fabric drawn on top
+        if DG.palette_key(p, pattern) != DG.palette_key(pc, pattern):
+            pr = np.asarray(p.seam_ring(), float)
+            pp = _poly(DG._unfolded(p, pr)) if p.on_fold else _poly(pr)
+            if halved and not p.on_fold:
+                pp = pp.union(_poly(DG._mirror_x(pr, cx)).buffer(0.01)).buffer(0)
+            pp = pp.intersection(body).buffer(0)
+            for g in (pp.geoms if hasattr(pp, "geoms") else [pp]):
+                if g.area > 1:
+                    layers.append((_ring(g), p, 1.05))
+    if "armhole" in allnames or "raglan" in allnames:
+        layers += _sleeve(pattern, arm_pc, cx, "drafted") + _sleeve(pattern, arm_pc, cx, "mirror")
+    if "neckline" in allnames:
+        neck = neck_pc.edge("neckline").pts
         both = np.vstack([neck, DG._mirror_x(neck, cx)[::-1]]) if halved else neck
         both = both[np.argsort(both[:, 0])]
         hood = _pc(pattern, "hood")
@@ -299,6 +434,38 @@ def _top_view(pattern, view):
         elif nb is not None:
             g = LineString(both).buffer(DG._band_dims(nb)[1] / 4, cap_style=2)
             layers.append((_ring(g), nb, 2.5))
+        bb = _pc(pattern, "button_band")
+        if bb is not None and "center" in names and view == "front":   # cardigan: band from hem to hem
+            ce = np.asarray(pc.edge("center").pts, float)
+            ce = ce[np.argsort(ce[:, 1])]                                 # bottom → top
+            fn = np.asarray(pc.edge("neckline").pts, float)[::-1]           # CF → neck point
+            half = np.vstack([ce, fn])
+            path = np.vstack([half, DG._mirror_x(half, cx)[::-1]])
+            g = LineString(path).buffer(DG._band_dims(bb)[1] / 4, cap_style=2, join_style=2)
+            layers.append((_ring(g), bb, 2.5))
+        col = _pc(pattern, "collar") or _pc(pattern, "collar_stand")
+        if col is not None and hood is None:
+            cr = np.asarray(col.seam_ring(), float)
+            ch = float(min(np.ptp(cr[:, 0]), np.ptp(cr[:, 1])))
+            if any(m.style == "fold" for m in col.marks):
+                ch /= 2                                   # folded lengthwise
+            if col.name == "Peter Pan collar":           # lies flat on the body round the neck
+                g = LineString(both).buffer(ch, cap_style=2).intersection(body.buffer(-0.5))
+                if not g.is_empty:
+                    g = max(g.geoms, key=lambda q: q.area) if hasattr(g, "geoms") else g
+                    layers.append((_ring(g), col, 2.5))
+            else:                                         # stands up from the neckline
+                up = both + np.array([0.0, ch * 0.8])
+                layers.append((np.vstack([both, up[::-1]]), col, 2.5))
+                fall = _pc(pattern, "collar") if col.key == "collar_stand" else None
+                if fall is not None and view == "front":  # shirt collar: the points fold down over the stand
+                    for sgn in (-1, 1):
+                        x0 = cx + sgn * 0.08 * np.ptp(both[:, 0])
+                        y0 = float(both[:, 1].min())
+                        tip = np.array([cx + sgn * 0.42 * np.ptp(both[:, 0]), y0 - ch * 0.9])
+                        top = np.array([cx + sgn * 0.55 * np.ptp(both[:, 0]), float(both[:, 1].max()) + ch * 0.8])
+                        layers.append((np.array([[x0, y0 + ch * 0.3], tip, top,
+                                                 [cx + sgn * 0.2 * np.ptp(both[:, 0]), top[1]]]), fall, 2.7))
     return dict(layers=layers, seams=seams, marks=_clip_marks(marks, body), gathers=gathers)
 
 
@@ -331,14 +498,37 @@ def garment_views(pattern) -> dict:
         pc = pattern.piece(view)
         names = {e.name for e in pc.edges}
         try:
-            if pattern.garment.startswith("pants") and "crotch" in names and not pc.on_fold:
+            if pattern.is_pants and "crotch" in names and not pc.on_fold:
                 views[view] = _pants_view(pattern, view)
             else:
                 views[view] = _top_view(pattern, view)
         except (KeyError, ValueError, IndexError, StopIteration):   # pragma: no cover - defensive
             ring = DG._unfolded(pc, np.asarray(pc.seam_ring(), float))
             views[view] = dict(layers=[(ring, pc, 1)], seams=[], marks=[], gathers=[])
+    keys_p = pattern.options.get("_pants_keys") if isinstance(pattern.options, dict) else None
+    if keys_p and pattern.has(keys_p.get("front", "")) and not pattern.piece(keys_p["front"]).part_of:
+        _add_pants(pattern, views, keys_p)
     return views
+
+
+def _add_pants(pattern, views, keys_p):
+    """Pyjama set: the pants drawn below the top in the same view."""
+    from garments._parts import SubView
+    sub = SubView(pattern, keys_p, pattern.options.get("_pants_opts", {}), "pants_basic", "Pants: ")
+    for view in ("front", "back"):
+        if view not in views or not sub.has(view):
+            continue
+        pv = _pants_view(sub, view)
+        top = views[view]
+        y_top = min(float(np.asarray(r, float)[:, 1].min()) for r, _pc0, _z in top["layers"])
+        tops = [float(np.asarray(r, float)[:, 0].mean()) for r, _p, _z in top["layers"][:1]]
+        y_p = max(float(np.asarray(r, float)[:, 1].max()) for r, _pc0, _z in pv["layers"])
+        x_p = float(np.asarray(pv["layers"][0][0], float)[:, 0].mean())
+        off = np.array([tops[0] - x_p, y_top - y_p - 60.0])
+        top["layers"] += [(np.asarray(r, float) + off, p, z) for r, p, z in pv["layers"]]
+        for k in ("seams", "gathers"):
+            top[k] = list(top.get(k, [])) + [np.asarray(x, float) + off for x in pv.get(k, [])]
+        top["marks"] = list(top.get("marks", [])) + [(st, np.asarray(x, float) + off) for st, x in pv.get("marks", [])]
 
 
 def draw_view(ax, pattern, view: dict, back: bool = False):

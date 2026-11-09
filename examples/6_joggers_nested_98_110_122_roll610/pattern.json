@@ -654,6 +654,15 @@
       "note": ""
     },
     {
+      "group": "Common practice",
+      "name": "Hip ease for fit 'normal'",
+      "status": "OK",
+      "target": "5 – 18 %",
+      "actual": "10 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
+    },
+    {
       "group": "Measurements",
       "name": "Hip circumference pattern = body + ease",
       "status": "OK",
@@ -996,6 +1005,15 @@
       "note": ""
     },
     {
+      "group": "Common practice",
+      "name": "Hip ease for fit 'normal'",
+      "status": "OK",
+      "target": "5 – 18 %",
+      "actual": "10 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
+    },
+    {
       "group": "Measurements",
       "name": "Hip circumference pattern = body + ease",
       "status": "OK",
@@ -1336,6 +1354,15 @@
       "actual": "90.0°",
       "delta": "+0.0°",
       "note": ""
+    },
+    {
+      "group": "Common practice",
+      "name": "Hip ease for fit 'normal'",
+      "status": "OK",
+      "target": "5 – 18 %",
+      "actual": "10 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
     },
     {
       "group": "Measurements",

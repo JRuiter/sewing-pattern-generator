@@ -1,6 +1,6 @@
 ---
 name: sewing-pattern-generator
-description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, pull-on trousers), T-shirt/raglan, hoodie/sweatshirt/zip jacket, skirt, dress, beanie, loop scarf; doll clothes ("Puppenkleidung", "Kleider für die Stoffpuppe").
+description: Creates sewable, true-to-size, print-ready sewing patterns (1:1 vector PDF) from a free description, a size or body measurements and/or photos of a garment. Use for "make/draft/generate a sewing pattern", "pattern from my measurements", "pattern from a photo", "copy my favourite pants", "trace a garment", plotter/roll printing, A0/A1, or A4 pages to tape together. Also triggers on German requests such as "Schnittmuster erstellen/konstruieren", "Nähmuster nach Maßen", "Schnitt nach Foto/Vorbild", "Kleidungsstück abnehmen/nachnähen", "Lieblingshose kopieren", "A4 zum Kleben". Pants (joggers, harem pants, leggings, trousers, jeans, dungarees, swim trunks, underwear), T-shirt/raglan, hoodie/sweatshirt/zip jacket, shirt/blouse, polo, cardigan, vest, lined jacket/coat, softshell, skirt, dress (also fitted, wrap, pinafore), jumpsuit/boiler suit, bodysuit/swimsuit, pyjamas, baby romper and sleeping bag, hats, gloves, socks, bags; doll clothes ("Puppenkleidung", "Kleider für die Stoffpuppe").
 ---
 
 # Sewing pattern generator
@@ -35,7 +35,7 @@ Ask for the missing points together in one short message, each with a default
 - Size (kids 86–176, women 34–56, men 44–60) **or** body measurements
   (height, chest, waist, hip, inseam, side length, arm length, head)
 - Fabric (woven / jersey / jersey with elastane / interlock / sweat / fleece) and stretch in %
-- Fit (slim / normal / wide / oversized; for pants also harem)
+- Fit (slim / normal / wide / oversized / boxy; for pants also harem)
 - Output: roll (width in mm, default 610), A0, A1, A4 or US Letter to tape together
 - **Machines:** which machines they sew with: sewing machine (zigzag? stretch stitch? or straight
   stitch only), twin needle, overlocker/serger, coverstitch. Skip the question when the workshop
@@ -120,8 +120,13 @@ python scripts/generate.py --garment skirt --size 128 --style circle --format a1
 python scripts/generate.py --spec order.json          # everything as JSON (see the header of generate.py)
 ```
 Sizes: kids `122`, women `w38`, men `m52`, US/UK `us8`/`uk12`/`us3t`/`usk8`; several sizes nested
-with `--size 98,110,122`; `--units imperial`; **German output** `--lang de`. Modules: `pants_basic`,
-`tshirt_basic`, `hoodie`, `skirt`, `dress`, `beanie`, `loop`. Formats: `rollNNN`, `a0`, `a1`, `a4`,
+with `--size 98,110,122`; `--units imperial`; **German output** `--lang de`. Modules: tops `tshirt_basic`,
+`hoodie`, `shirt` (also blouse), `polo`, `cardigan`, `vest`, `jacket`, `coat`, `softshell`, `wrap`; pants
+`pants_basic`, `jeans`, `dungarees`, `swim_trunks`, `underwear`; dresses and one-pieces `dress`, `fitted_dress`,
+`pinafore`, `skirt`, `jumpsuit`, `bodysuit` (also swimsuit, baby wrap body), `pyjama`; baby `romper`,
+`sleeping_bag`; accessories `beanie`, `loop`, `scarf`, `headband`, `neckwear`, `bib`, `mittens`, `gloves`,
+`socks`, `earflap_hat`, `bucket_hat`, `cap`, `bag`. Style lines (princess, yoke, colour blocking):
+option `style_lines`. Formats: `rollNNN`, `a0`, `a1`, `a4`,
 `letter`, `dxf`, `projector`. Seam allowance `--seam-allowance 7.5|none`, `--hem-allowance 30`.
 **Look up every module option, fabric, format and output file in `references/options.md`** before
 promising a variant; do not guess option names.
@@ -178,9 +183,8 @@ present.
   proportions. Exact measurements only with mode B (scale in the picture) or a tape
   measure.
 - The back and hidden details are asked about, never invented.
-- Not covered (offer the alternative): dresses with closures/darts (woven fitted bodices),
-  lined/woven jackets, shirts/blouses with collar and button placket, jeans with a fly,
-  welt/jetted pockets, style lines, overalls, bodysuits.
+- Not covered (offer the alternative): tailored jackets with a lapel collar and canvas, corsetry
+  and boned bodices, bras, leather and other materials that need special machines.
 - Grading uses grading rules per size step (`reverse/store.py`), never linear scaling.
 
 ## Files

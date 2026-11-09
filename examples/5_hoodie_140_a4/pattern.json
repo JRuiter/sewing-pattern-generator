@@ -35,7 +35,7 @@
       "Ct": 807.3,
       "q": 201.825,
       "nw": 85.0,
-      "fnd": 108.0,
+      "fnd": 75.75,
       "bnd": 15.0,
       "sx": 206.4507040073055,
       "sy": -38.82779654524987,
@@ -47,11 +47,13 @@
       "sh": 127.0
     },
     "_sinfo": {
-      "SW": 269.1,
+      "SW": 321.59941021626395,
       "SL": 560.5492959926945,
       "cuff_h": 30.0,
       "cuff_len": 200.1,
-      "op": 285.8571428571429
+      "op": 285.8571428571429,
+      "CH": 97.72212852560432,
+      "ch_max": 101.37791679415561
     },
     "_hem_band_h": 45,
     "_nb_h": 20,
@@ -87,8 +89,8 @@
     "length": 522.0,
     "sleeve_len": 560.5,
     "sleeve_opening": 200.1,
-    "bicep_circ": 269.1,
-    "neckline": 511.2,
+    "bicep_circ": 321.6,
+    "neckline": 456.0,
     "hood_height": 335.3
   },
   "pieces": [
@@ -104,7 +106,7 @@
           "label": "Centre (fold)",
           "sa": 0.0,
           "fold": true,
-          "length_mm": 369.0
+          "length_mm": 401.2
         },
         {
           "name": "hem",
@@ -139,7 +141,7 @@
           "label": "Neckline",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 156.3
+          "length_mm": 128.7
         }
       ]
     },
@@ -213,7 +215,7 @@
           "label": "Sleeve seam",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 402.9
+          "length_mm": 433.3
         },
         {
           "name": "hem",
@@ -227,7 +229,7 @@
           "label": "Sleeve seam",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 402.9
+          "length_mm": 433.3
         },
         {
           "name": "cap_front",
@@ -324,14 +326,14 @@
           "label": "Neck seam",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 255.6
+          "length_mm": 228.0
         },
         {
           "name": "center",
           "label": "Hood centre seam",
           "sa": 10.0,
           "fold": false,
-          "length_mm": 473.9
+          "length_mm": 466.2
         },
         {
           "name": "front_edge",
@@ -406,8 +408,8 @@
     },
     {
       "name": "front_neck_depth",
-      "value": 108.0,
-      "formula": "neck_width_half + 1.5 cm",
+      "value": 75.75,
+      "formula": "0.95 × neck_width_half − 0.5 cm",
       "unit": "mm",
       "overridden": false,
       "computed": null
@@ -485,9 +487,9 @@
       "group": "Seam pairs",
       "name": "Sleeve seam (front ↔ back)",
       "status": "OK",
-      "target": "40.3 cm",
-      "actual": "40.3 cm",
-      "delta": "-0.0 mm",
+      "target": "43.3 cm",
+      "actual": "43.3 cm",
+      "delta": "+0.0 mm",
       "note": ""
     },
     {
@@ -512,17 +514,17 @@
       "group": "Seam pairs",
       "name": "Hood ↔ neckline (each side)",
       "status": "OK",
-      "target": "25.6 cm",
-      "actual": "25.6 cm",
-      "delta": "+0.0 mm",
+      "target": "22.8 cm",
+      "actual": "22.8 cm",
+      "delta": "-0.0 mm",
       "note": ""
     },
     {
       "group": "Seam pairs",
       "name": "Hood centre seam (left ↔ right)",
       "status": "OK",
-      "target": "47.4 cm",
-      "actual": "47.4 cm",
+      "target": "46.6 cm",
+      "actual": "46.6 cm",
       "delta": "+0.0 mm",
       "note": ""
     },
@@ -558,8 +560,8 @@
       "name": "Sleeve cap top (smooth)",
       "status": "OK",
       "target": "180°",
-      "actual": "178.4°",
-      "delta": "-1.6°",
+      "actual": "179.0°",
+      "delta": "-1.0°",
       "note": ""
     },
     {
@@ -567,8 +569,8 @@
       "name": "Sleeve underarm ↔ cap front",
       "status": "OK",
       "target": "90°",
-      "actual": "90.8°",
-      "delta": "+0.8°",
+      "actual": "90.5°",
+      "delta": "+0.5°",
       "note": ""
     },
     {
@@ -576,8 +578,8 @@
       "name": "Shoulder ↔ neckline (front + back)",
       "status": "OK",
       "target": "180°",
-      "actual": "180.3°",
-      "delta": "+0.3°",
+      "actual": "180.4°",
+      "delta": "+0.4°",
       "note": ""
     },
     {
@@ -585,8 +587,8 @@
       "name": "Neckline at centre front",
       "status": "OK",
       "target": "90°",
-      "actual": "90.2°",
-      "delta": "+0.2°",
+      "actual": "90.1°",
+      "delta": "+0.1°",
       "note": ""
     },
     {
@@ -639,8 +641,8 @@
       "name": "Neckline (fabric edge) fits over the head",
       "status": "OK",
       "target": "≥ 53.5 cm",
-      "actual": "63.9 cm",
-      "delta": "+104.0 mm",
+      "actual": "57.0 cm",
+      "delta": "+35.1 mm",
       "note": "neckline incl. stretch ≥ head circumference"
     },
     {
@@ -660,6 +662,24 @@
       "actual": "117.7 cm",
       "delta": "+389.5 mm",
       "note": "hem band length incl. usable stretch ≥ hip + 5 %"
+    },
+    {
+      "group": "Common practice",
+      "name": "Chest ease for fit 'wide'",
+      "status": "OK",
+      "target": "14 – 28 %",
+      "actual": "17 %",
+      "delta": "+0 %",
+      "note": "guide value for this fit"
+    },
+    {
+      "group": "Common practice",
+      "name": "Sleeve cap height for this shoulder",
+      "status": "OK",
+      "target": "5.6 cm – 10.6 cm",
+      "actual": "9.8 cm",
+      "delta": "+0.0 mm",
+      "note": "lower cap for a dropped shoulder"
     },
     {
       "group": "Measurements",
@@ -828,7 +848,7 @@
       "name": "Front: cut-on-fold edge",
       "status": "OK",
       "target": "straight, no SA, 90° corners, on grain",
-      "actual": "ok, corners ≤ 0.2° off 90°",
+      "actual": "ok, corners ≤ 0.1° off 90°",
       "delta": "",
       "note": "Centre (fold)"
     },
@@ -890,7 +910,7 @@
   "fabric_mm": {
     "Main fabric": {
       "width": 1500.0,
-      "need": 1000.0,
+      "need": 1100.0,
       "layout": "single"
     },
     "Rib knit": {

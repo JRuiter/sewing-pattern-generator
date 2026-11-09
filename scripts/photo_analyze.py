@@ -30,7 +30,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 SCHEMA = {
     "garment_type": ["pants", "jogger", "harem", "leggings", "shorts", "tshirt", "longsleeve",
                      "hoodie", "sweatshirt", "sweater", "skirt", "beanie", "loop", "dress", "jacket",
-                     "blouse", "shirt", "jeans", "overalls", "body"],
+                     "blouse", "shirt", "jeans", "overalls", "body", "coat", "cardigan", "vest", "polo",
+                     "softshell", "jumpsuit", "pyjama", "swimsuit", "swim_trunks", "underwear", "romper",
+                     "sleeping_bag", "wrap", "pinafore"],
     "silhouette": ["slim", "straight", "wide", "oversized", "harem", "flared", "bootcut", "tapered",
                    "a-line", "circle_skirt"],
     "length": ["long", "7/8", "knee", "short", "mini", "midi", "maxi", "hip_length", "tunic"],
@@ -66,31 +68,41 @@ VALUE_LABELS = {"side": "side pockets", "slant": "slanted side pockets",
                 "button + zip", "dropped": "dropped shoulder"}
 
 UNSUPPORTED = {
-    "jacket": "Lined or woven jackets are not covered. Mapped to a zip-up sweat jacket (hoodie module, "
-              "front: zip) instead.",
-    "blouse": "Blouses with button placket/collar are not covered. Alternative: T-shirt in woven fabric "
-              "with more ease.",
-    "shirt": "Shirts are not covered. Alternative: the T-shirt module.",
-    "jeans": "Jeans with a fly are not covered. Alternative: pull-on trousers in woven fabric with a "
-             "drawstring casing.",
-    "overalls": "Overalls are not covered. Alternative: pants; the bib would have to be added separately.",
-    "body": "Bodysuits are not covered. Alternative: the T-shirt module.",
-    "welt": "Welt pockets are not covered. Alternative: side pockets.",
-    "jetted": "Jetted pockets are not covered. Alternative: side pockets.",
     "front_patch": "Front patch pockets are not an option. Alternative: side pockets.",
-    "button_zip": "A waistband with button and zip is not covered. Alternative: elastic waistband "
-                  "(pull-on pants).",
-    "button_placket": "Button plackets are not covered. Alternative: no closure.",
-    "zipper": "Zips are not covered. Alternative: no closure.",
-    "snaps": "Snap plackets are not covered. Alternative: no closure.",
-    "stand_collar": "Stand collars are not covered. Alternative: round neck with a wide neckband.",
-    "collar": "Shirt collars are not covered. Alternative: round neck.",
-    "yoke": "Style lines (yoke) are not covered. The pattern is drafted without the split.",
-    "vertical_seams": "Vertical style lines are not covered. The pattern is drafted without the split.",
-    "horizontal_seams": "Horizontal style lines are not covered. The pattern is drafted without the split.",
     "u-boot": "Boat necks are not an option. Alternative: wide round neck.",
     "dropped": "Dropped shoulders are not an option. Alternative: raglan or oversized fit.",
 }
+# features that only some modules cover: (modules that cover it, text for the others)
+PARTIAL = {
+    "welt": (("jacket", "coat"), "Welt pockets only exist on the lined jacket and coat. Alternative: side pockets."),
+    "jetted": (("jacket", "coat"), "Jetted pockets only exist on the lined jacket and coat. Alternative: side "
+                                   "pockets."),
+    "button_zip": (("jeans",), "A waistband with button and zip only exists on the jeans. Alternative: elastic "
+                               "waistband (pull-on pants)."),
+    "button_placket": (("shirt", "polo", "cardigan", "jacket", "coat", "jumpsuit", "pyjama"),
+                       "Button plackets are not covered for this garment. Alternative: no closure."),
+    "zipper": (("hoodie", "vest", "softshell", "jumpsuit", "fitted_dress", "jeans", "sleeping_bag"),
+               "Zips are not covered for this garment. Alternative: no closure."),
+    "snaps": (("vest", "bodysuit", "romper"), "Snap plackets are not covered for this garment. Alternative: no "
+                                             "closure."),
+    "stand_collar": (("shirt", "jacket", "coat", "vest", "jumpsuit"),
+                     "Stand collars are not covered for this garment. Alternative: round neck with a wide "
+                     "neckband."),
+    "collar": (("shirt", "polo", "jumpsuit", "pyjama"), "Shirt collars are not covered for this garment. "
+                                                       "Alternative: round neck."),
+    "yoke": (("tshirt_basic", "hoodie", "dress", "shirt", "jeans"),
+             "Style lines (yoke) are not covered for this garment. The pattern is drafted without the split."),
+    "vertical_seams": (("tshirt_basic", "hoodie", "dress"), "Vertical style lines are not covered for this "
+                                                          "garment. The pattern is drafted without the split."),
+    "horizontal_seams": (("tshirt_basic", "hoodie", "dress"), "Horizontal style lines are not covered for this "
+                                                            "garment. The pattern is drafted without the split."),
+}
+# garment types with their own module (options from the features below)
+DIRECT = {"jeans": "jeans", "overalls": "dungarees", "body": "bodysuit", "swimsuit": "bodysuit",
+          "blouse": "shirt", "shirt": "shirt", "jacket": "jacket", "coat": "coat", "cardigan": "cardigan",
+          "vest": "vest", "polo": "polo", "softshell": "softshell", "jumpsuit": "jumpsuit", "pyjama": "pyjama",
+          "swim_trunks": "swim_trunks", "underwear": "underwear", "romper": "romper",
+          "sleeping_bag": "sleeping_bag", "wrap": "wrap", "pinafore": "pinafore"}
 
 
 def normalize(features: dict) -> dict:
@@ -140,14 +152,63 @@ def confirmation_text(features: dict) -> str:
     return text
 
 
-ZIP_KINDS = ("hoodie", "sweatshirt", "sweater", "jacket")
+ZIP_KINDS = ("hoodie", "sweatshirt", "sweater")
+
+
+def _direct_options(kind, f, fit, sil) -> dict:
+    """Options for the garment types with their own module."""
+    o = {}
+    sl = _val(f, "sleeve_length")
+    lg = _val(f, "length")
+    pk = _val(f, "pockets", [])
+    pk = pk if isinstance(pk, list) else [pk]
+    if kind == "blouse":
+        o["style"] = "blouse"
+    if kind == "swimsuit":
+        o["style"] = "swimsuit"
+    if kind in ("shirt", "blouse", "jacket", "coat", "cardigan", "polo", "jumpsuit", "wrap") and fit != "harem":
+        o["fit"] = fit
+    if sl in ("short", "long") and kind in ("shirt", "blouse", "polo", "cardigan", "jumpsuit", "wrap", "body",
+                                            "romper"):
+        o["sleeve_length"] = sl
+    if kind in ("shirt", "blouse"):
+        nk = _val(f, "neckline")
+        if nk == "stand_collar":
+            o["collar"] = "stand"
+        elif nk in ("round", "v"):
+            o["collar"] = "none"
+    if kind == "jeans" and sil in ("flared", "bootcut", "tapered"):
+        o["leg_shape"] = {"flared": "flare"}.get(sil, sil)
+    if kind in ("jacket", "coat"):
+        for x in ("welt", "jetted"):
+            if x in pk:
+                o["pockets"] = x
+    if kind == "jumpsuit":
+        if lg == "short":
+            o["length"] = "short"
+        if _val(f, "closure") == "zipper":
+            o["closure"] = "zip"
+    if kind == "pyjama":
+        if lg == "short":
+            o["length"] = "short"
+        if _val(f, "closure") == "button_placket":
+            o["top"] = "shirt"
+    if kind == "vest":
+        c = _val(f, "closure")
+        if c in ("zipper", "snaps", "none"):
+            o["closure"] = {"zipper": "zip"}.get(c, c)
+    if kind == "wrap" and lg in ("knee", "midi", "maxi"):
+        o["style"] = "dress"
+    if kind == "swim_trunks" and lg == "knee":
+        o["length"] = "knee"
+    return o
 
 
 def map_to_module(features: dict) -> dict:
     """Features → (module, options, not covered + alternatives)."""
     f = normalize(features)
     kind = _val(f, "garment_type")
-    issues = []
+    issues, partial = [], []
     for k, v in f.items():
         if k in ("proportions", "notes"):
             continue
@@ -156,12 +217,17 @@ def map_to_module(features: dict) -> dict:
                 continue                      # zip-up hoodie / sweat jacket is covered
             if x in UNSUPPORTED:
                 issues.append(UNSUPPORTED[x])
+            elif x in PARTIAL:
+                partial.append(x)
     sil = _val(f, "silhouette", "straight")
     fit = {"slim": "slim", "straight": "normal", "wide": "wide", "oversized": "oversized",
            "harem": "harem", "flared": "normal", "bootcut": "normal", "tapered": "normal"}.get(sil, "normal")
     fabric = _val(f, "fabric")
     opts = {}
-    if kind in ("pants", "jogger", "harem", "leggings", "shorts", "jeans", "overalls"):
+    if kind in DIRECT:
+        module = DIRECT[kind]
+        opts.update(_direct_options(kind, f, fit, sil))
+    elif kind in ("pants", "jogger", "harem", "leggings", "shorts"):
         module = "pants_basic"
         style = {"harem": "harem", "leggings": "leggings"}.get(kind, "jogger")
         if fit == "harem":
@@ -217,7 +283,7 @@ def map_to_module(features: dict) -> dict:
                           "long": "maxi"}.get(lg, "knee")
         t = _val(f, "pockets", [])
         opts["pockets"] = "side" in (t if isinstance(t, list) else [t])
-    elif kind in ("tshirt", "longsleeve", "body", "blouse", "shirt"):
+    elif kind in ("tshirt", "longsleeve"):
         module = "tshirt_basic"
         opts["fit"] = fit
         opts["sleeve_style"] = "raglan" if _val(f, "sleeve") == "raglan" else "set_in"
@@ -230,7 +296,7 @@ def map_to_module(features: dict) -> dict:
             opts["sleeve_cuffs"] = True
         if _val(f, "hem") == "rib":
             opts["hem_band"] = True
-    elif kind in ("hoodie", "sweatshirt", "sweater", "jacket"):
+    elif kind in ("hoodie", "sweatshirt", "sweater"):
         module = "hoodie"
         opts["fit"] = fit if fit != "harem" else "wide"
         opts["hood"] = _val(f, "hood", "yes" if kind == "hoodie" else "no") == "yes" or \
@@ -239,7 +305,7 @@ def map_to_module(features: dict) -> dict:
         t = t if isinstance(t, list) else [t]
         opts["kangaroo"] = "kangaroo" in t
         opts["sleeve_style"] = "raglan" if _val(f, "sleeve") == "raglan" else "set_in"
-        if kind == "jacket" or _val(f, "closure") == "zipper":
+        if _val(f, "closure") == "zipper":
             opts["front"] = "zip"
     elif kind == "skirt":
         module = "skirt"
@@ -255,6 +321,12 @@ def map_to_module(features: dict) -> dict:
     else:
         module = "pants_basic"
         issues.append(f"There is no module for \"{kind}\".")
+    for x in partial:
+        if module not in PARTIAL[x][0] and PARTIAL[x][1] not in issues:
+            issues.append(PARTIAL[x][1])
+    st = _val(f, "style_lines")
+    if module in ("tshirt_basic", "hoodie", "dress") and st in ("yoke", "vertical_seams", "horizontal_seams"):
+        opts["style_lines"] = {"yoke": "yoke", "vertical_seams": "princess", "horizontal_seams": "color_block"}[st]
     if fabric:
         opts["fabric"] = fabric if fabric != "knit" else "jersey"
     prop = f.get("proportions", {})

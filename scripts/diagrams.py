@@ -156,6 +156,9 @@ PALETTES = {
     "velvet": ("#7e5a86", "#efe6f0", "pile"),
     "lining": ("#90caf9", "#e3f2fd", ""),
     "rib": ("#a5d6a7", "#eef7ee", "rib"),
+    "mesh": ("#b0bec5", "#eceff1", ""),
+    "wadding": ("#f5f5f5", "#fafafa", ""),
+    "contrast": ("#b39ddb", "#ede7f6", ""),
 }
 HAND_STITCH = (0, (0.6, 1.8))       # red dotted: by hand
 DONE_STITCH = "#7a7a7a"             # grey dashed: already sewn
@@ -169,7 +172,13 @@ def palette_key(pc=None, pattern=None) -> str:
     fab = (getattr(pc, "fabric_key", None) or getattr(pc, "fabric", "") or "").lower() if pc is not None else ""
     if "rib" in fab:
         return "rib"
-    if fab.startswith("lining"):
+    if fab.startswith("mesh"):
+        return "mesh"
+    if fab.startswith("wadding"):
+        return "wadding"
+    if fab.startswith("contrast"):
+        return "contrast"
+    if fab.startswith("lining") or fab.startswith("swim lining"):
         return "lining"
     main = (pattern.options.get("fabric", "") if pattern is not None and isinstance(pattern.options, dict)
             else "")
@@ -1100,7 +1109,7 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((2.0, 0.75), 0.05, fc="white", ec=INK, lw=0.8, zorder=5))
         ax.plot([2.0, 3.0, 3.3], [0.75, 1.2, 0.9], color=STITCH, lw=1.0)
         _pic_fabric(ax, 0.6, 0.0, 2.8, 0.25)
-    elif pic == "turn" and pattern.garment.startswith("pants") and pattern.has("front"):
+    elif pic == "turn" and pattern.is_pants and pattern.has("front"):
         _legs_inside(ax, pattern)
     elif pic == "turn":
         ax.add_patch(Rectangle((0.6, 0.6), 1.2, 1.4, fc=WRONG_SIDE, ec=INK, lw=1.3, hatch="////"))
@@ -1115,7 +1124,7 @@ def draw_icon(ax, pattern, step):
         ax.plot([0.9, 2.6], [1.3, 1.3], color=INK, lw=3.5, zorder=4, alpha=0.35)
         _pic_safety_pin(ax, 2.95, 1.3, 0.4)
         _arrow(ax, [2.9, 1.9], [3.6, 1.9], lw=1.4)
-        ax.text(1.75, 0.65, T("elastic, with a safety pin"), fontsize=7, ha="center")
+        ax.text(1.75, 0.65, T(step.data.get("label", "elastic, with a safety pin")), fontsize=7, ha="center")
     elif pic == "velcro":
         _pic_fabric(ax, 0.6, 0.4, 1.4, 1.8)
         _pic_fabric(ax, 2.0, 0.4, 1.4, 1.8, wrong=True)
@@ -1159,6 +1168,54 @@ def draw_icon(ax, pattern, step):
         _pic_fabric(ax, 0.5, 0.35, 3.0, 0.9)
         iax = ax.inset_axes((0.28, 0.42, 0.44, 0.5), transform=ax.transAxes)
         draw_machine(iax, "iron")
+    elif pic == "eyelet":                     # two eyelets in a band, a cord through them
+        _pic_fabric(ax, 0.4, 0.7, 3.2, 1.1)
+        for x in (1.6, 2.4):
+            ax.add_patch(Circle((x, 1.25), 0.2, fc="#cfd8dc", ec=INK, lw=1.2, zorder=4))
+            ax.add_patch(Circle((x, 1.25), 0.1, fc="white", ec=INK, lw=0.9, zorder=5))
+        ax.plot([1.6, 1.45, 1.2], [1.25, 0.8, 0.4], color=INK, lw=2.0, zorder=6)
+        ax.plot([2.4, 2.55, 2.8], [1.25, 0.8, 0.4], color=INK, lw=2.0, zorder=6)
+        ax.text(2.0, 0.15, T(step.data.get("label", "eyelets on the marks, cord through them")), fontsize=7,
+                ha="center")
+    elif pic == "snap":                       # press stud: cap and socket, pressed together
+        _pic_fabric(ax, 0.4, 0.5, 1.5, 1.5)
+        _pic_fabric(ax, 2.1, 0.5, 1.5, 1.5, wrong=True)
+        ax.add_patch(Circle((1.15, 1.25), 0.32, fc="#cfd8dc", ec=INK, lw=1.2, zorder=4))
+        ax.add_patch(Circle((1.15, 1.25), 0.1, fc="white", ec=INK, lw=0.9, zorder=5))
+        ax.add_patch(Circle((2.85, 1.25), 0.32, fc="#cfd8dc", ec=INK, lw=1.2, zorder=4))
+        ax.add_patch(Circle((2.85, 1.25), 0.12, fc=INK, ec=INK, lw=0.9, zorder=5))
+        _arrow(ax, [2.4, 2.25], [1.6, 2.25], lw=1.2)
+        ax.text(2.0, 0.2, T(step.data.get("label", "snap: cap and socket on the marks")), fontsize=7, ha="center")
+    elif pic == "button" and step.data.get("single"):     # one button sewn on (cap top, waistband)
+        _pic_fabric(ax, 0.8, 0.4, 2.4, 1.8)
+        ax.add_patch(Circle((2.0, 1.3), 0.45, fc="#cfd8dc", ec=INK, lw=1.3, zorder=4))
+        for dx, dy in ((-0.12, -0.12), (0.12, -0.12), (-0.12, 0.12), (0.12, 0.12)):
+            ax.add_patch(Circle((2.0 + dx, 1.3 + dy), 0.04, fc=INK, zorder=5))
+        ax.plot([1.88, 2.12], [1.18, 1.42], color=STITCH, lw=1.0, zorder=6)
+        ax.plot([1.88, 2.12], [1.42, 1.18], color=STITCH, lw=1.0, zorder=6)
+    elif pic == "button":                     # buttonholes on one band, buttons on the other
+        _pic_fabric(ax, 0.5, 0.3, 1.2, 2.1)
+        _pic_fabric(ax, 2.3, 0.3, 1.2, 2.1)
+        for y in np.linspace(0.6, 2.1, 4):
+            ax.add_patch(Rectangle((0.85, y - 0.05), 0.5, 0.1, fc="white", ec=INK, lw=1.0, zorder=4))
+            ax.add_patch(Circle((2.9, y), 0.17, fc="#cfd8dc", ec=INK, lw=1.0, zorder=4))
+            for dx in (-0.05, 0.05):
+                ax.add_patch(Circle((2.9 + dx, y), 0.025, fc=INK, zorder=5))
+        ax.text(1.1, 0.05, T("buttonholes"), fontsize=6.5, ha="center")
+        ax.text(2.9, 0.05, T("buttons"), fontsize=6.5, ha="center")
+    elif pic == "interfacing":                # iron-on interfacing, glue side down
+        _pic_fabric(ax, 0.5, 0.4, 3.0, 1.2, wrong=True)
+        ax.add_patch(Rectangle((0.8, 0.6), 2.4, 0.8, fc="#fafafa", ec=INK, lw=1.0, ls=(0, (3, 2)), zorder=4))
+        iax = ax.inset_axes((0.3, 0.5, 0.42, 0.48), transform=ax.transAxes)
+        draw_machine(iax, "iron")
+        ax.text(2.0, 0.15, T("glue side on the wrong side, press without steam"), fontsize=7, ha="center")
+    elif pic == "dart":                       # dart folded right sides together, sewn to the point
+        _pic_fabric(ax, 0.5, 0.4, 3.0, 1.8, wrong=True)
+        ax.plot([0.5, 2.9, 0.5], [1.75, 1.3, 0.85], color=INK, lw=1.2, ls=(0, (3, 2)), zorder=4)
+        ax.plot([0.5, 2.9], [1.3, 1.3], color=INK, lw=0.8, zorder=4)
+        ax.plot([0.55, 2.85], [1.72, 1.32], color=STITCH, lw=1.6, zorder=5)
+        ax.add_patch(Circle((2.9, 1.3), 0.06, fc=INK, zorder=6))
+        ax.text(2.0, 0.15, T("fold on the centre line, sew from the edge to the point"), fontsize=7, ha="center")
     elif pic == "zip":
         _pic_fabric(ax, 0.4, 0.3, 1.5, 2.0)
         _pic_fabric(ax, 2.1, 0.3, 1.5, 2.0)

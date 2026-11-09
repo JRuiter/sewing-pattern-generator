@@ -51,7 +51,8 @@ limited to 0.75–1.45).
 | slim | +6 % | ±0 (negative at ≥ 40 % stretch, down to −10 %) | +6 % | −4 … −12 % (leggings) |
 | normal | +14 % | +9 % | +14 % | +10 % |
 | wide | +22 % | +17 % | +22 % | +18 % |
-| oversized | +32 % | +27 % | +30 % | +26 % |
+| oversized | +40 % | +35 % | +30 % | +26 % |
+| boxy | +44 % | +40 % | +30 % | +26 % |
 | harem | – | – | +34 % | +30 % |
 
   \* at 30 % stretch; every 10 % more stretch means 1 % less ease.
@@ -121,17 +122,20 @@ limited to 0.75–1.45).
 ## 3. T-shirt / raglan (`tshirt_basic`)
 
 1. **Chest width** `Ct = B × (1 + ease)`, quarter `q = Ct/4`.
-2. **Neckline:** half width `nw = neck/5 + 15`; depth front `nw + 15/25`
-   (V-neck +60), back 15/20. The neckline meets centre and shoulder at right angles. If
+2. **Neckline:** half width `nw = neck/5 + 15`; crew neck depth front `0.95 × nw − 5` (children) /
+   `+ 5` (adults), i.e. about as deep as the half width as in current ready-to-wear (V-neck +60),
+   back 15/20. A neckline widened to fit over the head gets wider first (the depth follows nw). The neckline meets centre and shoulder at right angles. If
    the neckline (incl. stretch) does not fit over the head, it is widened automatically
    until the check "Neckline fits over the head" passes.
-3. **Shoulder:** length = shoulder width (+15 mm wide, +4 % chest oversized),
+3. **Shoulder:** length = shoulder width (+15 mm wide, +4 % chest oversized, +9 % chest boxy),
    slope 17°.
-4. **Armhole depth** `0.18 × Ct + 25` (+3 % Ct for wide/oversized); the armhole starts at
+4. **Armhole depth** `0.18 × Ct + 25` (+3 % Ct for wide/oversized/boxy); the armhole starts at
    a right angle to the shoulder and ends at a right angle to the side seam.
-5. **Length** = back length + 0.13 × BH (tunic +0.12 × BH).
-6. **Sleeve:** width = upper arm × (1 + 8/18/30/40 %); cap as a symmetric Bézier curve,
-   cap height by bisection to the target ease. Short-sleeve underarm seam ≥ 35 mm
+5. **Length** = back length + 0.13 × BH (tunic +0.12 × BH; boxy −7 %, straight sides, hem band 95 %).
+6. **Sleeve:** width = upper arm × (1 + 8/18/30/40/50 %); cap as a symmetric Bézier curve,
+   cap height by bisection to the target ease. The cap may be at most `0.56 × armhole depth −
+   0.8 × shoulder extension` (≥ 0.30 × depth): a dropped shoulder replaces part of the cap, so the
+   sleeve is widened until the cap is low enough. Short-sleeve underarm seam ≥ 35 mm
    (≥ 50 mm with cuffs). Front/back sleeve seams the same length, underarm corners 90°.
 7. **Raglan:** the raglan lines from the neckline to the underarm are transferred rigidly
    to the sleeve; the sleeve neck is a curve at right angles to both raglan seams; the
@@ -234,3 +238,13 @@ pattern as usual. Explicit `construction` overrides win over adjustments.
 The adjustments are stored in `options.adjustments` (pattern.json, project.json) and only
 there: they are re-applied on every run, so "same as last time, one size up" keeps them.
 The instructions show the finished measurements before and after.
+
+
+## Common practice (`scripts/practice.py`)
+
+Defaults must match current ready-to-wear and pattern-making practice; anything special (a deep
+scoop neck, a cropped length, a set chest width) comes from an explicit option or `construction`
+value, and the matching check is then skipped as intended. `practice.py` holds the guide ranges
+(chest/hip ease per fit, crew-neck depth relative to the neck width, neck width, sleeve-cap height
+for the shoulder); the validation report lists them under "Common practice" and warns (⚠) when a
+default drifts outside. Retune the table, not the formulas.

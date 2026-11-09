@@ -47,7 +47,7 @@ def check_views(pattern, views: dict) -> None:
             want = 2 if k in ("leg_cuff", "sleeve_cuff", "sleeve") else 1
             if keys.count(k) < want:
                 add("view", f"{name} view", f"'{k}' missing ({keys.count(k)} of {want} drawn)")
-        if pattern.garment.startswith("pants") and pattern.has("front") and not pattern.piece("front").on_fold:
+        if pattern.is_pants and pattern.has("front") and not pattern.piece("front").on_fold:
             body = Polygon(view["layers"][0][0]).buffer(0)
             y0, y1 = body.bounds[1], body.bounds[3]
             y = y0 + 0.04 * (y1 - y0)

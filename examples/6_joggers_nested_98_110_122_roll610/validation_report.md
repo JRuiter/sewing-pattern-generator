@@ -20,6 +20,7 @@
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband at the side panel | 90° | 90.0° | +0.0° | ✅ OK |  |
+| Common practice | Hip ease for fit 'normal' | 5 – 18 % | 10 % | +0 % | ✅ OK | guide value for this fit |
 | Measurements | Hip circumference pattern = body + ease | 62.7 cm | 62.7 cm | +0.0 % | ✅ OK | body 57.0 cm + +10 % ease |
 | Measurements | Top edge fits over the hip | ≥ 58.1 cm | 68.9 cm | +107.6 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 11.8 cm – 20.9 cm | 18.5 cm | +0.0 mm | ✅ OK | body rise 17.0 cm |
@@ -41,7 +42,7 @@
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 38 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 39 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 
@@ -81,6 +82,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband at the side panel | 90° | 90.0° | +0.0° | ✅ OK |  |
+| Common practice | Hip ease for fit 'normal' | 5 – 18 % | 10 % | +0 % | ✅ OK | guide value for this fit |
 | Measurements | Hip circumference pattern = body + ease | 67.1 cm | 67.1 cm | +0.0 % | ✅ OK | body 61.0 cm + +10 % ease |
 | Measurements | Top edge fits over the hip | ≥ 62.2 cm | 73.9 cm | +117.3 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 13.2 cm – 22.3 cm | 18.5 cm | +0.0 mm | ✅ OK | body rise 17.0 cm |
@@ -102,7 +104,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 38 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 39 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 
@@ -142,6 +144,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | Angles/transitions | Hem ↔ side seam back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband back | 90° | 90.1° | +0.1° | ✅ OK |  |
 | Angles/transitions | Side seam ↔ waistband at the side panel | 90° | 90.0° | +0.0° | ✅ OK |  |
+| Common practice | Hip ease for fit 'normal' | 5 – 18 % | 10 % | +0 % | ✅ OK | guide value for this fit |
 | Measurements | Hip circumference pattern = body + ease | 72.6 cm | 72.6 cm | +0.0 % | ✅ OK | body 66.0 cm + +10 % ease |
 | Measurements | Top edge fits over the hip | ≥ 67.3 cm | 80.3 cm | +129.4 mm | ✅ OK | top edge incl. usable stretch ≥ hip |
 | Measurements | Front rise plausible | 14.6 cm – 24.0 cm | 19.5 cm | +0.0 mm | ✅ OK | body rise 18.0 cm |
@@ -163,7 +166,7 @@ Override any of these with the option `construction`, values in mm (e.g. `{"cons
 | Labels | Front leg: notches | on the cutting line | 3 notch mark(s) |  | ✅ OK |  |
 | Labels | Back leg: notches | on the cutting line | 6 notch mark(s) |  | ✅ OK |  |
 
-**Result:** 38 OK, 0 warning(s), 0 error(s): the pattern is sewable.
+**Result:** 39 OK, 0 warning(s), 0 error(s): the pattern is sewable.
 
 ### Construction values
 

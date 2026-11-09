@@ -41,7 +41,8 @@ GREY = "#777777"
 LIGHT = "#e6e6e6"
 STEPS_PER_PAGE = 2
 NOTION_WORDS = {"elastic": "Elastic", "zip": "Zip", "velcro": "Velcro", "snap": "Snaps", "button": "Buttons",
-                "drawstring": "Drawstring", "cord": "Cord", "binding": "Binding"}
+                "drawstring": "Drawstring", "cord": "Cord", "binding": "Binding", "interfacing": "Interfacing",
+                "buckle": "Buckles", "wadding": "Wadding"}
 IMPORTANT = ("#fff3c4", "#d4a600")      # yellow box
 TIP = ("#e3f4e1", "#2e7d32")            # green box
 ALT = ("#e6eef8", "#4a6fa5")            # blue box: another way to do it
@@ -224,7 +225,8 @@ def _materials(pattern, plans, steps) -> list[tuple[str, str, str]]:
                     T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")))
     for en, n in zip(getattr(pattern, "notes_en", pattern.notes), pattern.notes):
         low = en.lower()
-        word = next((w for w in NOTION_WORDS if w in low), None)
+        hits = sorted((low.index(w), w) for w in NOTION_WORDS if w in low)    # the word the note starts with
+        word = hits[0][1] if hits else None
         if word:
             out.append(("safety_pin" if word in ("elastic", "drawstring", "cord") else "pins",
                         T(NOTION_WORDS[word]), T(n)))
@@ -279,7 +281,8 @@ def _legend(fig, pattern, x, y, w) -> float:
         if k not in keys:
             keys.append(k)
     names = {"main": "Main fabric", "corduroy": "Corduroy", "velvet": "Velvet", "lining": "Lining",
-             "rib": "Rib knit"}
+             "rib": "Rib knit", "mesh": "Mesh", "wadding": "Wadding",
+             "contrast": "Contrast fabric"}
     col = w / 3
     y0 = y
     for i, k in enumerate(keys):
@@ -341,7 +344,7 @@ def _key_data(pattern, steps, plans) -> list[tuple[str, str]]:
     rows.append(("Sewn with", " + ".join(T(t["name"]) for t in machines) or T("Sewing machine")))
     rows.append(("Seam allowance", _sa_summary(pattern)))
     level, hours = difficulty(pattern, steps)
-    rows.append(("Parts and steps", T(f"{len(pattern.pieces)} parts · {len(steps)} steps")))
+    rows.append(("Parts and steps", T(f"{len(pattern.pieces)} part{'s' if len(pattern.pieces) != 1 else ''} · {len(steps)} steps")))
     rows.append(("Difficulty", T(level) + " · " + T(f"about {hours:g} h")))
     return rows
 
@@ -393,12 +396,14 @@ def cover(pdf, pattern, steps, plans=None):
     fig.text(0.5, 0.93, title, fontsize=min(40.0, 40.0 * 16 / max(len(title), 1)), fontweight="bold",
              ha="center", va="top")
     o = pattern.options
-    fit = E.describe(o.get("fit", "normal"), o.get("fabric", "jersey"), o.get("stretch"))
+    mod = _module(pattern)
+    has_fit = mod is None or "fit" in getattr(mod, "DEFAULTS", {"fit": None})
+    fit = E.describe(o.get("fit", "normal") if has_fit else None, o.get("fabric", "jersey"), o.get("stretch"))
     sub = "  ·  ".join([T(pattern.size_label), fit])
     fig.text(0.5, 0.862, _fit_wrap(fig, sub, 0.84, 10), fontsize=10, ha="center", va="top", color="#555",
              multialignment="center")
     level, hours = difficulty(pattern, steps)
-    fig.text(0.5, 0.835, T(f"{len(pattern.pieces)} parts · {len(steps)} steps") + "  ·  " + T(level) + "  ·  "
+    fig.text(0.5, 0.835, T(f"{len(pattern.pieces)} part{'s' if len(pattern.pieces) != 1 else ''} · {len(steps)} steps") + "  ·  " + T(level) + "  ·  "
              + T(f"about {hours:g} h"), fontsize=8, ha="center", va="top", color=GREY)
     _views(fig, pattern, (0.06, 0.29, 0.88, 0.52), check=True)
     # what it is sewn with
@@ -488,7 +493,7 @@ def _sides_note(pattern) -> str:
     """What right/wrong side and left/right (as worn) mean, with an example from this garment."""
     keys = {pc.key for pc in pattern.pieces}
     who = {"doll": "the doll", "child": "the child", "adult": "the person"}[wearer(pattern)]
-    if keys & {"front", "back"} and pattern.garment.startswith("pants"):
+    if keys & {"front", "back"} and pattern.is_pants:
         example = f": the left front leg is on the right when you look at {who}."
     elif "sleeve" in keys:
         example = f": the left sleeve is on the right when you look at {who}."
@@ -1019,6 +1024,12 @@ def _done_panel(fig, pattern, steps, rect):
                label="After the test garment", colors=TIP, icon="")
 
 
+def _module(pattern):
+    """The garment module of a pattern (None for unknown garments)."""
+    import garments as GM
+    return GM.get(pattern.garment) if pattern.garment in GM.GARMENTS else None
+
+
 def _fit_check(pattern) -> str:
     """What to check on the test garment, for this kind of garment and wearer."""
     keys = {pc.key for pc in pattern.pieces}
@@ -1027,9 +1038,12 @@ def _fit_check(pattern) -> str:
         return ("Try the test garment on the doll: does it go over the head, does the opening close, is the "
                 "length right? Adjust the measurements and print the pattern again before you cut the good fabric.")
     on = "Try the test garment on the child" if who == "child" else "Try the test garment on"
+    fit_note = getattr(_module(pattern), "FIT_CHECK", None)
+    if fit_note:
+        return f"{on}: {fit_note} Adjust the measurements or options and print the pattern again if needed."  # i18n: template
     if "sleeve" in keys or "hood" in keys:
         what = "length, chest width, sleeve length and the neckline"
-    elif pattern.garment.startswith("pants"):
+    elif pattern.is_pants:
         what = "length, width at the hip, the crotch and the waistband"
     else:
         what = "length, width at the hip and the waistband"
