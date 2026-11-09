@@ -86,8 +86,9 @@ tape (`tape={"bicep_flat": 5.5, "opening_flat": 5.5}`, cm). Doll clothes have no
   are not copied yet.
 - With long sleeves spread out the garment is very wide compared to the card: hold the camera
   really level, or give me the chest width from the tape measure.
-- Style lines, zips and collars are recognised but not drafted; I tell you openly what is
-  left out.
+- In mode B (copy) style lines, zips and collars are recognised but not copied; I tell you openly
+  what is left out. In mode A (inspiration) they map to the modules that have them (shirt, jacket,
+  jumpsuit, `style_lines` …).
 
 
 ## For Claude: mode B details

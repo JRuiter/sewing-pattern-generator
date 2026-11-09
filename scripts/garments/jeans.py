@@ -27,7 +27,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     sa = o["sa"]
     adult = is_adult(m)
     ease = {"slim": 0.04, "normal": 0.07, "wide": 0.12}.get(o["fit"], 0.07)
-    popts = {k: v for k, v in o.items() if k not in ("coin_pocket", "belt_loops")}
+    popts: dict = {k: v for k, v in o.items() if k not in ("coin_pocket", "belt_loops")}
     popts.update(style="trousers", fit="normal", cuffs=False, waistband="casing", pockets=["side"],
                  hip_total=o.get("hip_total") or m["hip"] * (1 + ease), pocket_bag_fabric="cotton")
     pat = PB.draft(m, popts)

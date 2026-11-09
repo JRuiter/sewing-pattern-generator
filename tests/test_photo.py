@@ -101,9 +101,20 @@ def test_mode_a_unsupported_is_reported():
     feats = {"garment_type": {"value": "jeans", "confidence": 0.9},
              "pockets": {"value": ["cargo"], "confidence": 0.8}}
     m = A.map_to_module(feats)
-    assert any("Jeans" in x for x in m["not_covered"])
-    assert "cargo" in m["options"]["pockets"]                 # cargo pockets are a module option now
-    assert not any("Cargo" in x for x in m["not_covered"])
+    assert m["module"] == "jeans" and not m["not_covered"]   # jeans have their own module now
+
+
+def test_mode_a_new_modules():
+    m = A.map_to_module({"garment_type": {"value": "shirt", "confidence": 0.9},
+                         "closure": {"value": "button_placket", "confidence": 0.9},
+                         "neckline": {"value": "collar", "confidence": 0.8}})
+    assert m["module"] == "shirt" and not m["not_covered"]
+    m = A.map_to_module({"garment_type": {"value": "tshirt", "confidence": 0.9},
+                         "style_lines": {"value": "vertical_seams", "confidence": 0.8}})
+    assert m["options"]["style_lines"] == "princess" and not m["not_covered"]
+    m = A.map_to_module({"garment_type": {"value": "tshirt", "confidence": 0.9},
+                         "closure": {"value": "zipper", "confidence": 0.8}})
+    assert any("Zips" in x for x in m["not_covered"])
 
 
 def test_mode_a_flared_cargo_shorts():

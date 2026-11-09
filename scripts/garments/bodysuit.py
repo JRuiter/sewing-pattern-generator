@@ -57,7 +57,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     sa = o["sa"]
     style = o["style"]
     sleeveless = style == "swimsuit" or o["sleeve_length"] == "none"
-    top = {k: o[k] for k in ("fit", "fabric", "stretch", "sa", "hem_sa", "chest_total", "construction",
+    top: dict = {k: o[k] for k in ("fit", "fabric", "stretch", "sa", "hem_sa", "chest_total", "construction",
                              "machines", "notch_style", "neckline") if k in o}
     top.update(sleeve_length="short" if sleeveless else o["sleeve_length"], hem_band=False, sleeve_cuffs=False,
                body_length=m["back_length"] + m["crotch_depth"] + 30)

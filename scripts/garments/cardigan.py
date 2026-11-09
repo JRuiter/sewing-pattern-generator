@@ -23,7 +23,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     o.update({k: v for k, v in (options or {}).items() if v is not None})
     m = measures
     sa = o["sa"]
-    top = {k: o[k] for k in ("fit", "fabric", "stretch", "sleeve_length", "sleeve_cuffs", "sa", "hem_sa",
+    top: dict = {k: o[k] for k in ("fit", "fabric", "stretch", "sleeve_length", "sleeve_cuffs", "sa", "hem_sa",
                              "chest_total", "body_length", "construction", "machines", "notch_style", "hem_band",
                              "neckline") if k in o}
     top.update(_auto_neck=99, band_fabric="rib", neck_extra=10.0 if o["neckline"] == "round" else 0.0)

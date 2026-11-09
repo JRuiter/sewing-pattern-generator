@@ -27,7 +27,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         raise ValueError("vest closure must be zip, snaps or none")
     m = measures
     sa = o["sa"]
-    top = {k: o[k] for k in ("fit", "fabric", "stretch", "sa", "hem_sa", "chest_total", "body_length",
+    top: dict = {k: o[k] for k in ("fit", "fabric", "stretch", "sa", "hem_sa", "chest_total", "body_length",
                              "construction", "machines", "notch_style") if k in o}
     top.update(sleeve_length="short", sleeve_cuffs=False, hem_band=False, neckline="round",
                _auto_neck=99 if o["closure"] != "none" else 0)

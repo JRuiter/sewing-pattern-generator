@@ -29,8 +29,44 @@ commas and "Gr. 122". All texts go through one string table (`scripts/i18n.py`, 
 | `dress` | style: waist_seam (T-shirt bodice + skirt: gathered, a_line, circle; gather 1.0–2.5; waist_elastic; pockets in the side seam), shirt_dress (A-line T-shirt dress, flare_cm) · length (mini, knee, midi, maxi) · all T-shirt sleeve/neckline options |
 | `beanie` | brim, slouch |
 | `loop` | wraps (1 = single, 2 = worn doubled), height |
+| `jeans` | five-pocket jeans with zip fly, scoop pockets, back yoke · fit · leg_shape (straight, tapered, bootcut, flare) · length · coin_pocket · belt_loops · back_pockets (0–2) |
+| `dungarees` | style (trousers, jogger, short) · bib_pocket · length · cuffs · pockets · woven or sweat |
+| `shirt` | style: shirt (yoke, shirt collar, cuffs, chest pocket), blouse (bust dart) · fit · sleeve_length (short, long) · collar (shirt, stand, peter_pan, none = bias-bound neckline) · yoke · bust_dart · pocket · cuffs · buttons |
+| `polo` | fit · sleeve_length · sleeve_cuffs · collar_fabric (rib, main) · side_vents · buttons |
+| `cardigan` | neckline (v, round) · sleeve_length · sleeve_cuffs · hem_band · band_fabric (main, rib) · pockets · buttons |
+| `vest` | closure (zip, snaps, none) · collar · pockets · binding_fabric · fleece, sweat or woven |
+| `jacket` | style (jacket, coat) · collar (stand, none) · pockets (welt, jetted, flap) · lining · buttons · length (hip, thigh, knee) |
+| `coat` | the lined jacket at knee length (length: hip, thigh, knee), flap pockets |
+| `softshell` | hood · pockets (zip pockets) · cuff_tabs · hem_drawcord |
+| `fitted_dress` | woven fitted bodice with darts and invisible zip · skirt (a_line, gathered, circle) · length · sleeve_length (short, long, none) · neckline · pockets |
+| `wrap` | style (top, dress) · sleeve_length · length (dress) · overlap |
+| `pinafore` | skirt (gathered, a_line) · length · gather · pockets |
+| `bodysuit` | style: body (snap crotch), swimsuit (lined front, elastic edges, swim fabric), wrap (baby kimono body) · sleeve_length (short, long, none) · leg_cut (normal, high) |
+| `underwear` | style: briefs (burrito gusset, elastic edges), boxers (boxer briefs) · leg_cut (normal, high, low) · rise (mid, low) · leg_length (cm, boxers) |
+| `swim_trunks` | liner (mesh brief, default true) · length (short, knee) · pockets (mesh pocket bags) · fit |
+| `jumpsuit` | style: jumpsuit, boiler · length (long, 7/8, short = playsuit) · sleeve_length · closure (buttons, zip) · collar (none, stand, shirt) · pockets · belt · chest_pocket |
+| `pyjama` | top (tshirt, shirt) · length (long, short = shorty) · cuffs · collar (shirt top); top and pants in one booklet and layout |
+| `romper` | baby sizes 50–92 (write `b50`/`b56` for the smallest) · sleeve_length (long, short) · feet (sole instead of rib cuffs); snaps along the inner legs |
+| `sleeping_bag` | style: sleeping_bag (two-way zip), swaddle (newborns 50–68, wrap wings with Velcro) · tog (0.5 summer, 1.0 all year, 2.5 winter: jersey lining, + thin or thick wadding) |
+| `scarf` | style (tube, flat) · length_cm · width_cm · fringe |
+| `headband` | style (plain, twist) · height_cm |
+| `neckwear` | style (gaiter, neckerchief) · height_cm |
+| `bib` | style (classic, bandana) · absorbent · length_cm |
+| `mittens` | thumb · cuff · cuff_cm · string |
+| `gloves` | style (outline) · cuff_cm · finger_lengths_cm |
+| `socks` | style (profile, sole) · length (ankle, crew, knee) · cuff |
+| `earflap_hat` | ties · flap_cm |
+| `bucket_hat` | reversible · brim_cm · band_cm · brim_slope |
+| `cap` | peak_cm · ease_cm |
+| `bag` | style (tote, drawstring) · bag_size (small, medium, large) or width_cm/height_cm/depth_cm · pocket · handle_cm · lining |
 
-Fabrics: woven, corduroy, velvet, jersey, jersey_elastane, interlock, sweat, fleece, rib. Corduroy and
+**Style lines** (`style_lines`, modules `tshirt_basic`, `hoodie`, `dress`, `sweater`): `princess` (armhole
+princess seams front and back), `yoke` (front and back yoke), `color_block` (body split across the chest,
+upper part in a contrast fabric). The fit stays the same; the panels can be cut from different fabrics.
+
+Fabrics: woven, corduroy, velvet, jersey, jersey_elastane, interlock, sweat, fleece, rib, softshell,
+swim_woven (quick-dry swim fabric), swim_lycra (swimsuit fabric). Extra fabric groups in the cutting layout:
+mesh (swim liner, pocket bags), wadding (sleeping bag), contrast fabric (colour blocking), lining. Corduroy and
 velvet have a nap (option `nap`, also `nap: true` for any other fabric): every main-fabric piece is
 cut with the top towards the same fabric end, and the pressing note says to press from the wrong side.
 Print of the main fabric (all modules): `fabric_print` plain (default), one_way (directional print,

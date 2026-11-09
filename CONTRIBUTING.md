@@ -164,6 +164,11 @@ def sewing_steps(pat):
 
 Then: `python scripts/generate.py --garment headband --size 122 --format a4 --out out/headband`.
 
+Combined garments (pyjama, jumpsuit, romper) draft a second module and merge it with
+`_parts.merge_into(pat, other, prefix, seam_prefix)`; `_parts.SubView` and `_parts.remap_steps` reuse the
+other module's steps on the merged pattern. Baby sizes 50 and 56 are written `b50`/`b56` (otherwise they
+read as men's sizes).
+
 ### 5. Wire it up
 
 - [ ] `scripts/garments/__init__.py`: add to `GARMENTS`.
@@ -173,7 +178,11 @@ Then: `python scripts/generate.py --garment headband --size 122 --format a4 --ou
 - [ ] `scripts/photo_analyze.py`: map the garment type and features to the module so photo mode A
       offers it; remove it from the "not covered" texts.
 - [ ] `SKILL.md`: module table, trigger words in the description, limits section.
-- [ ] `docs/DEEP_DIVE.md`: garments table (and the garment list in `README.md` if it is a new kind of garment).
+- [ ] `docs/DEEP_DIVE.md`: garments table; `references/options.md`: a row with all options.
+- [ ] `tools/garment_docs.py`: a `DOCS` entry (German and English title, description and example prompts for
+      every option), then `python tools/garment_docs.py` writes `examples/garments/<module>/README.md`,
+      `README.en.md`, the cover picture and the garment tables in `README.md` / `README.en.md`.
+- [ ] German texts: every new output text needs an entry in `scripts/i18n_de_garments.py`.
 - [ ] Generate a validation report and preview for three sizes into `test-results/`
       (`python scripts/generate.py … --format roll610 --out <folder>`; keep `validation_report.md` and the
       preview PNG) and link them from its overview page.

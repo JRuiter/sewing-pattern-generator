@@ -72,6 +72,15 @@ want to run the generator directly from Python, see every option, or work on the
 | `skirt` | gathered, A-line, circle skirt with elastic waistband |
 | `dress` | T-shirt bodice + gathered/A-line/circle skirt with waist seam, or A-line T-shirt dress; pockets in the side seam |
 | `beanie`, `loop` | beanie with brim/slouch, single or double loop scarf |
+| `jeans`, `dungarees` | five-pocket jeans with zip fly and yoke; dungarees with bib and crossed straps |
+| `shirt`, `polo`, `cardigan` | shirt/blouse with button stand, collar (shirt, stand, Peter Pan, none), yoke, dart, cuffs; polo with half placket and knit collar; cardigan with button band |
+| `vest`, `jacket`, `coat`, `softshell` | vest with zip/snaps; lined jacket and coat with facings and welt/jetted/flap pockets; softshell jacket with hood, zip pockets and drawcords |
+| `fitted_dress`, `wrap`, `pinafore` | fitted woven dress with darts and invisible zip; wrap top/dress; pinafore with bib and straps |
+| `bodysuit`, `underwear`, `swim_trunks` | body with snap crotch, swimsuit, baby wrap body; briefs with gusset, boxer briefs; swim trunks with mesh liner |
+| `jumpsuit`, `pyjama` | jumpsuit, playsuit, boiler suit; pyjama set (top + pants in one booklet) |
+| `romper`, `sleeping_bag` | baby romper with snap legs or feet; sleeping bag and swaddle sack with TOG layers |
+| accessories | scarf, headband, neckwear, bib, mittens, gloves, socks, earflap hat, bucket hat, cap, bag |
+| style lines (`style_lines`) | princess seams, yoke or colour blocking on T-shirt, hoodie, sweater and dress |
 | doll clothes (`--doll`) | dress, skirt, pants and T-shirt for dolls 20–100 cm from the doll's own measurements: 5–6 mm seam allowances, back opening with Velcro, bias-bound neckline |
 
 Sizes: children 86–176 (`122`), women 34–56 (`w38`), men 44–60 (`m52`), US/UK sizes (`us8`, `uk12`,

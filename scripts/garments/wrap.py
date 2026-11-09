@@ -26,7 +26,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         raise ValueError("wrap style must be top or dress")
     m = measures
     sa = o["sa"]
-    top = {k: o[k] for k in ("fit", "fabric", "stretch", "sleeve_length", "sa", "hem_sa", "chest_total",
+    top: dict = {k: o[k] for k in ("fit", "fabric", "stretch", "sleeve_length", "sa", "hem_sa", "chest_total",
                              "construction", "machines", "notch_style") if k in o}
     top.update(neckline="round", hem_band=False, sleeve_cuffs=False, _auto_neck=99)
     if o["style"] == "dress":
