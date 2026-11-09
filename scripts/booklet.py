@@ -221,8 +221,11 @@ def _materials(pattern, plans, steps) -> list[tuple[str, str, str]]:
     for fab, pl in (plans or {}).items():
         import layout as L
         key = DG.palette_key(next((p for p in pattern.pieces if L.fabric_group(p) == fab), None), pattern)
-        out.append(("fabric:" + key, T(fab),
-                    T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")))
+        detail = T(f"{U.fabric_length(pl['need_mm'], u)} at {U.fabric_width(pl['width'], u)} width")
+        note = getattr(_module(pattern), "FABRIC_NOTE", None)
+        if note and fab == next(iter(plans)):   # the main fabric comes first
+            detail += "; " + T(note)
+        out.append(("fabric:" + key, T(fab), detail))
     for en, n in zip(getattr(pattern, "notes_en", pattern.notes), pattern.notes):
         low = en.lower()
         hits = sorted((low.index(w), w) for w in NOTION_WORDS if w in low)    # the word the note starts with
@@ -328,7 +331,30 @@ def difficulty(pattern, steps) -> tuple[str, float]:
     score = n + 4 * tricky
     level = "easy" if score <= 15 else "medium" if score <= 26 else "advanced"
     hours = 0.5 + n * 0.12 + (0.3 if E.has_nap(pattern.options) else 0.0)
+    hours += hand_stitched_mm(pattern, steps) / HAND_MM_PER_HOUR
     return level, max(1.0, round(hours * 2) / 2)
+
+
+HAND_MM_PER_HOUR = 2500.0     # back stitch / blind stitch by hand, including pinning and turning corners
+
+
+def hand_stitched_mm(pattern, steps) -> float:
+    """How many mm of seams, hems and topstitching are sewn by hand (no sewing machine): each step's
+    edges times the number of pieces cut, so the time estimate grows with the hand sewing."""
+    total = 0.0
+    for s in steps:
+        if not s.stitch or not s.edges:
+            continue
+        if S.tool_for(pattern.options, s.stitch, s.data.get("knit")).get("machine") != "hand":
+            continue
+        for key, name in s.edges:
+            if not pattern.has(key):
+                continue
+            pc = pattern.piece(key)
+            e = next((e for e in pc.edges if e.name == name), None)
+            if e is not None:
+                total += e.length * max(pc.cut_count, 1) * max(s.repeat, 1)
+    return total
 
 
 def _key_data(pattern, steps, plans) -> list[tuple[str, str]]:
@@ -420,9 +446,11 @@ def cover(pdf, pattern, steps, plans=None):
         DG.draw_machine(ax, key)
         fig.text(cx, 0.133, _fit_wrap(fig, name, slot * 0.95, 7), fontsize=7, ha="center", va="top", color="#444",
                  multialignment="center")
-    fig.text(0.5, 0.085, _fit_wrap(fig, T("Read the steps once before you start. Every picture is drawn from your "
-             "pattern pieces. Sew a test garment from cheap fabric first and adjust before you cut the good "
-             "fabric."), 0.8, 7.5), fontsize=7.5, color=GREY, ha="center", va="top", multialignment="center")
+    intro = ("Read the steps once before you start. Every picture is drawn from your pattern pieces."
+             if S.is_object(pattern) else
+             "Read the steps once before you start. Every picture is drawn from your pattern pieces. Sew a test "
+             "garment from cheap fabric first and adjust before you cut the good fabric.")
+    fig.text(0.5, 0.085, _fit_wrap(fig, T(intro), 0.8, 7.5), fontsize=7.5, color=GREY, ha="center", va="top", multialignment="center")
     pdf.savefig(fig)
     plt.close(fig)
 
@@ -491,6 +519,8 @@ def wearer(pattern) -> str:
 
 def _sides_note(pattern) -> str:
     """What right/wrong side and left/right (as worn) mean, with an example from this garment."""
+    if S.is_object(pattern):
+        return "Right/wrong side of the fabric = the side of the fabric."
     keys = {pc.key for pc in pattern.pieces}
     who = {"doll": "the doll", "child": "the child", "adult": "the person"}[wearer(pattern)]
     if keys & {"front", "back"} and pattern.is_pants:
@@ -1021,7 +1051,7 @@ def _done_panel(fig, pattern, steps, rect):
     fig.text(x + w * 0.36, y + h - 0.018, T("Done!"), fontsize=24, fontweight="bold", ha="center", va="top")
     _views(fig, pattern, (x + 0.02, y + 0.012, w * 0.68, h - 0.075))
     _important(fig, x + w * 0.73, y + h * 0.62, w * 0.25, T(_fit_check(pattern)), 7.2,
-               label="After the test garment", colors=TIP, icon="")
+               label="Final check" if S.is_object(pattern) else "After the test garment", colors=TIP, icon="")
 
 
 def _module(pattern):
@@ -1039,6 +1069,8 @@ def _fit_check(pattern) -> str:
                 "length right? Adjust the measurements and print the pattern again before you cut the good fabric.")
     on = "Try the test garment on the child" if who == "child" else "Try the test garment on"
     fit_note = getattr(_module(pattern), "FIT_CHECK", None)
+    if fit_note and S.is_object(pattern):      # a bag: nothing to try on, just check the finished piece
+        return fit_note[:1].upper() + fit_note[1:]
     if fit_note:
         return f"{on}: {fit_note} Adjust the measurements or options and print the pattern again if needed."  # i18n: template
     if "sleeve" in keys or "hood" in keys:

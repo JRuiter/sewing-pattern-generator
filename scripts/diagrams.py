@@ -922,9 +922,12 @@ def draw_edge(ax, pattern, step, kind="edge"):
         elif kind == "edge":
             xs = cut
             ax.plot(xs[:, 0], xs[:, 1], color=STITCH, lw=1.2, zorder=5, ls=(0, (1, 1)))
+    extra = _handles(ax, pattern, pc, step.data.get("handles"), size)
     _piece_label(ax, pattern, pc, full, size=8)
     xs_kind = {"hem": "hem", "press": "press", "topstitch": "topstitch_fold", "edge": "edge"}[kind]
     view = _zoom_view(full, [pc.edge(e).pts for p, e in step.edges if p == pc.key], size)
+    if len(extra):
+        view = np.vstack([view, extra])
     x0, y0 = view.min(0)
     x1, y1 = view.max(0)
     w = x1 - x0
@@ -934,6 +937,80 @@ def draw_edge(ax, pattern, step, kind="edge"):
         return
     _finish_axes(ax, [view, [[x1 + 0.55 * w, y0]]], pad=0.04)
     _detail(ax, xs_kind, S.cm(step.amount) if step.amount else "")
+
+
+def _handles(ax, pattern, pc, mode, size) -> np.ndarray:
+    """Bag handles at the "Handle" placement marks of ``pc`` (data ``handles``): "down" = ends slipped
+    under the hem, the handle hanging into the bag; "up" = folded up over the top edge, with the
+    square-and-cross reinforcement over each end. Returns the drawn points (for the view)."""
+    if not mode or not pattern.has("handle"):
+        return np.zeros((0, 2))
+    hd = pattern.piece("handle")
+    hw = min(e.sa for e in hd.edges if e.turned) if any(e.turned for e in hd.edges) else size * 0.05
+    marks = [m for m in pc.marks if m.style == "placement" and m.label in ("Handle", T("Handle"))]
+    if not marks:
+        return np.zeros((0, 2))
+    top = max(float(np.asarray(m.pts)[:, 1].mean()) for m in marks)
+    loop = size * 0.32
+    out = []
+    xs = sorted(float(np.asarray(m.pts)[:, 0].mean()) for m in marks)
+    if mode == "up" and len(xs) >= 2:
+        # one handle loop over two neighbouring marks
+        for a, b in zip(xs[0::2], xs[1::2]):
+            r_out = (b - a) / 2 + hw / 2
+            r_in = (b - a) / 2 - hw / 2
+            c = (a + b) / 2
+            # straight legs so that legs + arc have the handle's real length (ends under the hem excluded)
+            free = max(e.length for e in hd.edges) - 2 * pc.edge("top").sa
+            loop = max((free - np.pi * (b - a) / 2) / 2, size * 0.1) / 0.55
+            t = np.linspace(0, np.pi, 40)
+            outer = np.column_stack([c + r_out * np.cos(t), top + loop * 0.55 + r_out * np.sin(t) * 0.9])
+            inner = np.column_stack([c + r_in * np.cos(t[::-1]), top + loop * 0.55 + r_in * np.sin(t[::-1]) * 0.9])
+            for x in (a, b):
+                leg = np.array([[x - hw / 2, top - 22], [x + hw / 2, top - 22], [x + hw / 2, top + loop * 0.55],
+                                [x - hw / 2, top + loop * 0.55]])
+                ax.fill(leg[:, 0], leg[:, 1], fc=RIGHT_SIDE, ec=INK, lw=0.9, zorder=3.6)
+                box = np.array([[x - hw / 2 + 3, top - 20], [x + hw / 2 - 3, top - 20], [x + hw / 2 - 3, top - 3],
+                                [x - hw / 2 + 3, top - 3], [x - hw / 2 + 3, top - 20], [x + hw / 2 - 3, top - 3],
+                                [x + hw / 2 - 3, top - 20], [x - hw / 2 + 3, top - 3]])
+                _stitch(ax, box, z=6.5, lw=1.2)
+                out.append(leg)
+            band = np.vstack([outer, inner])
+            ax.fill(band[:, 0], band[:, 1], fc=RIGHT_SIDE, ec=INK, lw=0.9, zorder=3.5)
+            out.append(outer)
+    else:
+        for x in xs:
+            leg = np.array([[x - hw / 2, top + 8], [x + hw / 2, top + 8], [x + hw / 2, top - loop],
+                            [x - hw / 2, top - loop]])
+            ax.fill(leg[:, 0], leg[:, 1], fc=RIGHT_SIDE, ec=INK, lw=0.9, zorder=2.8, alpha=0.95)
+            ax.plot([x - hw / 2, x + hw / 2], [top - loop, top - loop], color=INK, lw=0.9, ls=(0, (2, 2)), zorder=2.9)
+            out.append(leg)
+    return np.vstack(out) if out else np.zeros((0, 2))
+
+
+def draw_boxed_corner(ax, pattern, step):
+    """A boxed corner opened out: side seam on the bottom seam in the middle, the raw edge straight
+    across, the stitch line parallel to it (schematic, at the size of the corner)."""
+    sm = S.resolve_seams(pattern, step)
+    pc = pattern.piece(sm[0]["a"][0][0]) if sm and sm[0].get("a") else pattern.pieces[0]
+    c = next((e.length for e in pc.edges if e.name.startswith("box_")), 70.0)
+    sa = next((e.sa for e in pc.edges if e.name.startswith("box_")), 10.0)
+    D = 2 * c
+    h = D * 0.9
+    body = np.array([[-D / 2, 0], [D / 2, 0], [D / 2 + h * 0.75, h], [-D / 2 - h * 0.75, h]])
+    _fill(ax, body, wrong=True, z=1, pc=pc)
+    ax.plot([0, 0], [0, h], color=DONE_STITCH, lw=1.4, ls=DONE_LS, zorder=3)
+    ax.plot([-D / 2, D / 2], [0, 0], color=ACCENT[1], lw=3.0, zorder=4, solid_capstyle="round")
+    _stitch(ax, np.array([[-D / 2 + sa * 0.3, sa], [D / 2 - sa * 0.3, sa]]))
+    for x in (-D * 0.05, D * 0.05):
+        ax.plot([x, x], [sa * 2.6, -sa * 1.4], color=PIN, lw=1.1, zorder=7)
+        ax.plot([x], [-sa * 1.4], "o", ms=3, color=PIN, zorder=7)
+    ax.text(D * 0.04, h * 0.72, T("Side seam on bottom seam"), fontsize=7, ha="left", va="center", zorder=9,
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none"))
+    _dim(ax, (-D / 2, -sa * 2.4), (D / 2, -sa * 2.4), S.cm(D), D, side=-1.0)
+    _arrow(ax, (-D / 2 - h * 0.05, h * 0.5), (-D / 2 - h * 0.45, h * 0.5))     # pull the corner apart
+    _arrow(ax, (D / 2 + h * 0.05, h * 0.5), (D / 2 + h * 0.45, h * 0.5))
+    _finish_axes(ax, [body, [[-D / 2, -sa * 4]]], pad=0.06)
 
 
 def draw_gather(ax, pattern, step):
@@ -1398,6 +1475,7 @@ DIAGRAMS = {
     "place": draw_place,
     "icon": draw_icon,
     "label": draw_label,
+    "boxed_corner": draw_boxed_corner,
 }
 
 

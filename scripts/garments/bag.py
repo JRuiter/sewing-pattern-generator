@@ -17,6 +17,7 @@ DEFAULTS = dict(style="tote", bag_size="medium", width_cm=None, height_cm=None, 
                 stretch=None, pocket=True, handle_cm=None, lining=True, sa=10.0)
 FINISHED_LABELS = {"width": ("Width", "width"), "height": ("Height", "length"), "depth": ("Depth", "width")}
 FIT_CHECK = "is the size right, and do the handles sit comfortably on the shoulder?"
+FABRIC_NOTE = "sturdy woven fabric such as canvas, denim or cotton twill (from about 250 g/m²)"
 
 
 def _size(o: dict) -> tuple[float, float, float]:
@@ -54,6 +55,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
         outer = _boxed_panel("panel", "Bag", Wp, Hp, c, sa, "Main fabric")
         outer.info.append("Optional: iron-on interfacing")
         pieces.append(outer)
+        notes.append("Optional: medium iron-on interfacing for the bag pieces if the fabric is soft")
         seams += [dict(name="Side seams", a=[("panel", "right", 1)], b=[("panel", "left", 1)], type="equal"),
                   dict(name="Bottom seam", a=[("panel", "bottom", 1)], b=[("panel", "bottom", 1)], type="equal"),
                   dict(name="Boxed corners", a=[("panel", "box_r_h", 2), ("panel", "box_l_h", 2)],
@@ -123,6 +125,10 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     return pat
 
 
+BOX_X_HINT = ("The handles carry the load: sew a square with a cross through all layers over every handle end, "
+              "between the two stitching lines.")
+
+
 def assembly(pat):
     import steps as ST
     o = pat.options
@@ -182,18 +188,21 @@ def assembly(pat):
                 "allowance; the cut-out corners stay open.", section="Bag"),
         ST.seam("Sew the boxed corners", ["Boxed corners"],
                 "Pull each open corner apart so that side seam and bottom seam lie on top of each other. Sew the raw "
-                f"edge straight across with {sa} seam allowance.", section="Bag",
+                f"edge straight across with {sa} seam allowance.", section="Bag", diagram="boxed_corner",
                 hint="Press the side seam and the bottom seam allowances in opposite directions so they nest."),
     ]
     if pat.has("lining"):
         out += [
+            ST.icon("Turn the bag", "turn", "Turn the outer bag right side out and push the corners out.",
+                    section="Bag"),
             ST.seam("Sew the lining", ["Lining side seams", "Lining bottom seam"],
                     f"Sew the lining the same way with {sa} seam allowance, but leave 12 cm open in the bottom seam "
                     "for turning.", section="Lining"),
             ST.seam("Box the lining corners", ["Lining boxed corners"],
-                    f"Sew the corners of the lining like those of the bag, with {sa} seam allowance.", section="Lining"),
+                    f"Sew the corners of the lining like those of the bag, with {sa} seam allowance.", section="Lining",
+                    diagram="boxed_corner"),
             ST.place("Baste the handles on", "handle", "panel", "Handle",
-                     "Bag right side out: pin the handle ends at the marks, raw ends level with the top edge, the "
+                     "Pin the handle ends at the marks, raw ends level with the top edge, the "
                      f"handle hanging down (not twisted). Baste {ST.cm(hd.edge('end_a').sa / 2)} from the edge.",
                      stitch="baste", section="Bag"),
             ST.seam("Sew the top edge", ["Top edge"],
@@ -204,14 +213,35 @@ def assembly(pat):
                     "topstitch it closed close to the edge.", section="Finish"),
             ST.topstitch("Topstitch the top edge", [("panel", "top")], 5.0,
                          "Push the lining into the bag, press the top edge and topstitch 5 mm from it.",
-                         section="Finish"),
+                         section="Finish", hint=BOX_X_HINT, data={"handles": "up"}),
         ]
     else:
-        out += [ST.hem("Hem the top edge", [("panel", "top")], 30.0,
-                       "Fold the top edge 1 cm, then 2 cm to the wrong side. Slip the handle ends under the fold at the "
-                       "marks and sew close to the lower fold.", section="Finish"),
-                ST.topstitch("Secure the handles", [("panel", "top")], 3.0,
-                             "Fold the handles up and topstitch close to the top edge, catching them.", section="Finish")]
+        hem = pat.piece("panel").edge("top").sa
+        out.append(ST.icon("Turn the bag", "turn", "Turn the bag right side out and push the corners out.",
+                           section="Bag"))
+        own = ST.owned_machines(o)
+        if own is not None and "overlocker" in own:
+            # the overlocker finishes the raw edge, so a single turn is enough (flatter than a double fold)
+            # without a sewing machine the "finish" kind means "already done by the overlock seam":
+            # this raw edge is overlocked on its own, like a seam
+            import machines as MC
+            out += [ST.finish("Finish the top edge", [("panel", "top")],
+                              "Overlock the top edge all round, just skimming it with the knife.", section="Finish",
+                              stitch="finish" if MC.has_sewing_machine(own) else "seam", data={"no_phrase": True}),
+                    ST.hem("Hem the top edge", [("panel", "top")], hem,
+                           f"Fold the top edge {ST.cm(hem)} to the wrong side and press. Slip the handle ends "
+                           "under the fold at the marks, the handles hanging down (not twisted), and sew close to "
+                           "the overlocked edge.", section="Finish", stitch="topstitch",
+                           data={"handles": "down"})]
+        else:
+            out.append(ST.hem("Hem the top edge", [("panel", "top")], hem,
+                              f"Fold the top edge 1 cm, then {ST.cm(hem - 10)} to the wrong side. Slip the handle "
+                              "ends under the fold at the marks, the handles hanging down (not twisted), and sew "
+                              "close to the lower fold.", section="Finish", stitch="topstitch",
+                              data={"handles": "down"}))
+        out.append(ST.topstitch("Secure the handles", [("panel", "top")], 3.0,
+                                "Fold the handles up and topstitch close to the top edge, catching them.",
+                                section="Finish", hint=BOX_X_HINT, data={"handles": "up"}))
     out.append(ST.done("Press the bag; press the boxed corners into shape."))
     return out
 

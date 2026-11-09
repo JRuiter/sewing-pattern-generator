@@ -7,6 +7,14 @@ All notable changes to this skill are listed here. Versions follow [semantic ver
 ### Added
 - **Creative silhouettes** for tops, dresses, skirts, trousers, jackets and hats (`--design`, spec/option `design`, `scripts/design.py`): explicit design features on top of the practice-correct base block: profiles, bulges, flares and tapers along seams, pointed tips (hood, crown), hem shapes (points, zigzag, scallops, waves, curve) across the unfolded panel, and appendages (spikes, ears, round tabs, fins) sewn into a seam with notches and their own booklet steps. Presets: starfish, balloon, bell_sleeves, zigzag_hem, petal_hem, tulip_skirt, elf, cat_ears, dino_spikes, balloon_legs, flared_legs, wavy_loop. `design.py describe` writes the feature list to confirm (including options the shape needs, e.g. no hem band under a pointed hem). The validation report lists every feature as an intended deviation and re-checks freedom of movement (girth ≥ body + minimum ease, openings) and sewability (tip angles, inner corners, steepness, appendage sizes); seams stay matched, attached ends do not move. Title-page views show the reshaped garment (also a pointed hood). Modules without a hand-written zone table get their zones from the drafted pattern; presets only go on the kind of garment they are meant for; hems with a band, facing or lining and flat accessories are not reshaped. See `references/creative_designs.md`.
 
+### Fixed
+- **Tote bag instructions** (review of a shopper booklet): the bag is turned right side out before the top edge (both variants); without a lining and with an overlocker the top edge is overlocked and turned once 3 cm instead of 1 + 2 cm; the hem that holds the handles is topstitched (back stitch by hand, never a blind stitch) and every handle end gets a square with a cross. New pictures: the boxed corner opened out with the stitch line across, the handles under the hem and folded up with the reinforcement. The main fabric gets a recommendation (canvas, denim, cotton twill from about 250 g/m²) and optional interfacing.
+- **Bags and other modules without body measurements** no longer get garment texts: no body measurement table, no fit, no test garment note, no "as worn" legend, a final check instead of "after the test garment", "wash the finished piece".
+- "Your machines" only lists the kinds of stitching the steps use (no cuffs/waistband row for a bag).
+- The time estimate counts hand sewing (no sewing machine): about 2.5 m per hour.
+- The cutting tip "turn the paper piece over for the second piece of a pair" only appears for mirrored pairs.
+- File names without "×" and spaces (`tragetasche_45x42x14_cm_…`); German pre-wash text: "damit der Stoff jetzt einläuft".
+
 ## [1.7.0] - 2026-11-09
 
 ### Added

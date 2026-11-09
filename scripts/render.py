@@ -500,8 +500,10 @@ def header_pdf(c, pattern, page_w_mm, page_h_mm, subtitle, top=6.0, left=8.0, co
     page.text(left, top + 19, tr("Print at 100 % / \"Actual size\". Do NOT use \"Fit to page\"."),
               8, center=False)
     page.text(left, top + 23.5, tr("Measure the control square before cutting."), 8, center=False)
-    page.text(left, top + 28, tr("Original parametric draft. "
-              "Sew a test garment the first time you use this pattern."), 7.5, center=False)
+    import steps as ST
+    page.text(left, top + 28, tr("Original parametric draft." if ST.is_object(pattern) else
+                                 "Original parametric draft. Sew a test garment the first time you use this pattern."),
+              7.5, center=False)
     if compact:
         control_squares_pdf(c, left, top + 33, page_h_mm)
     else:
