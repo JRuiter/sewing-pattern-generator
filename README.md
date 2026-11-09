@@ -21,6 +21,7 @@ Beschreib einfach, was du möchtest:
 - *„Hier ist ein Foto der Lieblingsjogger meines Sohnes neben der Referenzkarte, mach mir ein Schnittmuster daraus.“*
 - *„Eine Bluse mit Bubikragen für meine Tochter, Größe 110, nur mit der Overlock genäht.“*
 - *„Ein Kleid für die 45-cm-Stoffpuppe meiner Tochter.“*
+- *„Ein Sweatshirt in Seesternform, Größe 128.“*
 
 ## Installation in claude.ai (2 Minuten)
 
@@ -54,6 +55,11 @@ Beschreib einfach, was du möchtest:
 - **Vom Foto:** zeig ein Inspirationsfoto, und Claude überträgt es auf einen Schnitt; oder leg dein
   Lieblingsteil flach neben die druckbare [Referenzkarte](assets/reference-card.pdf), fotografier es
   von oben, und Claude baut den Schnitt daraus nach.
+- **Kreative Formen:** ein Sweatshirt als Seestern, Ballonbeine, Glockenärmel, Zickzack- oder
+  Blütensaum, Wichtelkapuze, Katzenohren oder Dino-Zacken, für Oberteile, Kleider, Röcke, Hosen, Jacken
+  und Mützen. Claude zeigt dir
+  die Form erst als Liste zum Bestätigen; sie kommt auf einen normalen Schnitt und wird erneut auf
+  Bewegungsfreiheit und Nähbarkeit geprüft.
 - **Anpassen:** nach dem Probeteil sagen, was nicht passt (*„Hüfte 2 cm zu eng, Schritt 1,5 cm zu
   tief“*), und einen korrigierten Schnitt bekommen.
 - **Deine Ausstattung:** sag Claude einmal, welche Maschinen du hast (Nähmaschine, Overlock,
@@ -219,6 +225,19 @@ nicht passt.
 
 <img src="docs/images/doll_dress.png" alt="Puppenkleid für eine 45-cm-Puppe auf A4-Seiten" width="300">
 
+### Kreative Formen
+
+> *„Ein Sweatshirt in Seesternform für meinen Sohn, Größe 128.“*
+
+Oberteile, Kleider, Röcke, Hosen, Jacken und Mützen können eine eigene Form bekommen: runder, weiter,
+spitz, mit Bögen, mit Zacken oder Ohren in einer Naht. Claude macht aus deiner Beschreibung, Skizze oder deinem Foto eine kurze Liste von
+Merkmalen, die du bestätigst, formt den normalen Schnitt um und prüft ihn erneut: Die Nähte passen
+weiter zusammen, es bleibt genug Bewegungsfreiheit, und die Spitzen lassen sich nähen und wenden. Der
+Prüfbericht markiert jede Änderung als gewollt. Flache Accessoires (Schal, Stirnband, Lätzchen, Tasche,
+Handschuhe, Socken, Cap) haben keine Naht, die man so umformen könnte.
+
+<img src="docs/images/creative_starfish.png" alt="Seestern-Hoodie: Vorder- und Rückansicht auf dem Titel des Nähhefts" width="400">
+
 ## Beispiele
 
 Vollständige Ausgabeordner, jeder mit eigener README (Prompt, Bilder, was jede Datei ist):
@@ -229,6 +248,7 @@ Vollständige Ausgabeordner, jeder mit eigener README (Prompt, Bilder, was jede 
 4. [Puppenkleid](examples/4_doll_dress_45cm_a4) für eine 45-cm-Stoffpuppe, A4-Seiten
 5. [Hoodie mit Kängurutasche, Größe 140](examples/5_hoodie_140_a4), A4-Seiten
 6. [Jogger in den Größen 98, 110 und 122](examples/6_joggers_nested_98_110_122_roll610) auf einer 610-mm-Rolle
+7. [Seestern-Hoodie, Größe 128](examples/7_starfish_hoodie_128_a4): eine kreative Form, A4-Seiten
 
 ## Claude Code und Kommandozeile
 

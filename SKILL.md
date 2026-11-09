@@ -100,6 +100,15 @@ Doll clothes can be copied too (`--doll`, see `references/doll_clothes.md`). Mod
 the flat-lay fit and the `tape={"chest_flat": …}` scale fix: `references/photo_guide.md`
 ("For Claude: mode B details").
 
+### 3b. Creative shapes (optional, only when asked)
+Special silhouettes ("a sweatshirt shaped like a starfish", balloon legs, bell sleeves, zigzag hem,
+elf hood, cat ears, dino spikes) go on top of the normal base block as explicit design features,
+for tops, dresses, skirts, trousers, jackets and hats (flat accessories have no zones). Turn the
+description, sketch or photo into a preset or feature list, show it with `python scripts/design.py describe <preset|design.json> --garment <module>` and let the user
+confirm it, then generate with `--design`. The report lists every feature as an intended deviation
+and re-checks room to move and sewability. Characters/brands: an own shape only, never their
+artwork. Presets, zones, feature JSON and rules: `references/creative_designs.md`.
+
 ### 4. Measurements
 `measurements.complete_measures(given_cm, size)` fills in missing measurements from the
 size table or body height and reports plausibility warnings. Given measurements take
@@ -192,6 +201,7 @@ present.
 - `scripts/validate.py`, `booklet_qa.py`, `booklet_pages.py`: sewability checks, booklet checks, contact sheets
 - `scripts/photo_analyze.py`, `photo_measure.py`, `reverse/`: photo modes A and B
 - `scripts/profiles.py`: measurement profiles and the machines workshop file
-- `references/`: `options.md` (all options and formats), `machines.md`, `doll_clothes.md`,
+- `scripts/design.py`: creative silhouettes (presets, zones, feature list, re-checks)
+- `references/`: `options.md` (all options and formats), `machines.md`, `doll_clothes.md`, `creative_designs.md`,
   `drafting_rules.md`, `size_tables.md`, `print_specs.md`, `photo_guide.md`
 - Developer docs (module layout, adding a garment): `CONTRIBUTING.md` in the repository

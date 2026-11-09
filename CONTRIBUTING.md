@@ -183,6 +183,9 @@ read as men's sizes).
       every option), then `python tools/garment_docs.py` writes `examples/garments/<module>/README.md`,
       `README.en.md`, the cover picture and the garment tables in `README.md` / `README.en.md`.
 - [ ] German texts: every new output text needs an entry in `scripts/i18n_de_garments.py`.
+- [ ] `scripts/design.py`: add the module's design zones to `ZONES` (seam edges with their free end,
+      hem edges, girth ring and body reference) and list it in at least one preset's `garments`, so
+      creative silhouettes work for it (`tests/test_design.py` checks that every module has both).
 - [ ] Generate a validation report and preview for three sizes into `test-results/`
       (`python scripts/generate.py … --format roll610 --out <folder>`; keep `validation_report.md` and the
       preview PNG) and link them from its overview page.

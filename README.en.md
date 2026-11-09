@@ -20,6 +20,7 @@ Just describe what you want, in any language:
 - *"Hoodie with kangaroo pocket for me, chest 96 cm, hip 102 cm, height 168 cm."*
 - *"Here is a photo of my son's favourite joggers next to the reference card, make me a pattern from it."*
 - *"A dress for my daughter's 45 cm fabric doll."*
+- *"A sweatshirt shaped like a starfish, size 128."*
 - *"Schnittmuster für einen Tellerrock, Größe 128, auf A1."*
 
 ## Install in claude.ai (2 minutes)
@@ -54,6 +55,9 @@ then upload the new zip as in step 3.
 - **From a photo:** show an inspiration photo and Claude maps it onto a pattern, or lay your
   favourite garment flat next to the printable [reference card](assets/reference-card.pdf), take a
   photo from above, and Claude rebuilds the pattern from it.
+- **Creative shapes:** a starfish sweatshirt, balloon legs, bell sleeves, a zigzag or petal hem, an
+  elf hood, cat ears or dino spikes, for tops, dresses, skirts, trousers, jackets and hats. Claude shows you the shape as a list of
+  features first; the shape goes on top of a normal pattern and is checked again for room to move.
 - **Fitting:** after a test garment, say what was off (*"hips 2 cm too tight, crotch 1.5 cm too
   low"*) and get a corrected pattern.
 - **Your setup:** tell Claude once which machines you have (sewing machine, overlocker, coverstitch)
@@ -136,6 +140,18 @@ through.
 
 <img src="docs/images/doll_dress.png" alt="Doll dress for a 45 cm doll on A4 pages" width="300">
 
+### Creative shapes
+
+> *"A sweatshirt shaped like a starfish for my son, size 128."*
+
+Tops, dresses, skirts, trousers, jackets and hats can get a shape of their own: rounder, wider, pointed, scalloped, with spikes or ears sewn
+into a seam. Claude turns your description, sketch or photo into a short list of features for you to
+confirm, reshapes the normal pattern and checks it again: the seams still match, there is enough room
+to move, and the points can be sewn and turned. The check report marks every change as intended. Flat accessories (scarf, headband, bib, bag,
+gloves, socks, cap) have no seam that could be reshaped like this.
+
+<img src="docs/images/creative_starfish.png" alt="Starfish hoodie: front and back view on the booklet cover" width="400">
+
 ## Examples
 
 Complete output folders, each with its own README (prompt, pictures, what every file is):
@@ -146,6 +162,7 @@ Complete output folders, each with its own README (prompt, pictures, what every 
 4. [Doll dress](examples/4_doll_dress_45cm_a4) for a 45 cm fabric doll, A4 pages
 5. [Hoodie with kangaroo pocket, size 140](examples/5_hoodie_140_a4), A4 pages
 6. [Joggers in sizes 98, 110 and 122](examples/6_joggers_nested_98_110_122_roll610) nested on a 610 mm roll
+7. [Starfish hoodie, size 128](examples/7_starfish_hoodie_128_a4): a creative silhouette, A4 pages
 
 ## All garments
 

@@ -246,6 +246,12 @@ def offset_polyline(pts, d: float) -> np.ndarray:
     ls = LineString(p)
     off = ls.offset_curve(-d, join_style="mitre", mitre_limit=3.0)  # shapely: + = left
     if off.geom_type == "MultiLineString":
+        # GEOS sometimes splits the offset of long, nearly collinear runs; a lightly simplified
+        # polyline (0.01 mm) gives the whole curve
+        alt = ls.simplify(0.01).offset_curve(-d, join_style="mitre", mitre_limit=3.0)
+        if alt.geom_type == "LineString":
+            off = alt
+    if off.geom_type == "MultiLineString":
         off = max(off.geoms, key=lambda g: g.length)
     out = np.asarray(off.coords, float)
     # keep the direction of travel

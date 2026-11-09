@@ -430,7 +430,7 @@ def _top_view(pattern, view):
         hood = _pc(pattern, "hood")
         nb = _pc(pattern, "neckband")
         if hood is not None:
-            layers.append((_hood(hood, both, view, cx), hood, 0.5 if view == "front" else 3))
+            layers.append((_hood(hood, both, view, cx, _hood_peak(pattern)), hood, 0.5 if view == "front" else 3))
         elif nb is not None:
             g = LineString(both).buffer(DG._band_dims(nb)[1] / 4, cap_style=2)
             layers.append((_ring(g), nb, 2.5))
@@ -469,8 +469,15 @@ def _top_view(pattern, view):
     return dict(layers=layers, seams=seams, marks=_clip_marks(marks, body), gathers=gathers)
 
 
-def _hood(hood, neck, view, cx):
-    """Hood behind the neck (front view) or lying on the back (back view)."""
+def _hood_peak(pattern) -> float:
+    """Height (mm) of a pointed hood tip from a creative design (design.py), 0 without one."""
+    feats = (getattr(pattern, "design", None) or {}).get("features") or []
+    return max([float(f["peak"]["cm"]) * 10 for f in feats if f.get("zone") == "hood" and "peak" in f] or [0.0])
+
+
+def _hood(hood, neck, view, cx, peak: float = 0.0):
+    """Hood behind the neck (front view) or lying on the back (back view); a designed tip
+    (`peak`, mm) points down the back in the back view."""
     hr = np.asarray(hood.seam_ring(), float)
     hh = float(np.ptp(hr[:, 1]))
     nw = float(np.ptp(neck[:, 0]))
@@ -484,6 +491,9 @@ def _hood(hood, neck, view, cx):
         rx, ry, c = nw * 0.62, hh * 0.62, (cx, ny)
         lower = t[(t >= np.pi) & (t <= 2 * np.pi)]
         pts = np.c_[c[0] + rx * np.cos(lower), c[1] + ry * np.sin(lower)]
+        if peak > 0:                # pointed tip hanging down the middle of the back
+            k = np.clip(1 - np.abs(pts[:, 0] - c[0]) / (rx * 0.6), 0, 1)
+            pts[:, 1] = pts[:, 1] - k ** 1.6 * peak
         pts = np.vstack([[[cx - rx, ny + hh * 0.04]], pts, [[cx + rx, ny + hh * 0.04]]])
     return pts
 
