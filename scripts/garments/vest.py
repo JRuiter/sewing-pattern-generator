@@ -42,7 +42,6 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     for pc in (f, b):
         pc.notches = [n for n in pc.notches if n.edge != "armhole"]
         pc.edge("armhole").label = "Armhole (binding)"
-    stretch = F["stretch"]
     knit = F["knit"]
     arm = f.edge("armhole").length + b.edge("armhole").length
     ratio = 0.92 if knit else 1.0

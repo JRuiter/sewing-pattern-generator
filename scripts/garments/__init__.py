@@ -38,6 +38,7 @@ GARMENTS = {
     "underwear": "Underwear: briefs with lined gusset, or boxer briefs (knit, elastic finishes)",
     "swim_trunks": "Swim trunks (quick-dry fabric, drawcord waistband, mesh pockets and brief liner)",
     "romper": "Baby romper / footed sleeper (sizes 50–92, snaps along the inner legs, cuffs or feet)",
+    "sleeping_bag": "Baby sleeping bag or swaddle sack (lined, two-way zip, warmth by TOG)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 

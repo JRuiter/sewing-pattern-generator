@@ -157,6 +157,7 @@ PALETTES = {
     "lining": ("#90caf9", "#e3f2fd", ""),
     "rib": ("#a5d6a7", "#eef7ee", "rib"),
     "mesh": ("#b0bec5", "#eceff1", ""),
+    "wadding": ("#f5f5f5", "#fafafa", ""),
 }
 HAND_STITCH = (0, (0.6, 1.8))       # red dotted: by hand
 DONE_STITCH = "#7a7a7a"             # grey dashed: already sewn
@@ -172,6 +173,8 @@ def palette_key(pc=None, pattern=None) -> str:
         return "rib"
     if fab.startswith("mesh"):
         return "mesh"
+    if fab.startswith("wadding"):
+        return "wadding"
     if fab.startswith("lining") or fab.startswith("swim lining"):
         return "lining"
     main = (pattern.options.get("fabric", "") if pattern is not None and isinstance(pattern.options, dict)

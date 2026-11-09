@@ -47,7 +47,7 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
     o["sleeve_length"] = "long"
     pat = SH.base(m, o, o["style"], extra=dict(neck_extra=8.0))
     F = pat.options["_F"]
-    f, b, sl = pat.piece("front"), pat.piece("back"), pat.piece("sleeve")
+    f, sl = pat.piece("front"), pat.piece("sleeve")
     ext = 25.0 if is_adult(m) else 20.0
     PT.button_stand(f, ext, facing=sa, label="Front edge (facing seam)")
     PT.rename_edge_refs(pat, "front", "center", "front_edge")

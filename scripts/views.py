@@ -344,7 +344,6 @@ def _top_view(pattern, view):
     if strap is not None and "top" in names and pattern.garment in ("pinafore", "dungarees", "romper", "jumpsuit"):
         sw = DG._band_dims(strap)[1] / 2
         top = np.asarray(pc.edge("top").pts, float)
-        ytop = float(top[:, 1].max())
         xs = [float(m.pts[:, 0].mean()) for m in pc.marks if m.label in ("Button", "Strap (crossed)")]
         x0 = xs[0] if xs else float(np.ptp(top[:, 0])) * 0.55
         h = 0.42 * DG._band_dims(strap)[0]

@@ -423,6 +423,8 @@ def fabric_group(piece) -> str:
         return "Rib knit"
     if fab.startswith("Mesh"):
         return "Mesh"
+    if fab.startswith("Wadding"):
+        return "Wadding"
     return "Lining" if "Lining" in fab or fab.startswith("Swim lining") else "Main fabric"
 
 

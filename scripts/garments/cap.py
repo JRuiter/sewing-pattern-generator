@@ -6,8 +6,8 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from shapely.geometry import Point, Polygon
 from shapely import affinity
+from shapely.geometry import Point, Polygon
 
 import geometry as G
 from pattern import Edge, Mark, Pattern, Piece, rect_piece
