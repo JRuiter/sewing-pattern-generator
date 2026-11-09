@@ -104,7 +104,7 @@ def buttonholes(piece: Piece, y_top: float, y_bot: float, n: int, size: float, x
                 vertical: bool = False, label: str = "Buttonhole") -> list[float]:
     """Evenly spaced buttonhole marks on centre front (x) from y_top down to y_bot. A horizontal
     buttonhole starts 3 mm beyond centre front, so the button sits on centre front."""
-    ys = list(np.linspace(y_top, y_bot, n))
+    ys = [float(v) for v in np.linspace(y_top, y_bot, n)]
     for y in ys:
         if vertical:
             pts = G.line(G.P(x, y + size / 2), G.P(x, y - size / 2))
