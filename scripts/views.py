@@ -319,7 +319,7 @@ def _top_view(pattern, view):
         hy = float(np.asarray(legs.edge("hem").pts, float)[:, 1].mean())
         crotch_y = float(cr[:, 1].min())
         hgt = float(body.bounds[3] - body.bounds[1])
-        gh = 0.05 * (crotch_y - hy)
+        gh = 0.09 * (crotch_y - hy)
         body = body.difference(Polygon([(cx, crotch_y - 0.01 * hgt), (cx - gh, hy - 0.5 * hgt),
                                         (cx + gh, hy - 0.5 * hgt)])).buffer(0)
         for p in parts:

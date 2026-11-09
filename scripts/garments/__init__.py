@@ -37,6 +37,7 @@ GARMENTS = {
     "bodysuit": "Bodysuit / swimsuit / baby wrap body (knit, snap crotch or crotch seam, leg bands or elastic)",
     "underwear": "Underwear: briefs with lined gusset, or boxer briefs (knit, elastic finishes)",
     "swim_trunks": "Swim trunks (quick-dry fabric, drawcord waistband, mesh pockets and brief liner)",
+    "romper": "Baby romper / footed sleeper (sizes 50–92, snaps along the inner legs, cuffs or feet)",
     "bag": "Bags: tote with lining and boxed corners, drawstring bag (no body measurements)",
 }
 
