@@ -284,10 +284,13 @@ def _cf_mark_x(pc):
 
 
 def _top_view(pattern, view):
+    from garments._style_lines import _PieceView
+    parts = [p for p in pattern.pieces if p.part_of == view]
     pc = pattern.piece(view)
+    if parts and pattern.options.get("style_lines"):
+        pc = _PieceView(pattern, pc)          # front/back answer for the edges of their panels
     ring = np.asarray(pc.seam_ring(), float)
     names = [e.name for e in pc.edges]
-    parts = [p for p in pattern.pieces if p.part_of == view]
     cfx = _cf_mark_x(pc)
     # half a body: on the fold, a centre seam/opening, or a button stand with a centre-front mark
     halved = pc.on_fold or "center" in names or cfx is not None
@@ -336,6 +339,10 @@ def _top_view(pattern, view):
     layers, gathers, seams = [], [], []
     marks = _unfold_marks(pc, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in pc.marks
                                                   if m.style != "fold"]
+    if pattern.options.get("style_lines"):              # pocket marks on the panels
+        for p in parts:
+            marks += _unfold_marks(p, cx) if halved else [(m.style, np.asarray(m.pts, float)) for m in p.marks
+                                                         if m.style != "fold"]
     if halved and not pc.on_fold and "center" in names:
         seams.append(np.array(pc.edge("center").pts, float))
     elif "front_edge" in names:
@@ -404,6 +411,16 @@ def _top_view(pattern, view):
                 if full and ends[-1][1] - ends[0][0] < 0.9 * (full[-1][1] - full[0][0]):
                     gathers += _gathers(ends[0][0], ends[-1][1], hy, 0.03 * height)
     layers.insert(0, (_ring(body), pc, 1))
+    for p in parts:                       # colour blocking: panels in another fabric drawn on top
+        if DG.palette_key(p, pattern) != DG.palette_key(pc, pattern):
+            pr = np.asarray(p.seam_ring(), float)
+            pp = _poly(DG._unfolded(p, pr)) if p.on_fold else _poly(pr)
+            if halved and not p.on_fold:
+                pp = pp.union(_poly(DG._mirror_x(pr, cx)).buffer(0.01)).buffer(0)
+            pp = pp.intersection(body).buffer(0)
+            for g in (pp.geoms if hasattr(pp, "geoms") else [pp]):
+                if g.area > 1:
+                    layers.append((_ring(g), p, 1.05))
     if "armhole" in allnames or "raglan" in allnames:
         layers += _sleeve(pattern, arm_pc, cx, "drafted") + _sleeve(pattern, arm_pc, cx, "mirror")
     if "neckline" in allnames:

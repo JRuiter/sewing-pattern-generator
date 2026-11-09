@@ -425,6 +425,8 @@ def fabric_group(piece) -> str:
         return "Mesh"
     if fab.startswith("Wadding"):
         return "Wadding"
+    if fab.startswith("Contrast"):
+        return "Contrast fabric"
     return "Lining" if "Lining" in fab or fab.startswith("Swim lining") else "Main fabric"
 
 

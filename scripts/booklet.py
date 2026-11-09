@@ -281,7 +281,8 @@ def _legend(fig, pattern, x, y, w) -> float:
         if k not in keys:
             keys.append(k)
     names = {"main": "Main fabric", "corduroy": "Corduroy", "velvet": "Velvet", "lining": "Lining",
-             "rib": "Rib knit", "mesh": "Mesh", "wadding": "Wadding"}
+             "rib": "Rib knit", "mesh": "Mesh", "wadding": "Wadding",
+             "contrast": "Contrast fabric"}
     col = w / 3
     y0 = y
     for i, k in enumerate(keys):
