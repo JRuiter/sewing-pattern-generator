@@ -485,3 +485,104 @@ def rename_edge_refs(pat, piece: str, old: str, new: str) -> None:
     for s in pat.seams:
         for side in ("a", "b"):
             s[side] = [(k, new if k == piece and e == old else e, n) for k, e, n in s[side]]
+
+
+# --------------------------------------------------------------------------- combined garments
+def merge_into(pat, other, prefix: str, seam_prefix: str, dy: float = 0.0, part_of: dict | None = None,
+               skip: tuple = ()) -> dict:
+    """Add the pieces, seams, corners, checks and notes of pattern `other` to `pat`, every key prefixed
+    with `prefix` and every seam/check name with `seam_prefix` (jumpsuit pants, pyjama pants). The
+    pieces are shifted by `dy` (into the frame of the main pattern); `part_of` maps an old key to the
+    view it belongs to. Returns the key map old → new for remap_steps."""
+    keymap = {}
+    for pc in other.pieces:
+        if pc.key in skip:
+            continue
+        old = pc.key
+        pc.key = prefix + old
+        keymap[old] = pc.key
+        if dy:
+            for e in pc.edges:
+                e.pts = e.pts + np.array([0.0, dy])
+            for mk in pc.marks:
+                mk.pts = np.asarray(mk.pts, float) + np.array([0.0, dy])
+            if pc.grain is not None:
+                pc.grain = (pc.grain[0] + np.array([0.0, dy]), pc.grain[1] + np.array([0.0, dy]))
+        if part_of and old in part_of:
+            pc.part_of = part_of[old]
+        pat.pieces.append(pc)
+    for s in other.seams:
+        if any(k in skip for k, _, _ in s["a"] + s["b"]):
+            continue
+        s = dict(s, name=seam_prefix + s["name"])
+        for side in ("a", "b"):
+            s[side] = [(keymap[k], e, n) for k, e, n in s[side]]
+        pat.seams.append(s)
+    for c in other.corners:
+        if c.get("piece") in skip:
+            continue
+        c = dict(c, name=seam_prefix + c["name"])
+        if "piece" in c:
+            c["piece"] = keymap[c["piece"]]
+        if "sum" in c:
+            c["sum"] = [(keymap[p], a, b) for p, a, b in c["sum"]]
+        pat.corners.append(c)
+    for c in other.checks:
+        pat.checks.append(dict(c, name=seam_prefix + c["name"]))
+    pat.notes += [seam_prefix + n for n in other.notes]
+    return keymap
+
+
+def remap_steps(steps: list, keymap: dict, seam_prefix: str) -> list:
+    """Steps written for a sub-pattern, with piece keys and seam names of the merged pattern."""
+    def k(x):
+        return keymap.get(x, x) if isinstance(x, str) else x
+
+    def walk(v):
+        if isinstance(v, dict):
+            return {kk: walk(vv) for kk, vv in v.items()}
+        if isinstance(v, list):
+            return [walk(x) for x in v]
+        if isinstance(v, tuple):
+            return tuple(walk(x) for x in v)
+        return k(v)
+
+    for st in steps:
+        st.seams = [seam_prefix + s for s in st.seams]
+        st.edges = [(keymap.get(p, p), e) for p, e in st.edges]
+        st.pieces = [keymap.get(p, p) for p in st.pieces]
+        st.data = walk(st.data)
+    return steps
+
+
+class SubView:
+    """A merged sub-pattern seen with its own keys (pants inside a jumpsuit): lets the assembly of the
+    original module run on the merged pattern. Pass the result of its steps through remap_steps."""
+
+    def __init__(self, pat, keymap: dict, options: dict, garment: str, seam_prefix: str):
+        self._pat, self._map, self.options, self.garment = pat, keymap, options, garment
+        self._sp = seam_prefix
+
+    def piece(self, key):
+        return self._pat.piece(self._map[key])
+
+    def has(self, key):
+        return key in self._map and self._pat.has(self._map[key])
+
+    @property
+    def pieces(self):
+        return [self._pat.piece(v) for v in self._map.values() if self._pat.has(v)]
+
+    @property
+    def seams(self):
+        inv = {v: k for k, v in self._map.items()}
+        return [dict(s, name=s["name"][len(self._sp):], a=[(inv[k], e, n) for k, e, n in s["a"]],
+                     b=[(inv[k], e, n) for k, e, n in s["b"]])
+                for s in self._pat.seams if s["name"].startswith(self._sp)]
+
+    @property
+    def is_pants(self):
+        return self.has("front") and any(e.name == "crotch" for e in self.piece("front").edges)
+
+    def __getattr__(self, name):
+        return getattr(self._pat, name)

@@ -12,6 +12,7 @@ GARMENTS = {
     "dress": "Dress (T-shirt bodice + skirt, or A-line T-shirt dress)",
     "fitted_dress": "Fitted woven dress (bust and waist darts, invisible zip, bias-bound neckline)",
     "wrap": "Wrap top / wrap dress (knit, band along the wrap edge, ties)",
+    "jumpsuit": "Jumpsuit / playsuit / boiler suit (bodice + pants, buttons or zip, back waist elastic, belt)",
     "pinafore": "Pinafore / strap dress (lined bib bodice, crossed straps, gathered skirt)",
     "beanie": "Beanie",
     "loop": "Loop scarf",

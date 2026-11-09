@@ -309,6 +309,20 @@ def _top_view(pattern, view):
         for e in p.edges:
             if e.name.startswith("split"):
                 part_seams += [np.asarray(e.pts, float), DG._mirror_x(np.asarray(e.pts, float), cx)]
+    legs = next((p for p in parts if any(e.name == "crotch" for e in p.edges)), None)
+    if legs is not None:                  # jumpsuit: the pants below the waist seam, two legs
+        cr = np.asarray(legs.edge("crotch").pts, float)
+        hy = float(np.asarray(legs.edge("hem").pts, float)[:, 1].mean())
+        crotch_y = float(cr[:, 1].min())
+        hgt = float(body.bounds[3] - body.bounds[1])
+        gh = 0.05 * (crotch_y - hy)
+        body = body.difference(Polygon([(cx, crotch_y - 0.01 * hgt), (cx - gh, hy - 0.5 * hgt),
+                                        (cx + gh, hy - 0.5 * hgt)])).buffer(0)
+        for p in parts:
+            for e in p.edges:
+                if e.name in ("waistband", "waist_outer"):
+                    pts = np.asarray(e.pts, float)
+                    part_seams += [pts, DG._mirror_x(pts, cx)]
     if body.geom_type != "Polygon":
         body = max(body.geoms, key=lambda g: g.area)
     allnames = names + [e.name for p in parts for e in p.edges]
