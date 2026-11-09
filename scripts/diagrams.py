@@ -1100,7 +1100,7 @@ def draw_icon(ax, pattern, step):
         ax.add_patch(Circle((2.0, 0.75), 0.05, fc="white", ec=INK, lw=0.8, zorder=5))
         ax.plot([2.0, 3.0, 3.3], [0.75, 1.2, 0.9], color=STITCH, lw=1.0)
         _pic_fabric(ax, 0.6, 0.0, 2.8, 0.25)
-    elif pic == "turn" and pattern.garment.startswith("pants") and pattern.has("front"):
+    elif pic == "turn" and pattern.is_pants and pattern.has("front"):
         _legs_inside(ax, pattern)
     elif pic == "turn":
         ax.add_patch(Rectangle((0.6, 0.6), 1.2, 1.4, fc=WRONG_SIDE, ec=INK, lw=1.3, hatch="////"))

@@ -195,6 +195,11 @@ class Pattern:
                 return p
         raise KeyError(key)
 
+    @property
+    def is_pants(self) -> bool:
+        """Pants and their derivatives (jeans, shorts, dungarees …): a front leg with a crotch edge."""
+        return self.has("front") and any(e.name == "crotch" for e in self.piece("front").edges)
+
     def has(self, key: str) -> bool:
         return any(p.key == key for p in self.pieces)
 

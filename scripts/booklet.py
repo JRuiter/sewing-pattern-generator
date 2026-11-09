@@ -492,7 +492,7 @@ def _sides_note(pattern) -> str:
     """What right/wrong side and left/right (as worn) mean, with an example from this garment."""
     keys = {pc.key for pc in pattern.pieces}
     who = {"doll": "the doll", "child": "the child", "adult": "the person"}[wearer(pattern)]
-    if keys & {"front", "back"} and pattern.garment.startswith("pants"):
+    if keys & {"front", "back"} and pattern.is_pants:
         example = f": the left front leg is on the right when you look at {who}."
     elif "sleeve" in keys:
         example = f": the left sleeve is on the right when you look at {who}."
@@ -1042,7 +1042,7 @@ def _fit_check(pattern) -> str:
         return f"{on}: {fit_note} Adjust the measurements or options and print the pattern again if needed."  # i18n: template
     if "sleeve" in keys or "hood" in keys:
         what = "length, chest width, sleeve length and the neckline"
-    elif pattern.garment.startswith("pants"):
+    elif pattern.is_pants:
         what = "length, width at the hip, the crotch and the waistband"
     else:
         what = "length, width at the hip and the waistband"

@@ -4,6 +4,8 @@ from importlib import import_module
 
 GARMENTS = {
     "pants_basic": "Pants (joggers, harem pants, leggings, pull-on trousers)",
+    "jeans": "Jeans (zip fly, scoop pockets, back yoke, patch and coin pockets, waistband with button)",
+    "dungarees": "Dungarees (pants with bib, crossed straps with buttons, bib pocket)",
     "tshirt_basic": "T-shirt / long sleeve (set-in or raglan sleeve)",
     "hoodie": "Hoodie / sweatshirt",
     "skirt": "Skirt (elastic waist: gathered, A-line, circle)",
