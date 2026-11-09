@@ -678,7 +678,7 @@ def assembly(pat, hem: bool = True, neck: bool = True, open_bands: bool = False,
                           tip="Sleeve on the bottom: the feed dogs ease the cap in without pleats.",
                           data={"view": "flat_sleeve"}))
         finished("Finish the armhole seams", [("sleeve", "cap_front"), ("sleeve", "cap_back")])
-    out.append(S.seam("Sew side and sleeve seams", ["Side seam", "Sleeve seam"],
+    out.append(S.seam("Sew side and sleeve seams", ["Side seam"] + (["Sleeve seam"] if has_sl else []),
                       "Fold the garment right sides together at the shoulders, the sleeves folded in half lengthwise. "
                       "Pin side and sleeve seam so that the " +
                       ("raglan" if o["sleeve_style"] == "raglan" else "armhole") +

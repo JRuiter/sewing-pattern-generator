@@ -464,9 +464,8 @@ def assembly(pattern, plans: dict | None = None) -> list[Step]:
                      t.split("**", 2)[2].strip() if t.startswith("**") else "") for t in mod.sewing_steps(pattern)]
     else:
         body = [Step("Sew the pieces together", "Right sides together, matching the notches.", stitch="seam")]
-    if pattern.options.get("style_lines"):
-        from garments import _style_lines as SL
-        body = SL.adjust_steps(pattern, body)
+    from garments import _style_lines as SL
+    body = SL.repoint(pattern, SL.adjust_steps(pattern, body))
     knit = E.fabric_info(pattern.options.get("fabric", "jersey"), pattern.options.get("stretch"))[2]
     own = owned_machines(pattern.options)
     out: list[Step] = []

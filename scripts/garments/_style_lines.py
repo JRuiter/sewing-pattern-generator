@@ -79,22 +79,14 @@ def apply(pat, kind: str) -> None:
     pat.notes.append(f"Style lines: {label}" + (" (upper part in a contrast fabric)" if kind == "color_block" else ""))
 
 
-def adjust_steps(pat, steps: list) -> list:
-    """Re-point edge references to the panel holding the edge and sew the style seams first."""
-    kind = pat.options.get("style_lines")
-    if not kind:
-        return steps
-    import steps as ST
-
+def repoint(pat, steps: list) -> list:
+    """Steps written for a whole front/back: point each edge (and placement mark) at the panel that
+    holds it now (yokes, side panels, style lines)."""
     def holder(k, e):
-        if not pat.has(k):
+        if not pat.has(k) or any(x.name == e for x in pat.piece(k).edges):
             return k
-        if any(x.name == e for x in pat.piece(k).edges):
-            return k
-        for p in pat.pieces:
-            if p.part_of == k and any(x.name == e for x in p.edges):
-                return p.key
-        return k
+        return next((p.key for p in pat.pieces if p.part_of == k and any(x.name == e for x in p.edges)), k)
+
     def mark_holder(k, label):
         if not pat.has(k) or any(m.label == label for m in pat.piece(k).marks):
             return k
@@ -103,6 +95,15 @@ def adjust_steps(pat, steps: list) -> list:
         st.edges = [(holder(k, e), e) for k, e in st.edges]
         if st.data.get("mark"):
             st.pieces = [mark_holder(k, st.data["mark"]) for k in st.pieces]
+    return steps
+
+
+def adjust_steps(pat, steps: list) -> list:
+    """Sew the style seams first."""
+    kind = pat.options.get("style_lines")
+    if not kind:
+        return steps
+    import steps as ST
     sa = ST.cm(next(e.sa for e in pat.piece("front").edges if e.name == "split"))
     text = {"princess": "Lay each side panel right sides together onto the centre panel, the notches matching, and "
                         f"sew the princess seam with {sa} seam allowance; ease the curve in, do not stretch it. Press "

@@ -45,8 +45,8 @@ def draft(measures: dict, options: dict | None = None) -> Pattern:
                               sleeve_length="short" if short else "long", sleeve_cuffs=bool(cuffs) and not short,
                               hem_sa=o["hem_sa"]), _garment="pyjama")
     pat.garment = "pyjama"
-    popts = dict(common, style="jogger", fit="wide", fabric=fabric, stretch=o.get("stretch"), waistband="casing",
-                 cuffs=bool(cuffs) and not short, pockets=[], length="short" if short else "long",
+    popts = dict(common, style="jogger", fit="normal" if knit else "wide", fabric=fabric, stretch=o.get("stretch"),
+                 waistband="casing", cuffs=bool(cuffs) and not short, pockets=[], length="short" if short else "long",
                  hem_sa=o["hem_sa"])
     pants = PB.draft(m, popts)
     keymap = PT.merge_into(pat, pants, "pants_", SP)
