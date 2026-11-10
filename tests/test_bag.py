@@ -64,3 +64,19 @@ def test_bag_file_names_have_no_times_sign():
     name = GN._basename(pat)
     assert "×" not in name and " " not in name
     assert name.endswith("45x42x14_cm")
+
+
+def test_stacked_bag_pieces_lie_face_down_and_upright():
+    """Shopper review: the back bag piece was drawn upside down on the front in 'sew side seams'."""
+    import diagrams as DG
+    pat, _ = _bag(lining=False, pocket=False, machines=OVERLOCK_ONLY)
+    side = next(sm for sm in pat.seams if sm["name"] == "Side seams")
+    _A, _ea, _B, _eb, (R, _t, flip) = DG.overlay_parts(pat, side)
+    assert flip                          # face down = mirror image
+    assert R[1, 1] > 0.99                # not turned round: bottom to bottom
+
+
+def test_press_handles_shows_the_folded_edges():
+    pat, _ = _bag(lining=False, pocket=False)
+    press = next(s for s in ST.assembly(pat) if s.title == "Press the handles")
+    assert press.amount > 0 and press.data.get("band") == 1.0

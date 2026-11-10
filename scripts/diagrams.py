@@ -343,9 +343,26 @@ def overlay_parts(pattern, sm):
     # pieces lie right sides together: the top one is turned over (mirrored) unless it is the
     # other piece of a mirrored pair (same edge) or clearly fits only unmirrored (pocket bags)
     same = pa == pb and ea == eb
-    flip = not same
-    if not same and results[False][0] < 0.5 * results[True][0]:
-        flip = False
+    tol = OVERLAY_MAX_RMS * G.length(EA)
+    if not (B.mirror or B.on_fold):
+        # identical (not mirrored) pieces: the one on top is face down, so it is the mirror image of
+        # the stored piece; never the unmirrored piece turned upside down instead
+        flip = results[True][0] <= tol or results[True][0] <= results[False][0]
+    elif same:
+        flip = False                    # the other piece of a mirrored pair, on the same edge
+    else:
+        # mirrored pair or symmetric (cut on the fold): the piece on top exists in both versions, so
+        # either fit can be the real one. Pieces lie on the table as in the garment, waist to waist and
+        # hem to hem: the fit that turns the piece least wins (no shoulder turned by 35°, no leg or
+        # pocket bag upside down), then the closer fit
+        def turn(f):
+            R_ = results[f][1]
+            return abs(math.degrees(math.atan2(R_[1, 0], R_[0, 0])))
+        fits = [f for f in (True, False) if results[f][0] <= tol]
+        if len(fits) == 2:
+            flip = min((True, False), key=lambda f: (round(turn(f) / 20.0), results[f][0]))
+        else:
+            flip = fits[0] if fits else results[True][0] <= results[False][0]
     score, R, t = results[flip]
     if score > OVERLAY_MAX_RMS * G.length(EA):     # edges of different shape: they would lie skewed
         return None
@@ -609,6 +626,7 @@ def _draw_overlays(ax, pattern, step, sms, parts):
         dev = min(np.abs(moved - _resample(edge)).max(), np.abs(moved[::-1] - _resample(edge)).max())
         import booklet_qa as QA
         QA.check_overlay(step.title, dev / max(A.edge(ea).length, 1e-9), 0.06)
+        QA.check_layers(step.title, B, bool(Tb[2]))
         _stitch(ax, edge)
         _pins(ax, edge, size)
         _notches(ax, A, ea, Ta, size)
@@ -893,7 +911,9 @@ def draw_edge(ax, pattern, step, kind="edge"):
         if kind in ("hem", "press") and step.amount > 0:
             # the turned-up allowance: band between the raw edge and the fold
             fold = pts if edge.sa > 0 else G.offset_polyline(pts, -step.amount)
-            raw_in = G.offset_polyline(fold, -step.amount * (0.5 if kind == "press" else 1.0))
+            # press: half the allowance shown folded, unless the step says how much (edges to the middle)
+            raw_in = G.offset_polyline(fold, -step.amount * (step.data.get("band", 0.5) if kind == "press"
+                                                             else 1.0))
             band = np.vstack([fold, raw_in[::-1]])
             ax.fill(band[:, 0], band[:, 1], fc=RIGHT_SIDE, ec=INK, lw=0.8, zorder=3)
             if kind == "hem":
@@ -935,7 +955,8 @@ def draw_edge(ax, pattern, step, kind="edge"):
         # a basting line needs no cross-section (the "edge" detail shows a finished edge)
         _finish_axes(ax, [view], pad=0.04)
         return
-    _finish_axes(ax, [view, [[x1 + 0.55 * w, y0]]], pad=0.04)
+    # room for the cross-section: a tall narrow piece (handle, strap) would shrink the detail to a dot
+    _finish_axes(ax, [view, [[x1 + max(0.55 * w, 0.9 * (y1 - y0) - w), y0]]], pad=0.04)
     _detail(ax, xs_kind, S.cm(step.amount) if step.amount else "")
 
 
