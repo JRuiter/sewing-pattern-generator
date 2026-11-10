@@ -1185,7 +1185,7 @@ TABLE.update({
         "Am Ende {n} cm Fadenkette über den Stoff hinaus nähen; mit einer Stopfnadel unter die Stiche zurückziehen.",
     "Back stitch": "Rückstich",
     "Back view": "Rückansicht",
-    "Front view": "Vorderansicht",
+    "Front view": "Vorderansicht", "View at an angle": "Schrägansicht",
     "Basics: hand stitches": "Grundlagen: Handstiche",
     "Basics: the overlocker": "Grundlagen: die Overlock",
     "Basics: the sewing machine": "Grundlagen: die Nähmaschine",
