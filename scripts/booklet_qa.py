@@ -86,6 +86,14 @@ def check_overlay(title: str, rel_rms: float, limit: float) -> None:
         add("seam", title, f"stacked pieces do not lie on each other (deviation {rel_rms:.1%} of the edge)")
 
 
+def check_layers(title: str, top, flipped: bool) -> None:
+    """Stacked right sides together: the piece on top lies face down. A piece that is not cut as a
+    mirrored pair (and not on the fold) must then be drawn as its mirror image, never turned round."""
+    if not flipped and not (top.mirror or top.on_fold):
+        add("seam", title, f"{top.name} on top is drawn right side up turned round, not face down "
+                           "(mirror image)")
+
+
 # --------------------------------------------------------------------------- text
 
 def text_problems(rec) -> list[tuple]:

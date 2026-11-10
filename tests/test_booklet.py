@@ -111,13 +111,16 @@ def test_garment_views_are_whole_garments():
 
 
 def test_seams_of_different_shape_are_shown_side_by_side(kord):
-    """Side seams and inseams of front and back differ: no skewed stacked picture."""
+    """Side seams and inseams of front and back differ: no skewed stacked picture (either side by side,
+    or stacked upright where the back leg really lies on the front leg)."""
     import diagrams as DG
     _checks, _pages, steps, pat = kord
     for title in ("Sew the side seams", "Sew the inseams"):
         st = next(s for s in steps if s.title == title)
         sms = S.resolve_seams(pat, st)
-        assert len(sms) == 1 and DG.overlay_parts(pat, sms[0]) is None, title
+        assert len(sms) == 1, title
+        r = DG.overlay_parts(pat, sms[0])
+        assert r is None or r[4][0][1, 1] > 0.9, title
 
 
 def test_booklet_qa_finds_broken_drawings():

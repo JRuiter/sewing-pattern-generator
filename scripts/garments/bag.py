@@ -166,7 +166,8 @@ def assembly(pat):
     out += [
         ST.press("Press the handles", [("handle", "right"), ("handle", "left")],
                  "Press each handle in half lengthwise, open it, fold both long edges into the middle and press, then "
-                 "fold in half again: 4 layers.", section="Handles"),
+                 "fold in half again: 4 layers.", section="Handles",
+                 amount=min(e.sa for e in hd.edges if e.turned), data={"band": 1.0}),
         ST.topstitch("Topstitch the handles", [("handle", "right"), ("handle", "left")], 3.0,
                      "Topstitch 3 mm from both long edges.", section="Handles"),
     ]
