@@ -80,3 +80,17 @@ def test_press_handles_shows_the_folded_edges():
     pat, _ = _bag(lining=False, pocket=False)
     press = next(s for s in ST.assembly(pat) if s.title == "Press the handles")
     assert press.amount > 0 and press.data.get("band") == 1.0
+
+
+@pytest.mark.parametrize("opts, names", [({"lining": False, "pocket": False}, {"front", "angle"}),
+                                         ({}, {"front", "angle"}), ({"style": "drawstring"}, {"front"})])
+def test_finished_bag_is_drawn_not_its_pieces(opts, names):
+    """Title page and "Done!": the finished bag (front view and a view at an angle with the gusset),
+    not the flat pattern pieces side by side."""
+    import views as V
+    pat, _ = _bag(**opts)
+    views = V.garment_views(pat)
+    assert set(views) == names
+    if "angle" in views:
+        keys = [pc.key for _r, pc, _z in views["angle"]["layers"]]
+        assert keys.count("handle") == 2 and views["angle"]["inside"]

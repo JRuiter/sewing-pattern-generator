@@ -506,7 +506,8 @@ def _views(fig, pattern, rect, captions=True, check=False):
     for a, ((ax0, ay0, aw, ah), (tx, ty)), name in zip(axes, places, views):
         a.set_position((ax0, ay0, aw, ah))
         if captions:
-            fig.text(tx, ty, T("Front view" if name == "front" else "Back view"), fontsize=9, ha="center",
+            fig.text(tx, ty, T({"front": "Front view", "back": "Back view", "angle": "View at an angle"}[name]),
+                     fontsize=9, ha="center",
                      color=GREY)
 
 

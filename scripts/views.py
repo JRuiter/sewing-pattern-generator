@@ -498,8 +498,72 @@ def _hood(hood, neck, view, cx, peak: float = 0.0):
     return pts
 
 
+def _handle(c, gap, hw, top, leg, ins):
+    """One handle: two straight legs from ``ins`` below the top edge up to ``leg`` above it,
+    joined by a half ring (outline as one polygon)."""
+    r_out, r_in = gap / 2 + hw / 2, gap / 2 - hw / 2
+    a, b = c - gap / 2, c + gap / 2
+    t = np.linspace(0, np.pi, 40)
+    y = top + leg
+    outer = np.c_[c + r_out * np.cos(t), y + r_out * np.sin(t)]
+    inner = np.c_[c + r_in * np.cos(t[::-1]), y + r_in * np.sin(t[::-1])]
+    return np.vstack([[[b + hw / 2, top - ins]], outer, [[a - hw / 2, top - ins], [a + hw / 2, top - ins]],
+                      inner, [[b - hw / 2, top - ins]]])
+
+
+def bag_views(pattern) -> dict:
+    """The finished bag: front view and a view at an angle (front, side gusset, the opening and both
+    handles), so the depth of the boxed corners shows. Drawstring bag: front view with the cords."""
+    fin = getattr(pattern, "finished", None) or {}
+    W, H, D = float(fin.get("width", 0)), float(fin.get("height", 0)), float(fin.get("depth", 0) or 0)
+    if W <= 0 or H <= 0:
+        return {}
+    body = pattern.piece("panel") if pattern.has("panel") else pattern.piece("bag") if pattern.has("bag") else None
+    if body is None:
+        return {}
+    top_e = next((e for e in body.edges if e.name == "top"), None)
+    hem = top_e.sa if top_e is not None else 30.0
+    views: dict = {}
+    hd = pattern.piece("handle") if pattern.has("handle") else None
+    if hd is not None:
+        hw = min(e.sa for e in hd.edges if e.turned)
+        hl = max(e.length for e in hd.edges)
+        gap = min(W * 0.35, 120.0)
+        leg = max((hl - 2 * hem - np.pi * gap / 2) / 2, 20.0)
+        front = np.array([[0, 0], [W, 0], [W, H], [0, H]], float)
+        handle = _handle(W / 2, gap, hw, H, leg, hem * 0.8)
+        hem_line = np.array([[0, H - hem], [W, H - hem]])
+        views["front"] = dict(layers=[(front, body, 1), (handle, hd, 2)], seams=[hem_line], marks=[],
+                              gathers=[])
+        if D > 0:
+            dx, dy = D * 0.75 * 0.87, D * 0.75 * 0.5          # side gusset drawn at 30°, shortened
+            side = np.array([[W, 0], [W + dx, dy], [W + dx, H + dy], [W, H]])
+            opening = np.array([[0, H], [W, H], [W + dx, H + dy], [dx, H + dy]])
+            back_handle = _handle(W / 2 + dx, gap, hw, H + dy, leg, 0.0)
+            views["angle"] = dict(
+                layers=[(back_handle, hd, 0.5), (side, body, 1), (opening, body, 1.2), (front, body, 2),
+                        (handle, hd, 3)],
+                seams=[hem_line, np.array([[W, H - hem], [W + dx, H - hem + dy]]),
+                       np.array([[W + dx * 0.5, dy * 0.5], [W + dx * 0.5, H + dy * 0.5]])],
+                marks=[], gathers=[], inside=[opening], shade=[side])
+        return views
+    # drawstring bag: casing at the top, the cords coming out at the sides and down to the corner loops
+    front = np.array([[0, 0], [W, 0], [W, H], [0, H]], float)
+    casing = np.array([[0, H - hem * 0.8], [W, H - hem * 0.8]])
+    t = np.linspace(0, 1, 30)[:, None]
+
+    def curve(p0, p1, p2):                   # quadratic Bézier: the cord hangs slightly away from the bag
+        return (1 - t) ** 2 * np.asarray(p0) + 2 * (1 - t) * t * np.asarray(p1) + t ** 2 * np.asarray(p2)
+    cords = [curve((0, H - hem * 0.4), (-W * 0.12, H * 0.45), (0, 40.0)),
+             curve((W, H - hem * 0.4), (W * 1.12, H * 0.45), (W, 40.0))]
+    views["front"] = dict(layers=[(front, body, 1)], seams=[casing], marks=[], gathers=[], cords=cords)
+    return views
+
+
 def garment_views(pattern) -> dict:
     """{'front': view, 'back': view} for garments with a front and a back piece, else {}."""
+    if pattern.garment == "bag":
+        return bag_views(pattern)
     keys = {pc.key for pc in pattern.pieces}
     views: dict = {}
     for view in ("front", "back"):
@@ -547,6 +611,16 @@ def draw_view(ax, pattern, view: dict, back: bool = False):
     for ring, pc, z in sorted(view["layers"], key=lambda r: r[2]):
         DG._fill(ax, np.asarray(ring, float), z=z, pc=pc)
         allp.append(np.asarray(ring, float))
+    for ring in view.get("shade", []):          # a face turned away from the light (side gusset)
+        r = np.asarray(ring, float)
+        ax.fill(r[:, 0], r[:, 1], fc="#000000", alpha=0.12, ec="none", zorder=1.1)
+    for ring in view.get("inside", []):         # the inside of an opening: wrong side of the fabric
+        r = np.asarray(ring, float)
+        DG._fill(ax, r, wrong=True, z=1.25)
+    for cord in view.get("cords", []):
+        c = np.asarray(cord, float)
+        ax.plot(c[:, 0], c[:, 1], color="#5d4037", lw=1.8, zorder=4.5, solid_capstyle="round")
+        allp.append(c)
     for sm in view["seams"]:
         ax.plot(sm[:, 0], sm[:, 1], color=DG.INK, lw=0.9, zorder=4)
     for g in view.get("gathers", []):
